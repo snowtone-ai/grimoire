@@ -1,42 +1,105 @@
-# Focus Task Manager PWA
+# Task Plant — タスク管理PWA
 
 大学生活と就職活動のマルチタスクを整理し、ユーザーが「今、何をすべきか」を瞬時に把握することに特化した、自分専用のタスク管理PWA（Progressive Web App）です。
 
-※自分専用前提で設計しているので、他の人はおそらく使用できません。
+> ※自分専用前提で設計しているため、他の方はご利用いただけません。
 
-## 🌟 プロダクトの核となる特徴
-<img src="https://github.com/user-attachments/assets/5f12f74e-33f4-43a5-954c-8152dc73a8d0" width="250">
-<img src="https://github.com/user-attachments/assets/877ccc0e-ac1a-457c-aacf-bdf61fa978ba" width="250">
+**Production URL**: https://task-plant.vercel.app
 
-- **AI音声タスク登録**: Gemini 2.5 Flash APIを搭載。曖昧な発話からタスク名・期限・カテゴリを自動抽出し、最小限の操作で登録を完了します。
-- **即時報酬デザイン**: タスク完了時に `canvas-confetti` による視覚的な演出を行い、日々の達成感を最大化します。
-- **継続の可視化（Streak）**: 毎日の全タスク完了を「🔥 ストリーク」として記録し、継続のモチベーションを維持します。
-- **オフラインファースト**: PWA対応および IndexedDB（Dexie.js）の採用により、通信環境に左右されない高速な操作性を実現しています。
+## 主な機能
 
-## 🛠 技術スタック
+- **AI音声タスク登録**: Gemini 2.5 Flash APIを搭載。曖昧な発話からタスク名・期限・カテゴリを自動抽出。
+- **Gmailタスク抽出**: 受信メールからGeminiがタスク候補を検出し、ワンタップで取り込む。
+- **Googleカレンダー連携**: 予定をタスクとして取り込み、締切管理を一元化。
+- **繰り返しタスク**: 毎日・毎週・毎月の定期タスクを自動生成。
+- **植物成長システム**: 週次完了数に応じて植物が育つ12か月・4アーキタイプの成長演出。
+- **Streak記録**: 毎日の全タスク完了を🔥ストリークとして記録。
+- **オフラインファースト**: PWA + IndexedDB（Dexie.js）により通信なしでも動作。
+- **即時報酬**: タスク完了時に canvas-confetti による視覚演出。
 
-2026年時点の最新のモダンWebスタックを採用し、パフォーマンスと保守性を両立させています。
+## 技術スタック
 
-- [cite_start]**Framework**: Next.js 16+ (App Router), React 19 [cite: 2, 4]
-- [cite_start]**Styling**: Tailwind CSS v4 (CSS-First Configuration) [cite: 2, 4]
-- [cite_start]**Language**: TypeScript (Strict Mode) [cite: 2]
-- **AI Integration**: Gemini 2.5 Flash API
-- **Local Database**: Dexie.js (IndexedDB)
-- [cite_start]**Deployment**: Vercel [cite: 2, 4]
-- [cite_start]**Package Manager**: pnpm [cite: 2, 4]
+| カテゴリ | 採用技術 |
+|---|---|
+| Framework | Next.js 16+ (App Router) / React 19 |
+| Language | TypeScript (strict: true) |
+| Styling | Tailwind CSS v4 (CSS-First Configuration) |
+| AI | Gemini 2.5 Flash API |
+| Auth | Google Identity Services (GIS) OAuth2 |
+| Database | Dexie.js (IndexedDB, lazy init) |
+| PWA | @ducanh2912/next-pwa + maskable icons |
+| Deployment | Vercel |
+| Package Manager | pnpm |
 
-## 🤖 AI-Driven Development (AI協調開発)
+## セットアップ
 
-[cite_start]このプロジェクトは、AIエージェントと密接に協調する次世代の開発手法で構築されました [cite: 1]。
+### 1. 環境変数
 
-1. [cite_start]**PMエージェントによる要件定義**: 独自の「要件定義専門PMエージェント」を用いて曖昧なアイデアを `vision.md` に構造化 [cite: 1]。
-2. [cite_start]**Claude Code による自律実装**: `CLAUDE.md` に蓄積された地雷回避ルールに基づき、Claude Code がコードの実装・デバッグ・検証（Playwright）を自律的に実行 [cite: 1, 2]。
-3. [cite_start]**自己進化プロセス**: 開発中に発生したエラーの教訓を `xp-rules.md` に蓄積し、開発プロセス自体を継続的に改善 [cite: 2]。
-
-## 🚀 セットアップと実行
-
-### 1. 環境変数の設定
-`.env.local` ファイルを作成し、以下のキーを設定してください。
+`.env.local` を作成し以下を設定:
 
 ```env
-NEXT_PUBLIC_GEMINI_API_KEY=your_api_key_here
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+```
+
+Google Cloud Console で OAuth 2.0 クライアントIDを作成し、`Authorized JavaScript origins` に以下を追加:
+- `http://localhost:3000`（開発）
+- `https://task-plant.vercel.app`（本番）
+
+### 2. 開発サーバー起動
+
+```bash
+pnpm install
+pnpm dev
+```
+
+### 3. PWAアイコン生成（SVG変更時のみ）
+
+```bash
+node scripts/gen-icons.mjs
+```
+
+`public/icon.svg` から 192px/512px（通常・maskable）の4種類のPNGを生成します。
+
+## 検証コマンド
+
+```bash
+npx tsc --noEmit   # 型チェック
+pnpm lint          # ESLint
+pnpm build         # ビルド確認
+```
+
+## AI協調開発
+
+このプロジェクトはAIエージェントと密接に協調する開発手法で構築されました。
+
+1. **PMエージェントによる要件定義**: 独自の「要件定義専門PMエージェント（pm-zero）」を用いて曖昧なアイデアを `docs/vision.md` に構造化。
+2. **Claude Code による自律実装**: `CLAUDE.md` / `AGENTS.md` に蓄積された地雷回避ルールに基づき、Claude Code がコードの実装・デバッグ・Playwright検証を自律的に実行。
+3. **Codex CLI との並行開発**: 同一ブランチへの同時書き込みを禁止し、Write Lock で排他制御。
+
+## ディレクトリ構成（主要）
+
+```
+src/
+├── app/                  # Next.js App Router
+│   ├── plant/            # 植物画面
+│   └── manifest.ts       # PWA manifest
+├── components/
+│   ├── home/             # ホーム画面（タスクカード/追加/編集）
+│   ├── all/              # 全タスク一覧
+│   ├── calendar/         # カレンダー連携
+│   ├── gmail/            # Gmail連携
+│   └── plant/            # 植物成長コンポーネント
+├── hooks/                # Reactカスタムフック
+├── lib/
+│   ├── domain/           # Pure domain logic（category / plant / task-date）
+│   ├── api/              # 外部API補助（gmail / google-auth / google-calendar）
+│   ├── db.ts             # Dexie スキーマ定義
+│   ├── taskDb.ts         # DB操作
+│   └── gemini.ts         # Gemini API クライアント
+docs/
+├── vision.md             # 仕様（Single Source of Truth）
+├── state.md              # 現在の実装状態
+├── decisions.md          # 設計判断ログ
+└── issues.md             # 失敗・エスカレーション記録
+```
