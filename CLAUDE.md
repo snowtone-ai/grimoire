@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+@AGENTS.md
+
+## Claude-specific
+- Claude CodeはCLAUDE.mdを読む。共通ルールはAGENTS.mdを一次ソースにする。
+- 計画、設計、レビュー、文章品質判断を優先する。
+- Codex CLIと同じbranchを同時編集しない。
+- /resume /escape /audit /reference /ev /env-guide /console-debug /verify は .claude/skills/index.md の該当章を読む。
+
 ## 技術スタック
 Next.js 16+ (App Router) / React 19 / TypeScript (strict: true) / Tailwind CSS v4 / pnpm / Vercel
 PWA構成（next-pwa） / IndexedDB（Dexie.js） / Web Speech API / Gemini 2.5 Flash API

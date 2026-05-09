@@ -1,4 +1,10 @@
 import { db, type Task, type Streak, type Category } from "./db";
+import {
+  doesTaskApplyToDate,
+  sortTasksByTime,
+  taskForDisplayDate,
+  todayDateString,
+} from "./domain/task-date";
 
 // ── Task CRUD ──────────────────────────────────────────────────────────────
 
@@ -9,48 +15,12 @@ export async function getAllTasks(): Promise<Task[]> {
 
 /** 指定日のタスクを時刻順で取得（当日締切 + 繰り返しで該当する日） */
 export async function getTasksForDate(date: string): Promise<Task[]> {
-  const dateObj = new Date(date);
-  const dayOfWeek = dateObj.getDay(); // 0=Sun ~ 6=Sat
-  const dayOfMonth = dateObj.getDate(); // 1-31
-
   const all = await db.tasks.toArray();
-
   const filtered = all
-    .filter((task) => {
-      if (task.recurrence === "none") {
-        return task.dueDate === date;
-      }
-      if (task.recurrence === "daily") {
-        return task.dueDate <= date;
-      }
-      if (task.recurrence === "weekly") {
-        return (
-          task.dueDate <= date && task.recurrenceDayOfWeek === dayOfWeek
-        );
-      }
-      if (task.recurrence === "monthly") {
-        return (
-          task.dueDate <= date && task.recurrenceDayOfMonth === dayOfMonth
-        );
-      }
-      return false;
-    })
-    .map((task) => {
-      // 繰り返しタスクは「当日に完了したか」だけを completed として返す
-      if (task.recurrence !== "none") {
-        const completedOnDate = task.completedAt?.slice(0, 10) === date;
-        return { ...task, completed: completedOnDate };
-      }
-      return task;
-    });
+    .filter((task) => doesTaskApplyToDate(task, date))
+    .map((task) => taskForDisplayDate(task, date));
 
-  // 時刻順ソート（時刻なし=終日は末尾）
-  return filtered.sort((a, b) => {
-    if (!a.dueTime && !b.dueTime) return 0;
-    if (!a.dueTime) return 1;
-    if (!b.dueTime) return -1;
-    return a.dueTime.localeCompare(b.dueTime);
-  });
+  return sortTasksByTime(filtered);
 }
 
 /** IDでタスクを1件取得 */
@@ -91,7 +61,7 @@ export async function toggleTaskComplete(id: string): Promise<void> {
 
   if (task.recurrence !== "none") {
     // 繰り返しタスク: 「今日完了済みか」で判断し、当日のみ有効な完了状態にする
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayDateString();
     const completedToday = task.completedAt?.slice(0, 10) === today;
     await db.tasks.update(id, {
       completed: !completedToday,
