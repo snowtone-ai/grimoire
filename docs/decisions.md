@@ -38,6 +38,30 @@
 - 採用理由: 個人利用PWAのため。本番運用で問題が出たら導入
 - 将来見直し条件: ユーザー数が増えた場合、本番障害が追跡困難になった場合
 
+## D-006: ディレクトリ構造 — domain/api/hooks に責務分離
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: pure domain logic を `src/lib/domain/`、外部API補助を `src/lib/api/`、React副作用を `src/hooks/` に分ける
+- 採用理由: 300行超ファイルを分割し、UI / domain / data の責務混在を減らすため
+- 不採用案: PRODUCT-OPTIMIZATION.md の全構成を一括導入 → diffが大きくなり既存機能の回帰リスクが高い
+- 将来見直し条件: テスト基盤導入後に `taskDb.ts` を query/mutation 単位へ追加分割する場合
+
+## D-007: Service Worker管理 — 今回は既存ファイルを維持
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: `src/components/pwa-register.tsx` は64行でゲート内のため、今回は抽出しない
+- 採用理由: Service Workerは既存の地雷回避ルールが多く、不要な移動は回帰リスクになるため
+- 不採用案: `lib/services/sw-manager.ts` へ即時抽出 → 動作差分の検証コストが高い
+- 将来見直し条件: SW更新UIや複数登録パスが増えた場合
+
+## D-008: テスト基盤 — Node built-in test を先行採用
+- 日付: 2026-05-09
+- 対象: process
+- 決定: pure domain helper は Node.js built-in test runner で検証し、Playwright/Vitest導入は別タスクで実施
+- 採用理由: 追加依存なしで最低限の再現テストを導入し、品質改善リファクタと依存追加を分離するため
+- 不採用案: 依存を即時追加してE2E/Unitを実装 → ロックファイル変更とテスト設定変更が大きくなる
+- 将来見直し条件: 次の機能追加またはバグ修正に着手する前
+
 ## Future Changes
 - Codex CLI を本格導入した場合、state.md の Write Lock 運用を厳格化
 - ユーザー数増加時に Observability Gate の本格対応

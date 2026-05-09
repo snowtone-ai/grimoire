@@ -3,7 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { createTask } from "@/lib/taskDb";
-import { parseTaskFromText, RateLimitError } from "@/lib/gemini";
+import { parseTaskFromText } from "@/lib/gemini";
+import { RateLimitError, redactSecret } from "@/lib/errors";
+import { todayDateString } from "@/lib/domain/task-date";
 
 interface VoiceInputButtonProps {
   onTaskCreated: () => void;
@@ -11,11 +13,6 @@ interface VoiceInputButtonProps {
 }
 
 type VoiceStatus = "idle" | "listening" | "processing" | "error" | "success";
-
-function todayDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 export function VoiceInputButton({
   onTaskCreated,
@@ -72,7 +69,7 @@ export function VoiceInputButton({
           setTimeout(() => setStatus("idle"), 3000);
         })
         .catch((err: unknown) => {
-          console.error("[VoiceInput] error:", err);
+          console.error("[VoiceInput] error:", redactSecret(err));
           if (err instanceof RateLimitError) {
             setErrorMsg("AI解析が一時的に利用できません。手動で入力してください");
             setStatus("error");

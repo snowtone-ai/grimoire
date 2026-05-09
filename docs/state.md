@@ -4,8 +4,8 @@
 - Branch: main
 - Current executor: Codex CLI
 - Write lock: Codex CLI
-- Last verified: —
-- Verification mode: —
+- Last verified: 2026-05-09
+- Verification mode: standard
 
 ## Done
 - [x] F-1: ホーム画面（今日のタスク一覧）
@@ -17,6 +17,7 @@
 - [x] F-7: タスク編集・削除
 - [x] PWA構成 + Service Worker修正（永続ローディングバグ修正済み）
 - [x] pm-zero v9.1 OS構造導入
+- [x] プロダクトコード品質ゲート適用
 
 ## Doing
 （なし）
