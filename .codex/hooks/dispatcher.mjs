@@ -2,21 +2,7 @@
 // pm-zero v9.1 — Codex CLI Hook Dispatcher
 import fs from 'node:fs/promises';
 import path from 'node:path';
-
-const REDACT = [
-  /sk-[a-zA-Z0-9_-]{20,}/g,
-  /Bearer\s+[a-zA-Z0-9._-]+/gi,
-  /eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g,
-  /(password|token|secret|key|authorization)["':=\s]+["']?[^"'\s,}]{8,}/gi,
-];
-
-function redact(text) {
-  let result = text;
-  for (const pattern of REDACT) {
-    result = result.replace(pattern, '[REDACTED]');
-  }
-  return result;
-}
+import { redact, warnHookFailure } from '../../scripts/lib/redact.mjs';
 
 const event = process.argv.find((a) => a.startsWith('--event='))?.split('=')[1];
 const projectRoot = path.resolve(import.meta.dirname, '..', '..');
@@ -31,8 +17,8 @@ const handlers = {
         const lines = current.split('\n').map((l) => l.trim()).filter(Boolean);
         console.log(`[pm-zero] State: ${lines.join(' | ')}`);
       }
-    } catch {
-      // docs/state.md が存在しない場合は無視
+    } catch (error) {
+      warnHookFailure('codex:SessionStart', error);
     }
   },
 
@@ -53,8 +39,8 @@ const handlers = {
           process.exit(1);
         }
       }
-    } catch {
-      // hook失敗で本処理を落とさない
+    } catch (error) {
+      warnHookFailure('codex:PreToolUse', error);
     }
   },
 
@@ -66,8 +52,8 @@ const handlers = {
           `[pm-zero] Tool failure (redacted): ${redact(input).slice(0, 200)}`
         );
       }
-    } catch {
-      // hook失敗で本処理を落とさない
+    } catch (error) {
+      warnHookFailure('codex:PostToolUseFailure', error);
     }
   },
 
@@ -82,8 +68,8 @@ const handlers = {
           `[pm-zero] Warning: ${doingItems.length} task(s) still in Doing. Update state.md if completed.`
         );
       }
-    } catch {
-      // hook失敗で本処理を落とさない
+    } catch (error) {
+      warnHookFailure('codex:Stop', error);
     }
   },
 };
@@ -91,7 +77,7 @@ const handlers = {
 if (event && handlers[event]) {
   try {
     await handlers[event]();
-  } catch {
-    // hook失敗で本処理を落とさない
+  } catch (error) {
+    warnHookFailure(`codex:${event}`, error);
   }
 }

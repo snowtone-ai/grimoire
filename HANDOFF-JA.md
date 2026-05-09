@@ -10,6 +10,7 @@
 
 ### 検証
 - Mode: quick / standard / final
+- 選択基準: OS-KERNEL.md の Verification Modes を参照
 - 実行コマンド:
   - [command]
 - 結果:

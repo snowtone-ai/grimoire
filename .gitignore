@@ -37,10 +37,8 @@ yarn-error.log*
 .vercel
 
 # pm-zero v9.1
-screenshots/
-logs/
-!screenshots/
-!logs/
+screenshots/*
+logs/*
 !screenshots/.gitkeep
 !logs/.gitkeep
 !.env.example
