@@ -19,9 +19,11 @@
 
 ## 技術スタック
 
-フロントエンド：Next.js 16（Reactベースのウェブアプリフレームワーク）、TypeScript、Tailwind CSS v4、Dexie.js（ブラウザ内データベースIndexedDBのラッパー）
-インフラ・環境：Vercel（ホスティングプラットフォーム）
-AI・外部API：Gemini 2.5 Flash API（Google製AI）、Google Identity Services OAuth2（ログイン認証）、Gmail API、Google Calendar API
+| カテゴリ | 技術・ツール |
+|---|---|
+| フロントエンド | Next.js 16（Reactベースのウェブアプリフレームワーク）、TypeScript、Tailwind CSS v4、Dexie.js（ブラウザ内データベースIndexedDBのラッパー） |
+| インフラ・環境 | Vercel（ホスティングプラットフォーム） |
+| AI・外部API | Gemini 2.5 Flash API（Google製AI）、Google Identity Services OAuth2（ログイン認証）、Gmail API、Google Calendar API |
 
 ---
 
