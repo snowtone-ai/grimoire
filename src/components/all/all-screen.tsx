@@ -96,7 +96,7 @@ export function AllScreen() {
           <button
             type="button"
             onClick={() => setShowCalendarModal(true)}
-            className="p-2 text-muted-foreground transition-transform active:scale-95"
+            className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-transform hover:bg-muted active:scale-90"
             aria-label="カレンダーからインポート"
           >
             <CalendarPlus className="size-5" />
@@ -136,8 +136,8 @@ export function AllScreen() {
         type="button"
         aria-label="タスクを追加"
         onClick={() => setShowAddModal(true)}
-        className="fixed right-4 flex size-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg active:scale-95 transition-transform"
-        style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        className="fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35 transition-transform duration-300 ease-spring active:scale-90"
+        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
       >
         <Plus className="size-6" />
       </button>

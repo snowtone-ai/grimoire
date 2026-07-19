@@ -75,9 +75,10 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
     >
       {/* Sheet */}
       <div
-        className="w-full max-w-lg rounded-t-2xl bg-background p-6 shadow-xl animate-slide-up"
+        className="w-full max-w-lg rounded-t-3xl bg-card p-6 pt-3 shadow-xl animate-slide-up"
         style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
       >
+        <div aria-hidden className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-muted" />
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">タスクを追加</h2>
@@ -98,7 +99,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
               htmlFor="task-title"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              タスク名<span className="ml-0.5 text-orange-500">*</span>
+              タスク名<span className="ml-0.5 text-brand">*</span>
             </label>
             <input
               id="task-title"
@@ -108,7 +109,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
               placeholder="例: A社 ES提出"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
             />
           </div>
 
@@ -126,7 +127,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
               placeholder="例: パン、牛乳、テープ、洗剤"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
             />
           </div>
 
@@ -137,7 +138,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                 htmlFor="task-due-date"
                 className="mb-1 block text-sm font-medium text-foreground"
               >
-                期限日<span className="ml-0.5 text-orange-500">*</span>
+                期限日<span className="ml-0.5 text-brand">*</span>
               </label>
               <input
                 id="task-due-date"
@@ -145,7 +146,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
             </div>
             <div className="w-32">
@@ -163,7 +164,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                 type="time"
                 value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
             </div>
           </div>
@@ -202,7 +203,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                   onClick={() => setRecurrence(value)}
                   className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition-colors ${
                     recurrence === value
-                      ? "bg-orange-500 text-white border-orange-500"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-foreground bg-transparent"
                   }`}
                 >
@@ -220,7 +221,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                     onClick={() => setRecurrenceDayOfWeek(i)}
                     className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                       recurrenceDayOfWeek === i
-                        ? "bg-orange-500 text-white"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
@@ -245,11 +246,11 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                   max={31}
                   value={recurrenceDayOfMonth}
                   onChange={(e) => setRecurrenceDayOfMonth(Number(e.target.value))}
-                  className="w-24 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  className="w-24 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                 />
                 <span className="ml-2 text-sm text-muted-foreground">日</span>
                 {recurrenceDayOfMonth > 28 && (
-                  <p className="mt-1.5 text-xs text-amber-600">
+                  <p className="mt-1.5 text-xs text-brand">
                     2月など短い月はこの日にタスクが表示されません
                   </p>
                 )}
@@ -261,7 +262,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
           <button
             type="submit"
             disabled={saving || !title.trim() || !dueDate}
-            className="w-full rounded-xl bg-orange-500 py-3 text-sm font-bold text-white shadow-sm transition-opacity disabled:opacity-50 active:scale-95"
+            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             {saving ? "保存中..." : "保存する"}
           </button>
