@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Download, Upload } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
   COMMON_DROPS,
@@ -11,6 +12,14 @@ import {
   type DropDef,
 } from "@/lib/domain/drops";
 import { getCollection } from "@/lib/rewardDb";
+import {
+  buildBackupJson,
+  downloadBackup,
+  importBackup,
+  parseBackup,
+  type ParsedBackup,
+} from "@/lib/backup";
+import { playSave, playTap } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
@@ -108,10 +117,142 @@ export function BookScreen() {
             </span>
           )}
         />
+
+        <BackupSection onImported={() => {
+          getCollection()
+            .then((summary) => setCounts(summary.counts))
+            .catch(console.error);
+        }} />
       </main>
 
       <BottomNav />
     </div>
+  );
+}
+
+function BackupSection({ onImported }: { onImported: () => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pending, setPending] = useState<ParsedBackup | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handleExport() {
+    setMessage(null);
+    try {
+      playTap();
+      downloadBackup(await buildBackupJson());
+      setMessage("バックアップファイルを保存しました");
+    } catch (err) {
+      console.error("[backup] export failed:", err);
+      setMessage("エクスポートに失敗しました");
+    }
+  }
+
+  async function handleFileSelected(file: File | undefined) {
+    setMessage(null);
+    setPending(null);
+    if (!file) return;
+    try {
+      setPending(parseBackup(await file.text()));
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "ファイルを読み込めませんでした");
+    }
+  }
+
+  async function handleImportConfirm() {
+    if (!pending || busy) return;
+    setBusy(true);
+    try {
+      await importBackup(pending.payload);
+      playSave();
+      setMessage(`取り込み完了: クエスト${pending.counts.tasks}件 / ドロップ${pending.counts.drops}件`);
+      setPending(null);
+      onImported();
+    } catch (err) {
+      console.error("[backup] import failed:", err);
+      setMessage("取り込みに失敗しました");
+    } finally {
+      setBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  return (
+    <section
+      aria-label="調査データのバックアップ"
+      className="rounded-2xl border border-border bg-card p-4"
+    >
+      <div className="flex items-center gap-2">
+        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">ARCHIVE</p>
+        <p className="text-xs font-semibold text-muted-foreground">調査データのバックアップ</p>
+      </div>
+      <div
+        aria-hidden
+        className="mt-1.5 mb-3 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleExport}
+          className="btn-squish flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+        >
+          <Download className="size-4" aria-hidden />
+          エクスポート
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            playTap();
+            fileInputRef.current?.click();
+          }}
+          className="btn-squish flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+        >
+          <Upload className="size-4" aria-hidden />
+          インポート
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          aria-label="バックアップファイルを選択"
+          onChange={(event) => handleFileSelected(event.target.files?.[0])}
+        />
+      </div>
+      {pending && (
+        <div className="mt-3 rounded-xl bg-brand-soft p-3">
+          <p className="text-sm font-semibold text-brand">
+            クエスト{pending.counts.tasks}件・ドロップ{pending.counts.drops}件を取り込みます
+          </p>
+          <p className="mt-0.5 text-xs text-brand/80">
+            同じIDのデータは上書きされます。既存データが消えることはありません
+          </p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setPending(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+              className="btn-squish flex-1 rounded-lg border border-border bg-card py-2 text-sm font-semibold text-foreground"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={handleImportConfirm}
+              disabled={busy}
+              className="btn-squish flex-1 rounded-lg bg-primary bg-gradient-to-b from-white/20 to-transparent py-2 text-sm font-bold text-primary-foreground disabled:opacity-50"
+            >
+              {busy ? "取り込み中..." : "取り込む"}
+            </button>
+          </div>
+        </div>
+      )}
+      <div aria-live="polite">
+        {message && <p className="mt-2.5 text-xs text-muted-foreground">{message}</p>}
+      </div>
+    </section>
   );
 }
 

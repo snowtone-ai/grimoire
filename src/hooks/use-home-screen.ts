@@ -4,12 +4,21 @@ import { useCallback, useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { type Task } from "@/lib/db";
 import {
+  getAllTasks,
   getTasksForDate,
   getCurrentStreakCount,
   recordStreak,
   syncPlantStateFromTasks,
   toggleTaskComplete,
 } from "@/lib/taskDb";
+import {
+  bountyTaskId,
+  getDailyBounties,
+  isBountyComplete,
+  bountyProgress,
+  type BountyDef,
+} from "@/lib/domain/bounty";
+import { getDepartedTaskIds, markDeparted } from "@/lib/departure";
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -19,13 +28,20 @@ import {
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
 import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
-import { grantDropForTask, type GrantResult } from "@/lib/rewardDb";
+import { getTodayBountyClaims, grantDropForTask, type GrantResult } from "@/lib/rewardDb";
 import {
   playClear,
   playFanfare,
+  playTap,
   playUndo,
   primeAudioOnFirstGesture,
 } from "@/lib/sound";
+
+export interface BountyView {
+  bounty: BountyDef;
+  progress: number;
+  claimed: boolean;
+}
 import { usePlant } from "./use-plant";
 
 export function useHomeScreen() {
@@ -43,6 +59,8 @@ export function useHomeScreen() {
   const [testNotifSent, setTestNotifSent] = useState(false);
   const [showGmailModal, setShowGmailModal] = useState(false);
   const [dropQueue, setDropQueue] = useState<GrantResult[]>([]);
+  const [bountyView, setBountyView] = useState<BountyView[]>([]);
+  const [departedIds, setDepartedIds] = useState<Set<string>>(new Set());
   const today = todayDateString();
 
   const loadTasks = useCallback(
@@ -62,13 +80,52 @@ export function useHomeScreen() {
     setStreakCount(await getCurrentStreakCount());
   }, []);
 
+  /** Recompute bounty progress and auto-claim finished ones (zero friction:
+   * satisfied bounties reward immediately, no claim button to remember). */
+  const evaluateBounties = useCallback(async () => {
+    const [all, claims] = await Promise.all([getAllTasks(), getTodayBountyClaims(today)]);
+    const departed = getDepartedTaskIds(today);
+    const input = {
+      completedToday: all.filter((task) => task.completedAt?.slice(0, 10) === today).length,
+      addedToday: all.filter((task) => task.createdAt.slice(0, 10) === today).length,
+      startedToday: departed.size,
+    };
+
+    const defs = getDailyBounties(today);
+    for (const bounty of defs) {
+      const claimId = bountyTaskId(bounty);
+      if (!claims.has(claimId) && isBountyComplete(bounty, input)) {
+        try {
+          const grant = await grantDropForTask(claimId, today);
+          if (grant) {
+            claims.add(claimId);
+            playClear(grant.rarity);
+            fireDropConfetti(grant.rarity);
+            setDropQueue((queue) => [...queue, grant]);
+          }
+        } catch (err) {
+          console.error("[bounty] claim failed:", err);
+        }
+      }
+    }
+
+    setDepartedIds(departed);
+    setBountyView(
+      defs.map((bounty) => ({
+        bounty,
+        progress: bountyProgress(bounty, input),
+        claimed: claims.has(bountyTaskId(bounty)),
+      }))
+    );
+  }, [today]);
+
   useEffect(() => {
     primeAudioOnFirstGesture();
     initializeNotificationState(setNotifPermission, setNotifBannerDismissed);
     const fallback = setTimeout(() => setLoading(false), 1500);
 
     Promise.resolve()
-      .then(() => Promise.all([loadTasks(), refreshStreak()]))
+      .then(() => Promise.all([loadTasks(), refreshStreak(), evaluateBounties()]))
       .catch((err) => console.error("[home] initial load failed:", err))
       .finally(() => {
         clearTimeout(fallback);
@@ -76,7 +133,7 @@ export function useHomeScreen() {
       });
 
     return () => clearTimeout(fallback);
-  }, [loadTasks, refreshStreak]);
+  }, [loadTasks, refreshStreak, evaluateBounties]);
 
   useEffect(() => {
     if (notifPermission === "granted") {
@@ -134,11 +191,19 @@ export function useHomeScreen() {
       await plant.decrementCompleted();
     }
     await syncPlantStateFromTasks();
+    await evaluateBounties();
     scheduleTaskNotifications().catch(console.error);
   }
 
   function dismissDrop() {
     setDropQueue((queue) => queue.slice(1));
+  }
+
+  function handleDepart(taskId: string) {
+    if (departedIds.has(taskId)) return;
+    playTap();
+    setDepartedIds(markDeparted(today, taskId));
+    evaluateBounties().catch(console.error);
   }
 
   function openAddModal(initialTitle = "") {
@@ -148,6 +213,7 @@ export function useHomeScreen() {
 
   function onTasksChanged() {
     Promise.all([loadTasks(true), syncPlantStateFromTasks()]).catch(console.error);
+    evaluateBounties().catch(console.error);
     scheduleTaskNotifications().catch(console.error);
   }
 
@@ -156,6 +222,9 @@ export function useHomeScreen() {
     plantStage: plant.stage,
     pendingDrop: dropQueue[0] ?? null,
     dismissDrop,
+    bounties: bountyView,
+    departedIds,
+    handleDepart,
     tasks,
     loading,
     showAddModal,

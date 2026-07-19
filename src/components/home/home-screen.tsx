@@ -10,6 +10,7 @@ import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain
 import { isFxEnabled, playTap, setFxEnabled } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { DropReveal } from "@/components/reward/drop-reveal";
+import { BountyBoard } from "./bounty-board";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
 import { TaskEditModal } from "./task-edit-modal";
@@ -58,6 +59,8 @@ export function HomeScreen() {
         stage={screen.plantStage}
       />
 
+      <BountyBoard bounties={screen.bounties} />
+
       <div aria-live="polite">
         {screen.allCompleteMessage && (
           <div className="mx-4 mt-3 animate-pop-in rounded-2xl bg-brand-soft px-4 py-3 text-center">
@@ -92,7 +95,13 @@ export function HomeScreen() {
                 className="task-vt"
                 style={{ viewTransitionName: `t-${task.id.replaceAll(/[^a-zA-Z0-9-]/g, "")}` }}
               >
-                <TaskCard task={task} onToggle={screen.handleToggle} onTap={screen.setEditingTask} />
+                <TaskCard
+                  task={task}
+                  departed={screen.departedIds.has(task.id)}
+                  onToggle={screen.handleToggle}
+                  onTap={screen.setEditingTask}
+                  onDepart={screen.handleDepart}
+                />
               </li>
             ))}
           </ul>

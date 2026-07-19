@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Footprints } from "lucide-react";
 import { type Task } from "@/lib/db";
 import { CATEGORY_CONFIG } from "@/lib/domain/category";
 
 interface TaskCardProps {
   task: Task;
+  departed: boolean;
   onToggle: (taskId: string) => Promise<void>;
   onTap: (task: Task) => void;
+  onDepart: (taskId: string) => void;
 }
 
-export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
+export function TaskCard({ task, departed, onToggle, onTap, onDepart }: TaskCardProps) {
   const config = CATEGORY_CONFIG[task.category];
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -92,6 +94,20 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
             {config.label}
           </span>
         </button>
+        {!task.completed && (
+          <button
+            type="button"
+            onClick={() => onDepart(task.id)}
+            disabled={departed}
+            aria-pressed={departed}
+            aria-label={departed ? "出発済み" : "このクエストに出発する"}
+            className={`btn-squish flex size-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+              departed ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            <Footprints className="size-4" aria-hidden />
+          </button>
+        )}
         <button
           type="button"
           onClick={(event) => {
