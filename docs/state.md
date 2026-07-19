@@ -13,11 +13,11 @@
 - None
 
 ## Next
-- On-device QA after the auto-deploy finishes (drop reveal + sounds, /book, page
-  turn, dark scheme, DB v3 migration keeps existing tasks).
-- Manual (human, dashboard): Vercel project rename task-plant -> grimoire, then
-  re-add the old production domain in Settings > Domains so the installed PWA
-  origin (and its IndexedDB data) keeps working. See HANDOFF-JA.md.
+- On-device QA after the auto-deploy finishes (atmosphere/aurora, snowfall on the
+  lab, QUEST CLEAR banner, drop reveal + sounds, /book, page turn, DB v3 migration
+  keeps existing tasks).
+- Vercel project name stays "task-plant" by user decision (renaming would change
+  the production origin and orphan on-device IndexedDB data).
 - Manual (human, post-session): local folder rename to "grimoire".
 - Next agent task: T018 (bounty board + 出発 button + streak insurance); consider
   adding JSON export/import there to make future origin migrations data-safe.

@@ -276,7 +276,7 @@ export function TaskEditModal({
           <button
             type="submit"
             disabled={saving || !title.trim() || !dueDate}
-            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 transition-all disabled:opacity-50 active:scale-[0.98]"
+            className="btn-squish w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 inset-shadow-[0_1px_0_rgba(255,255,255,0.25)] disabled:opacity-50"
           >
             {saving ? "保存中..." : "変更を保存"}
           </button>

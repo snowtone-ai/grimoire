@@ -27,9 +27,11 @@ export function BookScreen() {
   const discovered = counts?.size ?? 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col">
       <header className="aurora px-5 pt-8 pb-4">
-        <p className="text-[11px] font-bold tracking-[0.22em] text-frost">SURVEY NOTES</p>
+        <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+          SURVEY NOTES
+        </p>
         <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
           調査記録
         </h1>
@@ -134,7 +136,7 @@ function Section({
 
   return (
     <section aria-label={title}>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-1.5 flex items-center gap-2">
         <h2 className="text-sm font-bold text-foreground">{title}</h2>
         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider ${badgeClass}`}>
           {rarityBadge}
@@ -143,6 +145,10 @@ function Section({
           {foundCount}/{drops.length}
         </span>
       </div>
+      <div
+        aria-hidden
+        className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
+      />
       <ul className={`grid ${columns} gap-2`}>
         {drops.map((drop) => {
           const count = counts?.get(drop.id) ?? 0;

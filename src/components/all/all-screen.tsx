@@ -90,9 +90,14 @@ export function AllScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col">
       <header className="px-4 pt-8 pb-3 flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">全タスク</h1>
+        <div>
+          <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+            FIELD MAP
+          </p>
+          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">全クエスト</h1>
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -140,7 +145,7 @@ export function AllScreen() {
           playTap();
           setShowAddModal(true);
         }}
-        className="btn-squish fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35"
+        className="btn-squish fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary bg-gradient-to-b from-white/25 to-transparent text-primary-foreground shadow-lg shadow-primary/35 inset-shadow-[0_1px_0_rgba(255,255,255,0.3)]"
         style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
       >
         <Plus className="size-6" />

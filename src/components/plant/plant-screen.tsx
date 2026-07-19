@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { usePlant } from "@/hooks/use-plant";
 import { calcProgress, getStageLabel } from "@/lib/domain/plant";
@@ -20,7 +20,8 @@ export function PlantScreen() {
   }, []);
 
   return (
-    <div className={`relative flex min-h-dvh flex-col overflow-hidden bg-background ${flipped ? "flip-enter" : ""}`}>
+    <div className={`relative flex min-h-dvh flex-col overflow-hidden ${flipped ? "flip-enter" : ""}`}>
+      {!isBlooming && <Snowfall />}
       {isBlooming ? (
         <>
           <Image
@@ -40,8 +41,10 @@ export function PlantScreen() {
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <div className="mb-4 text-center drop-shadow-sm">
-          <p className={`text-[11px] font-bold tracking-[0.22em] ${isBlooming ? "text-white/80" : "text-frost"}`}>
-            植生研究所
+          <p
+            className={`font-display text-[10px] font-bold tracking-[0.28em] ${isBlooming ? "text-white/80" : "text-frost"}`}
+          >
+            BOTANICAL LAB <span aria-hidden>✦</span> 植生研究所
           </p>
           <p className={`text-2xl font-bold ${isBlooming ? "text-white" : "text-foreground"}`}>{species.name}</p>
           <p className={`text-sm ${isBlooming ? "text-white/85" : "text-muted-foreground"}`}>
@@ -97,6 +100,40 @@ export function PlantScreen() {
         )}
       </div>
       <BottomNav />
+    </div>
+  );
+}
+
+/* Eight slow flakes with staggered lanes — ambient, never busy.
+ * Hidden entirely under prefers-reduced-motion (globals.css). */
+const SNOWFLAKES = [
+  { left: "6%", size: 3, dur: 17, delay: -3, sway: 26 },
+  { left: "18%", size: 2, dur: 21, delay: -11, sway: -18 },
+  { left: "31%", size: 4, dur: 14, delay: -6, sway: 32 },
+  { left: "44%", size: 2, dur: 23, delay: -1, sway: -24 },
+  { left: "58%", size: 3, dur: 16, delay: -9, sway: 20 },
+  { left: "70%", size: 2, dur: 20, delay: -14, sway: -30 },
+  { left: "83%", size: 4, dur: 15, delay: -5, sway: 22 },
+  { left: "93%", size: 2, dur: 22, delay: -17, sway: -16 },
+] as const;
+
+function Snowfall() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {SNOWFLAKES.map((flake) => (
+        <span
+          key={flake.left}
+          className="snowflake"
+          style={{
+            left: flake.left,
+            width: flake.size,
+            height: flake.size,
+            "--dur": `${flake.dur}s`,
+            "--delay": `${flake.delay}s`,
+            "--sway": `${flake.sway}px`,
+          } as CSSProperties}
+        />
+      ))}
     </div>
   );
 }
