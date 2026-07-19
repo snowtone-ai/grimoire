@@ -15,8 +15,10 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
   const config = CATEGORY_CONFIG[task.category];
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const nowTime = new Date().toTimeString().slice(0, 5); // HH:MM
+  const now = new Date();
+  const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const isOverdue = !task.completed && task.dueTime !== null && task.dueTime < nowTime;
+  const detailId = `task-detail-${task.id}`;
 
   async function handleCheck() {
     if (busy) return;
@@ -98,6 +100,7 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
           }}
           className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted active:scale-90"
           aria-expanded={expanded}
+          aria-controls={detailId}
           aria-label={expanded ? "詳細を折りたたむ" : "詳細を展開する"}
         >
           <ChevronDown
@@ -106,6 +109,7 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
         </button>
       </div>
       <div
+        id={detailId}
         inert={!expanded}
         className={`grid transition-[grid-template-rows] duration-300 ease-fluid ${
           expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"

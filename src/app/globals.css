@@ -120,9 +120,11 @@
   --card-foreground: oklch(0.215 0.015 60);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.215 0.015 60);
-  /* Primary fills pair vivid orange with deep-brown text (AA on both schemes). */
-  --primary: oklch(0.705 0.213 47.6);
-  --primary-foreground: oklch(0.19 0.04 45);
+  /* Primary fills pair vivid orange with deep-brown text. L=0.66 keeps the
+   * fill >=3:1 against the near-white background (WCAG 1.4.11) while the
+   * dark text stays >=4.5:1 on the fill. */
+  --primary: oklch(0.66 0.21 45);
+  --primary-foreground: oklch(0.16 0.035 45);
   --secondary: oklch(0.955 0.01 80);
   --secondary-foreground: oklch(0.215 0.015 60);
   --muted: oklch(0.952 0.008 80);
@@ -132,7 +134,7 @@
   --destructive: oklch(0.55 0.23 27.3);
   --border: oklch(0.905 0.01 80);
   --input: oklch(0.905 0.01 80);
-  --ring: oklch(0.705 0.213 47.6);
+  --ring: oklch(0.66 0.21 45);
   --brand: oklch(0.553 0.195 38.4);
   --brand-soft: oklch(0.962 0.028 65);
   --success: oklch(0.5 0.14 150);
@@ -157,7 +159,7 @@
     --popover: oklch(0.215 0.014 60);
     --popover-foreground: oklch(0.955 0.008 80);
     --primary: oklch(0.75 0.183 55.9);
-    --primary-foreground: oklch(0.19 0.04 45);
+    --primary-foreground: oklch(0.16 0.035 45);
     --secondary: oklch(0.27 0.015 60);
     --secondary-foreground: oklch(0.955 0.008 80);
     --muted: oklch(0.26 0.014 60);

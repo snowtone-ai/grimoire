@@ -197,7 +197,11 @@ function ProgressRing({
       aria-valuemin={0}
       aria-valuemax={Math.max(totalCount, 1)}
       aria-valuenow={completedCount}
-      aria-label={`今日のタスク ${totalCount}件中${completedCount}件完了`}
+      aria-label={
+        totalCount === 0
+          ? "今日のタスクはありません"
+          : `今日のタスク ${totalCount}件中${completedCount}件完了`
+      }
       className="relative size-[84px] shrink-0"
     >
       <svg viewBox="0 0 76 76" className="size-full -rotate-90">
