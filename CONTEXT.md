@@ -1,9 +1,10 @@
-# CONTEXT.md -- Task Plant Domain Vocabulary
+# CONTEXT.md -- Grimoire Domain Vocabulary
 
 ## Product Name
-- Canonical name: Task Plant
-- Legacy name: Focus Task Manager / task-manager
-- Package name: task-plant
+- Canonical name: Grimoire
+- Legacy names: Task Plant / Focus Task Manager / task-manager
+- Package name: grimoire
+- GitHub repo: snowtone-ai/grimoire (renamed from snowtone-ai/task-plant)
 
 ## User
 - 不注意優勢型ADHDの就活中大学生。
@@ -40,6 +41,6 @@
 （効果音/エフェクトは単一文法で、ランダム刺激疲れを防ぐ）。
 
 ## Naming Rules
-- User-facing product name is Task Plant.
+- User-facing product name is Grimoire.
 - Keep code identifiers in English.
 - Keep Japanese UI copy concise and action-oriented.

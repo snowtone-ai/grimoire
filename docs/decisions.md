@@ -251,3 +251,23 @@
   （無罰原則に反する）、完了毎の固定演出のみ（変動性がなく飽きる）。
 - 将来見直し条件: T018（バウンティボード+出発ボタン+ストリーク保険）実装時に
   ドロップ率・天井値を実使用データで再調整する。
+
+## D-023: プロダクト名変更 — Grimoire（旧 Task Plant）+ アイコン刷新
+- 日付: 2026-07-19
+- 対象: branding / assets / infra
+- 決定: プロダクト名を「Grimoire」へ変更。適用範囲は package.json name、PWA表示名
+  （manifest name/short_name、layout metadata title/applicationName/appleWebApp.title —
+  スマホのホーム画面に表示される名前）、README、CLAUDE.md/CONTEXT.md ヘッダ、
+  verify バナー、GitHubリポジトリ名（snowtone-ai/task-plant → snowtone-ai/grimoire、
+  旧URLはGitHubが自動リダイレクト）。歴史的記録（decisions の過去エントリ、tasks.md の
+  過去行、docs/implementation-plan.md）は証跡保全のため書き換えない。
+- アイコン: 手描きSVG（public/icon.svg）を新規作成 — 凍夜の紺グラデーション地に、
+  フロストシアンの雪ルーン円環と炉の火の宝珠を戴く魔導書、金の留め具、エンバーの栞。
+  既存の sharp パイプライン（scripts/gen-icons.mjs）で 192/512 + maskable 2種を再生成。
+  Canva生成ではなくSVG手描きを選択（リポジトリ内で再現可能・依存最小・ベクター原本）。
+  sharp は require されていたのに未宣言だったため devDependency として明示追加。
+- 併せて修正: gen-icons.mjs の maskable 変換が背景rectごと0.8倍縮小して外周10%が
+  透過になる潜在バグを、背景フルブリード+コンテンツのみ縮小に修正。
+- ローカルフォルダ名（プロダクト/task-plant）はセッション稼働中のためリネーム不可。
+  ユーザーがセッション終了後に手動でリネームする（HANDOFF-JA.md 参照）。
+- 将来見直し条件: なし

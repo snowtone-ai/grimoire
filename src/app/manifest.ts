@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Task Plant",
-    short_name: "Task Plant",
+    name: "Grimoire",
+    short_name: "Grimoire",
     description:
       "クエストを達成して素材を集め、凍てついた調査拠点の植物を育てるADHDフレンドリーなタスク管理PWA",
     start_url: "/",

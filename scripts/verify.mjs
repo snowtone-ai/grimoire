@@ -17,7 +17,7 @@ const requiredPaths = [
 
 const failures = []
 
-console.log('=== Task Plant verification ===')
+console.log('=== Grimoire verification ===')
 for (const file of requiredPaths) {
   const ok = existsSync(file)
   console.log(`${ok ? 'OK' : 'MISSING'} ${file}`)

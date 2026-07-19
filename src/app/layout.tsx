@@ -14,14 +14,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Task Plant",
+  title: "Grimoire",
   description:
     "クエストを達成して素材を集め、凍てついた調査拠点の植物を育てるADHDフレンドリーなタスク管理PWA",
-  applicationName: "Task Plant",
+  applicationName: "Grimoire",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Task Plant",
+    title: "Grimoire",
   },
   formatDetection: {
     telephone: false,
