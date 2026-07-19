@@ -1,4 +1,4 @@
-# HANDOFF-JA.md -- pm-zero v9.4
+# HANDOFF-JA.md -- pm-zero v11
 
 ## 完了報告テンプレート
 
@@ -21,6 +21,12 @@
 - Command:
 - Result:
 - Evidence location:
+
+### 自己レビュー
+- レビューティア: Tier 1 (Sonnet) / Tier 2 (Opus) / Tier 2→1 代替
+- レビュアー:
+- 結果: pass / fail
+- 主な指摘:
 
 ### Residual Risk
 - 

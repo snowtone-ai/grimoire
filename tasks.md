@@ -1,11 +1,12 @@
-# tasks.md -- pm-zero v9.4 Execution Ledger
+# tasks.md -- pm-zero v11 Execution Ledger
 
 ## Goal Binding
 - Vision source: docs/vision.md
-- Active goal: Maintain Task Plant under pm-zero v9.4 with product code changes tracked as explicit tasks.
-- Planning owner: Codex CLI
-- Implementation owner: Codex CLI
-- Review owner: Codex CLI self-audit; cross-vendor review required only for trigger work.
+- Active goal: Maintain Task Plant under pm-zero v11 with product code changes tracked as explicit tasks.
+- Main agent: Claude Code (Sonnet-first) — sole owner of this ledger.
+- Implementation: Claude Code main agent; Sonnet worker subagents on disjoint scopes.
+- Review: fresh-context Sonnet subagent (Tier 1); Opus (Tier 2) for top-risk classes when available.
+- Historical rows below owned "Codex CLI" under pm-zero v9.4; kept as-is for evidence integrity.
 
 ## Status Vocabulary
 - proposed: idea exists, not ready
@@ -17,11 +18,12 @@
 - verified: evidence recorded
 
 ## Parallelization Rules
-- Coordinator owns tasks.md.
-- Worker agents own only their assigned Write Scope.
-- Parallel implementation requires disjoint Write Scopes or isolated worktrees.
+- The main agent owns tasks.md.
+- Worker subagents own only their assigned Write Scope.
+- Parallel implementation requires disjoint Write Scopes or worktree isolation.
 - If two tasks need the same file, serialize them.
-- Subagents return reports; coordinator updates tasks.md.
+- Default cap: <=2 concurrent worker subagents on a Pro plan.
+- Subagents return reports; the main agent updates tasks.md.
 
 ## Tasks
 | ID | Status | Owner | Depends On | Write Scope | Acceptance | Verification | Evidence |
@@ -40,6 +42,7 @@
 | T012 | verified | Codex CLI | T011 | src/components/navigation/bottom-nav.tsx, src/components/plant/plant-screen.tsx, docs/state.md, tasks.md | 開花写真表示中でもスマホの下部ナビでホーム/カレンダーへ遷移できる | pnpm lint; pnpm typecheck; pnpm test; pnpm build; pnpm verify; browser mobile smoke; git diff --check | 2026-05-17: reward image and overlay made non-interactive; bottom nav given explicit z-index; mobile 390x844 smoke confirmed /plant photo state can navigate to / and /all with no console errors |
 | T013 | verified | Codex CLI | T012 | src/hooks/use-home-screen.ts, tasks.md | Home screen initialization keeps the same behavior while React hook dependencies are explicit and the exhaustive-deps suppression is removed | pnpm lint; pnpm typecheck; pnpm test; pnpm build | 2026-05-17: initial lint exposed react-hooks/set-state-in-effect; load moved behind a microtask; lint/typecheck/test/build passed. |
 | T014 | verified | Codex CLI | T013 | src/lib/gemini.ts, src/components/home/voice-input-button.tsx, docs/state.md, tasks.md | 音声タスク登録でGemini APIが400を返しても、リクエスト形式/モデルのフォールバックで復旧可能であり、空音声入力も安全に扱える | pnpm lint; pnpm typecheck; pnpm test; pnpm build; pnpm verify | 2026-05-25: gemini client fallback (payload/model) added; transcript empty guard added; lint/typecheck/test/build/verify passed. |
+| T015 | verified | Claude Code | none | CLAUDE.md, .claude/settings.json, HANDOFF-JA.md, docs/state.md, docs/repo-map.md, docs/decisions.md, tasks.md, scripts/verify.mjs; removed AGENTS.md, OS-KERNEL.md, MEMORY.md, docs/codex-prompt.md | Non-source governance files match pm-zero v11: self-contained CLAUDE.md, bypassPermissions project settings, Codex/AGENTS artifacts removed, tiered self-review documented; product source untouched | pnpm verify; git diff --check | 2026-07-19: node scripts/verify.mjs all checks passed (lint/typecheck/test/build); git diff --check clean; product source unchanged. |
 
 ## Execution Pointer
 Current active task, executor, write lock, and latest verification live in docs/state.md.
@@ -52,3 +55,4 @@ Current active task, executor, write lock, and latest verification live in docs/
 | Task | Reviewer | Result | Follow-up |
 |---|---|---|---|
 | T001 | Codex CLI self-audit | pass | Cross-vendor review not triggered; changes are OS docs/scripts and package scripts only. |
+| T015 | Claude Code self-audit (Tier 1) | pass | pm-zero v11 governance migration; docs/config only, no product source changed. |

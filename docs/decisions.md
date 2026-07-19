@@ -178,3 +178,23 @@
 - 実例2: 人物・ブランド・ロゴ・文字が主役になる写真は避ける。
 - 実例3: 選定後に `public/plant-rewards/` 配下で画面用サイズへトリミング・圧縮する。
 - 将来見直し条件: 無料素材で花種や季節感の品質が不足する場合、ユーザー提供写真または有料素材を検討する。
+
+## D-020: pm-zero v9.4 -> v11 governance migration
+- Date: 2026-07-19
+- Target: OS/governance files (non-source)
+- Decision: Migrate all non-source governance files to pm-zero v11: CLAUDE.md becomes the
+  self-contained always-on ruleset; AGENTS.md and the Codex model-routing are removed
+  (v11 is Claude Code only); .claude/settings.json adopts the v11 project template
+  (bypassPermissions + guard-hook deny mirrors + autocompact 50); self-review is tiered
+  (Tier 1 fresh Sonnet default, Tier 2 Opus for top-risk classes).
+- Rationale: v11 is the Budget-Bound Autonomous Solo-Dev OS. It reasons from a hard Pro-plan
+  budget and a single Claude Code agent, so the dual-agent (Codex) split, the AGENTS.md
+  adapter layer, and the mandatory-Opus review gate are dropped. Behavior lives in a lean
+  CLAUDE.md that reloads every turn; project facts stay in the git ledger.
+- Consequence: Removed AGENTS.md (folded into CLAUDE.md), docs/codex-prompt.md (Codex-only),
+  and the deprecated tombstones OS-KERNEL.md and MEMORY.md (v11 auto-memory is user-level,
+  not a project stub). scripts/verify.mjs no longer requires AGENTS.md. Historical tasks.md
+  rows keep their "Codex CLI" owner for evidence integrity; docs/implementation-plan.md is
+  retained unchanged as a historical planning artifact.
+- Future review: if Codex or another second agent is reintroduced, re-add a thin adapter and
+  record the concrete need here.
