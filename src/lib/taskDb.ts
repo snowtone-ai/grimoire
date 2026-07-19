@@ -4,9 +4,9 @@ import {
   sortTasksByTime,
   taskForDisplayDate,
   todayDateString,
-  toDateStr,
 } from "./domain/task-date";
 import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant";
+import { calcStreakCount } from "./domain/streak";
 
 // ── Task CRUD ──────────────────────────────────────────────────────────────
 
@@ -132,29 +132,12 @@ export async function recordStreak(
 }
 
 /**
- * 現在の連続全完了日数を計算する
- * - タスクが0件の日はカウントしない（Assumptions参照）
- * - allCompleted=true の日だけを連続日数に加算する
+ * 現在の連続全完了日数を計算する（保険つき）
+ * - 未完のままの「今日」は連鎖を切らない（朝に🔥が消えない）
+ * - 1連鎖につき1日まで、欠けた日を保険で吸収する（カウントには入れない）
+ * - 判定ロジックは純関数 domain/streak.ts に分離（テスト対象）
  */
 export async function getCurrentStreakCount(): Promise<number> {
-  const streaks = await db.streaks.orderBy("date").reverse().toArray();
-  if (streaks.length === 0) return 0;
-
-  let count = 0;
-  const todayStr = todayDateString();
-
-  for (let i = 0; i < streaks.length; i++) {
-    const streak = streaks[i];
-    if (!streak.allCompleted) break;
-
-    // ローカル日付ベースで期待値を算出（ISO変換によるUTCズレを回避）
-    const d = new Date(`${todayStr}T00:00:00`);
-    d.setDate(d.getDate() - i);
-    const expected = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
-
-    if (streak.date !== expected) break;
-    count++;
-  }
-
-  return count;
+  const streaks = await db.streaks.toArray();
+  return calcStreakCount(streaks, todayDateString());
 }

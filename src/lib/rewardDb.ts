@@ -59,6 +59,16 @@ export interface CollectionSummary {
   totalRolls: number;
 }
 
+/** Bounty ids already rewarded today (claim ledger = drops table). */
+export async function getTodayBountyClaims(dateKey: string): Promise<Set<string>> {
+  const todays = await db.drops.where("dateKey").equals(dateKey).toArray();
+  return new Set(
+    todays
+      .map((record) => record.taskId)
+      .filter((taskId) => taskId.startsWith("bounty:"))
+  );
+}
+
 export async function getCollection(): Promise<CollectionSummary> {
   const all: DropRecord[] = await db.drops.toArray();
   const counts = new Map<string, number>();
