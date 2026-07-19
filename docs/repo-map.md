@@ -1,4 +1,4 @@
-# repo-map.md -- pm-zero v9.4 Repository Map
+# repo-map.md -- pm-zero v11 Repository Map
 
 ## Read Policy
 - Session start: read Summary only.
@@ -43,7 +43,7 @@
 | Domain change | docs/decisions.md, src/lib/domain/ | src/lib/domain/, tests/ | pnpm test |
 | Screen change | docs/vision.md, relevant component | src/components/, src/hooks/ | pnpm lint; pnpm typecheck; pnpm build |
 | External API change | docs/decisions.md | src/lib/api/, src/hooks/ | pnpm lint; pnpm typecheck; pnpm build |
-| pm-zero docs | AGENTS.md | tasks.md, docs/, scripts/ | git diff --check; pnpm verify |
+| pm-zero docs | CLAUDE.md | tasks.md, docs/, scripts/ | git diff --check; pnpm verify |
 
 ## Generated / External Files
 | Path | Rule |

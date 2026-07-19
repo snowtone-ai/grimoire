@@ -4,7 +4,6 @@ import { existsSync } from 'node:fs'
 
 const pnpm = 'pnpm'
 const requiredPaths = [
-  'AGENTS.md',
   'CLAUDE.md',
   'HANDOFF-JA.md',
   'tasks.md',
