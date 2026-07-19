@@ -18,6 +18,7 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
+import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
 import { usePlant } from "./use-plant";
 
 export function useHomeScreen() {
@@ -36,11 +37,18 @@ export function useHomeScreen() {
   const [showGmailModal, setShowGmailModal] = useState(false);
   const today = todayDateString();
 
-  const loadTasks = useCallback(async () => {
-    const loaded = await getTasksForDate(today);
-    setTasks(loaded);
-    return loaded;
-  }, [today]);
+  const loadTasks = useCallback(
+    async (animate = false) => {
+      const loaded = await getTasksForDate(today);
+      if (animate) {
+        withViewTransition(() => setTasks(loaded));
+      } else {
+        setTasks(loaded);
+      }
+      return loaded;
+    },
+    [today]
+  );
 
   const refreshStreak = useCallback(async () => {
     setStreakCount(await getCurrentStreakCount());
@@ -89,7 +97,7 @@ export function useHomeScreen() {
     if (!task) return;
 
     await toggleTaskComplete(taskId);
-    const newTasks = await loadTasks();
+    const newTasks = await loadTasks(true);
     await updateCompletionEffects({
       isCompleting: !task.completed,
       allDone: newTasks.length > 0 && newTasks.every((item) => item.completed),
@@ -112,11 +120,13 @@ export function useHomeScreen() {
   }
 
   function onTasksChanged() {
-    Promise.all([loadTasks(), syncPlantStateFromTasks()]).catch(console.error);
+    Promise.all([loadTasks(true), syncPlantStateFromTasks()]).catch(console.error);
     scheduleTaskNotifications().catch(console.error);
   }
 
   return {
+    plantSpecies: plant.species,
+    plantStage: plant.stage,
     tasks,
     loading,
     showAddModal,
@@ -188,6 +198,7 @@ async function updateCompletionEffects({
 }
 
 function fireNormalConfetti() {
+  if (prefersReducedMotion()) return;
   confetti({
     particleCount: 80,
     spread: 60,
@@ -197,6 +208,7 @@ function fireNormalConfetti() {
 }
 
 function fireAllCompleteConfetti() {
+  if (prefersReducedMotion()) return;
   confetti({
     particleCount: 120,
     angle: 60,

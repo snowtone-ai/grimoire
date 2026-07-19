@@ -1,9 +1,11 @@
 "use client";
 
-import { Mail, Plus } from "lucide-react";
+import Link from "next/link";
+import { Leaf, Mail, Plus } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import { todayDateString } from "@/lib/domain/task-date";
+import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain/plant";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
@@ -14,7 +16,6 @@ export function HomeScreen() {
   const screen = useHomeScreen();
   const completedCount = screen.tasks.filter((task) => task.completed).length;
   const totalCount = screen.tasks.length;
-  const progressPct = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const dateLabel = new Date(`${todayDateString()}T00:00:00`).toLocaleDateString("ja-JP", {
     month: "long",
     day: "numeric",
@@ -23,28 +24,38 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="flex items-center justify-between px-4 pt-8 pb-3">
+      <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
-          <p className="text-xs text-muted-foreground">{dateLabel}</p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">今日のタスク</h1>
+          <p className="text-[13px] font-medium text-muted-foreground">{dateLabel}</p>
+          <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
+            今日のタスク
+          </h1>
         </div>
         <button
           type="button"
           onClick={() => screen.setShowGmailModal(true)}
-          className="p-2 text-muted-foreground transition-transform active:scale-95"
+          className="flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs transition-transform active:scale-90"
           aria-label="Gmailからインポート"
         >
           <Mail className="size-5" />
         </button>
       </header>
 
-      {screen.streakCount > 0 && (
-        <div className="px-4 pb-1">
-          <p className="text-sm font-semibold text-orange-500">
-            🔥 {screen.streakCount}日連続全完了！
-          </p>
-        </div>
-      )}
+      <HeroCard
+        completedCount={completedCount}
+        totalCount={totalCount}
+        streakCount={screen.streakCount}
+        species={screen.plantSpecies}
+        stage={screen.plantStage}
+      />
+
+      <div aria-live="polite">
+        {screen.allCompleteMessage && (
+          <div className="mx-4 mt-3 animate-pop-in rounded-2xl bg-brand-soft px-4 py-3 text-center">
+            <p className="text-sm font-bold text-brand">🎉 全タスク完了！すごい！</p>
+          </div>
+        )}
+      </div>
 
       <NotificationPanel
         permission={screen.notifPermission}
@@ -55,19 +66,11 @@ export function HomeScreen() {
         onDismiss={screen.handleDismissNotifBanner}
         onTest={screen.handleTestNotification}
       />
-      <ProgressPanel
-        completedCount={completedCount}
-        totalCount={totalCount}
-        progressPct={progressPct}
-      />
 
-      {screen.allCompleteMessage && (
-        <div className="mx-4 mb-2 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-center animate-bounce">
-          <p className="text-sm font-bold text-orange-600">🎉 全タスク完了！すごい！</p>
-        </div>
-      )}
-
-      <main className="flex-1 px-4 pt-2" style={{ paddingBottom: "calc(8rem + env(safe-area-inset-bottom))" }}>
+      <main
+        className="flex-1 px-4 pt-4"
+        style={{ paddingBottom: "calc(8.5rem + env(safe-area-inset-bottom))" }}
+      >
         {screen.loading ? (
           <LoadingState />
         ) : screen.tasks.length === 0 ? (
@@ -75,7 +78,10 @@ export function HomeScreen() {
         ) : (
           <ul className="space-y-3">
             {screen.tasks.map((task) => (
-              <li key={task.id}>
+              <li
+                key={task.id}
+                style={{ viewTransitionName: `t-${task.id.replaceAll(/[^a-zA-Z0-9-]/g, "")}` }}
+              >
                 <TaskCard task={task} onToggle={screen.handleToggle} onTap={screen.setEditingTask} />
               </li>
             ))}
@@ -114,6 +120,114 @@ export function HomeScreen() {
   );
 }
 
+function HeroCard({
+  completedCount,
+  totalCount,
+  streakCount,
+  species,
+  stage,
+}: {
+  completedCount: number;
+  totalCount: number;
+  streakCount: number;
+  species: PlantSpecies;
+  stage: GrowthStage;
+}) {
+  const remaining = totalCount - completedCount;
+  let title: string;
+  let sub: string;
+  if (totalCount === 0) {
+    title = "今日は予定なし";
+    sub = "ゆっくり休むのも大事な一日";
+  } else if (remaining === 0) {
+    title = "全タスク完了！";
+    sub = "今日のぶんは全部やりきりました";
+  } else if (completedCount === 0) {
+    title = `今日は${totalCount}件`;
+    sub = "まず1件だけ、始めてみましょう";
+  } else {
+    title = `あと${remaining}件`;
+    sub = `${completedCount}件完了、いい調子です`;
+  }
+
+  return (
+    <section
+      aria-label="今日の進捗"
+      className="mx-4 animate-pop-in rounded-3xl border border-border bg-card p-5 shadow-sm"
+    >
+      <div className="flex items-center gap-5">
+        <ProgressRing completedCount={completedCount} totalCount={totalCount} />
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-bold text-foreground text-balance">{title}</p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">{sub}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {streakCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand">
+                🔥 {streakCount}日連続
+              </span>
+            )}
+            <Link
+              href="/plant"
+              className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold text-success transition-transform active:scale-95"
+            >
+              <Leaf className="size-3.5" aria-hidden />
+              {species.name}・{getStageLabel(stage)}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgressRing({
+  completedCount,
+  totalCount,
+}: {
+  completedCount: number;
+  totalCount: number;
+}) {
+  const radius = 30;
+  const circumference = 2 * Math.PI * radius;
+  const fraction = totalCount > 0 ? completedCount / totalCount : 0;
+
+  return (
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={Math.max(totalCount, 1)}
+      aria-valuenow={completedCount}
+      aria-label={`今日のタスク ${totalCount}件中${completedCount}件完了`}
+      className="relative size-[84px] shrink-0"
+    >
+      <svg viewBox="0 0 76 76" className="size-full -rotate-90">
+        <circle cx="38" cy="38" r={radius} fill="none" strokeWidth="7" className="stroke-muted" />
+        <circle
+          cx="38"
+          cy="38"
+          r={radius}
+          fill="none"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - fraction)}
+          className="stroke-primary transition-[stroke-dashoffset] duration-700 ease-fluid"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+        {totalCount === 0 ? (
+          <span className="text-xl select-none">🌱</span>
+        ) : (
+          <span className="text-lg font-bold tabular-nums text-foreground">
+            {completedCount}
+            <span className="text-sm font-semibold text-muted-foreground">/{totalCount}</span>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NotificationPanel({
   permission,
   dismissed,
@@ -133,15 +247,26 @@ function NotificationPanel({
 }) {
   if (!dismissed && permission === "default" && hasTasks) {
     return (
-      <div className="mx-4 mb-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+      <div className="mx-4 mt-3 rounded-2xl border border-brand/20 bg-brand-soft px-4 py-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-orange-700">🔔 締切通知を有効にしますか？</p>
-            <p className="mt-0.5 text-xs text-orange-600">締切前日・当日の朝9時にリマインドします</p>
+            <p className="text-sm font-semibold text-brand">🔔 締切通知を有効にしますか？</p>
+            <p className="mt-0.5 text-xs text-brand/80">締切前日・当日の朝9時にリマインドします</p>
           </div>
-          <button type="button" aria-label="通知バナーを閉じる" onClick={onDismiss} className="text-orange-400 hover:text-orange-600 text-lg leading-none">×</button>
+          <button
+            type="button"
+            aria-label="通知バナーを閉じる"
+            onClick={onDismiss}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand/60 transition-colors hover:text-brand"
+          >
+            <span aria-hidden className="text-lg leading-none">×</span>
+          </button>
         </div>
-        <button type="button" onClick={onRequest} className="mt-2 w-full rounded-lg bg-orange-500 py-2 text-sm font-semibold text-white active:scale-95 transition-transform">
+        <button
+          type="button"
+          onClick={onRequest}
+          className="mt-2 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+        >
           通知を許可する
         </button>
       </div>
@@ -150,54 +275,53 @@ function NotificationPanel({
   if (permission !== "granted" || dismissed) return null;
 
   return (
-    <div className="mx-4 mb-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+    <div className="mx-4 mt-3 rounded-2xl border border-success/20 bg-success-soft px-4 py-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-green-700">🔔 通知が有効です</p>
-        <button type="button" onClick={onDismiss} className="text-green-400 hover:text-green-600 text-lg leading-none">×</button>
+        <p className="text-sm font-medium text-success">🔔 通知が有効です</p>
+        <button
+          type="button"
+          aria-label="通知バナーを閉じる"
+          onClick={onDismiss}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-success/60 transition-colors hover:text-success"
+        >
+          <span aria-hidden className="text-lg leading-none">×</span>
+        </button>
       </div>
-      <button type="button" onClick={onTest} className="mt-2 w-full rounded-lg border border-green-300 bg-white py-2 text-sm font-semibold text-green-700 active:scale-95 transition-transform">
+      <button
+        type="button"
+        onClick={onTest}
+        className="mt-2 w-full rounded-xl border border-success/30 bg-card py-2.5 text-sm font-semibold text-success transition-transform active:scale-[0.98]"
+      >
         {testSent ? "✓ 送信しました！" : "テスト通知を送る"}
       </button>
     </div>
   );
 }
 
-function ProgressPanel({
-  completedCount,
-  totalCount,
-  progressPct,
-}: {
-  completedCount: number;
-  totalCount: number;
-  progressPct: number;
-}) {
-  return (
-    <div className="px-4 pb-2">
-      <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-        <span>{totalCount > 0 ? `${completedCount}/${totalCount} 完了` : "タスクなし"}</span>
-        {totalCount > 0 && completedCount === totalCount && <span className="font-semibold text-orange-500">全完了！</span>}
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-orange-500 transition-all duration-500 ease-out" style={{ width: `${progressPct}%` }} />
-      </div>
-    </div>
-  );
-}
-
 function LoadingState() {
   return (
-    <div className="flex items-center justify-center py-24">
-      <p className="text-sm text-muted-foreground">読み込み中...</p>
+    <div className="space-y-3" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="h-16 animate-pulse rounded-2xl bg-muted"
+          style={{ animationDelay: `${i * 140}ms` }}
+        />
+      ))}
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="mb-4 text-6xl select-none">🎉</div>
-      <p className="text-base font-semibold text-foreground">今日のタスクはありません</p>
-      <p className="mt-1 text-sm text-muted-foreground">右下の「+」ボタンからタスクを追加しましょう</p>
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-5 flex size-20 items-center justify-center rounded-full bg-success-soft text-4xl select-none animate-breathe">
+        🌿
+      </div>
+      <p className="text-base font-bold text-foreground">今日のタスクはありません</p>
+      <p className="mt-1.5 text-sm text-muted-foreground text-balance">
+        「+」から追加するか、マイクで話しかけてください
+      </p>
     </div>
   );
 }
@@ -212,9 +336,17 @@ function FloatingActions({
   onAdd: () => void;
 }) {
   return (
-    <div className="fixed right-4 flex flex-col items-end gap-3" style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}>
+    <div
+      className="fixed right-4 z-40 flex flex-col items-end gap-3"
+      style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+    >
       <VoiceInputButton onTaskCreated={onVoiceTaskCreated} onFallbackToManual={onFallbackToManual} />
-      <button type="button" aria-label="タスクを追加" onClick={onAdd} className="flex size-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg active:scale-95 transition-transform">
+      <button
+        type="button"
+        aria-label="タスクを追加"
+        onClick={onAdd}
+        className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35 transition-transform duration-300 ease-spring active:scale-90"
+      >
         <Plus className="size-6" />
       </button>
     </div>
