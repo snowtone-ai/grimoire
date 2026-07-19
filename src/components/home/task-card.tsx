@@ -105,7 +105,7 @@ export function TaskCard({ task, departed, onToggle, onTap, onDepart }: TaskCard
               departed ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted"
             }`}
           >
-            <Footprints className="size-4" />
+            <Footprints className="size-4" aria-hidden />
           </button>
         )}
         <button

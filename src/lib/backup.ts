@@ -4,9 +4,12 @@ import { db, type DropRecord, type PlantState, type Streak, type Task } from "./
  * single transaction, so re-importing the same file is idempotent and an
  * import can never delete existing data. */
 
+/** Dexie schema version snapshots are written at; imports newer than this are rejected. */
+export const BACKUP_VERSION = 3;
+
 export interface BackupPayload {
   app: "grimoire";
-  version: 3; // Dexie schema version this snapshot came from.
+  version: typeof BACKUP_VERSION;
   exportedAt: string;
   tasks: Task[];
   streaks: Streak[];
@@ -23,7 +26,7 @@ export async function buildBackupJson(): Promise<string> {
   ]);
   const payload: BackupPayload = {
     app: "grimoire",
-    version: 3,
+    version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     tasks,
     streaks,
@@ -58,6 +61,9 @@ export function parseBackup(text: string): ParsedBackup {
   if (record.app !== "grimoire") {
     throw new Error("このアプリのバックアップではありません");
   }
+  if (typeof record.version !== "number" || record.version > BACKUP_VERSION) {
+    throw new Error("バックアップのバージョンがこのアプリより新しいため取り込めません");
+  }
   const tasks = record.tasks;
   const streaks = record.streaks;
   const plantState = record.plantState;
@@ -75,6 +81,15 @@ export function parseBackup(text: string): ParsedBackup {
   }
   if (!streaks.every((streak) => typeof (streak as Streak)?.date === "string")) {
     throw new Error("ストリークデータの日付が不正です");
+  }
+  if (
+    !drops.every(
+      (drop) =>
+        typeof (drop as DropRecord)?.taskId === "string" &&
+        typeof (drop as DropRecord)?.dateKey === "string"
+    )
+  ) {
+    throw new Error("ドロップデータの形式が不正です");
   }
 
   const payload = record as unknown as BackupPayload;

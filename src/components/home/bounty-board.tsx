@@ -46,6 +46,7 @@ export function BountyBoard({ bounties }: { bounties: BountyView[] }) {
               }`}
             >
               {bounty.label}
+              {claimed && <span className="sr-only">（達成済み）</span>}
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
               {progress}/{bounty.target}
