@@ -88,9 +88,15 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Brand: orange that stays AA-readable as text in both schemes. */
+  /* Brand ember-orange: the hearth of the frozen survey base. AA-readable
+   * as text in both schemes. Frost cyan and rarity gold complete the
+   * Iceborne-inspired triad. */
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
+  --color-frost: var(--frost);
+  --color-frost-soft: var(--frost-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
 
@@ -111,32 +117,36 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Light scheme (warm paper) ────────────────────────────────────── */
+/* ── Light scheme (snowfield paper) ───────────────────────────────── */
 :root {
   color-scheme: light;
-  --background: oklch(0.988 0.005 85);
-  --foreground: oklch(0.215 0.015 60);
+  --background: oklch(0.985 0.004 240);
+  --foreground: oklch(0.21 0.02 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.215 0.015 60);
+  --card-foreground: oklch(0.21 0.02 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.215 0.015 60);
-  /* Primary fills pair vivid orange with deep-brown text. L=0.66 keeps the
+  --popover-foreground: oklch(0.21 0.02 255);
+  /* Primary fills pair ember orange with deep-brown text. L=0.66 keeps the
    * fill >=3:1 against the near-white background (WCAG 1.4.11) while the
    * dark text stays >=4.5:1 on the fill. */
   --primary: oklch(0.66 0.21 45);
   --primary-foreground: oklch(0.16 0.035 45);
-  --secondary: oklch(0.955 0.01 80);
-  --secondary-foreground: oklch(0.215 0.015 60);
-  --muted: oklch(0.952 0.008 80);
-  --muted-foreground: oklch(0.49 0.02 60);
-  --accent: oklch(0.955 0.03 60);
-  --accent-foreground: oklch(0.215 0.015 60);
+  --secondary: oklch(0.955 0.008 240);
+  --secondary-foreground: oklch(0.21 0.02 255);
+  --muted: oklch(0.95 0.008 240);
+  --muted-foreground: oklch(0.48 0.02 250);
+  --accent: oklch(0.94 0.02 225);
+  --accent-foreground: oklch(0.21 0.02 255);
   --destructive: oklch(0.55 0.23 27.3);
-  --border: oklch(0.905 0.01 80);
-  --input: oklch(0.905 0.01 80);
+  --border: oklch(0.9 0.01 240);
+  --input: oklch(0.9 0.01 240);
   --ring: oklch(0.66 0.21 45);
   --brand: oklch(0.553 0.195 38.4);
   --brand-soft: oklch(0.962 0.028 65);
+  --frost: oklch(0.45 0.09 230);
+  --frost-soft: oklch(0.94 0.025 225);
+  --gold: oklch(0.52 0.11 80);
+  --gold-soft: oklch(0.955 0.035 90);
   --success: oklch(0.5 0.14 150);
   --success-soft: oklch(0.958 0.028 150);
   --cat-job: oklch(0.5 0.21 262);
@@ -148,30 +158,34 @@
   --radius: 0.75rem;
 }
 
-/* ── Dark scheme (warm botanical charcoal) ────────────────────────── */
+/* ── Dark scheme (frozen night, hearth-lit) ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --background: oklch(0.17 0.012 60);
-    --foreground: oklch(0.955 0.008 80);
-    --card: oklch(0.215 0.014 60);
-    --card-foreground: oklch(0.955 0.008 80);
-    --popover: oklch(0.215 0.014 60);
-    --popover-foreground: oklch(0.955 0.008 80);
+    --background: oklch(0.17 0.02 255);
+    --foreground: oklch(0.955 0.008 240);
+    --card: oklch(0.215 0.022 255);
+    --card-foreground: oklch(0.955 0.008 240);
+    --popover: oklch(0.215 0.022 255);
+    --popover-foreground: oklch(0.955 0.008 240);
     --primary: oklch(0.75 0.183 55.9);
     --primary-foreground: oklch(0.16 0.035 45);
-    --secondary: oklch(0.27 0.015 60);
-    --secondary-foreground: oklch(0.955 0.008 80);
-    --muted: oklch(0.26 0.014 60);
-    --muted-foreground: oklch(0.72 0.02 70);
-    --accent: oklch(0.28 0.03 55);
-    --accent-foreground: oklch(0.955 0.008 80);
+    --secondary: oklch(0.27 0.02 255);
+    --secondary-foreground: oklch(0.955 0.008 240);
+    --muted: oklch(0.26 0.02 255);
+    --muted-foreground: oklch(0.72 0.015 240);
+    --accent: oklch(0.28 0.03 240);
+    --accent-foreground: oklch(0.955 0.008 240);
     --destructive: oklch(0.704 0.191 22.2);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 14%);
     --ring: oklch(0.75 0.183 55.9);
     --brand: oklch(0.78 0.155 60);
     --brand-soft: oklch(0.28 0.045 55);
+    --frost: oklch(0.8 0.1 215);
+    --frost-soft: oklch(0.28 0.05 230);
+    --gold: oklch(0.8 0.12 85);
+    --gold-soft: oklch(0.3 0.05 85);
     --success: oklch(0.79 0.17 152);
     --success-soft: oklch(0.27 0.045 150);
     --cat-job: oklch(0.71 0.145 255);
@@ -204,6 +218,32 @@
     /* Prevent iOS auto-zoom on focus (font-size must be >= 16px) */
     font-size: max(16px, 1em);
   }
+}
+
+/* ── Shared interaction grammar ───────────────────────────────────── */
+/* THE press effect. Every pressable surface uses this one squish so the
+ * app feels like a single material instead of random effects. */
+@utility btn-squish {
+  transition: transform 0.4s var(--ease-spring);
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+/* Aurora wash over the frozen base — one ambient touch, used sparingly
+ * (home hero + survey-notes header only). */
+.aurora {
+  background-image:
+    radial-gradient(
+      120% 100% at 85% -10%,
+      color-mix(in oklab, var(--frost) 14%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      100% 90% at 8% 110%,
+      color-mix(in oklab, var(--brand) 9%, transparent),
+      transparent 55%
+    );
 }
 
 /* ── Task micro-interactions ──────────────────────────────────────── */
@@ -241,6 +281,81 @@
   ::view-transition-new(root) {
     animation-duration: 180ms;
   }
+}
+
+/* ── Notebook page turn (route changes) ───────────────────────────── */
+/* The whole app is the survey notebook: switching tabs turns a page.
+ * The bottom nav is pinned outside the turning page. */
+.bottom-nav {
+  view-transition-name: bottom-nav;
+}
+
+@keyframes page-turn-out {
+  to {
+    transform: rotateY(-72deg) translateX(-6%);
+    opacity: 0.1;
+  }
+}
+@keyframes page-turn-out-back {
+  to {
+    transform: rotateY(72deg) translateX(6%);
+    opacity: 0.1;
+  }
+}
+@keyframes page-turn-in {
+  from {
+    opacity: 0.35;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-page-turn]::view-transition-image-pair(root) {
+    perspective: 1400px;
+  }
+  html[data-page-turn]::view-transition-old(root) {
+    animation: page-turn-out 0.4s var(--ease-fluid) both;
+    transform-origin: left center;
+    backface-visibility: hidden;
+    z-index: 2;
+  }
+  html[data-page-turn]::view-transition-new(root) {
+    animation: page-turn-in 0.4s var(--ease-fluid) both;
+  }
+  html[data-page-turn="back"]::view-transition-old(root) {
+    animation-name: page-turn-out-back;
+    transform-origin: right center;
+  }
+}
+
+/* Task cards keep per-item transition names for list FLIP; suppress them
+ * while a page is turning so cards do not detach from the page. */
+html[data-page-turn] .task-vt {
+  view-transition-name: none !important;
+}
+
+/* ── Drop reveal (quest-clear reward card) ────────────────────────── */
+@keyframes drop-reveal-in {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(70deg) scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(900px) rotateY(-7deg) scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0) scale(1);
+  }
+}
+
+.drop-reveal {
+  animation: drop-reveal-in 0.55s var(--ease-out-expo) both;
 }
 
 /* ── Plant scene ──────────────────────────────────────────────────── */
@@ -293,7 +408,8 @@
   .animate-fade-in,
   .animate-pop-in,
   .animate-check-pop,
-  .animate-breathe {
+  .animate-breathe,
+  .drop-reveal {
     animation: none !important;
   }
   .task-strike,

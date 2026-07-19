@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
 
@@ -7,14 +8,15 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf9f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#1e1915" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f9fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#14181f" },
   ],
 };
 
 export const metadata: Metadata = {
   title: "Task Plant",
-  description: "ADHDユーザー向けタスク管理 + 植物育成PWA",
+  description:
+    "クエストを達成して素材を集め、凍てついた調査拠点の植物を育てるADHDフレンドリーなタスク管理PWA",
   applicationName: "Task Plant",
   appleWebApp: {
     capable: true,
@@ -32,21 +34,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ja"
-      className="h-full antialiased"
-      suppressHydrationWarning
-    >
-      <head>
-        <script
-          src="https://accounts.google.com/gsi/client"
-          async
-        />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <PwaRegister />
-        {children}
-      </body>
-    </html>
+    <ViewTransitions>
+      <html
+        lang="ja"
+        className="h-full antialiased"
+        suppressHydrationWarning
+      >
+        <head>
+          <script
+            src="https://accounts.google.com/gsi/client"
+            async
+          />
+        </head>
+        <body className="min-h-full flex flex-col">
+          <PwaRegister />
+          {children}
+        </body>
+      </html>
+    </ViewTransitions>
   );
 }
