@@ -4,40 +4,36 @@ import { useCallback, useEffect, useState } from "react";
 import { getDb, type PlantState } from "@/lib/db";
 import {
   calcGrowthStage,
-  getWeekStartLocal,
   getCurrentSpecies,
-  toLocalDateString,
+  monthKeyLocal,
   type GrowthStage,
   type PlantSpecies,
 } from "@/lib/domain/plant";
 
-function getWeekStart(): string {
-  return toLocalDateString(getWeekStartLocal(new Date()));
-}
-
 async function loadPlantState(): Promise<PlantState> {
   const db = getDb();
-  const weekStart = getWeekStart();
+  const monthKey = monthKeyLocal(new Date());
   const now = new Date().toISOString();
   const existing = await db.plantState.get(1);
 
   if (!existing) {
-    const created = {
+    const created: PlantState = {
       id: 1,
-      weeklyCompleted: 0,
+      monthlyCompleted: 0,
+      monthKey,
       lifetimeCompleted: 0,
-      weekStartDate: weekStart,
       lastUpdated: now,
     };
     await db.plantState.put(created);
     return created;
   }
 
-  if (existing.weekStartDate < weekStart) {
-    const reset = {
+  // New month: a new species arrives — a fresh start, never a mid-month loss.
+  if (existing.monthKey !== monthKey) {
+    const reset: PlantState = {
       ...existing,
-      weeklyCompleted: 0,
-      weekStartDate: weekStart,
+      monthlyCompleted: 0,
+      monthKey,
       lastUpdated: now,
     };
     await db.plantState.put(reset);
@@ -51,11 +47,11 @@ async function changeCompleted(delta: 1 | -1): Promise<PlantState | null> {
   const db = getDb();
   return db.transaction("rw", db.plantState, async () => {
     const current = await loadPlantState();
-    if (delta < 0 && current.weeklyCompleted <= 0) return current;
+    if (delta < 0 && current.monthlyCompleted <= 0) return current;
 
-    const updated = {
+    const updated: PlantState = {
       ...current,
-      weeklyCompleted: current.weeklyCompleted + delta,
+      monthlyCompleted: current.monthlyCompleted + delta,
       lifetimeCompleted: Math.max(0, current.lifetimeCompleted + delta),
       lastUpdated: new Date().toISOString(),
     };
@@ -67,7 +63,7 @@ async function changeCompleted(delta: 1 | -1): Promise<PlantState | null> {
 export function usePlant() {
   const [state, setState] = useState<PlantState | null>(null);
   const species: PlantSpecies = getCurrentSpecies();
-  const stage: GrowthStage = state ? calcGrowthStage(state.weeklyCompleted) : 0;
+  const stage: GrowthStage = state ? calcGrowthStage(state.monthlyCompleted) : 0;
 
   useEffect(() => {
     loadPlantState()

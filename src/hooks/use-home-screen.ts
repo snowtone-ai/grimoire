@@ -19,6 +19,13 @@ import {
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
 import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
+import { grantDropForTask, type GrantResult } from "@/lib/rewardDb";
+import {
+  playClear,
+  playFanfare,
+  playUndo,
+  primeAudioOnFirstGesture,
+} from "@/lib/sound";
 import { usePlant } from "./use-plant";
 
 export function useHomeScreen() {
@@ -35,6 +42,7 @@ export function useHomeScreen() {
   const [notifBannerDismissed, setNotifBannerDismissed] = useState(false);
   const [testNotifSent, setTestNotifSent] = useState(false);
   const [showGmailModal, setShowGmailModal] = useState(false);
+  const [dropQueue, setDropQueue] = useState<GrantResult[]>([]);
   const today = todayDateString();
 
   const loadTasks = useCallback(
@@ -55,6 +63,7 @@ export function useHomeScreen() {
   }, []);
 
   useEffect(() => {
+    primeAudioOnFirstGesture();
     initializeNotificationState(setNotifPermission, setNotifBannerDismissed);
     const fallback = setTimeout(() => setLoading(false), 1500);
 
@@ -107,11 +116,29 @@ export function useHomeScreen() {
     });
     if (!task.completed) {
       await plant.incrementCompleted();
+      try {
+        const grant = await grantDropForTask(taskId, today);
+        if (grant) {
+          playClear(grant.rarity);
+          fireDropConfetti(grant.rarity);
+          setDropQueue((queue) => [...queue, grant]);
+        } else {
+          // Already rewarded today for this task — quiet completion chime.
+          playClear(1);
+        }
+      } catch (err) {
+        console.error("[reward] drop grant failed:", err);
+      }
     } else {
+      playUndo();
       await plant.decrementCompleted();
     }
     await syncPlantStateFromTasks();
     scheduleTaskNotifications().catch(console.error);
+  }
+
+  function dismissDrop() {
+    setDropQueue((queue) => queue.slice(1));
   }
 
   function openAddModal(initialTitle = "") {
@@ -127,6 +154,8 @@ export function useHomeScreen() {
   return {
     plantSpecies: plant.species,
     plantStage: plant.stage,
+    pendingDrop: dropQueue[0] ?? null,
+    dismissDrop,
     tasks,
     loading,
     showAddModal,
@@ -182,53 +211,77 @@ async function updateCompletionEffects({
   if (isCompleting && allDone) {
     await recordStreak(today, true);
     await refreshStreak();
+    playFanfare();
     fireAllCompleteConfetti();
     setAllCompleteMessage(true);
     setTimeout(() => setAllCompleteMessage(false), 3000);
     return;
   }
-  if (isCompleting) {
-    fireNormalConfetti();
-    return;
-  }
+  if (isCompleting) return; // Per-completion celebration comes from the drop.
   if (!allDone) {
     await recordStreak(today, false);
     await refreshStreak();
   }
 }
 
-function fireNormalConfetti() {
+/* Frost & ember palette: star confetti scaled by drop rarity. */
+const EMBER = ["#fb923c", "#fbbf24"];
+const FROST = ["#7dd3fc", "#38bdf8", "#e0f2fe"];
+const GOLD = ["#fbbf24", "#f59e0b", "#fde68a"];
+
+function fireDropConfetti(rarity: 1 | 4 | 8) {
   if (prefersReducedMotion()) return;
+  if (rarity === 1) {
+    confetti({
+      particleCount: 30,
+      spread: 55,
+      startVelocity: 28,
+      shapes: ["star"],
+      scalar: 0.8,
+      origin: { y: 0.6 },
+      colors: [...EMBER, FROST[0]],
+    });
+    return;
+  }
+  if (rarity === 4) {
+    confetti({
+      particleCount: 70,
+      spread: 75,
+      shapes: ["star"],
+      scalar: 1,
+      origin: { y: 0.55 },
+      colors: [...FROST, EMBER[1]],
+    });
+    return;
+  }
   confetti({
-    particleCount: 80,
-    spread: 60,
-    origin: { y: 0.6 },
-    colors: ["#f97316", "#fb923c", "#fbbf24", "#a3e635", "#34d399"],
+    particleCount: 130,
+    spread: 100,
+    startVelocity: 40,
+    shapes: ["star"],
+    scalar: 1.15,
+    origin: { y: 0.5 },
+    colors: [...GOLD, ...FROST],
   });
 }
 
 function fireAllCompleteConfetti() {
   if (prefersReducedMotion()) return;
+  const colors = [...EMBER, ...FROST, GOLD[2]];
   confetti({
-    particleCount: 120,
+    particleCount: 110,
     angle: 60,
     spread: 70,
+    shapes: ["star"],
     origin: { x: 0, y: 0.6 },
-    colors: ["#f97316", "#fb923c", "#fbbf24", "#a3e635", "#34d399", "#60a5fa"],
+    colors,
   });
   confetti({
-    particleCount: 120,
+    particleCount: 110,
     angle: 120,
     spread: 70,
+    shapes: ["star"],
     origin: { x: 1, y: 0.6 },
-    colors: ["#f97316", "#fb923c", "#fbbf24", "#a3e635", "#34d399", "#60a5fa"],
+    colors,
   });
-  setTimeout(() => {
-    confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { y: 0.5 },
-      colors: ["#f97316", "#fbbf24", "#34d399", "#60a5fa", "#c084fc"],
-    });
-  }, 200);
 }

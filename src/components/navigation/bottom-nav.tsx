@@ -1,23 +1,46 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
-import { Calendar, Home, Leaf } from "lucide-react";
+import { BookOpen, Calendar, Home, Sprout } from "lucide-react";
+import { playPage } from "@/lib/sound";
 
 const NAV_ITEMS = [
   { href: "/", label: "ホーム", icon: Home },
   { href: "/all", label: "カレンダー", icon: Calendar },
-  { href: "/plant", label: "植物", icon: Leaf },
+  { href: "/plant", label: "研究所", icon: Sprout },
+  { href: "/book", label: "記録", icon: BookOpen },
 ] as const;
 
-export function BottomNav({ currentPath }: { currentPath?: "/" | "/all" | "/plant" }) {
+type NavPath = (typeof NAV_ITEMS)[number]["href"];
+
+/** Mark the html element so CSS picks the page-turn direction, then let the
+ * transition Link take over. The marker is cleared after the turn ends. */
+let pageTurnTimer = 0;
+
+function markPageTurn(fromPath: string, toPath: string) {
+  const fromIndex = NAV_ITEMS.findIndex((item) => item.href === fromPath);
+  const toIndex = NAV_ITEMS.findIndex((item) => item.href === toPath);
+  const root = document.documentElement;
+  window.clearTimeout(pageTurnTimer);
+  root.dataset.pageTurn = toIndex < fromIndex ? "back" : "fwd";
+  pageTurnTimer = window.setTimeout(() => {
+    delete root.dataset.pageTurn;
+  }, 700);
+}
+
+export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
   const pathname = usePathname();
-  const resolvedPath = currentPath ?? (pathname === "/all" || pathname === "/plant" ? pathname : "/");
+  const resolvedPath: NavPath =
+    currentPath ??
+    (pathname === "/all" || pathname === "/plant" || pathname === "/book"
+      ? pathname
+      : "/");
 
   return (
     <nav
       aria-label="メインナビゲーション"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto flex max-w-lg">
         {NAV_ITEMS.map((item) => {
@@ -29,6 +52,11 @@ export function BottomNav({ currentPath }: { currentPath?: "/" | "/all" | "/plan
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
+              onClick={() => {
+                if (isActive) return;
+                playPage();
+                markPageTurn(resolvedPath, item.href);
+              }}
               className="group flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5"
             >
               <span

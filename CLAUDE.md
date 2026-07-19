@@ -1,4 +1,4 @@
-# CLAUDE.md -- Task Plant / pm-zero v11 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v11 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.

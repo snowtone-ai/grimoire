@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { type Category, type Recurrence } from "@/lib/db";
 import { createTask } from "@/lib/taskDb";
 import { CATEGORY_CONFIG, CATEGORY_LIST } from "@/lib/domain/category";
+import { playSave } from "@/lib/sound";
 
 interface TaskAddModalProps {
   onClose: () => void;
@@ -58,6 +59,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
         recurrenceDayOfWeek: recurrence === "weekly" ? recurrenceDayOfWeek : undefined,
         recurrenceDayOfMonth: recurrence === "monthly" ? recurrenceDayOfMonth : undefined,
       });
+      playSave();
       onTaskCreated();
       onClose();
     } finally {
@@ -81,7 +83,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
         <div aria-hidden className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-muted" />
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">タスクを追加</h2>
+          <h2 className="text-lg font-bold text-foreground">クエストを追加</h2>
           <button
             type="button"
             aria-label="閉じる"
@@ -99,7 +101,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
               htmlFor="task-title"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              タスク名<span className="ml-0.5 text-brand">*</span>
+              クエスト名<span className="ml-0.5 text-brand">*</span>
             </label>
             <input
               id="task-title"
@@ -262,9 +264,9 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
           <button
             type="submit"
             disabled={saving || !title.trim() || !dueDate}
-            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 transition-all disabled:opacity-50 active:scale-[0.98]"
+            className="btn-squish w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 disabled:opacity-50"
           >
-            {saving ? "保存中..." : "保存する"}
+            {saving ? "保存中..." : "受注する"}
           </button>
         </form>
       </div>

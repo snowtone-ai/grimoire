@@ -1,5 +1,5 @@
 {
-  "name": "task-plant",
+  "name": "grimoire",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,6 +21,7 @@
     "dexie": "^4.4.2",
     "lucide-react": "^1.7.0",
     "next": "16.2.6",
+    "next-view-transitions": "^0.3.5",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -36,6 +37,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

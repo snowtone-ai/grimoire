@@ -6,6 +6,7 @@ import { createTask } from "@/lib/taskDb";
 import { parseTaskFromText } from "@/lib/gemini";
 import { RateLimitError, redactSecret } from "@/lib/errors";
 import { todayDateString } from "@/lib/domain/task-date";
+import { playSave, playTap } from "@/lib/sound";
 
 interface VoiceInputButtonProps {
   onTaskCreated: () => void;
@@ -70,7 +71,8 @@ export function VoiceInputButton({
           const dateLabel = isToday
             ? "今日"
             : dateObj.toLocaleDateString("ja-JP", { month: "long", day: "numeric" });
-          setSuccessMsg(`「${parsed.title}」を${dateLabel}に追加しました`);
+          setSuccessMsg(`「${parsed.title}」を${dateLabel}に受注しました`);
+          playSave();
           setStatus("success");
           setTimeout(() => setStatus("idle"), 3000);
         })
@@ -122,6 +124,7 @@ export function VoiceInputButton({
     if (status === "listening") {
       stopListening();
     } else if (status === "idle") {
+      playTap();
       startListening();
     }
   };
@@ -166,7 +169,7 @@ export function VoiceInputButton({
         aria-label={status === "listening" ? "音声入力を停止" : "音声入力"}
         onClick={handleClick}
         disabled={isDisabled}
-        className={`relative flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-spring active:scale-90 disabled:cursor-not-allowed ${buttonColor}`}
+        className={`btn-squish relative flex size-14 items-center justify-center rounded-full shadow-lg disabled:cursor-not-allowed ${buttonColor}`}
       >
         {status === "listening" && (
           <span

@@ -1,4 +1,5 @@
 import Dexie, { type Table } from "dexie";
+import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant";
 
 export type Category = "job" | "university" | "life";
 export type Recurrence = "none" | "daily" | "weekly" | "monthly";
@@ -25,16 +26,28 @@ export interface Streak {
 
 export interface PlantState {
   id?: number;
-  weeklyCompleted: number;
+  /** Cumulative completions within the current local month (never reset mid-month). */
+  monthlyCompleted: number;
+  monthKey: string; // YYYY-MM
   lifetimeCompleted: number;
-  weekStartDate: string; // YYYY-MM-DD
   lastUpdated: string; // ISO datetime
+}
+
+/** One reward roll granted for completing a task (never revoked). */
+export interface DropRecord {
+  id?: number;
+  taskId: string;
+  dateKey: string; // YYYY-MM-DD (local)
+  dropId: string;
+  rarity: number;
+  at: string; // ISO datetime
 }
 
 class TaskManagerDB extends Dexie {
   tasks!: Table<Task, string>;
   streaks!: Table<Streak, string>;
   plantState!: Table<PlantState, number>;
+  drops!: Table<DropRecord, number>;
 
   constructor() {
     super("TaskManagerDB");
@@ -47,6 +60,31 @@ class TaskManagerDB extends Dexie {
       streaks: "date",
       plantState: "++id",
     });
+    // v3: material-drop rewards + monthly (cumulative) plant growth.
+    // The upgrade recomputes monthly progress from tasks; nothing is lost.
+    this.version(3)
+      .stores({
+        tasks: "id, dueDate, category, completed, recurrence",
+        streaks: "date",
+        plantState: "++id",
+        // &[taskId+dateKey] is unique: one drop per task per day is enforced
+        // by the store itself, not just the read-then-add check.
+        drops: "++id, taskId, dateKey, rarity, &[taskId+dateKey]",
+      })
+      .upgrade(async (tx) => {
+        const now = new Date();
+        const tasks = (await tx.table("tasks").toArray()) as Task[];
+        const monthlyCompleted = countMonthlyCompletedTasks(tasks, now);
+        await tx
+          .table("plantState")
+          .toCollection()
+          .modify((state: Record<string, unknown>) => {
+            state.monthlyCompleted = monthlyCompleted;
+            state.monthKey = monthKeyLocal(now);
+            delete state.weeklyCompleted;
+            delete state.weekStartDate;
+          });
+      });
   }
 }
 

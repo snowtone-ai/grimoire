@@ -1,4 +1,4 @@
-# Task Plant
+# Grimoire
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
@@ -6,7 +6,7 @@
 ![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-orange?logo=google)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-> 「今、何をすべきか」を瞬時に把握できるタスク管理アプリ。タスクを完了するたびに植物が育つ
+> 「今、何をすべきか」を瞬時に把握できるタスク管理アプリ。クエストを達成するたびに素材がドロップし、凍てついた調査拠点の植物が育つ
 
 個人向けタスク管理PWAです。AIへの音声入力でタスクを登録でき、GmailやGoogleカレンダーとも連携します。Vercel上で公開されています。
 
@@ -18,7 +18,9 @@
 - Gmailの受信メールからAIがタスク候補を検出し、ワンタップで取り込める
 - Googleカレンダーの予定をタスクとして取り込み、締切管理を一元化できる
 - 毎日・毎週・毎月の繰り返しタスクを自動生成できる
-- 週次完了数に応じて植物が育つ12か月・4アーキタイプの成長演出と毎日の完了ストリーク（連続達成記録）が確認できる
+- タスク（クエスト）を達成するたびに素材がドロップ（RARE1/4/8・天井あり）し、調査記録（図鑑）にコレクションされる
+- 月間達成数に応じて植物が育つ12か月・4アーキタイプの成長演出と毎日の完了ストリーク（連続達成記録）が確認できる
+- Web Audio合成の統一効果音・ハプティクス・ページめくり遷移など、ADHDの報酬系を意識したフィードバック設計
 - オフライン状態でも動作し（IndexedDB使用）、スマートフォンのホーム画面にアプリとして追加できる
 
 ---

@@ -13,6 +13,7 @@ import {
   taskForDisplayDate,
   todayDateString,
 } from "@/lib/domain/task-date";
+import { playTap } from "@/lib/sound";
 import { TaskEditModal } from "@/components/home/task-edit-modal";
 import { TaskAddModal } from "@/components/home/task-add-modal";
 import { CalendarImportModal } from "@/components/calendar/calendar-import-modal";
@@ -134,9 +135,12 @@ export function AllScreen() {
       <BottomNav />
       <button
         type="button"
-        aria-label="タスクを追加"
-        onClick={() => setShowAddModal(true)}
-        className="fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35 transition-transform duration-300 ease-spring active:scale-90"
+        aria-label="クエストを追加"
+        onClick={() => {
+          playTap();
+          setShowAddModal(true);
+        }}
+        className="btn-squish fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35"
         style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
       >
         <Plus className="size-6" />

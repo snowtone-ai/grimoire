@@ -5,6 +5,7 @@ import { X, Trash2 } from "lucide-react";
 import { type Task, type Category, type Recurrence } from "@/lib/db";
 import { updateTask, deleteTask } from "@/lib/taskDb";
 import { CATEGORY_CONFIG, CATEGORY_LIST } from "@/lib/domain/category";
+import { playSave } from "@/lib/sound";
 
 interface TaskEditModalProps {
   task: Task;
@@ -63,6 +64,7 @@ export function TaskEditModal({
           recurrence === "monthly" ? recurrenceDayOfMonth : undefined,
       };
       await updateTask(task.id, changes);
+      playSave();
       onSaved();
       onClose();
     } finally {
@@ -95,7 +97,7 @@ export function TaskEditModal({
         <div aria-hidden className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-muted" />
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">タスクを編集</h2>
+          <h2 className="text-lg font-bold text-foreground">クエストを編集</h2>
           <button
             type="button"
             aria-label="閉じる"
@@ -113,7 +115,7 @@ export function TaskEditModal({
               htmlFor="edit-task-title"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              タスク名<span className="ml-0.5 text-brand">*</span>
+              クエスト名<span className="ml-0.5 text-brand">*</span>
             </label>
             <input
               id="edit-task-title"
@@ -289,12 +291,12 @@ export function TaskEditModal({
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 active:scale-[0.98]"
             >
               <Trash2 className="size-4" />
-              タスクを削除
+              クエストを削除
             </button>
           ) : (
             <div className="rounded-xl bg-destructive/10 border border-destructive/25 p-4 space-y-3">
               <p className="text-sm text-destructive font-medium text-center">
-                このタスクを削除しますか？
+                このクエストを削除しますか？
               </p>
               <div className="flex gap-3">
                 <button

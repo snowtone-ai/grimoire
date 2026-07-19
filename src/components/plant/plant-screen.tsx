@@ -12,7 +12,7 @@ export function PlantScreen() {
   const { species, stage, state } = usePlant();
   const [flipped, setFlipped] = useState(true);
   const isBlooming = stage >= 4;
-  const progress = calcProgress(state?.weeklyCompleted ?? 0, stage);
+  const progress = calcProgress(state?.monthlyCompleted ?? 0, stage);
 
   useEffect(() => {
     const timer = setTimeout(() => setFlipped(false), 300);
@@ -40,9 +40,12 @@ export function PlantScreen() {
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <div className="mb-4 text-center drop-shadow-sm">
+          <p className={`text-[11px] font-bold tracking-[0.22em] ${isBlooming ? "text-white/80" : "text-frost"}`}>
+            植生研究所
+          </p>
           <p className={`text-2xl font-bold ${isBlooming ? "text-white" : "text-foreground"}`}>{species.name}</p>
           <p className={`text-sm ${isBlooming ? "text-white/85" : "text-muted-foreground"}`}>
-            {getStageLabel(stage)} · 今週 {state?.weeklyCompleted ?? 0}件完了
+            {getStageLabel(stage)} · 今月 {state?.monthlyCompleted ?? 0}件達成
           </p>
           <div className="mt-3 flex items-center justify-center gap-1.5" aria-hidden>
             {([0, 1, 2, 3, 4, 5] as const).map((step) => (

@@ -7,12 +7,13 @@
 - After structural changes: update only the affected section.
 
 ## Summary
-- App type: Next.js PWA for personal task management.
-- Main runtime: Next.js 16, React 19, TypeScript, Tailwind CSS v4.
+- App type: Next.js PWA for personal task management (Iceborne-inspired quest/drop reward loop).
+- Main runtime: Next.js 16, React 19, TypeScript, Tailwind CSS v4, next-view-transitions.
 - Package manager: pnpm.
 - Primary source directory: src/.
 - Primary test directory: tests/.
-- Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/layout.tsx.
+- Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/book/page.tsx, src/app/layout.tsx.
+- Reward core: src/lib/domain/drops.ts, src/lib/rewardDb.ts, src/lib/sound.ts.
 - Verification command: pnpm verify.
 
 ## Directory Map
@@ -32,9 +33,11 @@
 ## Entry Points
 | Area | File | Purpose |
 |---|---|---|
-| Home | src/app/page.tsx | Main task view. |
-| Plant | src/app/plant/page.tsx | Plant progress view. |
-| Layout | src/app/layout.tsx | App shell and metadata. |
+| Home | src/app/page.tsx | Main quest (task) view + drop reveal. |
+| Plant | src/app/plant/page.tsx | Botanical research (monthly growth) view. |
+| Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia). |
+| Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider. |
+| Sound | src/lib/sound.ts | Web-Audio synthesized SFX + haptics (single pentatonic palette). |
 | Verification | scripts/verify.mjs | Unified local checks. |
 
 ## Common Workflows

@@ -39,10 +39,10 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
       <div className="flex items-center gap-3 px-4 py-3">
         <button
           type="button"
-          aria-label={task.completed ? "完了を取り消す" : "タスクを完了にする"}
+          aria-label={task.completed ? "達成を取り消す" : "クエストを達成にする"}
           disabled={busy}
           onClick={handleCheck}
-          className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300 active:scale-90 ${
+          className={`btn-squish flex size-7 shrink-0 items-center justify-center rounded-full border-2 [transition-property:transform,border-color,background-color] duration-300 ${
             task.completed
               ? "is-checked border-primary bg-primary animate-check-pop"
               : "border-muted-foreground/35"
@@ -64,7 +64,7 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
           type="button"
           onClick={() => onTap(task)}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
-          aria-label="タスクを編集"
+          aria-label="クエストを編集"
         >
           <div className="min-w-0 flex-1">
             <p
@@ -98,7 +98,7 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
             event.stopPropagation();
             setExpanded((value) => !value);
           }}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted active:scale-90"
+          className="btn-squish flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
           aria-expanded={expanded}
           aria-controls={detailId}
           aria-label={expanded ? "詳細を折りたたむ" : "詳細を展開する"}

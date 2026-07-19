@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Leaf, Mail, Plus } from "lucide-react";
+import { useState } from "react";
+import { Leaf, Mail, Plus, Volume2, VolumeX } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import { todayDateString } from "@/lib/domain/task-date";
 import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain/plant";
+import { isFxEnabled, playTap, setFxEnabled } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
+import { DropReveal } from "@/components/reward/drop-reveal";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
 import { TaskEditModal } from "./task-edit-modal";
@@ -28,17 +31,20 @@ export function HomeScreen() {
         <div>
           <p className="text-[13px] font-medium text-muted-foreground">{dateLabel}</p>
           <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
-            今日のタスク
+            今日のクエスト
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={() => screen.setShowGmailModal(true)}
-          className="flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs transition-transform active:scale-90"
-          aria-label="Gmailからインポート"
-        >
-          <Mail className="size-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <FxToggle />
+          <button
+            type="button"
+            onClick={() => screen.setShowGmailModal(true)}
+            className="btn-squish flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs"
+            aria-label="Gmailからインポート"
+          >
+            <Mail className="size-5" />
+          </button>
+        </div>
       </header>
 
       <HeroCard
@@ -52,7 +58,7 @@ export function HomeScreen() {
       <div aria-live="polite">
         {screen.allCompleteMessage && (
           <div className="mx-4 mt-3 animate-pop-in rounded-2xl bg-brand-soft px-4 py-3 text-center">
-            <p className="text-sm font-bold text-brand">🎉 全タスク完了！すごい！</p>
+            <p className="text-sm font-bold text-brand">🏆 本日の全クエスト達成！</p>
           </div>
         )}
       </div>
@@ -80,6 +86,7 @@ export function HomeScreen() {
             {screen.tasks.map((task) => (
               <li
                 key={task.id}
+                className="task-vt"
                 style={{ viewTransitionName: `t-${task.id.replaceAll(/[^a-zA-Z0-9-]/g, "")}` }}
               >
                 <TaskCard task={task} onToggle={screen.handleToggle} onTap={screen.setEditingTask} />
@@ -116,7 +123,33 @@ export function HomeScreen() {
           onDeleted={screen.onTasksChanged}
         />
       )}
+      {screen.pendingDrop && (
+        <DropReveal grant={screen.pendingDrop} onDismiss={screen.dismissDrop} />
+      )}
     </div>
+  );
+}
+
+function FxToggle() {
+  const [enabled, setEnabled] = useState(isFxEnabled);
+
+  function toggle() {
+    const next = !enabled;
+    setFxEnabled(next);
+    setEnabled(next);
+    if (next) playTap();
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={enabled}
+      aria-label={enabled ? "効果音をオフにする" : "効果音をオンにする"}
+      className="btn-squish flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs"
+    >
+      {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+    </button>
   );
 }
 
@@ -137,23 +170,23 @@ function HeroCard({
   let title: string;
   let sub: string;
   if (totalCount === 0) {
-    title = "今日は予定なし";
-    sub = "ゆっくり休むのも大事な一日";
+    title = "今日の受注はなし";
+    sub = "休息も大事な調査のうち";
   } else if (remaining === 0) {
-    title = "全タスク完了！";
-    sub = "今日のぶんは全部やりきりました";
+    title = "全クエスト達成！";
+    sub = "今日の調査は完了。おつかれさま";
   } else if (completedCount === 0) {
-    title = `今日は${totalCount}件`;
-    sub = "まず1件だけ、始めてみましょう";
+    title = `受注中 ${totalCount}件`;
+    sub = "まずは1件、小さく出発しよう";
   } else {
     title = `あと${remaining}件`;
-    sub = `${completedCount}件完了、いい調子です`;
+    sub = `${completedCount}件達成、いい調子`;
   }
 
   return (
     <section
       aria-label="今日の進捗"
-      className="mx-4 animate-pop-in rounded-3xl border border-border bg-card p-5 shadow-sm"
+      className="aurora mx-4 animate-pop-in rounded-3xl border border-border bg-card p-5 shadow-sm"
     >
       <div className="flex items-center gap-5">
         <ProgressRing completedCount={completedCount} totalCount={totalCount} />
@@ -168,10 +201,10 @@ function HeroCard({
             )}
             <Link
               href="/plant"
-              className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold text-success transition-transform active:scale-95"
+              className="btn-squish inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold text-success"
             >
               <Leaf className="size-3.5" aria-hidden />
-              {species.name}・{getStageLabel(stage)}
+              研究所: {species.name}・{getStageLabel(stage)}
             </Link>
           </div>
         </div>
@@ -319,12 +352,12 @@ function LoadingState() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="mb-5 flex size-20 items-center justify-center rounded-full bg-success-soft text-4xl select-none animate-breathe">
-        🌿
+      <div className="mb-5 flex size-20 items-center justify-center rounded-full bg-frost-soft text-4xl select-none animate-breathe">
+        ❄️
       </div>
-      <p className="text-base font-bold text-foreground">今日のタスクはありません</p>
+      <p className="text-base font-bold text-foreground">受注中のクエストはありません</p>
       <p className="mt-1.5 text-sm text-muted-foreground text-balance">
-        「+」から追加するか、マイクで話しかけてください
+        「+」から追加するか、マイクで話しかけて登録
       </p>
     </div>
   );
@@ -347,9 +380,12 @@ function FloatingActions({
       <VoiceInputButton onTaskCreated={onVoiceTaskCreated} onFallbackToManual={onFallbackToManual} />
       <button
         type="button"
-        aria-label="タスクを追加"
-        onClick={onAdd}
-        className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35 transition-transform duration-300 ease-spring active:scale-90"
+        aria-label="クエストを追加"
+        onClick={() => {
+          playTap();
+          onAdd();
+        }}
+        className="btn-squish flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35"
       >
         <Plus className="size-6" />
       </button>
