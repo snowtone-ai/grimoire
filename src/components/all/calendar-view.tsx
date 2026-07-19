@@ -48,7 +48,7 @@ export function CalendarView({
 
       <div className="grid grid-cols-7 px-2 mb-1">
         {WEEKDAY_LABELS.map((label, i) => (
-          <div key={label} className={`text-center text-xs font-medium py-1 ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-muted-foreground"}`}>
+          <div key={label} className={`text-center text-xs font-medium py-1 ${i === 0 ? "text-destructive" : i === 6 ? "text-cat-job" : "text-muted-foreground"}`}>
             {label}
           </div>
         ))}
@@ -96,10 +96,10 @@ function CalendarCell({
       type="button"
       onClick={() => onSelectDate(selected ? null : dateStr)}
       className={`flex flex-col items-center justify-start rounded-xl px-1 py-1.5 min-h-[56px] transition-colors active:scale-95 ${
-        selected ? "bg-orange-500 text-white" : today ? "bg-orange-50 border border-orange-300" : "hover:bg-muted"
+        selected ? "bg-primary" : today ? "bg-brand-soft ring-1 ring-brand/40" : "hover:bg-muted"
       }`}
     >
-      <span className={`text-sm font-medium leading-none ${selected ? "text-white" : today ? "text-orange-600 font-bold" : dayOfWeek === 0 ? "text-red-500" : dayOfWeek === 6 ? "text-blue-500" : "text-foreground"}`}>
+      <span className={`text-sm font-medium leading-none ${selected ? "font-bold text-primary-foreground" : today ? "text-brand font-bold" : dayOfWeek === 0 ? "text-destructive" : dayOfWeek === 6 ? "text-cat-job" : "text-foreground"}`}>
         {dayNum}
       </span>
       {dots && (
@@ -107,7 +107,7 @@ function CalendarCell({
           {(["job", "university", "life"] as Category[])
             .filter((category) => dots.has(category))
             .map((category) => (
-              <span key={category} className={`size-1.5 rounded-full ${selected ? "bg-white" : categoryConfig[category].dot}`} />
+              <span key={category} className={`size-1.5 rounded-full ${selected ? "bg-primary-foreground" : categoryConfig[category].dot}`} />
             ))}
         </div>
       )}

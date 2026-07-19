@@ -29,8 +29,9 @@ export function ListView({
             key={value}
             type="button"
             onClick={() => onCategoryFilterChange(value)}
+            aria-pressed={categoryFilter === value}
             className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-              categoryFilter === value ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"
+              categoryFilter === value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
             {label}
@@ -42,7 +43,7 @@ export function ListView({
           type="checkbox"
           checked={showFutureOnly}
           onChange={(event) => onShowFutureOnlyChange(event.target.checked)}
-          className="rounded border-border"
+          className="size-4 rounded border-border accent-brand"
         />
         今日以降のみ表示
       </label>
@@ -85,9 +86,9 @@ function ListTaskButton({
       onClick={() => onEditTask(task)}
       className={`w-full flex items-start gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm text-left transition-opacity ${task.completed ? "opacity-50" : ""}`}
     >
-      <span className={`mt-0.5 size-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${task.completed ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40"}`}>
+      <span className={`mt-0.5 size-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${task.completed ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
         {task.completed && (
-          <svg viewBox="0 0 10 8" className="size-2.5 stroke-white" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 10 8" className="size-2.5 stroke-primary-foreground" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="1,4 4,7 9,1" />
           </svg>
         )}
@@ -98,12 +99,12 @@ function ListTaskButton({
           {task.title}
         </p>
         <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-          <span className={`text-xs ${isPast ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+          <span className={`text-xs tabular-nums ${isPast ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
             {formatDateLabel(task.dueDate)}
             {task.dueTime ? ` ${task.dueTime}` : ""}
             {isPast ? " (期限切れ)" : ""}
           </span>
-          {recurrenceDetail && <span className="text-xs text-orange-500 font-medium">🔄 {recurrenceDetail}</span>}
+          {recurrenceDetail && <span className="text-xs text-brand font-medium">🔄 {recurrenceDetail}</span>}
         </div>
       </div>
 

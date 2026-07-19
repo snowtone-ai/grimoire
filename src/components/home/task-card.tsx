@@ -15,6 +15,10 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
   const config = CATEGORY_CONFIG[task.category];
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const now = new Date();
+  const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const isOverdue = !task.completed && task.dueTime !== null && task.dueTime < nowTime;
+  const detailId = `task-detail-${task.id}`;
 
   async function handleCheck() {
     if (busy) return;
@@ -28,59 +32,62 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
 
   return (
     <div
-      className={`rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-opacity duration-300 ${
-        task.completed ? "opacity-50" : ""
+      className={`rounded-2xl border bg-card shadow-xs transition-all duration-300 ${
+        task.completed ? "border-transparent opacity-60" : "border-border"
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-4 py-3">
         <button
           type="button"
           aria-label={task.completed ? "完了を取り消す" : "タスクを完了にする"}
           disabled={busy}
           onClick={handleCheck}
-          className={`size-6 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-colors active:scale-90 ${
+          className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300 active:scale-90 ${
             task.completed
-              ? "border-orange-500 bg-orange-500"
-              : "border-muted-foreground/40"
+              ? "is-checked border-primary bg-primary animate-check-pop"
+              : "border-muted-foreground/35"
           } ${busy ? "opacity-50" : ""}`}
         >
-          {task.completed && (
-            <svg
-              viewBox="0 0 10 8"
-              className="size-3 stroke-white"
-              fill="none"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="1,4 4,7 9,1" />
-            </svg>
-          )}
+          <svg
+            viewBox="0 0 10 8"
+            className="size-3.5"
+            fill="none"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="1,4 4,7 9,1" pathLength="1" className="check-draw stroke-primary-foreground" />
+          </svg>
         </button>
 
         <button
           type="button"
           onClick={() => onTap(task)}
-          className="flex flex-1 min-w-0 items-center gap-3 text-left"
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
           aria-label="タスクを編集"
         >
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <p
-              className={`text-sm font-medium leading-snug transition-all duration-300 ${
-                task.completed
-                  ? "line-through text-muted-foreground"
-                  : "text-foreground"
+              className={`task-strike text-[15px] font-medium leading-snug ${
+                task.completed ? "is-struck text-muted-foreground" : "text-foreground"
               }`}
             >
               {task.title}
             </p>
             {task.dueTime && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{task.dueTime}</p>
+              <p
+                className={`mt-0.5 text-xs tabular-nums ${
+                  isOverdue ? "font-semibold text-destructive" : "text-muted-foreground"
+                }`}
+              >
+                {task.dueTime}
+                {isOverdue && "・期限超過"}
+              </p>
             )}
           </div>
 
           <span
-            className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}
+            className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${config.bg} ${config.text}`}
           >
             {config.label}
           </span>
@@ -91,24 +98,38 @@ export function TaskCard({ task, onToggle, onTap }: TaskCardProps) {
             event.stopPropagation();
             setExpanded((value) => !value);
           }}
-          className="p-1 text-muted-foreground"
-          aria-label={expanded ? "折りたたむ" : "展開する"}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted active:scale-90"
+          aria-expanded={expanded}
+          aria-controls={detailId}
+          aria-label={expanded ? "詳細を折りたたむ" : "詳細を展開する"}
         >
-          <ChevronDown className={`size-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`size-4 transition-transform duration-300 ease-spring ${expanded ? "rotate-180" : ""}`}
+          />
         </button>
       </div>
-      {expanded && (
-        <div className="mt-2 border-t border-border/50 pt-2 pl-9 pr-4 pb-1 text-xs text-muted-foreground">
-          <p className="whitespace-pre-wrap leading-relaxed">
-            {task.description?.trim() || "詳細はありません"}
-          </p>
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={() => onTap(task)} className="text-orange-500 underline">
+      <div
+        id={detailId}
+        inert={!expanded}
+        className={`grid transition-[grid-template-rows] duration-300 ease-fluid ${
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="mx-4 border-t border-border/60 pt-2.5 pb-3 pl-10 text-xs text-muted-foreground">
+            <p className="whitespace-pre-wrap leading-relaxed">
+              {task.description?.trim() || "詳細はありません"}
+            </p>
+            <button
+              type="button"
+              onClick={() => onTap(task)}
+              className="-ml-2 mt-1 rounded-lg px-2 py-1.5 font-semibold text-brand underline-offset-2 hover:underline"
+            >
               編集
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

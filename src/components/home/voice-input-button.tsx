@@ -128,52 +128,58 @@ export function VoiceInputButton({
 
   const buttonColor =
     status === "listening"
-      ? "bg-red-500"
-      : status === "processing"
-        ? "bg-gray-400"
-        : status === "error"
-          ? "bg-gray-400"
-          : status === "success"
-            ? "bg-green-500"
-            : "bg-orange-400";
+      ? "bg-destructive text-background"
+      : status === "processing" || status === "error"
+        ? "bg-muted text-muted-foreground"
+        : status === "success"
+          ? "bg-success text-background"
+          : "border border-border bg-card text-brand";
 
   const isDisabled = status === "processing" || status === "error" || status === "success";
 
   return (
     <div className="flex flex-col items-end gap-2">
       {/* Status popup */}
-      {(status === "listening" || status === "processing" || status === "error" || status === "success") && (
-        <div
-          className={`max-w-xs rounded-xl border px-3 py-2 text-xs font-medium ${
-            status === "error"
-              ? "border-red-200 bg-red-50 text-red-600"
-              : status === "success"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : status === "listening"
-                  ? "border-orange-200 bg-orange-50 text-orange-600"
-                  : "border-gray-200 bg-gray-50 text-gray-600"
-          }`}
-        >
-          {status === "listening" && "聞いています..."}
-          {status === "processing" && "AI解析中..."}
-          {status === "error" && errorMsg}
-          {status === "success" && successMsg}
-        </div>
-      )}
+      <div role="status" aria-live="polite">
+        {(status === "listening" || status === "processing" || status === "error" || status === "success") && (
+          <div
+            className={`max-w-xs animate-pop-in rounded-xl border px-3 py-2 text-xs font-medium shadow-sm ${
+              status === "error"
+                ? "border-destructive/25 bg-destructive/10 text-destructive"
+                : status === "success"
+                  ? "border-success/25 bg-success-soft text-success"
+                  : status === "listening"
+                    ? "border-brand/25 bg-brand-soft text-brand"
+                    : "border-border bg-muted text-muted-foreground"
+            }`}
+          >
+            {status === "listening" && "聞いています..."}
+            {status === "processing" && "AI解析中..."}
+            {status === "error" && errorMsg}
+            {status === "success" && successMsg}
+          </div>
+        )}
+      </div>
 
       <button
         type="button"
-        aria-label="音声入力"
+        aria-label={status === "listening" ? "音声入力を停止" : "音声入力"}
         onClick={handleClick}
         disabled={isDisabled}
-        className={`flex size-14 items-center justify-center rounded-full text-white shadow-lg transition-all active:scale-95 disabled:cursor-not-allowed ${buttonColor} ${status === "listening" ? "animate-pulse" : ""}`}
+        className={`relative flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-spring active:scale-90 disabled:cursor-not-allowed ${buttonColor}`}
       >
+        {status === "listening" && (
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full bg-destructive/40 motion-safe:animate-ping"
+          />
+        )}
         {status === "processing" ? (
-          <Loader2 className="size-6 animate-spin" />
+          <Loader2 className="size-6 motion-safe:animate-spin" />
         ) : status === "listening" ? (
-          <MicOff className="size-6" />
+          <MicOff className="relative size-6" />
         ) : status === "success" ? (
-          <span className="text-lg">✓</span>
+          <span className="text-lg" aria-hidden>✓</span>
         ) : (
           <Mic className="size-6" />
         )}

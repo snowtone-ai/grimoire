@@ -89,9 +89,10 @@ export function TaskEditModal({
       }}
     >
       <div
-        className="w-full max-w-lg rounded-t-2xl bg-background p-6 shadow-xl max-h-[90dvh] overflow-y-auto animate-slide-up"
+        className="w-full max-w-lg rounded-t-3xl bg-card p-6 pt-3 shadow-xl max-h-[90dvh] overflow-y-auto animate-slide-up"
         style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
       >
+        <div aria-hidden className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-muted" />
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">タスクを編集</h2>
@@ -112,7 +113,7 @@ export function TaskEditModal({
               htmlFor="edit-task-title"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              タスク名<span className="ml-0.5 text-orange-500">*</span>
+              タスク名<span className="ml-0.5 text-brand">*</span>
             </label>
             <input
               id="edit-task-title"
@@ -121,7 +122,7 @@ export function TaskEditModal({
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
             />
           </div>
 
@@ -138,7 +139,7 @@ export function TaskEditModal({
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
             />
           </div>
 
@@ -149,7 +150,7 @@ export function TaskEditModal({
                 htmlFor="edit-task-due-date"
                 className="mb-1 block text-sm font-medium text-foreground"
               >
-                期限日<span className="ml-0.5 text-orange-500">*</span>
+                期限日<span className="ml-0.5 text-brand">*</span>
               </label>
               <input
                 id="edit-task-due-date"
@@ -157,7 +158,7 @@ export function TaskEditModal({
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
             </div>
             <div className="w-32">
@@ -173,7 +174,7 @@ export function TaskEditModal({
                 type="time"
                 value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
             </div>
           </div>
@@ -210,7 +211,7 @@ export function TaskEditModal({
                   onClick={() => setRecurrence(value)}
                   className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition-colors ${
                     recurrence === value
-                      ? "bg-orange-500 text-white border-orange-500"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-foreground bg-transparent"
                   }`}
                 >
@@ -229,7 +230,7 @@ export function TaskEditModal({
                     onClick={() => setRecurrenceDayOfWeek(i)}
                     className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                       recurrenceDayOfWeek === i
-                        ? "bg-orange-500 text-white"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
@@ -257,11 +258,11 @@ export function TaskEditModal({
                   onChange={(e) =>
                     setRecurrenceDayOfMonth(Number(e.target.value))
                   }
-                  className="w-24 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  className="w-24 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                 />
                 <span className="ml-2 text-sm text-muted-foreground">日</span>
                 {recurrenceDayOfMonth > 28 && (
-                  <p className="mt-1.5 text-xs text-amber-600">
+                  <p className="mt-1.5 text-xs text-brand">
                     2月など短い月はこの日にタスクが表示されません
                   </p>
                 )}
@@ -273,7 +274,7 @@ export function TaskEditModal({
           <button
             type="submit"
             disabled={saving || !title.trim() || !dueDate}
-            className="w-full rounded-xl bg-orange-500 py-3 text-sm font-bold text-white shadow-sm transition-opacity disabled:opacity-50 active:scale-95"
+            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             {saving ? "保存中..." : "変更を保存"}
           </button>
@@ -285,14 +286,14 @@ export function TaskEditModal({
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 py-3 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50 active:scale-95"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 active:scale-[0.98]"
             >
               <Trash2 className="size-4" />
               タスクを削除
             </button>
           ) : (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-4 space-y-3">
-              <p className="text-sm text-red-700 font-medium text-center">
+            <div className="rounded-xl bg-destructive/10 border border-destructive/25 p-4 space-y-3">
+              <p className="text-sm text-destructive font-medium text-center">
                 このタスクを削除しますか？
               </p>
               <div className="flex gap-3">
@@ -307,7 +308,7 @@ export function TaskEditModal({
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-bold text-white transition-opacity disabled:opacity-50 active:scale-95"
+                  className="flex-1 rounded-xl bg-destructive py-2.5 text-sm font-bold text-background transition-opacity disabled:opacity-50 active:scale-[0.98]"
                 >
                   {deleting ? "削除中..." : "削除する"}
                 </button>

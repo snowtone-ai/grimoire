@@ -18,8 +18,9 @@ export function SelectedDateSheet({
 }: SelectedDateSheetProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade-in" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg rounded-t-2xl bg-background shadow-xl flex flex-col max-h-[70dvh] animate-slide-up">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+      <div className="w-full max-w-lg rounded-t-3xl bg-card shadow-xl flex flex-col max-h-[70dvh] animate-slide-up">
+        <div aria-hidden className="mx-auto mt-3 h-1.5 w-10 flex-shrink-0 rounded-full bg-muted" />
+        <div className="flex items-center justify-between px-5 pt-2 pb-3 flex-shrink-0">
           <h2 className="text-base font-bold text-foreground">{formatDateLabel(selectedDate)}</h2>
           <button type="button" aria-label="閉じる" onClick={onClose} className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">
             <X className="size-5" />
@@ -64,9 +65,9 @@ function SheetTaskButton({
       }}
       className={`w-full flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm text-left transition-opacity ${task.completed ? "opacity-50" : ""}`}
     >
-      <span className={`size-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${task.completed ? "border-orange-500 bg-orange-500" : "border-muted-foreground/40"}`}>
+      <span className={`size-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${task.completed ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
         {task.completed && (
-          <svg viewBox="0 0 10 8" className="size-2.5 stroke-white" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 10 8" className="size-2.5 stroke-primary-foreground" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="1,4 4,7 9,1" />
           </svg>
         )}

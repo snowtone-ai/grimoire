@@ -80,16 +80,16 @@ export function CalendarImportModal({ open, onClose, onTasksCreated }: Props) {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {step === "auth" && (
           <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
-            <CalendarPlus className="mb-4 size-10 text-orange-500" />
+            <CalendarPlus className="mb-4 size-10 text-brand" />
             <button
               type="button"
               onClick={loadEvents}
               disabled={auth.isLoading}
-              className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white active:scale-95 disabled:opacity-50"
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground active:scale-95 disabled:opacity-50"
             >
               Calendarと接続
             </button>
-            {(error || auth.error) && <p className="mt-3 text-sm text-red-500">{error ?? auth.error}</p>}
+            {(error || auth.error) && <p className="mt-3 text-sm text-destructive">{error ?? auth.error}</p>}
           </div>
         )}
         {step === "loading" && <LoadingState />}
@@ -109,7 +109,7 @@ export function CalendarImportModal({ open, onClose, onTasksCreated }: Props) {
 function LoadingState() {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-3">
-      <Loader2 className="size-8 animate-spin text-orange-500" />
+      <Loader2 className="size-8 animate-spin text-brand" />
       <p className="text-sm text-muted-foreground">予定を読み込み中...</p>
     </div>
   );
@@ -141,8 +141,8 @@ function ConfirmEvents({
               onClick={() => onUpdate(candidate.event.id, { selected: !candidate.selected })}
               className="flex w-full gap-3 text-left"
             >
-              <span className={`mt-0.5 flex size-5 items-center justify-center rounded border ${candidate.selected ? "border-orange-500 bg-orange-500" : "border-border"}`}>
-                {candidate.selected && <Check className="size-3 text-white" />}
+              <span className={`mt-0.5 flex size-5 items-center justify-center rounded border transition-colors ${candidate.selected ? "border-primary bg-primary" : "border-border"}`}>
+                {candidate.selected && <Check className="size-3 text-primary-foreground" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">{task.title}</span>
@@ -154,7 +154,7 @@ function ConfirmEvents({
             <select
               value={candidate.category}
               onChange={(event) => onUpdate(candidate.event.id, { category: event.target.value as Category })}
-              className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
             >
               <option value="job">就活</option>
               <option value="university">大学</option>
@@ -167,7 +167,7 @@ function ConfirmEvents({
         type="button"
         onClick={onCreate}
         disabled={selectedCount === 0}
-        className="mt-4 w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white active:scale-95 disabled:opacity-50"
+        className="mt-4 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 active:scale-[0.98] disabled:opacity-50"
       >
         選択した予定を追加
       </button>
@@ -178,9 +178,9 @@ function ConfirmEvents({
 function DoneState({ count, onClose }: { count: number; onClose: () => void }) {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
-      <Check className="mb-4 size-10 text-green-500" />
+      <Check className="mb-4 size-10 text-success" />
       <p className="text-base font-semibold text-foreground">{count}件のタスクを追加しました</p>
-      <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white">
+      <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
         閉じる
       </button>
     </div>

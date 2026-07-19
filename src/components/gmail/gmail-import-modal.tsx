@@ -73,16 +73,16 @@ export function GmailImportModal({ open, onClose, onTasksCreated }: Props) {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {step === "auth" && (
           <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
-            <Mail className="mb-4 size-10 text-orange-500" />
+            <Mail className="mb-4 size-10 text-brand" />
             <button
               type="button"
               onClick={loadCandidates}
               disabled={auth.isLoading}
-              className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white active:scale-95 disabled:opacity-50"
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground active:scale-95 disabled:opacity-50"
             >
               Gmailと接続
             </button>
-            {(error || auth.error) && <p className="mt-3 text-sm text-red-500">{error ?? auth.error}</p>}
+            {(error || auth.error) && <p className="mt-3 text-sm text-destructive">{error ?? auth.error}</p>}
           </div>
         )}
         {step === "loading" && <LoadingState label="メールからタスク候補を抽出中..." />}
@@ -113,7 +113,7 @@ function ModalHeader({ onClose }: { onClose: () => void }) {
 function LoadingState({ label }: { label: string }) {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-3">
-      <Loader2 className="size-8 animate-spin text-orange-500" />
+      <Loader2 className="size-8 animate-spin text-brand" />
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
@@ -143,8 +143,8 @@ function ConfirmList({
           onClick={() => onToggle(candidate.messageId)}
           className="flex w-full gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm"
         >
-          <span className={`mt-0.5 flex size-5 items-center justify-center rounded border ${candidate.selected ? "border-orange-500 bg-orange-500" : "border-border"}`}>
-            {candidate.selected && <Check className="size-3 text-white" />}
+          <span className={`mt-0.5 flex size-5 items-center justify-center rounded border transition-colors ${candidate.selected ? "border-primary bg-primary" : "border-border"}`}>
+            {candidate.selected && <Check className="size-3 text-primary-foreground" />}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-foreground">{candidate.task.title}</span>
@@ -159,7 +159,7 @@ function ConfirmList({
         type="button"
         onClick={onCreate}
         disabled={selectedCount === 0}
-        className="mt-4 w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white active:scale-95 disabled:opacity-50"
+        className="mt-4 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 active:scale-[0.98] disabled:opacity-50"
       >
         選択したタスクを追加
       </button>
@@ -170,9 +170,9 @@ function ConfirmList({
 function DoneState({ count, onClose }: { count: number; onClose: () => void }) {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center text-center">
-      <Check className="mb-4 size-10 text-green-500" />
+      <Check className="mb-4 size-10 text-success" />
       <p className="text-base font-semibold text-foreground">{count}件のタスクを追加しました</p>
-      <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white">
+      <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
         閉じる
       </button>
     </div>
