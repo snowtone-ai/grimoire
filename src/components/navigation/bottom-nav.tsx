@@ -16,12 +16,15 @@ type NavPath = (typeof NAV_ITEMS)[number]["href"];
 
 /** Mark the html element so CSS picks the page-turn direction, then let the
  * transition Link take over. The marker is cleared after the turn ends. */
+let pageTurnTimer = 0;
+
 function markPageTurn(fromPath: string, toPath: string) {
   const fromIndex = NAV_ITEMS.findIndex((item) => item.href === fromPath);
   const toIndex = NAV_ITEMS.findIndex((item) => item.href === toPath);
   const root = document.documentElement;
+  window.clearTimeout(pageTurnTimer);
   root.dataset.pageTurn = toIndex < fromIndex ? "back" : "fwd";
-  window.setTimeout(() => {
+  pageTurnTimer = window.setTimeout(() => {
     delete root.dataset.pageTurn;
   }, 700);
 }

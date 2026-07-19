@@ -20,7 +20,12 @@ import {
 import { todayDateString } from "@/lib/domain/task-date";
 import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
 import { grantDropForTask, type GrantResult } from "@/lib/rewardDb";
-import { playClear, playFanfare, playUndo } from "@/lib/sound";
+import {
+  playClear,
+  playFanfare,
+  playUndo,
+  primeAudioOnFirstGesture,
+} from "@/lib/sound";
 import { usePlant } from "./use-plant";
 
 export function useHomeScreen() {
@@ -58,6 +63,7 @@ export function useHomeScreen() {
   }, []);
 
   useEffect(() => {
+    primeAudioOnFirstGesture();
     initializeNotificationState(setNotifPermission, setNotifBannerDismissed);
     const fallback = setTimeout(() => setLoading(false), 1500);
 

@@ -67,7 +67,9 @@ class TaskManagerDB extends Dexie {
         tasks: "id, dueDate, category, completed, recurrence",
         streaks: "date",
         plantState: "++id",
-        drops: "++id, taskId, dateKey, rarity, [taskId+dateKey]",
+        // &[taskId+dateKey] is unique: one drop per task per day is enforced
+        // by the store itself, not just the read-then-add check.
+        drops: "++id, taskId, dateKey, rarity, &[taskId+dateKey]",
       })
       .upgrade(async (tx) => {
         const now = new Date();

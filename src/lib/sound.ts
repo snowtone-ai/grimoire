@@ -38,6 +38,17 @@ function ac(): AudioContext | null {
   }
 }
 
+/** Create and unlock the AudioContext inside the first user gesture, so
+ * sounds played after async work (e.g. quest completion) are not muted by
+ * the autoplay policy on the session's very first interaction. */
+export function primeAudioOnFirstGesture(): void {
+  if (typeof window === "undefined") return;
+  window.addEventListener("pointerdown", () => void ac(), {
+    once: true,
+    passive: true,
+  });
+}
+
 /** Pentatonic palette (Hz). */
 const N = {
   E4: 329.63, G4: 392.0,
