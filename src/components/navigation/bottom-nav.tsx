@@ -42,6 +42,10 @@ export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
       aria-label="メインナビゲーション"
       className="bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
     >
+      <div
+        aria-hidden
+        className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-frost/45 to-transparent"
+      />
       <div className="mx-auto flex max-w-lg">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;

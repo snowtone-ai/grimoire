@@ -264,7 +264,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
           <button
             type="submit"
             disabled={saving || !title.trim() || !dueDate}
-            className="btn-squish w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 disabled:opacity-50"
+            className="btn-squish w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 inset-shadow-[0_1px_0_rgba(255,255,255,0.25)] disabled:opacity-50"
           >
             {saving ? "保存中..." : "受注する"}
           </button>

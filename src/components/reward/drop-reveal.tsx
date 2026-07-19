@@ -49,9 +49,22 @@ export function DropReveal({
       onClick={onDismiss}
     >
       <div
-        className={`drop-reveal w-full max-w-[280px] rounded-3xl border border-border bg-card p-5 text-center shadow-xl ${style.ring}`}
+        className={`drop-reveal relative w-full max-w-[280px] overflow-hidden rounded-3xl border border-border bg-card p-5 text-center shadow-xl ${style.ring}`}
       >
-        <p className="text-xs font-bold tracking-[0.18em] text-brand">クエスト達成！</p>
+        {grant.rarity === 8 && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-gold/15 via-transparent to-transparent"
+          />
+        )}
+        <div className="flex items-center gap-2.5">
+          <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/60" />
+          <p className="font-display text-[13px] font-bold tracking-[0.24em] text-gold">
+            QUEST CLEAR
+          </p>
+          <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/60" />
+        </div>
+        <p className="mt-1 text-[10px] font-bold tracking-[0.2em] text-brand">クエスト達成！</p>
 
         <div className="mt-4 flex items-center justify-center">
           {grant.drop.photo ? (

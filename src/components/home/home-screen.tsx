@@ -26,10 +26,13 @@ export function HomeScreen() {
   });
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
-          <p className="text-[13px] font-medium text-muted-foreground">{dateLabel}</p>
+          <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+            GRIMOIRE
+          </p>
+          <p className="mt-1 text-[13px] font-medium text-muted-foreground">{dateLabel}</p>
           <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
             今日のクエスト
           </h1>
@@ -186,8 +189,12 @@ function HeroCard({
   return (
     <section
       aria-label="今日の進捗"
-      className="aurora mx-4 animate-pop-in rounded-3xl border border-border bg-card p-5 shadow-sm"
+      className="aurora relative mx-4 animate-pop-in overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm"
     >
+      <div
+        aria-hidden
+        className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent"
+      />
       <div className="flex items-center gap-5">
         <ProgressRing completedCount={completedCount} totalCount={totalCount} />
         <div className="min-w-0 flex-1">
@@ -238,6 +245,12 @@ function ProgressRing({
       className="relative size-[84px] shrink-0"
     >
       <svg viewBox="0 0 76 76" className="size-full -rotate-90">
+        <defs>
+          <linearGradient id="ring-ember" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fbbf24" />
+            <stop offset="1" stopColor="#fb923c" />
+          </linearGradient>
+        </defs>
         <circle cx="38" cy="38" r={radius} fill="none" strokeWidth="7" className="stroke-muted" />
         <circle
           cx="38"
@@ -248,7 +261,8 @@ function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - fraction)}
-          className="stroke-primary transition-[stroke-dashoffset] duration-700 ease-fluid"
+          stroke="url(#ring-ember)"
+          className="transition-[stroke-dashoffset] duration-700 ease-fluid"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
@@ -302,7 +316,7 @@ function NotificationPanel({
         <button
           type="button"
           onClick={onRequest}
-          className="mt-2 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+          className="btn-squish mt-2 w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-2.5 text-sm font-bold text-primary-foreground inset-shadow-[0_1px_0_rgba(255,255,255,0.25)]"
         >
           通知を許可する
         </button>
@@ -385,7 +399,7 @@ function FloatingActions({
           playTap();
           onAdd();
         }}
-        className="btn-squish flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/35"
+        className="btn-squish flex size-14 items-center justify-center rounded-full bg-primary bg-gradient-to-b from-white/25 to-transparent text-primary-foreground shadow-lg shadow-primary/35 inset-shadow-[0_1px_0_rgba(255,255,255,0.3)]"
       >
         <Plus className="size-6" />
       </button>

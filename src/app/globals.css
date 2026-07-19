@@ -71,6 +71,9 @@
     Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-heading: var(--font-sans);
+  /* Trajan-adjacent display face for hunter-notebook overlines and the
+   * QUEST CLEAR banner (Cinzel via next/font; JP glyphs fall back to sans). */
+  --font-display: var(--font-cinzel), "Times New Roman", serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -156,6 +159,23 @@
   --cat-life: oklch(0.51 0.23 302);
   --cat-life-soft: oklch(0.958 0.02 300);
   --radius: 0.75rem;
+  /* Daylight snowfield: pale sky settling onto sunlit snow. */
+  --atmosphere:
+    radial-gradient(
+      100% 55% at 80% -12%,
+      color-mix(in oklab, oklch(0.85 0.08 80) 22%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      110% 60% at 12% -10%,
+      color-mix(in oklab, var(--frost) 14%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      180deg,
+      oklch(0.955 0.02 235),
+      oklch(0.985 0.004 240) 45%
+    );
 }
 
 /* ── Dark scheme (frozen night, hearth-lit) ───────────────────────── */
@@ -194,7 +214,41 @@
     --cat-university-soft: oklch(0.26 0.045 152);
     --cat-life: oklch(0.72 0.16 304);
     --cat-life-soft: oklch(0.28 0.05 303);
+    /* Hoarfrost night: aurora overhead, Seliana's hearth glowing below
+     * the horizon, deep ice-blue sky in between. */
+    --atmosphere:
+      radial-gradient(
+        110% 70% at 18% -12%,
+        color-mix(in oklab, var(--frost) 17%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        90% 55% at 84% -8%,
+        color-mix(in oklab, oklch(0.62 0.17 300) 11%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        130% 45% at 50% 116%,
+        color-mix(in oklab, var(--brand) 9%, transparent),
+        transparent 62%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(0.215 0.05 265),
+        oklch(0.17 0.02 255) 42%,
+        oklch(0.14 0.02 250)
+      );
   }
+}
+
+/* Fixed sky behind every screen; screens stay transparent so cards float
+ * over the vista. Falls back to the flat background token if unsupported. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--atmosphere);
 }
 
 @layer base {
@@ -236,12 +290,17 @@
   background-image:
     radial-gradient(
       120% 100% at 85% -10%,
-      color-mix(in oklab, var(--frost) 14%, transparent),
+      color-mix(in oklab, var(--frost) 15%, transparent),
       transparent 60%
     ),
     radial-gradient(
+      90% 80% at 45% -20%,
+      color-mix(in oklab, oklch(0.62 0.17 300) 8%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
       100% 90% at 8% 110%,
-      color-mix(in oklab, var(--brand) 9%, transparent),
+      color-mix(in oklab, var(--brand) 10%, transparent),
       transparent 55%
     );
 }
@@ -356,6 +415,32 @@ html[data-page-turn] .task-vt {
 
 .drop-reveal {
   animation: drop-reveal-in 0.55s var(--ease-out-expo) both;
+}
+
+/* ── Snowfall (botanical-lab vista only, hidden for reduced motion) ── */
+@keyframes snow-drift {
+  from {
+    transform: translate3d(0, -8vh, 0);
+  }
+  to {
+    transform: translate3d(var(--sway, 24px), 106vh, 0);
+  }
+}
+
+.snowflake {
+  position: absolute;
+  top: 0;
+  border-radius: 9999px;
+  background: white;
+  opacity: 0.45;
+  animation: snow-drift var(--dur, 16s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snowflake {
+    display: none;
+  }
 }
 
 /* ── Plant scene ──────────────────────────────────────────────────── */

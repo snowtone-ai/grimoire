@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Cinzel } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-cinzel",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,7 +45,7 @@ export default function RootLayout({
     <ViewTransitions>
       <html
         lang="ja"
-        className="h-full antialiased"
+        className={`h-full antialiased ${cinzel.variable}`}
         suppressHydrationWarning
       >
         <head>
