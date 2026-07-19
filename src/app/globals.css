@@ -2,9 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark mode is media-driven (prefers-color-scheme): the app follows the OS
+ * setting with zero JS and no flash of wrong theme. `dark:` utilities use
+ * Tailwind v4's default media variant. */
 
-/* ── Modal slide-up animation ─────────────────────────────────────── */
+/* ── Keyframes ────────────────────────────────────────────────────── */
 @keyframes slide-up {
   from {
     transform: translateY(100%);
@@ -21,27 +23,54 @@
   to   { opacity: 1; }
 }
 
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes check-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Motion vocabulary: fluid for movement, spring for playful overshoot.
+ * Plain @theme (not inline) so the variables are emitted on :root and
+ * stay usable from the raw CSS below (.task-strike, view transitions). */
+@theme {
+  --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: linear(
+    0, 0.0036 1.1%, 0.0185 2.4%, 0.0771 5%, 0.1922 8.1%, 0.6462 17.5%,
+    0.7921 21.5%, 0.9095 25.8%, 0.9695 29.3%, 1.0093 33.3%, 1.0287 38%,
+    1.0324 41.5%, 1.0271 47.1%, 1.0083 59.3%, 1.0007 69.4%, 1
+  );
+}
+
 @theme inline {
   --animate-slide-up: slide-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-pop-in: pop-in 0.45s var(--ease-out-expo) both;
+  --animate-check-pop: check-pop 0.4s var(--ease-out-expo);
+  --animate-breathe: breathe 3.2s ease-in-out infinite;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -58,6 +87,21 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Brand: orange that stays AA-readable as text in both schemes. */
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+
+  /* Task categories (就活 / 大学 / 生活). */
+  --color-cat-job: var(--cat-job);
+  --color-cat-job-soft: var(--cat-job-soft);
+  --color-cat-university: var(--cat-university);
+  --color-cat-university-soft: var(--cat-university-soft);
+  --color-cat-life: var(--cat-life);
+  --color-cat-life-soft: var(--cat-life-soft);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -67,73 +111,74 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Light scheme (warm paper) ────────────────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  color-scheme: light;
+  --background: oklch(0.988 0.005 85);
+  --foreground: oklch(0.215 0.015 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.215 0.015 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.215 0.015 60);
+  /* Primary fills pair vivid orange with deep-brown text (AA on both schemes). */
+  --primary: oklch(0.705 0.213 47.6);
+  --primary-foreground: oklch(0.19 0.04 45);
+  --secondary: oklch(0.955 0.01 80);
+  --secondary-foreground: oklch(0.215 0.015 60);
+  --muted: oklch(0.952 0.008 80);
+  --muted-foreground: oklch(0.49 0.02 60);
+  --accent: oklch(0.955 0.03 60);
+  --accent-foreground: oklch(0.215 0.015 60);
+  --destructive: oklch(0.55 0.23 27.3);
+  --border: oklch(0.905 0.01 80);
+  --input: oklch(0.905 0.01 80);
+  --ring: oklch(0.705 0.213 47.6);
+  --brand: oklch(0.553 0.195 38.4);
+  --brand-soft: oklch(0.962 0.028 65);
+  --success: oklch(0.5 0.14 150);
+  --success-soft: oklch(0.958 0.028 150);
+  --cat-job: oklch(0.5 0.21 262);
+  --cat-job-soft: oklch(0.951 0.023 255);
+  --cat-university: oklch(0.5 0.14 150);
+  --cat-university-soft: oklch(0.958 0.028 150);
+  --cat-life: oklch(0.51 0.23 302);
+  --cat-life-soft: oklch(0.958 0.02 300);
+  --radius: 0.75rem;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* ── Dark scheme (warm botanical charcoal) ────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --background: oklch(0.17 0.012 60);
+    --foreground: oklch(0.955 0.008 80);
+    --card: oklch(0.215 0.014 60);
+    --card-foreground: oklch(0.955 0.008 80);
+    --popover: oklch(0.215 0.014 60);
+    --popover-foreground: oklch(0.955 0.008 80);
+    --primary: oklch(0.75 0.183 55.9);
+    --primary-foreground: oklch(0.19 0.04 45);
+    --secondary: oklch(0.27 0.015 60);
+    --secondary-foreground: oklch(0.955 0.008 80);
+    --muted: oklch(0.26 0.014 60);
+    --muted-foreground: oklch(0.72 0.02 70);
+    --accent: oklch(0.28 0.03 55);
+    --accent-foreground: oklch(0.955 0.008 80);
+    --destructive: oklch(0.704 0.191 22.2);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 14%);
+    --ring: oklch(0.75 0.183 55.9);
+    --brand: oklch(0.78 0.155 60);
+    --brand-soft: oklch(0.28 0.045 55);
+    --success: oklch(0.79 0.17 152);
+    --success-soft: oklch(0.27 0.045 150);
+    --cat-job: oklch(0.71 0.145 255);
+    --cat-job-soft: oklch(0.27 0.05 258);
+    --cat-university: oklch(0.79 0.17 152);
+    --cat-university-soft: oklch(0.26 0.045 152);
+    --cat-life: oklch(0.72 0.16 304);
+    --cat-life-soft: oklch(0.28 0.05 303);
+  }
 }
 
 @layer base {
@@ -159,6 +204,44 @@
   }
 }
 
+/* ── Task micro-interactions ──────────────────────────────────────── */
+/* Strike-through that draws itself through the title on completion. */
+.task-strike {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 0% 1.5px;
+  transition:
+    background-size 0.35s var(--ease-fluid),
+    color 0.35s var(--ease-fluid);
+}
+.task-strike.is-struck {
+  background-size: 100% 1.5px;
+}
+
+/* Checkmark that draws its stroke when the button enters .is-checked. */
+.check-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.28s var(--ease-out-expo) 0.05s;
+}
+.is-checked .check-draw {
+  stroke-dashoffset: 0;
+}
+
+/* ── Native View Transitions (list FLIP on task changes) ──────────── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(*) {
+    animation-duration: 300ms;
+    animation-timing-function: var(--ease-fluid);
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+  }
+}
+
+/* ── Plant scene ──────────────────────────────────────────────────── */
 @keyframes plant-sway {
   0% { transform: rotate(0deg) translateX(0); }
   25% { transform: rotate(1.5deg) translateX(2px); }
@@ -196,4 +279,23 @@
 
 .flip-enter {
   animation: flip-in 0.3s ease-out forwards;
+}
+
+/* ── Reduced motion: settle instantly, keep every end state ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .plant-sway,
+  .petal-fall,
+  .flip-enter,
+  .flip-exit,
+  .animate-slide-up,
+  .animate-fade-in,
+  .animate-pop-in,
+  .animate-check-pop,
+  .animate-breathe {
+    animation: none !important;
+  }
+  .task-strike,
+  .check-draw {
+    transition: none;
+  }
 }

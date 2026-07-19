@@ -5,10 +5,11 @@ import { PwaRegister } from "@/components/pwa-register";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f97316",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbf9f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#1e1915" },
+  ],
 };
 
 export const metadata: Metadata = {
