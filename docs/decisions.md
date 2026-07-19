@@ -198,3 +198,26 @@
   retained unchanged as a historical planning artifact.
 - Future review: if Codex or another second agent is reintroduced, re-add a thin adapter and
   record the concrete need here.
+
+## D-021: 2026デザイン刷新 — メディア駆動ダークファースト + ネイティブView Transitions
+- 日付: 2026-07-19
+- 対象: ui / design-system / accessibility
+- 決定: ダークモードは prefers-color-scheme メディアクエリ駆動（クラストグルなし・JSゼロ・FOUCなし）。
+  全画面の色は globals.css のセマンティックトークン（primary/brand/category/success/destructive）
+  経由に統一し、ライト専用のパレット直書きを廃止。リストの並び替えアニメーションは依存追加なしの
+  ネイティブ View Transitions API + flushSync（`src/lib/view-transition.ts`）で実装。
+- 採用理由: 単一ユーザーのAndroid Chrome PWAではOS設定追従が最小実装で最大効果。orange-500直書きは
+  ダーク非対応かつ白文字コントラスト2.8:1でWCAG AA不合格のため、AA準拠ペア（橙地+濃茶文字、
+  テキスト用は--brand）へ置換。WCAG 2.2対応として userScalable:false 撤廃、24px以上のタッチ
+  ターゲット、progressbarロール、prefers-reduced-motion 全面対応を同時に実施。
+- 実在例:
+  - ホームのヒーローカード: SVG進捗リング + ストリークチップ + 植物ステータスチップ（/plant導線）
+  - タスクカード: pathLength=1 のSVGチェック描画、background-size遷移の取り消し線、
+    grid-template-rows 0fr→1fr の展開、期限超過シグナル
+  - チェック色は text-background / text-primary-foreground で両スキームの可読性を自動維持
+- 不採用案: Biome移行（eslint-config-next 16のNext/react-hooksルール喪失リスク > 速度益）、
+  Motion/Framer Motion導入（View Transitions APIで代替、バンドル増を回避）、
+  クラスベースdarkトグル（状態管理とFOUC対策が不要に増える）、
+  Server Actions/PPR適用（サーバーレスのローカルファーストPWAには適用対象外）
+- 将来見直し条件: 手動テーマ切替の要望が出た場合、またはブラウザのView Transitions挙動差が
+  問題化した場合
