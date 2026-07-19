@@ -3,34 +3,35 @@ import assert from "node:assert/strict";
 import {
   calcProgress,
   calcGrowthStage,
-  countWeeklyCompletedTasks,
-  getWeekStartLocal,
+  countMonthlyCompletedTasks,
+  monthKeyLocal,
   getSpeciesForMonth,
   getStageLabel,
   PLANT_SPECIES,
   toLocalDateString,
 } from "../../../src/lib/domain/plant.ts";
 
-test("calcGrowthStage maps weekly completed count to stages", () => {
+test("calcGrowthStage maps monthly completed count to stages", () => {
   assert.equal(calcGrowthStage(-1), 0);
   assert.equal(calcGrowthStage(0), 0);
   assert.equal(calcGrowthStage(1), 1);
   assert.equal(calcGrowthStage(2), 2);
-  assert.equal(calcGrowthStage(3), 3);
+  assert.equal(calcGrowthStage(3), 2);
   assert.equal(calcGrowthStage(4), 3);
-  assert.equal(calcGrowthStage(5), 4);
-  assert.equal(calcGrowthStage(6), 4);
-  assert.equal(calcGrowthStage(7), 5);
+  assert.equal(calcGrowthStage(6), 3);
+  assert.equal(calcGrowthStage(7), 4);
+  assert.equal(calcGrowthStage(10), 4);
+  assert.equal(calcGrowthStage(11), 5);
 });
 
 test("calcProgress maps current stage progress including final stage", () => {
   assert.equal(calcProgress(0, 0), 0);
   assert.equal(calcProgress(1, 1), 100);
-  assert.equal(calcProgress(2, 2), 100);
-  assert.equal(calcProgress(3, 3), 50);
+  assert.equal(calcProgress(2, 2), 50);
+  assert.equal(calcProgress(4, 3), 33);
   assert.equal(calcProgress(-1, 1), 0);
   assert.equal(calcProgress(99, 4), 100);
-  assert.equal(calcProgress(7, 5), 100);
+  assert.equal(calcProgress(11, 5), 100);
 });
 
 test("plant species covers all months and required archetypes", () => {
@@ -50,25 +51,23 @@ test("getSpeciesForMonth rejects invalid months instead of returning blank UI da
   assert.throws(() => getSpeciesForMonth(0), /Invalid plant month/);
 });
 
-test("countWeeklyCompletedTasks only includes completed tasks in the current week", () => {
-  const now = new Date("2026-05-15T12:00:00.000Z");
+test("countMonthlyCompletedTasks only includes completed tasks in the current month", () => {
+  const now = new Date("2026-05-15T12:00:00");
   const tasks = [
-    { completed: true, completedAt: "2026-05-12T00:00:00.000Z" },
-    { completed: true, completedAt: "2026-05-15T11:00:00.000Z" },
-    { completed: true, completedAt: "2026-05-08T23:59:59.000Z" },
-    { completed: false, completedAt: "2026-05-14T10:00:00.000Z" },
+    { completed: true, completedAt: "2026-05-12T10:00:00" },
+    { completed: true, completedAt: "2026-05-02T09:00:00" },
+    { completed: true, completedAt: "2026-04-28T23:59:59" },
+    { completed: true, completedAt: "2026-05-20T10:00:00" },
+    { completed: false, completedAt: "2026-05-14T10:00:00" },
     { completed: true, completedAt: null },
   ];
 
-  assert.equal(countWeeklyCompletedTasks(tasks, now), 2);
+  assert.equal(countMonthlyCompletedTasks(tasks, now), 2);
 });
 
-test("getWeekStartLocal uses Monday as start of week", () => {
-  const sunday = new Date("2026-05-17T12:00:00+09:00");
-  assert.equal(toLocalDateString(getWeekStartLocal(sunday)), "2026-05-11");
-
-  const monday = new Date("2026-05-18T00:01:00+09:00");
-  assert.equal(toLocalDateString(getWeekStartLocal(monday)), "2026-05-18");
+test("monthKeyLocal formats the local year-month", () => {
+  assert.equal(monthKeyLocal(new Date("2026-05-01T00:30:00")), "2026-05");
+  assert.equal(monthKeyLocal(new Date("2026-12-31T23:59:00")), "2026-12");
 });
 
 test("toLocalDateString is timezone-safe for local date extraction", () => {

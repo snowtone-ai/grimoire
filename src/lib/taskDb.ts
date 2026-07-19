@@ -6,7 +6,7 @@ import {
   todayDateString,
   toDateStr,
 } from "./domain/task-date";
-import { countWeeklyCompletedTasks, getWeekStartLocal, toLocalDateString } from "./domain/plant";
+import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant";
 
 // ── Task CRUD ──────────────────────────────────────────────────────────────
 
@@ -78,19 +78,19 @@ export async function toggleTaskComplete(id: string): Promise<void> {
   }
 }
 
-/** 現在週の完了数を集計し、plantStateを同期する */
+/** 今月の完了数を集計し、plantStateを同期する（月内累積・減算なしの育成） */
 export async function syncPlantStateFromTasks(now = new Date()): Promise<void> {
   const tasks = await db.tasks.toArray();
-  const weekStartDate = toLocalDateString(getWeekStartLocal(now));
-  const weeklyCompleted = countWeeklyCompletedTasks(tasks, now);
+  const monthKey = monthKeyLocal(now);
+  const monthlyCompleted = countMonthlyCompletedTasks(tasks, now);
   const existing = await db.plantState.get(1);
 
   if (!existing) {
     await db.plantState.put({
       id: 1,
-      weeklyCompleted,
-      lifetimeCompleted: weeklyCompleted,
-      weekStartDate,
+      monthlyCompleted,
+      monthKey,
+      lifetimeCompleted: monthlyCompleted,
       lastUpdated: now.toISOString(),
     });
     return;
@@ -98,8 +98,8 @@ export async function syncPlantStateFromTasks(now = new Date()): Promise<void> {
 
   await db.plantState.put({
     ...existing,
-    weeklyCompleted,
-    weekStartDate,
+    monthlyCompleted,
+    monthKey,
     lastUpdated: now.toISOString(),
   });
 }

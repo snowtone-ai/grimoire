@@ -32,23 +32,26 @@ export const PLANT_SPECIES: PlantSpecies[] = [
 
 export type GrowthStage = 0 | 1 | 2 | 3 | 4 | 5;
 
-const THRESHOLDS = [0, 1, 2, 4, 6, Infinity] as const;
+/* Growth is cumulative within the calendar month — progress is never taken
+ * away mid-month (ADHD-safe: no weekly confiscation). A new month brings a
+ * new species, which is a fresh start, not a punishment. */
+const THRESHOLDS = [0, 1, 3, 6, 10, Infinity] as const;
 
-/** Map weekly completed count to a growth stage (0-5). */
-export function calcGrowthStage(weeklyCompleted: number): GrowthStage {
-  const completed = Math.max(0, weeklyCompleted);
+/** Map the monthly completed count to a growth stage (0-5). */
+export function calcGrowthStage(monthlyCompleted: number): GrowthStage {
+  const completed = Math.max(0, monthlyCompleted);
   const stage = THRESHOLDS.findIndex((threshold) => completed <= threshold);
   return Math.max(0, stage) as GrowthStage;
 }
 
 /** Progress percentage toward the next growth stage. */
-export function calcProgress(weeklyCompleted: number, stage: GrowthStage): number {
+export function calcProgress(monthlyCompleted: number, stage: GrowthStage): number {
   const hi = THRESHOLDS[stage];
   if (stage === 0) return 0;
   if (hi === Infinity) return 100;
 
   const lo = THRESHOLDS[stage - 1];
-  const completed = Math.max(0, weeklyCompleted);
+  const completed = Math.max(0, monthlyCompleted);
   const progress = Math.round(((completed - lo) / (hi - lo)) * 100);
   return Math.min(100, Math.max(0, progress));
 }
@@ -64,26 +67,25 @@ export function getSpeciesForMonth(month: number): PlantSpecies {
   return species;
 }
 
-export function countWeeklyCompletedTasks(
+/** Count tasks completed within the local calendar month of `now`. */
+export function countMonthlyCompletedTasks(
   tasks: CompletedTaskRecord[],
   now: Date
 ): number {
-  const weekStart = getWeekStartLocal(now);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   return tasks.filter((task) => {
     if (!task.completed || !task.completedAt) return false;
     const completedAt = new Date(task.completedAt);
-    return completedAt >= weekStart && completedAt <= now;
+    return completedAt >= monthStart && completedAt <= now;
   }).length;
 }
 
-export function getWeekStartLocal(baseDate: Date): Date {
-  const weekStart = new Date(baseDate);
-  weekStart.setHours(0, 0, 0, 0);
-  const day = weekStart.getDay();
-  const diff = day === 0 ? 6 : day - 1;
-  weekStart.setDate(weekStart.getDate() - diff);
-  return weekStart;
+/** Local-timezone month key, e.g. "2026-07". */
+export function monthKeyLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
 }
 
 export function toLocalDateString(date: Date): string {
