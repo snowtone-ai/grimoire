@@ -29,11 +29,8 @@ export function GmailImportModal({ open, onClose, onTasksCreated }: Props) {
     setStep("loading");
     setError(null);
     try {
-      if (!auth.isConnected) {
-        const connected = await auth.connect();
-        if (!connected) { setStep("auth"); return; } // user cancelled
-      }
-      const messages = await fetchRecentMessages();
+      const messages = await auth.withAuth(() => fetchRecentMessages());
+      if (messages === null) { setStep("auth"); return; } // user cancelled auth
       const extracted = await extractTasksFromEmails(messages);
       setCandidates(extracted);
       setStep("confirm");
