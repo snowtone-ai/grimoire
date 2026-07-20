@@ -34,11 +34,8 @@ export function CalendarImportModal({ open, onClose, onTasksCreated }: Props) {
     setStep("loading");
     setError(null);
     try {
-      if (!auth.isConnected) {
-        const connected = await auth.connect();
-        if (!connected) { setStep("auth"); return; } // user cancelled
-      }
-      const events = await fetchUpcomingEvents();
+      const events = await auth.withAuth(() => fetchUpcomingEvents());
+      if (events === null) { setStep("auth"); return; } // user cancelled auth
       setCandidates(events.map((event) => ({ event, selected: true, category: "life" })));
       setStep("confirm");
     } catch (err) {

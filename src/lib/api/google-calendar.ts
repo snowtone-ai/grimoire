@@ -1,5 +1,5 @@
 import type { Category, Recurrence } from "@/lib/db";
-import { getToken } from "./google-auth";
+import { googleAuthFetch } from "./google-auth";
 
 export interface CalendarEvent {
   id: string;
@@ -10,22 +10,22 @@ export interface CalendarEvent {
 
 const BASE = "https://www.googleapis.com/calendar/v3";
 
-async function authFetch(path: string): Promise<unknown> {
-  const token = getToken("calendar");
-  if (!token) throw new Error("Calendar not authenticated");
-
-  const response = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+// F1+F5: delegates auth + 401 handling to googleAuthFetch; generic T makes casts explicit.
+async function authFetch<T>(path: string): Promise<T> {
+  const response = await googleAuthFetch("calendar", `${BASE}${path}`);
   if (!response.ok) throw new Error(`Calendar API error: ${response.status}`);
-  return response.json();
+  const data: unknown = await response.json();
+  if (data === null || typeof data !== "object") {
+    throw new Error("Calendar API returned an unexpected response");
+  }
+  return data as T;
 }
 
 export async function fetchUpcomingEvents(): Promise<CalendarEvent[]> {
   const timeMin = encodeURIComponent(new Date().toISOString());
-  const data = (await authFetch(
-    `/calendars/primary/events?timeMin=${timeMin}&maxResults=30&singleEvents=true&orderBy=startTime`
-  )) as { items?: CalendarEvent[] };
+  const data = await authFetch<{ items?: CalendarEvent[] }>(
+    `/calendars/primary/events?timeMin=${timeMin}&maxResults=30&singleEvents=true&orderBy=startTime`,
+  );
   return data.items ?? [];
 }
 
