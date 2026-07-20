@@ -36,7 +36,7 @@ export function CalendarImportModal({ open, onClose, onTasksCreated }: Props) {
     try {
       if (!auth.isConnected) {
         const connected = await auth.connect();
-        if (!connected) throw new Error("Calendar認証に失敗しました");
+        if (!connected) { setStep("auth"); return; } // user cancelled
       }
       const events = await fetchUpcomingEvents();
       setCandidates(events.map((event) => ({ event, selected: true, category: "life" })));

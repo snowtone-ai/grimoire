@@ -44,18 +44,29 @@ function getOAuth2(): GoogleOAuth2 | undefined {
   return (window as unknown as GoogleWindow).google?.accounts?.oauth2;
 }
 
-export async function requestGoogleToken(
-  scope: GoogleScope
-): Promise<string> {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set");
+/** Poll until GIS script is ready. Handles async script load timing. */
+function waitForGIS(timeoutMs = 10_000): Promise<GoogleOAuth2> {
+  const immediate = getOAuth2();
+  if (immediate) return Promise.resolve(immediate);
 
-  const oauth2 = getOAuth2();
-  if (!oauth2) {
-    return Promise.reject(
-      new Error("Google Identity Services OAuth2 API is not loaded")
-    );
-  }
+  return new Promise<GoogleOAuth2>((resolve, reject) => {
+    const deadline = Date.now() + timeoutMs;
+    const timer = setInterval(() => {
+      const api = getOAuth2();
+      if (api) { clearInterval(timer); resolve(api); return; }
+      if (Date.now() >= deadline) {
+        clearInterval(timer);
+        reject(new Error("Google認証ライブラリの読み込みがタイムアウトしました。ページを再読み込みしてください。"));
+      }
+    }, 200);
+  });
+}
+
+export async function requestGoogleToken(scope: GoogleScope): Promise<string> {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured");
+
+  const oauth2 = await waitForGIS();
 
   return new Promise<string>((resolve, reject) => {
     const client = oauth2.initTokenClient({
@@ -63,7 +74,10 @@ export async function requestGoogleToken(
       scope: SCOPES[scope],
       callback: (resp) => {
         if (resp.error) {
-          reject(new Error(resp.error));
+          const err = new Error(resp.error);
+          // Tag cancellations so callers can distinguish from real errors.
+          err.name = resp.error === "popup_closed_by_user" ? "GISCancelled" : "GISError";
+          reject(err);
           return;
         }
         tokenMap[scope] = resp.access_token!;

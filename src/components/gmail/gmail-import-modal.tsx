@@ -31,7 +31,7 @@ export function GmailImportModal({ open, onClose, onTasksCreated }: Props) {
     try {
       if (!auth.isConnected) {
         const connected = await auth.connect();
-        if (!connected) throw new Error("Gmail認証に失敗しました");
+        if (!connected) { setStep("auth"); return; } // user cancelled
       }
       const messages = await fetchRecentMessages();
       const extracted = await extractTasksFromEmails(messages);
