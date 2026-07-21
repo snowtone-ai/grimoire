@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { type Category, type Recurrence } from "@/lib/db";
+import { type Recurrence } from "@/lib/db";
 import { createTask } from "@/lib/taskDb";
-import { CATEGORY_CONFIG, CATEGORY_LIST } from "@/lib/domain/category";
 import { playSave } from "@/lib/sound";
 
 interface TaskAddModalProps {
@@ -35,7 +34,6 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(todayDateString());
   const [dueTime, setDueTime] = useState("");
-  const [category, setCategory] = useState<Category>("life");
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
   const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<number>(1);
   const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState<number>(1);
@@ -52,7 +50,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
         description: description.trim(),
         dueDate,
         dueTime: dueTime || null,
-        category,
+        category: "life",
         completed: false,
         completedAt: null,
         recurrence,
@@ -168,29 +166,6 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                 onChange={(e) => setDueTime(e.target.value)}
                 className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
-            </div>
-          </div>
-
-          {/* カテゴリ */}
-          <div>
-            <p className="mb-2 text-sm font-medium text-foreground">
-              カテゴリ
-            </p>
-            <div className="flex gap-2">
-              {CATEGORY_LIST.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setCategory(value)}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition-colors ${
-                    category === value
-                      ? CATEGORY_CONFIG[value].active
-                      : `border ${CATEGORY_CONFIG[value].outline} bg-transparent`
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
             </div>
           </div>
 

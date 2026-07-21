@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChevronDown, Footprints } from "lucide-react";
 import { type Task } from "@/lib/db";
-import { CATEGORY_CONFIG } from "@/lib/domain/category";
 
 interface TaskCardProps {
   task: Task;
@@ -14,7 +13,6 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, departed, onToggle, onTap, onDepart }: TaskCardProps) {
-  const config = CATEGORY_CONFIG[task.category];
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const now = new Date();
@@ -88,11 +86,6 @@ export function TaskCard({ task, departed, onToggle, onTap, onDepart }: TaskCard
             )}
           </div>
 
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${config.bg} ${config.text}`}
-          >
-            {config.label}
-          </span>
         </button>
         {!task.completed && (
           <button

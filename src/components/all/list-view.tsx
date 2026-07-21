@@ -1,13 +1,10 @@
-import { type Category, type Task } from "@/lib/db";
+import { type Task } from "@/lib/db";
 import { formatDateLabel, getRecurrenceDetail } from "@/lib/domain/task-date";
-import { CATEGORY_FILTERS, categoryConfig } from "./all-constants";
 
 interface ListViewProps {
   tasks: Task[];
   today: string;
-  categoryFilter: Category | "all";
   showFutureOnly: boolean;
-  onCategoryFilterChange: (category: Category | "all") => void;
   onShowFutureOnlyChange: (value: boolean) => void;
   onEditTask: (task: Task) => void;
 }
@@ -15,29 +12,12 @@ interface ListViewProps {
 export function ListView({
   tasks,
   today,
-  categoryFilter,
   showFutureOnly,
-  onCategoryFilterChange,
   onShowFutureOnlyChange,
   onEditTask,
 }: ListViewProps) {
   return (
     <div>
-      <div className="flex gap-2 px-4 pb-4 overflow-x-auto">
-        {CATEGORY_FILTERS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onCategoryFilterChange(value)}
-            aria-pressed={categoryFilter === value}
-            className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-              categoryFilter === value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
       <label className="flex items-center gap-2 px-4 pb-3 text-sm text-muted-foreground">
         <input
           type="checkbox"
@@ -76,7 +56,6 @@ function ListTaskButton({
   today: string;
   onEditTask: (task: Task) => void;
 }) {
-  const config = categoryConfig[task.category];
   const recurrenceDetail = getRecurrenceDetail(task);
   const isPast = task.dueDate < today && !task.completed && task.recurrence === "none";
 
@@ -108,9 +87,6 @@ function ListTaskButton({
         </div>
       </div>
 
-      <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
     </button>
   );
 }
