@@ -9,9 +9,15 @@ import {
   DROP_CATALOG,
   RARE_DROPS,
   SSR_DROPS,
+  TIER2_DROPS,
+  TIER3_DROPS,
+  TIER5_DROPS,
+  TIER6_DROPS,
+  TIER7_DROPS,
   type DropDef,
 } from "@/lib/domain/drops";
-import { getCollection } from "@/lib/rewardDb";
+import { getCollection, getChronicle } from "@/lib/rewardDb";
+import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import {
   buildBackupJson,
   downloadBackup,
@@ -23,6 +29,7 @@ import { playSave, playTap } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
+  const [chronicle, setChronicle] = useState<ChronicleMonth[]>([]);
 
   useEffect(() => {
     getCollection()
@@ -31,6 +38,9 @@ export function BookScreen() {
         console.error("[book] collection load failed:", err);
         setCounts(new Map());
       });
+    getChronicle()
+      .then(setChronicle)
+      .catch((err) => console.error("[book] chronicle load failed:", err));
   }, []);
 
   const discovered = counts?.size ?? 0;
@@ -66,57 +76,19 @@ export function BookScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
-        <Section
-          title="絶景の記録"
-          rarityBadge="RARE 8"
-          badgeClass="bg-gold-soft text-gold"
-          drops={SSR_DROPS}
-          counts={counts}
-          columns="grid-cols-3"
-          renderIcon={(drop, isFound) =>
-            isFound && drop.photo ? (
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
-                <Image
-                  src={drop.photo}
-                  alt={drop.name}
-                  fill
-                  sizes="120px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-muted text-xl text-muted-foreground/60">
-                ?
-              </div>
-            )
-          }
-        />
-        <Section
-          title="希少植物"
-          rarityBadge="RARE 4"
-          badgeClass="bg-frost-soft text-frost"
-          drops={RARE_DROPS}
-          counts={counts}
-          columns="grid-cols-4"
-          renderIcon={(drop, isFound) => (
-            <span className={`text-3xl select-none ${isFound ? "" : "grayscale opacity-30"}`} aria-hidden>
-              {isFound ? drop.emoji : "❔"}
-            </span>
-          )}
-        />
-        <Section
-          title="採集素材"
-          rarityBadge="RARE 1"
-          badgeClass="bg-muted text-muted-foreground"
-          drops={COMMON_DROPS}
-          counts={counts}
-          columns="grid-cols-4"
-          renderIcon={(drop, isFound) => (
-            <span className={`text-3xl select-none ${isFound ? "" : "grayscale opacity-30"}`} aria-hidden>
-              {isFound ? drop.emoji : "❔"}
-            </span>
-          )}
-        />
+        <ChronicleSection chronicle={chronicle} />
+        {RARITY_SECTIONS.map((section) => (
+          <Section
+            key={section.rarity}
+            title={section.title}
+            rarityBadge={`RARE ${section.rarity}`}
+            badgeClass={section.badgeClass}
+            drops={section.pool}
+            counts={counts}
+            columns={section.columns}
+            renderIcon={section.rarity === 8 ? photoIcon : emojiIcon}
+          />
+        ))}
 
         <BackupSection onImported={() => {
           getCollection()
@@ -253,6 +225,145 @@ function BackupSection({ onImported }: { onImported: () => void }) {
         {message && <p className="mt-2.5 text-xs text-muted-foreground">{message}</p>}
       </div>
     </section>
+  );
+}
+
+const emojiIcon = (drop: DropDef, isFound: boolean) => (
+  <span className={`text-3xl select-none ${isFound ? "" : "grayscale opacity-30"}`} aria-hidden>
+    {isFound ? drop.emoji : "❔"}
+  </span>
+);
+
+const photoIcon = (drop: DropDef, isFound: boolean) =>
+  isFound && drop.photo ? (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+      <Image src={drop.photo} alt={drop.name} fill sizes="120px" className="object-cover" />
+    </div>
+  ) : (
+    <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-muted text-xl text-muted-foreground/60">
+      ?
+    </div>
+  );
+
+// The full RARE 1-8 ladder, shown top rank first. Badge tokens ascend
+// neutral -> green -> cool -> ember -> gold, matching the drop reveal.
+const RARITY_SECTIONS: {
+  rarity: number;
+  title: string;
+  badgeClass: string;
+  pool: DropDef[];
+  columns: string;
+}[] = [
+  { rarity: 8, title: "絶景の記録", badgeClass: "bg-gold-soft text-gold", pool: SSR_DROPS, columns: "grid-cols-3" },
+  { rarity: 7, title: "秘蔵の遺物", badgeClass: "bg-brand text-primary-foreground", pool: TIER7_DROPS, columns: "grid-cols-4" },
+  { rarity: 6, title: "貴重標本", badgeClass: "bg-brand-soft text-brand", pool: TIER6_DROPS, columns: "grid-cols-4" },
+  { rarity: 5, title: "特殊素材", badgeClass: "bg-cat-life-soft text-cat-life", pool: TIER5_DROPS, columns: "grid-cols-4" },
+  { rarity: 4, title: "希少植物", badgeClass: "bg-cat-job-soft text-cat-job", pool: RARE_DROPS, columns: "grid-cols-4" },
+  { rarity: 3, title: "希少結晶", badgeClass: "bg-frost-soft text-frost", pool: TIER3_DROPS, columns: "grid-cols-4" },
+  { rarity: 2, title: "良質素材", badgeClass: "bg-success-soft text-success", pool: TIER2_DROPS, columns: "grid-cols-4" },
+  { rarity: 1, title: "採集素材", badgeClass: "bg-muted text-muted-foreground", pool: COMMON_DROPS, columns: "grid-cols-4" },
+];
+
+// Season identity comes from the RARE4 specimen emoji, so the chronicle can
+// show a month's flower without spoiling its still-locked RARE8 photo.
+const MONTH_EMOJI = new Map<number, string>(
+  RARE_DROPS.map((drop) => [drop.month ?? 0, drop.emoji ?? "🌸"])
+);
+function monthEmoji(month: number): string {
+  return MONTH_EMOJI.get(month) ?? "🌸";
+}
+
+function ChronicleSection({ chronicle }: { chronicle: ChronicleMonth[] }) {
+  if (chronicle.length === 0) return null;
+  const [current, ...past] = chronicle;
+
+  return (
+    <section aria-label="年代記">
+      <div className="mb-1.5 flex items-center gap-2">
+        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-gold">CHRONICLE</p>
+        <h2 className="text-sm font-bold text-foreground">年代記</h2>
+        <span className="ml-auto text-xs text-muted-foreground tabular-nums">{chronicle.length}か月</span>
+      </div>
+      <div
+        aria-hidden
+        className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
+      />
+      <CurrentMonthPage month={current} />
+      {past.length > 0 && (
+        <ul className="mt-2 space-y-1.5">
+          {past.map((month) => (
+            <li key={month.monthKey}>
+              <PastMonthCard month={month} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function CurrentMonthPage({ month }: { month: ChronicleMonth }) {
+  return (
+    <div
+      className="rounded-2xl border border-gold/25 bg-card p-4"
+      style={{ boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${month.species.color} 16%, transparent)` }}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className="flex size-12 flex-shrink-0 items-center justify-center rounded-xl text-2xl select-none"
+          style={{ backgroundColor: `color-mix(in oklab, ${month.species.color} 22%, transparent)` }}
+        >
+          {monthEmoji(month.month)}
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-gold">今月の調査対象</p>
+          <p className="truncate text-base font-bold text-foreground">
+            {month.year}年{month.month}月 · {month.species.name}
+          </p>
+        </div>
+        <span className="ml-auto flex-shrink-0 rounded-full bg-frost-soft px-2 py-0.5 text-[10px] font-bold text-frost">
+          調査中
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <ChronicleStat label="討伐" value={month.totalDrops} />
+        <ChronicleStat label="希少" value={month.rareDrops} />
+        <ChronicleStat label="活動" value={month.activeDays} unit="日" />
+      </dl>
+    </div>
+  );
+}
+
+function PastMonthCard({ month }: { month: ChronicleMonth }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card/70 px-3 py-2">
+      <span
+        aria-hidden
+        className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg text-lg select-none"
+        style={{ backgroundColor: `color-mix(in oklab, ${month.species.color} 18%, transparent)` }}
+      >
+        {monthEmoji(month.month)}
+      </span>
+      <p className="min-w-0 truncate text-sm font-semibold text-foreground">
+        {month.year}年{month.month}月 · {month.species.name}
+      </p>
+      <p className="ml-auto flex-shrink-0 text-xs text-muted-foreground tabular-nums">
+        討伐{month.totalDrops} · 活動{month.activeDays}日
+      </p>
+    </div>
+  );
+}
+
+function ChronicleStat({ label, value, unit }: { label: string; value: number; unit?: string }) {
+  return (
+    <div className="rounded-xl bg-muted/50 py-1.5">
+      <dt className="text-[10px] text-muted-foreground">{label}</dt>
+      <dd className="text-base font-bold tabular-nums text-foreground">
+        {value}
+        {unit && <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>}
+      </dd>
+    </div>
   );
 }
 

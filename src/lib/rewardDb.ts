@@ -6,6 +6,7 @@ import {
   type DropDef,
   type DropRarity,
 } from "./domain/drops";
+import { buildChronicle, type ChronicleMonth } from "./domain/chronicle";
 
 export interface GrantResult {
   drop: DropDef;
@@ -78,4 +79,10 @@ export async function getCollection(): Promise<CollectionSummary> {
     counts.set(record.dropId, (counts.get(record.dropId) ?? 0) + 1);
   }
   return { counts, totalRolls: all.length };
+}
+
+/** Monthly chronicle derived from the (never-revoked) drops table. */
+export async function getChronicle(now = new Date()): Promise<ChronicleMonth[]> {
+  const all: DropRecord[] = await db.drops.toArray();
+  return buildChronicle(all, now);
 }

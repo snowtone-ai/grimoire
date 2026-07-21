@@ -2,11 +2,11 @@
 
 ## Current
 - Branch: main
-- Active task: none — all ledger tasks are verified or closed (T001-T022; zero open agent tasks)
+- Active task: none — all ledger tasks are verified or closed (T001-T024; zero open agent tasks)
 - Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
-- Latest verification pointer: tasks.md T022
+- Latest verification pointer: tasks.md T023/T024
 - Verification mode: standard
 
 ## Current Blocker
@@ -14,9 +14,12 @@
 
 ## Next
 - 2026-07-21: Category classification removed (b31d66e) + calendar reborn as the
-  調査記録 ember heatmap (T022 / D-027). Shipped together on feat/remove-category.
-  Future option: track per-day recurring completion history so recurring quests
-  contribute to the heatmap beyond their last-completed day (see D-027 review note).
+  調査記録 ember heatmap (T022 / D-027, merged #15).
+- 2026-07-21: Permanent-use survey-notes overhaul on feat/seasonal-chronicle —
+  seasonal CHRONICLE (T023 / D-028) + honest RARE 1-8 ladder (T024 / D-029).
+  Future options: chronicle folding / year dividers once it gets long; a
+  moving-personal-best axis (deferred 4th option); per-day recurring completion
+  history for the heatmap (D-027 note); rate/pity re-tuning on real usage.
 - No agent tasks queued. The staged reward plan (案1+案3) is fully shipped:
   drops/collection (T017), bounty board + departure + streak insurance (T018),
   Iceborne vista art direction (T020), Grimoire rebrand (T019), JSON backup (T021).
