@@ -1,5 +1,5 @@
 // Bump this when SW logic changes. All clients discard old caches on activate.
-const CACHE_NAME = "task-manager-v4";
+const CACHE_NAME = "task-manager-v5";
 const NAV_TIMEOUT_MS = 3000;
 
 // ── Scheduled Notification Timers ─────────────────────────────────────────
