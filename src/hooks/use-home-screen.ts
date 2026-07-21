@@ -298,9 +298,10 @@ const EMBER = ["#fb923c", "#fbbf24"];
 const FROST = ["#7dd3fc", "#38bdf8", "#e0f2fe"];
 const GOLD = ["#fbbf24", "#f59e0b", "#fde68a"];
 
-function fireDropConfetti(rarity: 1 | 4 | 8) {
+// RARE 1-8 buckets into low(1-3) / mid(4-6) / high(7-8) confetti intensities.
+function fireDropConfetti(rarity: number) {
   if (prefersReducedMotion()) return;
-  if (rarity === 1) {
+  if (rarity <= 3) {
     confetti({
       particleCount: 30,
       spread: 55,
@@ -312,7 +313,7 @@ function fireDropConfetti(rarity: 1 | 4 | 8) {
     });
     return;
   }
-  if (rarity === 4) {
+  if (rarity <= 6) {
     confetti({
       particleCount: 70,
       spread: 75,

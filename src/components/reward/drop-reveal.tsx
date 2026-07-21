@@ -5,25 +5,20 @@ import { useEffect } from "react";
 import { getRarityLabel } from "@/lib/domain/drops";
 import { type GrantResult } from "@/lib/rewardDb";
 
+// Ascending RARE 1-8 ladder: neutral -> cool -> ember -> gold, with the glow
+// and dwell time growing with rank. Badge tokens match the /book sections.
 const RARITY_STYLE: Record<
   number,
   { badge: string; ring: string; duration: number }
 > = {
-  1: {
-    badge: "bg-muted text-muted-foreground",
-    ring: "",
-    duration: 2000,
-  },
-  4: {
-    badge: "bg-frost-soft text-frost",
-    ring: "ring-2 ring-frost/50 shadow-[0_0_44px] shadow-frost/30",
-    duration: 2600,
-  },
-  8: {
-    badge: "bg-gold-soft text-gold",
-    ring: "ring-2 ring-gold/60 shadow-[0_0_60px] shadow-gold/40",
-    duration: 3400,
-  },
+  1: { badge: "bg-muted text-muted-foreground", ring: "", duration: 2000 },
+  2: { badge: "bg-success-soft text-success", ring: "", duration: 2200 },
+  3: { badge: "bg-frost-soft text-frost", ring: "ring-1 ring-frost/40", duration: 2400 },
+  4: { badge: "bg-cat-job-soft text-cat-job", ring: "ring-2 ring-cat-job/50 shadow-[0_0_44px] shadow-cat-job/25", duration: 2600 },
+  5: { badge: "bg-cat-life-soft text-cat-life", ring: "ring-2 ring-cat-life/50 shadow-[0_0_48px] shadow-cat-life/25", duration: 2800 },
+  6: { badge: "bg-brand-soft text-brand", ring: "ring-2 ring-brand/50 shadow-[0_0_52px] shadow-brand/30", duration: 3000 },
+  7: { badge: "bg-brand text-primary-foreground", ring: "ring-2 ring-brand/70 shadow-[0_0_56px] shadow-brand/40", duration: 3200 },
+  8: { badge: "bg-gold-soft text-gold", ring: "ring-2 ring-gold/60 shadow-[0_0_60px] shadow-gold/40", duration: 3400 },
 };
 
 /** Quest-clear reward card. Tap anywhere to skip; auto-dismisses. */

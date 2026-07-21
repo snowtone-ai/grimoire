@@ -2,8 +2,9 @@
  *
  * Every sound is synthesized from a single C-major pentatonic palette
  * (C-D-E-G-A), so nothing can ever clash. Rarity reuses ONE ascending
- * motif at growing lengths (recognition, not random novelty):
- *   tap 1 note -> clear 3 notes -> RARE4 4 notes -> RARE8 6-note run.
+ * motif at growing lengths (recognition, not random novelty). The RARE 1-8
+ * ladder is bucketed into three motif lengths so the audio stays coherent:
+ *   tap 1 note -> low(1-3) 3 notes -> mid(4-6) 4 notes -> high(7-8) 6-note run.
  * Budget per action: at most 1 sound + 1 haptic. Volume stays low.
  * The toggle persists in localStorage and also gates haptics. */
 
@@ -150,14 +151,15 @@ export function playPage(): void {
   swish(audio, audio.currentTime);
 }
 
-/** Quest clear + drop, scaled by rarity — the same motif, extended. */
-export function playClear(rarity: 1 | 4 | 8): void {
-  if (rarity === 1) {
+/** Quest clear + drop, scaled by rarity band — the same motif, extended.
+ * RARE 1-8 buckets into low(1-3) / mid(4-6) / high(7-8). */
+export function playClear(rarity: number): void {
+  if (rarity <= 3) {
     arpeggio([N.C5, N.E5, N.G5], 0.07, 0.1);
     haptic(12);
     return;
   }
-  if (rarity === 4) {
+  if (rarity <= 6) {
     arpeggio([N.C5, N.E5, N.G5, N.C6], 0.08, 0.11);
     haptic([12, 40, 18]);
     return;
