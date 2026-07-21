@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
-import { type Task, type Category, type Recurrence } from "@/lib/db";
+import { type Task, type Recurrence } from "@/lib/db";
 import { updateTask, deleteTask } from "@/lib/taskDb";
-import { CATEGORY_CONFIG, CATEGORY_LIST } from "@/lib/domain/category";
 import { playSave } from "@/lib/sound";
 
 interface TaskEditModalProps {
@@ -33,7 +32,6 @@ export function TaskEditModal({
   const [description, setDescription] = useState(task.description ?? "");
   const [dueDate, setDueDate] = useState(task.dueDate);
   const [dueTime, setDueTime] = useState(task.dueTime ?? "");
-  const [category, setCategory] = useState<Category>(task.category);
   const [recurrence, setRecurrence] = useState<Recurrence>(task.recurrence);
   const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<number>(
     task.recurrenceDayOfWeek ?? 1
@@ -56,7 +54,6 @@ export function TaskEditModal({
         description: description.trim(),
         dueDate,
         dueTime: dueTime || null,
-        category,
         recurrence,
         recurrenceDayOfWeek:
           recurrence === "weekly" ? recurrenceDayOfWeek : undefined,
@@ -178,27 +175,6 @@ export function TaskEditModal({
                 onChange={(e) => setDueTime(e.target.value)}
                 className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
-            </div>
-          </div>
-
-          {/* カテゴリ */}
-          <div>
-            <p className="mb-2 text-sm font-medium text-foreground">カテゴリ</p>
-            <div className="flex gap-2">
-              {CATEGORY_LIST.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setCategory(value)}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition-colors ${
-                    category === value
-                      ? CATEGORY_CONFIG[value].active
-                      : `border ${CATEGORY_CONFIG[value].outline} bg-transparent`
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
             </div>
           </div>
 

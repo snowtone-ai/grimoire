@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { Calendar, CalendarPlus, List, Plus } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
-import { type Category, type Task } from "@/lib/db";
+import { type Task } from "@/lib/db";
 import { getAllTasks, syncPlantStateFromTasks } from "@/lib/taskDb";
 import {
-  buildCategoryDotMap,
   doesTaskApplyToDate,
   sortTasksByDateTime,
   sortTasksByTime,
@@ -28,7 +27,6 @@ export function AllScreen() {
     return new Date(date.getFullYear(), date.getMonth(), 1);
   });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -62,9 +60,6 @@ export function AllScreen() {
   }, []);
 
   const today = todayDateString();
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const dotMap = buildCategoryDotMap(allTasks, year, month);
   const selectedDateTasks = selectedDate
     ? sortTasksByTime(
         allTasks
@@ -74,7 +69,6 @@ export function AllScreen() {
     : [];
   const filteredTasks = sortTasksByDateTime(
     allTasks
-      .filter((task) => categoryFilter === "all" || task.category === categoryFilter)
       .filter((task) => !showFutureOnly || task.dueDate >= today)
       .map((task) => taskForDisplayDate(task, today))
   );
@@ -119,7 +113,6 @@ export function AllScreen() {
             currentMonth={currentMonth}
             selectedDate={selectedDate}
             today={today}
-            dotMap={dotMap}
             onSelectDate={setSelectedDate}
             onPrevMonth={prevMonth}
             onNextMonth={nextMonth}
@@ -128,9 +121,7 @@ export function AllScreen() {
           <ListView
             tasks={filteredTasks}
             today={today}
-            categoryFilter={categoryFilter}
             showFutureOnly={showFutureOnly}
-            onCategoryFilterChange={setCategoryFilter}
             onShowFutureOnlyChange={setShowFutureOnly}
             onEditTask={setEditingTask}
           />

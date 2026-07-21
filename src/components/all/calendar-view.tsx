@@ -1,13 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { type Category } from "@/lib/db";
 import { WEEKDAY_LABELS, toDateStr } from "@/lib/domain/task-date";
-import { categoryConfig } from "./all-constants";
 
 interface CalendarViewProps {
   currentMonth: Date;
   selectedDate: string | null;
   today: string;
-  dotMap: Record<string, Set<Category>>;
   onSelectDate: (date: string | null) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
@@ -17,7 +14,6 @@ export function CalendarView({
   currentMonth,
   selectedDate,
   today,
-  dotMap,
   onSelectDate,
   onPrevMonth,
   onNextMonth,
@@ -62,7 +58,6 @@ export function CalendarView({
               dateStr={dateStr}
               selected={dateStr === selectedDate}
               today={dateStr === today}
-              dots={dotMap[dateStr]}
               onSelectDate={onSelectDate}
             />
           ) : (
@@ -78,13 +73,11 @@ function CalendarCell({
   dateStr,
   selected,
   today,
-  dots,
   onSelectDate,
 }: {
   dateStr: string;
   selected: boolean;
   today: boolean;
-  dots?: Set<Category>;
   onSelectDate: (date: string | null) => void;
 }) {
   const date = new Date(`${dateStr}T00:00:00`);
@@ -99,18 +92,9 @@ function CalendarCell({
         selected ? "bg-primary" : today ? "bg-brand-soft ring-1 ring-brand/40" : "hover:bg-muted"
       }`}
     >
-      <span className={`text-sm font-medium leading-none ${selected ? "font-bold text-primary-foreground" : today ? "text-brand font-bold" : dayOfWeek === 0 ? "text-destructive" : dayOfWeek === 6 ? "text-cat-job" : "text-foreground"}`}>
+      <span className={`text-sm font-medium leading-none ${selected ? "font-bold text-primary-foreground" : today ? "text-brand font-bold" : dayOfWeek === 0 ? "text-destructive" : dayOfWeek === 6 ? "text-muted-foreground" : "text-foreground"}`}>
         {dayNum}
       </span>
-      {dots && (
-        <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-          {(["job", "university", "life"] as Category[])
-            .filter((category) => dots.has(category))
-            .map((category) => (
-              <span key={category} className={`size-1.5 rounded-full ${selected ? "bg-primary-foreground" : categoryConfig[category].dot}`} />
-            ))}
-        </div>
-      )}
     </button>
   );
 }

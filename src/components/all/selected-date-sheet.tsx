@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import { type Task } from "@/lib/db";
 import { formatDateLabel } from "@/lib/domain/task-date";
-import { categoryConfig } from "./all-constants";
 
 interface SelectedDateSheetProps {
   selectedDate: string;
@@ -54,8 +53,6 @@ function SheetTaskButton({
   onClose: () => void;
   onEditTask: (task: Task) => void;
 }) {
-  const config = categoryConfig[task.category];
-
   return (
     <button
       type="button"
@@ -78,9 +75,6 @@ function SheetTaskButton({
         </p>
         {task.dueTime && <p className="mt-0.5 text-xs text-muted-foreground">{task.dueTime}</p>}
       </div>
-      <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
     </button>
   );
 }
