@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import { type Task } from "@/lib/db";
 import { getAllTasks, syncPlantStateFromTasks } from "@/lib/taskDb";
 import {
+  buildCalendarSummary,
   doesTaskApplyToDate,
   sortTasksByDateTime,
   sortTasksByTime,
@@ -60,6 +61,12 @@ export function AllScreen() {
   }, []);
 
   const today = todayDateString();
+  const calendarSummary = buildCalendarSummary(
+    allTasks,
+    currentMonth.getFullYear(),
+    currentMonth.getMonth()
+  );
+  const lifetimeCompleted = allTasks.filter((task) => task.completedAt).length;
   const selectedDateTasks = selectedDate
     ? sortTasksByTime(
         allTasks
@@ -113,6 +120,8 @@ export function AllScreen() {
             currentMonth={currentMonth}
             selectedDate={selectedDate}
             today={today}
+            summary={calendarSummary}
+            lifetimeCompleted={lifetimeCompleted}
             onSelectDate={setSelectedDate}
             onPrevMonth={prevMonth}
             onNextMonth={nextMonth}

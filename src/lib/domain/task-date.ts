@@ -74,23 +74,71 @@ export function getRecurrenceDetail(task: TaskDateFields): string {
   return "";
 }
 
-export function buildCategoryDotMap(
+/**
+ * Per-day survey-log summary for the calendar heatmap.
+ * `completed` counts quests finished ON that date (the day of effort — the
+ * hunting-log semantics), so the calendar becomes a growing record of activity.
+ * `pending` counts quests scheduled for that date that are not yet done, which
+ * drives the "there is a quest here" marker for both upcoming and untouched days.
+ */
+export interface CalendarDaySummary {
+  completed: number;
+  pending: number;
+}
+
+export function buildCalendarSummary(
   tasks: TaskDateFields[],
   year: number,
   month: number
-): Record<string, Set<Category>> {
+): Record<string, CalendarDaySummary> {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const dotMap: Record<string, Set<Category>> = {};
+  const summary: Record<string, CalendarDaySummary> = {};
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = toDateStr(year, month, day);
-    const categories = tasks
-      .filter((task) => doesTaskApplyToDate(task, dateStr))
-      .map((task) => task.category);
-    if (categories.length > 0) dotMap[dateStr] = new Set(categories);
+    let completed = 0;
+    let pending = 0;
+
+    for (const task of tasks) {
+      // Completed on this date = day of effort (matches taskForDisplayDate's
+      // completedAt slice, so the heat and the day sheet always agree).
+      if (task.completedAt && task.completedAt.slice(0, 10) === dateStr) {
+        completed += 1;
+      }
+      if (doesTaskApplyToDate(task, dateStr) && !taskForDisplayDate(task, dateStr).completed) {
+        pending += 1;
+      }
+    }
+
+    if (completed > 0 || pending > 0) summary[dateStr] = { completed, pending };
   }
 
-  return dotMap;
+  return summary;
+}
+
+/** Aggregate a month's per-day summary into headline survey-log stats. */
+export function summarizeCalendarMonth(
+  summary: Record<string, CalendarDaySummary>
+): { completed: number; activeDays: number; pending: number } {
+  let completed = 0;
+  let activeDays = 0;
+  let pending = 0;
+
+  for (const day of Object.values(summary)) {
+    completed += day.completed;
+    pending += day.pending;
+    if (day.completed > 0) activeDays += 1;
+  }
+
+  return { completed, activeDays, pending };
+}
+
+/** Map a completion count to a 0-3 ember-heat tier for the calendar cell. */
+export function completionHeatLevel(completed: number): 0 | 1 | 2 | 3 {
+  if (completed <= 0) return 0;
+  if (completed === 1) return 1;
+  if (completed <= 3) return 2;
+  return 3;
 }
 
 function compareDueTime(a: TaskDateFields, b: TaskDateFields): number {
