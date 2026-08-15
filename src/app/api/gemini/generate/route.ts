@@ -1,5 +1,6 @@
 import { buildTaskParsePrompt, buildGmailExtractionPrompt } from "@/lib/api/gemini-prompts";
 import type { GmailMessage } from "@/lib/api/gmail";
+import { redactSecret } from "@/lib/errors";
 
 // Server-only proxy for Gemini calls. The API key never reaches the client,
 // and — since this endpoint is unauthenticated on a public URL — only two
@@ -7,6 +8,9 @@ import type { GmailMessage } from "@/lib/api/gmail";
 // "prompt" field: accepting one would turn this into an open LLM relay for
 // anyone who finds the URL.
 export const maxDuration = 60;
+
+/** Whole-request budget for the model/payload retry ladder, inside maxDuration. */
+const LADDER_BUDGET_MS = 50_000;
 
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const;
 const MAX_TEXT_LENGTH = 500;
@@ -56,27 +60,42 @@ async function callGemini(apiKey: string, prompt: string): Promise<Response> {
   ] as const;
 
   let last400Status = 0;
+  // One budget for the whole ladder rather than per attempt: 2 models x 3
+  // payloads at 45s each would be 270s against a 60s maxDuration, so the tail
+  // of the ladder could never actually run.
+  const deadline = Date.now() + LADDER_BUDGET_MS;
 
   for (const model of GEMINI_MODELS) {
     for (const payload of payloads) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        console.error("[gemini/generate] exhausted the time budget before finding a working payload");
+        return Response.json({ error: "Gemini API request failed" }, { status: 504 });
+      }
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(45_000),
+          signal: AbortSignal.timeout(remaining),
         }
       );
 
       if (response.status === 429) return Response.json({ error: "rate_limit" }, { status: 429 });
 
       if (!response.ok) {
+        const body = await response.text().catch(() => "");
         if (response.status === 400) {
+          // Kept server-side only: it can carry project identifiers, and this
+          // endpoint is reachable by anyone. Without it, an all-400 ladder is
+          // undiagnosable.
           last400Status = 400;
+          console.error(`[gemini/generate] ${model} rejected a payload:`, redactSecret(body).slice(0, 200));
           continue;
         }
-        console.error("[gemini/generate] upstream error", response.status, await response.text().catch(() => ""));
+        console.error("[gemini/generate] upstream error", response.status, redactSecret(body).slice(0, 200));
         return Response.json({ error: "Gemini API request failed" }, { status: 502 });
       }
 

@@ -19,40 +19,69 @@ import { PLANT_SPECIES } from "../../../src/lib/domain/plant.ts";
  * the catalog can only ever grow: these tests pin the ids that shipped before
  * the 5x expansion so a future edit can't quietly orphan someone's records. */
 
-/** Every drop id that existed before the catalog expansion. Never shrink this. */
-const LEGACY_DROP_IDS = [
-  // RARE1
-  "c-yukinoshita", "c-kooribana", "c-toudokinoko", "c-shimofuri",
-  "c-reikanomi", "c-hidamari", "c-hikarigoke", "c-yugetsubaki",
-  "c-suishousou", "c-kazekusa", "c-koyukizakura", "c-hoshikuzu",
-  // RARE2
-  "t2-aotsurara", "t2-yukiwata", "t2-koketsubu", "t2-hiuchiishi",
-  "t2-reitosui", "t2-shirakaba",
-  // RARE3
-  "t3-hyousho", "t3-ginsazare", "t3-akanezuna", "t3-aokoseki",
-  "t3-shirogane", "t3-tsuraragane",
-  // RARE5
-  "t5-yukibotaru", "t5-reikagai", "t5-yugegoke", "t5-hakuginyo",
-  "t5-koorichou", "t5-yumigoori",
-  // RARE6
-  "t6-reikaseki", "t6-murasui", "t6-ginkitsune", "t6-yukihyou", "t6-seiraiseki",
-  // RARE7
-  "t7-koreitama", "t7-ginyoku", "t7-enshinseki", "t7-hyoketsurin",
-  // RARE4 / RARE8 seasonal anchors
-  "r-plum", "r-wintersweet", "r-sakura", "r-wisteria", "r-rose", "r-hydrangea",
-  "r-sunflower", "r-morning_glory", "r-cosmos", "r-osmanthus",
-  "r-chrysanthemum", "r-cyclamen",
-  "s-plum", "s-wintersweet", "s-sakura", "s-wisteria", "s-rose", "s-hydrangea",
-  "s-sunflower", "s-morning_glory", "s-cosmos", "s-osmanthus",
-  "s-chrysanthemum", "s-cyclamen",
-];
+/**
+ * Every drop id that existed before the catalog expansion, with the rank it
+ * shipped at. Never shrink this, and never move an id to another rank.
+ *
+ * The rank matters as much as the id: rewardDb decides "is this drop new?" by
+ * searching only the rarity partition the drop belongs to. Moving an id to a
+ * different rank would leave the user's older records outside that partition,
+ * so long-collected materials would start announcing themselves as NEW again.
+ */
+const LEGACY_DROPS_BY_RARITY = {
+  1: [
+    "c-yukinoshita", "c-kooribana", "c-toudokinoko", "c-shimofuri",
+    "c-reikanomi", "c-hidamari", "c-hikarigoke", "c-yugetsubaki",
+    "c-suishousou", "c-kazekusa", "c-koyukizakura", "c-hoshikuzu",
+  ],
+  2: [
+    "t2-aotsurara", "t2-yukiwata", "t2-koketsubu", "t2-hiuchiishi",
+    "t2-reitosui", "t2-shirakaba",
+  ],
+  3: [
+    "t3-hyousho", "t3-ginsazare", "t3-akanezuna", "t3-aokoseki",
+    "t3-shirogane", "t3-tsuraragane",
+  ],
+  4: [
+    "r-plum", "r-wintersweet", "r-sakura", "r-wisteria", "r-rose",
+    "r-hydrangea", "r-sunflower", "r-morning_glory", "r-cosmos",
+    "r-osmanthus", "r-chrysanthemum", "r-cyclamen",
+  ],
+  5: [
+    "t5-yukibotaru", "t5-reikagai", "t5-yugegoke", "t5-hakuginyo",
+    "t5-koorichou", "t5-yumigoori",
+  ],
+  6: ["t6-reikaseki", "t6-murasui", "t6-ginkitsune", "t6-yukihyou", "t6-seiraiseki"],
+  7: ["t7-koreitama", "t7-ginyoku", "t7-enshinseki", "t7-hyoketsurin"],
+  8: [
+    "s-plum", "s-wintersweet", "s-sakura", "s-wisteria", "s-rose",
+    "s-hydrangea", "s-sunflower", "s-morning_glory", "s-cosmos",
+    "s-osmanthus", "s-chrysanthemum", "s-cyclamen",
+  ],
+};
 
-test("every pre-expansion drop id still resolves (saved records stay readable)", () => {
-  assert.equal(LEGACY_DROP_IDS.length, 63);
-  for (const id of LEGACY_DROP_IDS) {
+test("every pre-expansion drop id still resolves at its original rank", () => {
+  const entries = Object.entries(LEGACY_DROPS_BY_RARITY).flatMap(([rarity, ids]) =>
+    ids.map((id) => [id, Number(rarity)])
+  );
+  assert.equal(entries.length, 63);
+
+  for (const [id, rarity] of entries) {
     const drop = getDropById(id);
     assert.ok(drop, `legacy id ${id} must still exist in the catalog`);
     assert.equal(drop.id, id);
+    assert.equal(drop.rarity, rarity, `legacy id ${id} must stay at RARE${rarity}`);
+  }
+});
+
+test("every catalog entry lives in the pool matching its own rarity", () => {
+  // The isNew lookup narrows by rarity, so an entry sitting in a pool that
+  // disagrees with its own `rarity` field would be searched in the wrong place.
+  for (const drop of DROP_CATALOG) {
+    assert.ok(
+      POOL_BY_RARITY[drop.rarity].includes(drop),
+      `${drop.id} declares RARE${drop.rarity} but is not in that rank's pool`
+    );
   }
 });
 
