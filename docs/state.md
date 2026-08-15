@@ -1,8 +1,8 @@
 # state.md
 
 ## Current
-- Branch: main
-- Active task: none — T025 and T026 verified and merged (PR #19).
+- Branch: feat/reward-world-atlas (T027, not yet merged)
+- Active task: T027 — reward catalog world-atlas rebuild, awaiting Tier 1 review + human merge confirmation (300+ line diff, high-risk class per CLAUDE.md).
 - Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
@@ -32,6 +32,12 @@
     owner/editor), so this was always going to be a manual step.
 
 ## Next
+- 2026-08-15: T027 — reward catalog rebuilt into an 8-region world atlas (308→436 items,
+  D-032). Backward compat intentionally broken (user-authorized). RARE4/8 untouched
+  (season-linked, photo-backed). AI-generated illustrations for RARE6-8 were requested
+  but are out of reach in this environment (no image-gen tool/key access) — deferred to
+  a future task (a standalone script the user runs with their own GEMINI_API_KEY).
+  Pending: Tier 1 fresh-context review, then human merge confirmation.
 - 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
   reads the whole drops ledger. See D-031. Deferred options recorded there: a
   Dexie v4 `dropId` index (would make the isNew check fully O(log n)), and more

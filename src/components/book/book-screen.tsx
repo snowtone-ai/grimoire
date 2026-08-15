@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Download, Upload } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
@@ -19,6 +19,7 @@ import {
 } from "@/lib/domain/drops";
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
+import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
 import {
   buildBackupJson,
   downloadBackup,
@@ -77,6 +78,7 @@ export function BookScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
+        <ExpeditionsSection counts={counts} />
         <ChronicleSection chronicle={chronicle} />
         {RARITY_SECTIONS.map((section) => (
           <Section
@@ -227,6 +229,64 @@ function BackupSection({ onImported }: { onImported: () => void }) {
       </div>
     </section>
   );
+}
+
+function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) {
+  const regionStats = EXPEDITION_REGIONS.map((region) => {
+    const items = DROP_CATALOG.filter((drop) => drop.region === region.id);
+    const found = items.filter((drop) => (counts?.get(drop.id) ?? 0) > 0).length;
+    return { region, found, total: items.length };
+  });
+
+  return (
+    <section aria-label="遠征記録">
+      <div className="mb-1.5 flex items-center gap-2">
+        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">EXPEDITIONS</p>
+        <h2 className="text-sm font-bold text-foreground">遠征記録</h2>
+      </div>
+      <div
+        aria-hidden
+        className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
+      />
+      <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {regionStats.map(({ region, found, total }) => (
+          <li
+            key={region.id}
+            className="w-40 flex-shrink-0 rounded-2xl border border-border bg-card p-3"
+            style={{
+              boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${region.accent} 20%, transparent)`,
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden className="size-2 flex-shrink-0 rounded-full" style={{ backgroundColor: region.accent }} />
+              <p className="truncate text-xs font-bold text-foreground">{region.name}</p>
+            </div>
+            <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+              {region.subtitle}
+            </p>
+            <p className="mt-2 text-right text-[11px] font-bold tabular-nums" style={{ color: region.accent }}>
+              {found}/{total}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Layered gradient + rarity-scaled glow, replacing a flat colored circle.
+ * Blends the item's own color with its expedition region's accent so
+ * high ranks (6-8) read as a subtle foil card without any image assets. */
+function materialCardStyle(drop: DropDef): CSSProperties {
+  const accent = getRegionById(drop.region).accent;
+  const glow =
+    drop.rarity >= 6
+      ? `inset 0 0 0 1px color-mix(in oklab, ${accent} 55%, transparent), 0 0 14px -4px color-mix(in oklab, ${accent} 65%, transparent)`
+      : `inset 0 0 0 1px color-mix(in oklab, ${accent} 22%, transparent)`;
+  return {
+    backgroundImage: `radial-gradient(120% 140% at 25% 15%, color-mix(in oklab, ${drop.color} 32%, transparent), transparent 65%), linear-gradient(165deg, color-mix(in oklab, ${accent} 16%, var(--card)) 0%, var(--card) 70%)`,
+    boxShadow: glow,
+  };
 }
 
 const emojiIcon = (drop: DropDef, isFound: boolean) => (
@@ -406,13 +466,23 @@ function Section({
         {drops.map((drop) => {
           const count = counts?.get(drop.id) ?? 0;
           const isFound = count > 0;
+          const region = getRegionById(drop.region);
           return (
             <li
               key={drop.id}
               className={`relative rounded-2xl border p-2 text-center transition-colors ${
-                isFound ? "border-border bg-card" : "border-dashed border-border/70 bg-muted/30"
+                isFound ? "border-transparent" : "border-dashed border-border/70 bg-muted/30"
               }`}
+              style={isFound ? materialCardStyle(drop) : undefined}
             >
+              {isFound && (
+                <span
+                  aria-hidden
+                  title={region.name}
+                  className="absolute left-1.5 top-1.5 size-1.5 rounded-full"
+                  style={{ backgroundColor: region.accent }}
+                />
+              )}
               {renderIcon(drop, isFound)}
               <p
                 className={`mt-1.5 truncate text-[10px] font-semibold ${
@@ -421,6 +491,7 @@ function Section({
               >
                 {isFound ? drop.name : "？？？"}
               </p>
+              {isFound && <span className="sr-only">{region.name}産</span>}
               {count > 1 && (
                 <span className="absolute right-1.5 top-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold text-secondary-foreground tabular-nums">
                   ×{count}

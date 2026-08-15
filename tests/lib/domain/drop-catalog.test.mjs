@@ -11,72 +11,25 @@ import {
   pickDrop,
 } from "../../../src/lib/domain/drops.ts";
 import { PLANT_SPECIES } from "../../../src/lib/domain/plant.ts";
+import { REGIONS, EXPEDITION_REGIONS, getRegionById } from "../../../src/lib/domain/regions.ts";
 
 /* Catalog integrity + long-term-use simulation.
  *
- * The drops table is an append-only ledger of the user's real history, and a
- * dropId that no longer resolves is silently skipped by getCollection(). So
- * the catalog can only ever grow: these tests pin the ids that shipped before
- * the 5x expansion so a future edit can't quietly orphan someone's records. */
-
-/**
- * Every drop id that existed before the catalog expansion, with the rank it
- * shipped at. Never shrink this, and never move an id to another rank.
+ * D-032 rebuilt the catalog from a single frozen-tundra theme into an
+ * eight-region world atlas (region material ranks 1/2/3/5/6/7) plus the
+ * unchanged home-garden season axis (rank 4/8). Unlike D-031's 5x expansion,
+ * this rewrite intentionally does NOT preserve old drop ids — the user
+ * explicitly authorized breaking backward compatibility for the world-theme
+ * change (docs/decisions.md D-032). So these tests check structural
+ * invariants of the new catalog rather than pinning specific legacy ids.
  *
- * The rank matters as much as the id: rewardDb decides "is this drop new?" by
- * searching only the rarity partition the drop belongs to. Moving an id to a
- * different rank would leave the user's older records outside that partition,
- * so long-collected materials would start announcing themselves as NEW again.
- */
-const LEGACY_DROPS_BY_RARITY = {
-  1: [
-    "c-yukinoshita", "c-kooribana", "c-toudokinoko", "c-shimofuri",
-    "c-reikanomi", "c-hidamari", "c-hikarigoke", "c-yugetsubaki",
-    "c-suishousou", "c-kazekusa", "c-koyukizakura", "c-hoshikuzu",
-  ],
-  2: [
-    "t2-aotsurara", "t2-yukiwata", "t2-koketsubu", "t2-hiuchiishi",
-    "t2-reitosui", "t2-shirakaba",
-  ],
-  3: [
-    "t3-hyousho", "t3-ginsazare", "t3-akanezuna", "t3-aokoseki",
-    "t3-shirogane", "t3-tsuraragane",
-  ],
-  4: [
-    "r-plum", "r-wintersweet", "r-sakura", "r-wisteria", "r-rose",
-    "r-hydrangea", "r-sunflower", "r-morning_glory", "r-cosmos",
-    "r-osmanthus", "r-chrysanthemum", "r-cyclamen",
-  ],
-  5: [
-    "t5-yukibotaru", "t5-reikagai", "t5-yugegoke", "t5-hakuginyo",
-    "t5-koorichou", "t5-yumigoori",
-  ],
-  6: ["t6-reikaseki", "t6-murasui", "t6-ginkitsune", "t6-yukihyou", "t6-seiraiseki"],
-  7: ["t7-koreitama", "t7-ginyoku", "t7-enshinseki", "t7-hyoketsurin"],
-  8: [
-    "s-plum", "s-wintersweet", "s-sakura", "s-wisteria", "s-rose",
-    "s-hydrangea", "s-sunflower", "s-morning_glory", "s-cosmos",
-    "s-osmanthus", "s-chrysanthemum", "s-cyclamen",
-  ],
-};
-
-test("every pre-expansion drop id still resolves at its original rank", () => {
-  const entries = Object.entries(LEGACY_DROPS_BY_RARITY).flatMap(([rarity, ids]) =>
-    ids.map((id) => [id, Number(rarity)])
-  );
-  assert.equal(entries.length, 63);
-
-  for (const [id, rarity] of entries) {
-    const drop = getDropById(id);
-    assert.ok(drop, `legacy id ${id} must still exist in the catalog`);
-    assert.equal(drop.id, id);
-    assert.equal(drop.rarity, rarity, `legacy id ${id} must stay at RARE${rarity}`);
-  }
-});
+ * The drops table is still an append-only ledger of the user's real history,
+ * and a dropId that no longer resolves is silently skipped by getCollection()
+ * — so *future* edits to this catalog should still avoid renaming/removing
+ * ids without a good reason, even though this particular rewrite was an
+ * authorized one-time break. */
 
 test("every catalog entry lives in the pool matching its own rarity", () => {
-  // The isNew lookup narrows by rarity, so an entry sitting in a pool that
-  // disagrees with its own `rarity` field would be searched in the wrong place.
   for (const drop of DROP_CATALOG) {
     assert.ok(
       POOL_BY_RARITY[drop.rarity].includes(drop),
@@ -112,20 +65,37 @@ test("catalog entries are well formed and non-duplicated", () => {
   }
 });
 
-test("the catalog grew to roughly 5x without shrinking any rank", () => {
-  // Pre-expansion sizes, by rank.
-  const before = { 1: 12, 2: 6, 3: 6, 4: 12, 5: 6, 6: 5, 7: 4, 8: 12 };
-  for (let rarity = 1; rarity <= 8; rarity++) {
-    assert.ok(
-      POOL_BY_RARITY[rarity].length >= before[rarity],
-      `rank ${rarity} pool must not shrink (was ${before[rarity]})`
-    );
+test("every drop belongs to a real region, and region use matches the season/expedition split", () => {
+  const regionIds = new Set(REGIONS.map((region) => region.id));
+  for (const drop of DROP_CATALOG) {
+    assert.ok(regionIds.has(drop.region), `${drop.id} has an unknown region "${drop.region}"`);
+    assert.doesNotThrow(() => getRegionById(drop.region));
+
+    if (drop.rarity === 4 || drop.rarity === 8) {
+      assert.equal(drop.region, "garden", `${drop.id} (RARE${drop.rarity}) must be the home-garden region`);
+    } else {
+      assert.notEqual(drop.region, "garden", `${drop.id} (RARE${drop.rarity}) must be an expedition region`);
+    }
   }
-  // RARE8 stays the 12 photo-backed seasonal vistas by design.
-  assert.equal(SSR_DROPS.length, 12);
+});
+
+test("every expedition region contributes to every non-seasonal rank", () => {
+  for (const region of EXPEDITION_REGIONS) {
+    for (const rarity of [1, 2, 3, 5, 6, 7]) {
+      const count = POOL_BY_RARITY[rarity].filter((drop) => drop.region === region.id).length;
+      assert.ok(count > 0, `region ${region.id} has no RARE${rarity} materials`);
+    }
+  }
+});
+
+test("the catalog is a full RARE 1-8 ladder sized in the 400-500 range", () => {
+  for (let rarity = 1; rarity <= 8; rarity++) {
+    assert.ok(POOL_BY_RARITY[rarity].length > 0, `rank ${rarity} has drops`);
+  }
+  assert.equal(SSR_DROPS.length, 12, "RARE8 stays the 12 photo-backed seasonal vistas");
   assert.ok(
-    DROP_CATALOG.length >= 63 * 4,
-    `catalog should be several times larger, got ${DROP_CATALOG.length}`
+    DROP_CATALOG.length >= 400 && DROP_CATALOG.length <= 500,
+    `catalog should be in the 400-500 range, got ${DROP_CATALOG.length}`
   );
 });
 
@@ -256,8 +226,8 @@ test("simulation: three years of daily use never violates the reward rules", () 
 });
 
 test("simulation: long-term variety is high enough to stay interesting", () => {
-  // The point of the 5x expansion: a year of use should not exhaust the
-  // catalog, and no single item should dominate what the user sees.
+  // A year of use should not exhaust the catalog, and no single item should
+  // dominate what the user sees.
   const history = simulate({ days: 365, perDay: 4 });
   const counts = new Map();
   for (const entry of history) {
