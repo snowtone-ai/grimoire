@@ -10,7 +10,17 @@
 - Verification mode: standard
 
 ## Current Blocker
-- DONE 2026-08-15 (human): `GEMINI_API_KEY` added to the Vercel project env vars.
+- OPEN: `GEMINI_API_KEY` is NOT visible to the production function. Verified
+  against the live deployment (53c151a, READY): POST /api/gemini/generate returns
+  500 {"error":"AI機能は現在利用できません"}, which is the one branch that fires
+  when process.env.GEMINI_API_KEY is falsy. The owner reports adding it, so the
+  likely cause is the variable being scoped to Preview/Development but not
+  Production, or saved under a different name. Fix in Vercel > Settings >
+  Environment Variables: name exactly `GEMINI_API_KEY` (no NEXT_PUBLIC_ prefix),
+  Production checked, then redeploy. Everything else in production is confirmed
+  working: the app serves 200 with no SSO gate, so the PWA is installable by the
+  family right now; only the AI features (voice task entry, Gmail import) are
+  affected.
 - OPEN (human, or an agent session that has browser tools): Google Cloud OAuth
   consent screen. If the GIS client used by src/lib/api/google-auth.ts is still
   in "Testing" mode, the family's Google accounts must be added as test users or
