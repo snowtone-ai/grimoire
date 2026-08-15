@@ -1,8 +1,10 @@
 # state.md
 
 ## Current
-- Branch: feat/reward-world-atlas (T027, not yet merged)
-- Active task: T027 — reward catalog world-atlas rebuild, awaiting Tier 1 review + human merge confirmation (300+ line diff, high-risk class per CLAUDE.md).
+- Branch: feat/reward-world-atlas (T027, PR #20 open, not yet merged)
+- Active task: T027 — reward catalog world-atlas rebuild. Tier 1 review attempt failed
+  (session usage limit, resets 19:00 JST 2026-08-15) — retry needed, then human merge
+  confirmation (300+ line diff, high-risk class per CLAUDE.md).
 - Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
