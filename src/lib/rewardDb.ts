@@ -47,11 +47,14 @@ export async function grantDropForTask(
 
     const rarity = decideRarity(Math.random, { rollsSinceSsr, isFirstOfDay });
     const drop = pickDrop(Math.random, rarity, now.getMonth() + 1);
-    // A given dropId always carries its catalog rarity (pinned by test), so
-    // the rarity index narrows this to one rank instead of the whole table.
-    // For an already-collected drop it stops at the first hit; only a genuinely
-    // new drop walks that rank's full partition. A dropId index would make it
-    // O(log n) outright, deferred as a schema change (D-031).
+    // A given dropId always carries its catalog rarity, so the rarity index
+    // narrows this to one rank instead of the whole table. For an already-
+    // collected drop it stops at the first hit; only a genuinely new drop
+    // walks that rank's full partition. The season-linked ids (RARE4/RARE8,
+    // which already have real historical records) are pinned to their rank
+    // by drop-catalog.test.mjs's "season-linked garden ids ... stay pinned"
+    // test; a dropId index would make this O(log n) outright regardless,
+    // deferred as a schema change (D-031).
     const seen = await db.drops
       .where("rarity")
       .equals(drop.rarity)
