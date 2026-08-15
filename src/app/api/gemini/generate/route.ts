@@ -1,8 +1,17 @@
-import { redactSecret } from "@/lib/errors";
+import { buildTaskParsePrompt, buildGmailExtractionPrompt } from "@/lib/api/gemini-prompts";
+import type { GmailMessage } from "@/lib/api/gmail";
 
-// Server-only proxy for Gemini calls. Keeps the API key out of the client
-// bundle — callers on this route never see GEMINI_API_KEY.
+// Server-only proxy for Gemini calls. The API key never reaches the client,
+// and — since this endpoint is unauthenticated on a public URL — only two
+// fixed, size-bounded request shapes are accepted. There is no free-form
+// "prompt" field: accepting one would turn this into an open LLM relay for
+// anyone who finds the URL.
+export const maxDuration = 60;
+
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const;
+const MAX_TEXT_LENGTH = 500;
+const MAX_MESSAGES = 30;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 type GeminiResponse = {
   candidates?: Array<{
@@ -10,57 +19,65 @@ type GeminiResponse = {
   }>;
 };
 
-export async function POST(request: Request): Promise<Response> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
-  }
+type RequestBody =
+  | { kind: "voice"; text: string; todayDate: string }
+  | { kind: "gmail"; messages: Pick<GmailMessage, "subject" | "from" | "snippet">[] };
 
-  const body = (await request.json().catch(() => null)) as { prompt?: unknown } | null;
-  const prompt = body?.prompt;
-  if (typeof prompt !== "string" || !prompt.trim()) {
-    return Response.json({ error: "prompt is required" }, { status: 400 });
+function buildPrompt(body: RequestBody): string | null {
+  if (body.kind === "voice") {
+    if (typeof body.text !== "string" || typeof body.todayDate !== "string") return null;
+    const text = body.text.trim().slice(0, MAX_TEXT_LENGTH);
+    if (!text || !DATE_PATTERN.test(body.todayDate)) return null;
+    return buildTaskParsePrompt(text, body.todayDate);
   }
+  if (body.kind === "gmail") {
+    if (!Array.isArray(body.messages) || body.messages.length === 0) return null;
+    const messages = body.messages.slice(0, MAX_MESSAGES).filter(
+      (m): m is Pick<GmailMessage, "subject" | "from" | "snippet"> =>
+        !!m && typeof m.subject === "string" && typeof m.from === "string" && typeof m.snippet === "string"
+    );
+    if (messages.length === 0) return null;
+    return buildGmailExtractionPrompt(messages);
+  }
+  return null;
+}
 
+async function callGemini(apiKey: string, prompt: string): Promise<Response> {
   const payloads = [
     {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, responseMimeType: "application/json" },
+      generationConfig: { temperature: 0.1, responseMimeType: "application/json", maxOutputTokens: 2048 },
     },
     {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1 },
+      generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
     },
-    { contents: [{ parts: [{ text: prompt }] }] },
+    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 2048 } },
   ] as const;
 
-  let last400Error = "";
+  let last400Status = 0;
 
   for (const model of GEMINI_MODELS) {
     for (const payload of payloads) {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(45_000),
         }
       );
 
-      if (response.status === 429) {
-        return Response.json({ error: "rate_limit" }, { status: 429 });
-      }
+      if (response.status === 429) return Response.json({ error: "rate_limit" }, { status: 429 });
 
       if (!response.ok) {
-        const errorBody = await response.text().catch(() => "");
         if (response.status === 400) {
-          last400Error = redactSecret(errorBody);
+          last400Status = 400;
           continue;
         }
-        return Response.json(
-          { error: `Gemini API error ${response.status}: ${redactSecret(errorBody)}` },
-          { status: 502 }
-        );
+        console.error("[gemini/generate] upstream error", response.status, await response.text().catch(() => ""));
+        return Response.json({ error: "Gemini API request failed" }, { status: 502 });
       }
 
       const data = (await response.json()) as GeminiResponse;
@@ -69,8 +86,29 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  if (last400Error) {
-    return Response.json({ error: `Gemini API error 400: ${last400Error}` }, { status: 502 });
+  if (last400Status) {
+    console.error("[gemini/generate] all model/payload combinations returned 400");
+    return Response.json({ error: "Gemini API request failed" }, { status: 502 });
   }
   return Response.json({ error: "Empty response from Gemini API" }, { status: 502 });
+}
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return Response.json({ error: "AI機能は現在利用できません" }, { status: 500 });
+    }
+
+    const body = (await request.json().catch(() => null)) as RequestBody | null;
+    const prompt = body ? buildPrompt(body) : null;
+    if (!prompt) {
+      return Response.json({ error: "invalid request" }, { status: 400 });
+    }
+
+    return await callGemini(apiKey, prompt);
+  } catch (err) {
+    console.error("[gemini/generate] unexpected error", err);
+    return Response.json({ error: "Gemini API request failed" }, { status: 502 });
+  }
 }

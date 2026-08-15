@@ -51,7 +51,7 @@ Status: 個人利用中
 `.env.local` を作成して以下を設定します。
 
 ```env
-NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_KEY=your_gemini_api_key
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 ```
 

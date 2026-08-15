@@ -1,5 +1,4 @@
 import { type Category } from "./db";
-import { buildTaskParsePrompt } from "./api/gemini-prompts";
 import { RateLimitError } from "./errors";
 
 export interface ParsedTask {
@@ -53,13 +52,21 @@ export function parseTaskPayload(value: string): ParsedTask {
   };
 }
 
-// Delegates to the server-side proxy (src/app/api/gemini/generate) so the
-// Gemini API key never ships in the client bundle.
-async function requestGemini(prompt: string): Promise<string> {
+// Delegates to the server-side proxy (src/app/api/gemini/generate), which
+// builds the actual prompt itself — the client only sends structured input,
+// so the Gemini API key never ships in the client bundle and the endpoint
+// can't be used as a free-form prompt relay.
+export async function parseTaskFromText(
+  text: string,
+  todayDate: string
+): Promise<ParsedTask> {
+  const normalizedText = text.trim().replace(/\s+/g, " ").slice(0, 500);
+  if (!normalizedText) throw new Error("Voice input is empty");
+
   const response = await fetch("/api/gemini/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ kind: "voice", text: normalizedText, todayDate }),
   });
 
   if (response.status === 429) throw new RateLimitError();
@@ -70,17 +77,5 @@ async function requestGemini(prompt: string): Promise<string> {
     throw new Error(data.error ?? `Gemini API error ${response.status}`);
   }
   if (!data.text?.trim()) throw new Error("Empty response from Gemini API");
-  return data.text;
-}
-
-export async function parseTaskFromText(
-  text: string,
-  todayDate: string
-): Promise<ParsedTask> {
-  const normalizedText = text.trim().replace(/\s+/g, " ").slice(0, 500);
-  if (!normalizedText) throw new Error("Voice input is empty");
-
-  const prompt = buildTaskParsePrompt(normalizedText, todayDate);
-  const content = await requestGemini(prompt);
-  return parseTaskPayload(content);
+  return parseTaskPayload(data.text);
 }
