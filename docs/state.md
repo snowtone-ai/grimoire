@@ -10,27 +10,26 @@
 - Verification mode: standard
 
 ## Current Blocker
-- OPEN: `GEMINI_API_KEY` is NOT visible to the production function. Verified
-  against the live deployment (53c151a, READY): POST /api/gemini/generate returns
-  500 {"error":"AI機能は現在利用できません"}, which is the one branch that fires
-  when process.env.GEMINI_API_KEY is falsy. The owner reports adding it, so the
-  likely cause is the variable being scoped to Preview/Development but not
-  Production, or saved under a different name. Fix in Vercel > Settings >
-  Environment Variables: name exactly `GEMINI_API_KEY` (no NEXT_PUBLIC_ prefix),
-  Production checked, then redeploy. Everything else in production is confirmed
-  working: the app serves 200 with no SSO gate, so the PWA is installable by the
-  family right now; only the AI features (voice task entry, Gmail import) are
-  affected.
-- OPEN (human, or an agent session that has browser tools): Google Cloud OAuth
-  consent screen. If the GIS client used by src/lib/api/google-auth.ts is still
-  in "Testing" mode, the family's Google accounts must be added as test users or
-  Gmail/Calendar sign-in fails for them. There is NO CLI/API path for this — the
-  IAP OAuth Admin APIs were shut down in March 2026, so it is Cloud Console UI
-  only. Browser automation was unavailable in the session that did this work (the
-  playwright MCP dropped mid-session; its tools do not re-register until Claude
-  Code restarts). Also blocked until the family's Google addresses are known.
-  Scope: this gates only the optional Gmail/Calendar import — the core app works
-  without any Google sign-in.
+- none — both prior Google Cloud blockers closed 2026-08-15 by the owner (human
+  action was required for both; the agent lacked either tooling or credentials to
+  self-serve). Root cause and fix history:
+  - `GEMINI_API_KEY`: the owner's screenshot of Vercel > Environment Variables
+    showed the var was saved under its pre-PR#19 name, `NEXT_PUBLIC_GEMINI_API_KEY`
+    (added May 9), while the route reads `process.env.GEMINI_API_KEY` (added in
+    PR #19 / T025). A grep of `src/` confirmed `NEXT_PUBLIC_GEMINI_API_KEY` is no
+    longer referenced anywhere — since Vercel SSO is now off in Production
+    (D-030), that stale var was sitting exposed in the client JS bundle for
+    anyone to read. Owner added `GEMINI_API_KEY` (Production) and removed the
+    stale `NEXT_PUBLIC_` one; redeployed automatically (dpl_Gnf5VDiMxgLRVyXSdziSQ138nUqJ,
+    READY). Re-verified 2026-08-15: POST /api/gemini/generate with a valid
+    `{kind:"voice", text, todayDate}` body now returns 200 with real Gemini
+    output; an invalid body still correctly returns 400 (request-shape guard
+    from T025 intact).
+  - Google OAuth consent screen test users: owner added the family's Gmail
+    addresses directly in Cloud Console (console.cloud.google.com/auth/audience)
+    without needing agent involvement — self-service by a non-owner account is
+    not possible on Google's side (test-user list is edited only by the project
+    owner/editor), so this was always going to be a manual step.
 
 ## Next
 - 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
