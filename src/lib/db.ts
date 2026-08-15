@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant";
+import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant.ts";
 
 export type Category = "job" | "university" | "life";
 export type Recurrence = "none" | "daily" | "weekly" | "monthly";

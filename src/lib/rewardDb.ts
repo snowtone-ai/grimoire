@@ -1,12 +1,12 @@
-import { db, type DropRecord } from "./db";
+import { db, type DropRecord } from "./db.ts";
 import {
   decideRarity,
   getDropById,
   pickDrop,
   type DropDef,
   type DropRarity,
-} from "./domain/drops";
-import { buildChronicle, type ChronicleMonth } from "./domain/chronicle";
+} from "./domain/drops.ts";
+import { buildChronicle, type ChronicleMonth } from "./domain/chronicle.ts";
 
 export interface GrantResult {
   drop: DropDef;
@@ -32,15 +32,28 @@ export async function grantDropForTask(
       .first();
     if (existing) return null;
 
-    const all = await db.drops.toArray();
-    const lastSsrIndex = all.findLastIndex((record) => record.rarity === 8);
+    // These used to be three scans over db.drops.toArray(). The drops table is
+    // append-only and grows for the life of the install (years of daily use),
+    // so the hot path deliberately uses indexed lookups only — nothing here
+    // loads the whole history into memory.
+    const lastSsr = await db.drops.where("rarity").equals(8).last();
     const rollsSinceSsr =
-      lastSsrIndex < 0 ? all.length : all.length - 1 - lastSsrIndex;
-    const isFirstOfDay = !all.some((record) => record.dateKey === dateKey);
+      lastSsr?.id === undefined
+        ? await db.drops.count()
+        : await db.drops.where(":id").above(lastSsr.id).count();
+    const isFirstOfDay =
+      (await db.drops.where("dateKey").equals(dateKey).count()) === 0;
 
     const rarity = decideRarity(Math.random, { rollsSinceSsr, isFirstOfDay });
     const drop = pickDrop(Math.random, rarity, now.getMonth() + 1);
-    const isNew = !all.some((record) => record.dropId === drop.id);
+    // A given dropId always carries its catalog rarity, so the rarity index
+    // narrows this to one rank's records instead of the whole table.
+    const seen = await db.drops
+      .where("rarity")
+      .equals(drop.rarity)
+      .filter((record) => record.dropId === drop.id)
+      .first();
+    const isNew = !seen;
 
     await db.drops.add({
       taskId,
