@@ -1,15 +1,12 @@
 # state.md
 
 ## Current
-- Branch: chore/dependabot-alerts-t028 (T028, PR #21 open)
-- Active task: T028 — resolve all 62 open Dependabot alerts (D-033). Tier 2 Opus
-  fresh-context review: PASS WITH NITS. 4 pre-merge-recommended findings fixed
-  (brace-expansion overrides were pinned to an exact minimatch version instead of
-  a major range and would have silently stopped protecting on the next minimatch
-  patch bump; body-parser/ip-address/nanoid used bare global overrides where a
-  scoped one was safer given other real or plausible consumers). pnpm audit 0/62;
-  pnpm verify green; sharp verified working end-to-end via a real /_next/image
-  request. Ready to merge.
+- Branch: feat/calendar-survey-reset (T029, not yet pushed/PR'd)
+- Active task: T029 — calendar reset (tasks+streaks) and survey-notes reset (drops)
+  added to /book's new RESET card, next to ARCHIVE (D-034). pnpm verify green
+  (62/62 tests); browser smoke via Playwright confirmed reveal/cancel/confirm
+  flows for both buttons, empty states render correctly afterward. Not yet
+  reviewed or merged.
 - Current executor: none
 - Write lock: none
 - Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)

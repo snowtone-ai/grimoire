@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Download, Upload } from "lucide-react";
+import { Download, RotateCcw, Upload } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
   COMMON_DROPS,
@@ -17,7 +17,13 @@ import {
   TIER7_DROPS,
   type DropDef,
 } from "@/lib/domain/drops";
-import { getCollection, getChronicle } from "@/lib/rewardDb";
+import {
+  getCollection,
+  getChronicle,
+  getSurveyResetCount,
+  resetSurveyNotes,
+} from "@/lib/rewardDb";
+import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
 import {
@@ -98,6 +104,13 @@ export function BookScreen() {
             .then((summary) => setCounts(summary.counts))
             .catch(console.error);
         }} />
+
+        <ResetSection
+          onSurveyReset={() => {
+            setCounts(new Map());
+            setChronicle([]);
+          }}
+        />
       </main>
 
       <BottomNav />
@@ -228,6 +241,138 @@ function BackupSection({ onImported }: { onImported: () => void }) {
         {message && <p className="mt-2.5 text-xs text-muted-foreground">{message}</p>}
       </div>
     </section>
+  );
+}
+
+function ResetSection({ onSurveyReset }: { onSurveyReset: () => void }) {
+  return (
+    <section
+      aria-label="データのリセット"
+      className="rounded-2xl border border-destructive/25 bg-card p-4"
+    >
+      <div className="flex items-center gap-2">
+        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-destructive">RESET</p>
+        <p className="text-xs font-semibold text-muted-foreground">データのリセット（取り消し不可）</p>
+      </div>
+      <div
+        aria-hidden
+        className="mt-1.5 mb-3 h-px bg-gradient-to-r from-destructive/35 via-destructive/10 to-transparent"
+      />
+      <div className="space-y-3">
+        <ResetRow
+          label="カレンダーをリセット"
+          description="すべてのクエスト（タスク）とストリーク記録を削除し、カレンダーを空の状態に戻します"
+          loadSummary={async () => {
+            const { tasks, streaks } = await getCalendarResetCounts();
+            return `クエスト${tasks}件・ストリーク記録${streaks}件を完全に削除します`;
+          }}
+          onReset={resetCalendar}
+        />
+        <ResetRow
+          label="調査記録をリセット"
+          description="ドロップ（素材/コレクション/年代記）の記録をすべて削除し、図鑑を空の状態に戻します"
+          loadSummary={async () => {
+            const drops = await getSurveyResetCount();
+            return `ドロップ記録${drops}件を完全に削除します`;
+          }}
+          onReset={async () => {
+            await resetSurveyNotes();
+            onSurveyReset();
+          }}
+        />
+      </div>
+    </section>
+  );
+}
+
+/** Two-tap destructive confirm: tap reveals a count-backed warning panel,
+ * a second explicit tap performs the (irreversible) reset. Same pattern as
+ * the quest-delete confirm in task-edit-modal.tsx. */
+function ResetRow({
+  label,
+  description,
+  loadSummary,
+  onReset,
+}: {
+  label: string;
+  description: string;
+  loadSummary: () => Promise<string>;
+  onReset: () => Promise<void>;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function startConfirm() {
+    playTap();
+    setMessage(null);
+    setSummary(await loadSummary().catch(() => null));
+    setConfirming(true);
+  }
+
+  async function handleConfirm() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await onReset();
+      setConfirming(false);
+      setMessage("削除しました");
+    } catch (err) {
+      console.error(`[reset] ${label} failed:`, err);
+      setMessage("削除に失敗しました");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={startConfirm}
+          className="btn-squish flex w-full items-center justify-center gap-1.5 rounded-xl border border-destructive/30 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
+        >
+          <RotateCcw className="size-4" aria-hidden />
+          {label}
+        </button>
+        <div aria-live="polite">
+          {message && <p className="mt-1.5 text-center text-xs text-muted-foreground">{message}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border border-destructive/25 bg-destructive/10 p-4">
+      <div>
+        <p className="text-sm font-medium text-destructive">{summary ?? description}</p>
+        <p className="mt-1 text-xs text-destructive/80">
+          この操作は取り消せません。必要ならARCHIVEで先にエクスポートしてください
+        </p>
+      </div>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          キャンセル
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={busy}
+          className="flex-1 rounded-xl bg-destructive py-2.5 text-sm font-bold text-background transition-opacity disabled:opacity-50"
+        >
+          {busy ? "削除中..." : "本当に削除する"}
+        </button>
+      </div>
+      <div aria-live="polite">
+        {message && <p className="text-center text-xs text-destructive">{message}</p>}
+      </div>
+    </div>
   );
 }
 
