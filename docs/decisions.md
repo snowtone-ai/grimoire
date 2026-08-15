@@ -530,3 +530,68 @@
   切り出すのが現実的(未着手・将来タスク候補)。当面はCSSベースの箔カードで代替。
 - 将来見直し条件: 実際にAI生成イラストを追加する場合(別スクリプト+ユーザーのAPIキーが必要)、
   9番目以降の地域を追加する場合、または地域ごとのアイテム数バランスを実使用データで見直す場合。
+
+## D-033: GitHub Dependabotアラート62件(High25/Medium33/Low4)を全件解消
+
+- 日付: 2026-08-15
+- 対象: dependencies / build / deploy
+- 背景: PR #20マージ後、GitHubから default branch に62件のDependabotアラートが検出された旨の
+  通知(push時のremote message)。全件がpnpm-lock.yaml上の間接依存で、直接依存としてはどれも
+  package.jsonに現れない。ユーザーから全件対応の指示。
+- 決定(shadcn CLIの依存ツリーを縮小): アラート最大の発生源は `shadcn`(shadcn/ui CLI、
+  dependencies直下)経由の`@modelcontextprotocol/sdk`→`@hono/node-server`→`hono`鎖で、
+  hono関連だけで約25件、加えてip-address/qs/body-parser/`brace-expansion`の1系統もこの鎖。
+  `shadcn`パッケージ自体はCLIコード(コンポーネント追加コマンド)だが、`src/app/globals.css`が
+  `@import "shadcn/tailwind.css";`でこのパッケージ同梱のプリセットCSS(デザイントークンの土台)を
+  読み込んでおり、ビルドに必須と判明(削除して`next build`が壊れることを実地で確認、後述の
+  トラブルシュートを参照)。パッケージ自体は削除できないため、`pnpm.overrides`でhono/
+  @hono/node-server/ip-address/qs/body-parserの脆弱バージョンのみを個別にピン留めした。
+- 決定(Next.js 16.2.11→16.3.1、eslint-config-next 16.2.2→16.3.1): postcss(8.4.31)と
+  nanoid(3.3.16経由)、sharp(0.34.5)がいずれもNext.js自身が内部で要求するバージョンで、
+  Next側が新しいパッチをリリース済みなら追従するのが本来の直し方だと判断。実際に16.3.1は
+  postcss@8.5.23・sharp@^0.35.3を自ら要求しており、overrideなしでこの3件が解消した。
+  eslint-config-nextはNextのメジャー/マイナーと揃えるのが通例のため同時に16.3.1へ。
+- 決定(残りはpnpm.overridesでピン留め): 上記以外はすべてdev/build時のみ使われるツール
+  (eslint本体・typescript-eslint・next-pwaのworkbox-buildビルドステップ)の間接依存で、
+  実行時にブラウザへ配信されることはない。brace-expansionは呼び出し元のminimatchメジャー
+  バージョンが3系/2系/5系の3系統に分かれており、一括overrideだと非対応バージョンを強制
+  する恐れがあったため、`親パッケージ@バージョン>brace-expansion`の親スコープ付き
+  override構文で系統ごとに個別ピン留め。fast-uri/js-yaml/serialize-javascript/
+  @babel/core/@babel/plugin-transform-modules-systemjsも同様に親スコープを指定し、
+  意図しない他パッケージへの波及を防いだ。
+- トラブルシュート(記録価値あり): `shadcn`を一旦削除してから`^4.1.2`で入れ直したところ、
+  semverの範囲一致で最新の`4.18.0`が解決され、そちらのパッケージには`dist/tailwind.css`が
+  同梱されておらずビルドが壊れた(shadcn CLIが4.x系の途中でテンプレート配布方式を変更した
+  とみられる)。教訓: 元のロックファイルが解決していた具体バージョンが暗黙の前提になって
+  いる依存は、削除→再追加ではなく`package.json`側で完全一致バージョン(caret無し)に
+  固定してから触るべき。`shadcn`は`"4.1.2"`(caretなし)に固定した。また`next`を16.3.1へ
+  上げた直後、`.next`の古いTurbopackキャッシュが残っていたことが原因の別のビルド失敗
+  (`shadcn/tailwind.css`解決エラー)も一度発生した。`.next`削除で解消し、パッケージの
+  バージョンとは無関係な事象だったため、対応不要だった`tailwindcss`の追加バージョンアップは
+  取り消し、元の`^4`のまま維持した。
+- 検証: `pnpm audit`が0件になったことを確認(修正前は62件)。`pnpm verify`
+  (lint/typecheck/58テスト/build)全緑。sharpの実動作は`next build && next start`後に
+  `/_next/image?url=...`エンドポイントへ実リクエストし、200 + image/jpegでリサイズ画像が
+  返ることを確認済み(next/imageの最適化パイプラインがsharp@0.35.3で実際に機能することの
+  実地検証)。
+- 将来見直し条件: 次にDependabotアラートが出た際、同じ`pnpm.overrides`ブロックへの追記で
+  対応するか、根本パッケージ(shadcn/next-pwa等)のメジャーアップデートで自然解消するかを
+  都度判断する。`shadcn`のバージョンを次に上げるときは、事前に`dist/tailwind.css`が
+  同梱されているか(またはCSSの入手方法が変わっていないか)を必ず確認すること。
+- 訂正(2026-08-15 Tier2レビュー指摘、マージ前に修正済み): 初版の`pnpm.overrides`に4件の
+  堅牢性の問題があった。(1) `brace-expansion`の親スコープを`minimatch@3.1.5>`のように
+  完全一致バージョンで書いていたため、次にminimatchがパッチリリースされて解決バージョンが
+  ずれた瞬間、override が静かに無効化され脆弱版に戻る恐れがあった → `minimatch@3>`
+  のようにメジャー範囲指定に修正。(2) `body-parser`と`ip-address`をbare(親スコープなし)
+  overrideにしていたため、現時点では唯一のconsumer(それぞれexpress@5, express-rate-limit)
+  にしか影響しないが、将来別のconsumer(express4系はbody-parser 1.x必須、socks系は
+  ip-address 9系必須)が入った場合に非互換バージョンを強制する恐れがあった →
+  `express@5>body-parser`、`express-rate-limit>ip-address`にスコープ。(3) `nanoid`の
+  bare overrideはpostcss以外に将来consumerが増えた際に古い3系へ引き戻すリスクがあった →
+  `postcss>nanoid`にスコープ。(4) 逆に`@babel/core`と`js-yaml`は本来木の中で単一メジアー
+  系統しかない(それぞれdedupeで1バージョンに収束することを確認済み)のに複数の親スコープ
+  overrideに分割していて冗長だった → それぞれ単一のbare overrideに統一。
+  使い分けの基準(以後の追記もこれに従う): 対象パッケージが**同一ツリー内で複数の
+  非互換メジャー系統**を持つ場合は親スコープ(かつメジャー範囲指定、完全一致バージョンは
+  避ける)、**単一メジャー系統のみ**であることを`pnpm why`で確認できた場合はbareの
+  グローバルoverrideでよい。
