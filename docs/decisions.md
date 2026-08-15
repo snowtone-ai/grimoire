@@ -578,3 +578,20 @@
   対応するか、根本パッケージ(shadcn/next-pwa等)のメジャーアップデートで自然解消するかを
   都度判断する。`shadcn`のバージョンを次に上げるときは、事前に`dist/tailwind.css`が
   同梱されているか(またはCSSの入手方法が変わっていないか)を必ず確認すること。
+- 訂正(2026-08-15 Tier2レビュー指摘、マージ前に修正済み): 初版の`pnpm.overrides`に4件の
+  堅牢性の問題があった。(1) `brace-expansion`の親スコープを`minimatch@3.1.5>`のように
+  完全一致バージョンで書いていたため、次にminimatchがパッチリリースされて解決バージョンが
+  ずれた瞬間、override が静かに無効化され脆弱版に戻る恐れがあった → `minimatch@3>`
+  のようにメジャー範囲指定に修正。(2) `body-parser`と`ip-address`をbare(親スコープなし)
+  overrideにしていたため、現時点では唯一のconsumer(それぞれexpress@5, express-rate-limit)
+  にしか影響しないが、将来別のconsumer(express4系はbody-parser 1.x必須、socks系は
+  ip-address 9系必須)が入った場合に非互換バージョンを強制する恐れがあった →
+  `express@5>body-parser`、`express-rate-limit>ip-address`にスコープ。(3) `nanoid`の
+  bare overrideはpostcss以外に将来consumerが増えた際に古い3系へ引き戻すリスクがあった →
+  `postcss>nanoid`にスコープ。(4) 逆に`@babel/core`と`js-yaml`は本来木の中で単一メジアー
+  系統しかない(それぞれdedupeで1バージョンに収束することを確認済み)のに複数の親スコープ
+  overrideに分割していて冗長だった → それぞれ単一のbare overrideに統一。
+  使い分けの基準(以後の追記もこれに従う): 対象パッケージが**同一ツリー内で複数の
+  非互換メジャー系統**を持つ場合は親スコープ(かつメジャー範囲指定、完全一致バージョンは
+  避ける)、**単一メジャー系統のみ**であることを`pnpm why`で確認できた場合はbareの
+  グローバルoverrideでよい。

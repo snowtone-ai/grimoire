@@ -1,15 +1,21 @@
 # state.md
 
 ## Current
-- Branch: main (T028 in progress directly on main pre-branch; will move to a branch
-  before commit per the git workflow)
-- Active task: T028 — resolve all 62 open Dependabot alerts (D-033). Fix applied
-  (shadcn kept + overrides, next bumped to 16.3.1, remaining transitives pinned via
-  scoped pnpm.overrides); pnpm audit 0/62; pnpm verify green; sharp verified working
-  end-to-end via a real /_next/image request. Pending: Tier 2 fresh-context review,
-  then merge.
+- Branch: chore/dependabot-alerts-t028 (T028, PR #21 open)
+- Active task: T028 — resolve all 62 open Dependabot alerts (D-033). Tier 2 Opus
+  fresh-context review: PASS WITH NITS. 4 pre-merge-recommended findings fixed
+  (brace-expansion overrides were pinned to an exact minimatch version instead of
+  a major range and would have silently stopped protecting on the next minimatch
+  patch bump; body-parser/ip-address/nanoid used bare global overrides where a
+  scoped one was safer given other real or plausible consumers). pnpm audit 0/62;
+  pnpm verify green; sharp verified working end-to-end via a real /_next/image
+  request. Ready to merge.
 - Current executor: none
 - Write lock: none
+- Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
+  because 4.18.0 stopped shipping the `dist/tailwind.css` file this app's
+  `globals.css` imports as its design-token base. Any future bump of `shadcn`
+  must confirm `dist/tailwind.css` still ships before changing the pin.
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
 - Latest verification pointer: tasks.md T026
 - Verification mode: standard
