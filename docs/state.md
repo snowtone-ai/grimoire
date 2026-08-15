@@ -1,12 +1,13 @@
 # state.md
 
 ## Current
-- Branch: feat/calendar-survey-reset (T029, not yet pushed/PR'd)
-- Active task: T029 — calendar reset (tasks+streaks) and survey-notes reset (drops)
-  added to /book's new RESET card, next to ARCHIVE (D-034). pnpm verify green
-  (62/62 tests); browser smoke via Playwright confirmed reveal/cancel/confirm
-  flows for both buttons, empty states render correctly afterward. Not yet
-  reviewed or merged.
+- Branch: main (T029 merged, PR #22 closed, branch deleted)
+- Active task: none. T029 — calendar reset (tasks+streaks) and survey-notes reset
+  (drops) added to /book's new RESET card, next to ARCHIVE (D-034). pnpm verify
+  green (62/62 tests); browser smoke via Playwright confirmed reveal/cancel/confirm
+  flows for both buttons, empty states render correctly afterward. Tier 1
+  fresh-context Sonnet review found and fixed 1 real bug (failed-delete error
+  message never rendered); re-verified green. Merged to main.
 - Current executor: none
 - Write lock: none
 - Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
