@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Download, Upload } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
@@ -232,11 +232,21 @@ function BackupSection({ onImported }: { onImported: () => void }) {
 }
 
 function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) {
-  const regionStats = EXPEDITION_REGIONS.map((region) => {
-    const items = DROP_CATALOG.filter((drop) => drop.region === region.id);
-    const found = items.filter((drop) => (counts?.get(drop.id) ?? 0) > 0).length;
-    return { region, found, total: items.length };
-  });
+  const regionStats = useMemo(() => {
+    const totals = new Map<string, number>();
+    const found = new Map<string, number>();
+    for (const drop of DROP_CATALOG) {
+      totals.set(drop.region, (totals.get(drop.region) ?? 0) + 1);
+      if ((counts?.get(drop.id) ?? 0) > 0) {
+        found.set(drop.region, (found.get(drop.region) ?? 0) + 1);
+      }
+    }
+    return EXPEDITION_REGIONS.map((region) => ({
+      region,
+      found: found.get(region.id) ?? 0,
+      total: totals.get(region.id) ?? 0,
+    }));
+  }, [counts]);
 
   return (
     <section aria-label="遠征記録">
@@ -248,10 +258,14 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
         aria-hidden
         className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
       />
-      <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul
+        tabIndex={0}
+        className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {regionStats.map(({ region, found, total }) => (
           <li
             key={region.id}
+            title={region.blurb}
             className="w-40 flex-shrink-0 rounded-2xl border border-border bg-card p-3"
             style={{
               boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${region.accent} 20%, transparent)`,
@@ -264,7 +278,7 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
             <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
               {region.subtitle}
             </p>
-            <p className="mt-2 text-right text-[11px] font-bold tabular-nums" style={{ color: region.accent }}>
+            <p className="mt-2 text-right text-[11px] font-bold tabular-nums text-foreground">
               {found}/{total}
             </p>
           </li>
@@ -485,7 +499,8 @@ function Section({
               )}
               {renderIcon(drop, isFound)}
               <p
-                className={`mt-1.5 truncate text-[10px] font-semibold ${
+                title={isFound ? drop.name : undefined}
+                className={`mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight ${
                   isFound ? "text-foreground" : "text-muted-foreground/60"
                 }`}
               >

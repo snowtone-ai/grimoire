@@ -65,6 +65,8 @@ function rareFromSpecies(species: PlantSpecies): DropDef {
     emoji: SPECIES_EMOJI[species.nameEn] ?? "🌸",
     month: species.month,
     color: species.color,
+    // Reworded from "研究所で" to "本部で" for the D-032 world-atlas framing;
+    // id/name/photo/month/color stay byte-identical (see D-032 correction).
     flavor: `${species.month}月の希少植物。本部の庭で大切に育てられている`,
   };
 }
@@ -78,6 +80,7 @@ function ssrFromSpecies(species: PlantSpecies): DropDef {
     photo: species.rewardImage,
     month: species.month,
     color: species.accentColor,
+    // Reworded (see the RARE4 flavor comment above) for the same reason.
     flavor: `調査班が記録した、本部の庭に広がる一面の${species.name}`,
   };
 }

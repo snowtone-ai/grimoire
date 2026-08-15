@@ -84,7 +84,7 @@ test("pity forces a RARE8 once the limit is reached", async () => {
     await db.drops.add({
       taskId: `seed-${i}`,
       dateKey: "2026-08-01",
-      dropId: "c-kooribana",
+      dropId: "frost-1-kooribana",
       rarity: 1,
       at: new Date(2026, 7, 1).toISOString(),
     });
@@ -108,7 +108,7 @@ test("the pity counter resets after a RARE8 and counts only later rolls", async 
     await db.drops.add({
       taskId: `seed-${i}`,
       dateKey: "2026-08-01",
-      dropId: "c-kooribana",
+      dropId: "frost-1-kooribana",
       rarity: 1,
       at: new Date(2026, 7, 1).toISOString(),
     });
@@ -152,7 +152,7 @@ test("granting never loads the whole drops ledger into memory", async () => {
     bulk.push({
       taskId: `bulk-${i}`,
       dateKey: `2026-0${(i % 9) + 1}-01`,
-      dropId: "c-kooribana",
+      dropId: "frost-1-kooribana",
       rarity: 1,
       at: new Date(2026, 0, 1).toISOString(),
     });

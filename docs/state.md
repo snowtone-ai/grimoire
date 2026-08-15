@@ -1,10 +1,10 @@
 # state.md
 
 ## Current
-- Branch: feat/reward-world-atlas (T027, PR #20 open, not yet merged)
-- Active task: T027 — reward catalog world-atlas rebuild. Tier 1 review attempt failed
-  (session usage limit, resets 19:00 JST 2026-08-15) — retry needed, then human merge
-  confirmation (300+ line diff, high-risk class per CLAUDE.md).
+- Branch: main (feat/reward-world-atlas merged, PR #20 closed, branch deleted)
+- Active task: none — T027 done. Tier 2 Opus fresh-context review ran (pass with nits);
+  2 major + 7 minor/nit findings fixed in a follow-up commit; pnpm verify re-run green
+  (58/58 tests); merged with user's explicit go-ahead in the same session.
 - Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
@@ -36,10 +36,12 @@
 ## Next
 - 2026-08-15: T027 — reward catalog rebuilt into an 8-region world atlas (308→436 items,
   D-032). Backward compat intentionally broken (user-authorized). RARE4/8 untouched
-  (season-linked, photo-backed). AI-generated illustrations for RARE6-8 were requested
-  but are out of reach in this environment (no image-gen tool/key access) — deferred to
-  a future task (a standalone script the user runs with their own GEMINI_API_KEY).
-  Pending: Tier 1 fresh-context review, then human merge confirmation.
+  (ids/names/photos; flavor text on 24 of 60 was reworded, see D-032 correction).
+  AI-generated illustrations for RARE6-8 were requested but are out of reach in this
+  environment (no image-gen tool/key access) — deferred to a future task (a standalone
+  script the user runs with their own GEMINI_API_KEY). Also deferred: drop-reveal.tsx
+  doesn't show the region name at the moment of reveal (Tier 2 review nit, no visual
+  QA time this session). Shipped and merged 2026-08-15.
 - 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
   reads the whole drops ledger. See D-031. Deferred options recorded there: a
   Dexie v4 `dropId` index (would make the isNew check fully O(log n)), and more

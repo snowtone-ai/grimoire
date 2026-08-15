@@ -112,6 +112,51 @@ test("RARE4 keeps exactly one canonical specimen per month for the chronicle", (
   }
 });
 
+/* Unlike the expedition-region ids (376 of them, intentionally NOT preserved
+ * by D-032), these 60 season-linked "garden" ids already have real drop
+ * records in the user's IndexedDB from before this rewrite, and D-032
+ * explicitly promised to leave them byte-identical. If a future edit ever
+ * moved one of these to a different rank, grantDropForTask's rarity-scoped
+ * lookup (rewardDb.ts) would stop finding the user's existing record and
+ * show it as permanently "NEW!" (the exact failure D-031 warned about) — so
+ * this is a literal snapshot, not derived from drops.ts, and fails on that
+ * kind of accidental move. */
+const SEASON_DROPS_BY_RARITY = {
+  4: [
+    "r-plum", "r-wintersweet", "r-sakura", "r-wisteria", "r-rose", "r-hydrangea",
+    "r-sunflower", "r-morning_glory", "r-cosmos", "r-osmanthus", "r-chrysanthemum", "r-cyclamen",
+    "r-plum-seed", "r-plum-pressed", "r-plum-bud",
+    "r-wintersweet-sprout", "r-wintersweet-oil", "r-wintersweet-dried",
+    "r-sakura-seed", "r-sakura-pressed", "r-sakura-sprout",
+    "r-wisteria-bud", "r-wisteria-cutting", "r-wisteria-petal",
+    "r-rose-seed", "r-rose-pressed", "r-rose-cutting",
+    "r-hydrangea-cutting", "r-hydrangea-dried", "r-hydrangea-bud",
+    "r-sunflower-seed", "r-sunflower-pollen", "r-sunflower-pressed",
+    "r-morning_glory-seed", "r-morning_glory-bud", "r-morning_glory-pressed",
+    "r-cosmos-seed", "r-cosmos-pressed", "r-cosmos-sprout",
+    "r-osmanthus-oil", "r-osmanthus-dried", "r-osmanthus-bud",
+    "r-chrysanthemum-cutting", "r-chrysanthemum-pressed", "r-chrysanthemum-tea",
+    "r-cyclamen-seed", "r-cyclamen-bud", "r-cyclamen-pressed",
+  ],
+  8: [
+    "s-plum", "s-wintersweet", "s-sakura", "s-wisteria", "s-rose", "s-hydrangea",
+    "s-sunflower", "s-morning_glory", "s-cosmos", "s-osmanthus", "s-chrysanthemum", "s-cyclamen",
+  ],
+};
+
+test("season-linked garden ids (RARE4/RARE8) stay pinned to their rank, per D-032", () => {
+  for (const [rarityKey, ids] of Object.entries(SEASON_DROPS_BY_RARITY)) {
+    const rarity = Number(rarityKey);
+    assert.equal(ids.length, rarity === 4 ? 48 : 12, `RARE${rarity} garden id count`);
+    for (const id of ids) {
+      const drop = getDropById(id);
+      assert.ok(drop, `expected garden drop ${id} to exist`);
+      assert.equal(drop.rarity, rarity, `${id} must stay RARE${rarity}`);
+      assert.equal(drop.region, "garden", `${id} must stay in the garden region`);
+    }
+  }
+});
+
 test("every RARE4 entry carries a month so seasonal weighting applies", () => {
   for (const drop of POOL_BY_RARITY[4]) {
     assert.ok(

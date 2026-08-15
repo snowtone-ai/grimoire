@@ -93,9 +93,15 @@ const REGION_BY_ID: Map<string, RegionDef> = new Map(REGIONS.map((region) => [re
 
 export function getRegionById(id: string): RegionDef {
   const region = REGION_BY_ID.get(id);
-  if (!region) throw new Error(`Unknown region id: ${id}`);
+  if (!region) {
+    // Every DropDef's region is exercised by drop-catalog.test.mjs, so this
+    // only fires on a future data typo. Degrade to the garden region instead
+    // of throwing mid-render (a white /book screen) — but still surface it.
+    console.error(`Unknown region id: ${id}, falling back to garden`);
+    return REGION_BY_ID.get("garden")!;
+  }
   return region;
 }
 
-/** The seven expedition regions the atlas overview shows (excludes the home garden). */
+/** The eight expedition regions the atlas overview shows (excludes the home garden). */
 export const EXPEDITION_REGIONS: RegionDef[] = REGIONS.filter((region) => region.id !== "garden");
