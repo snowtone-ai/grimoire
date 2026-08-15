@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
   COMMON_DROPS,
   DROP_CATALOG,
+  RARE4_POOL,
   RARE_DROPS,
   SSR_DROPS,
   TIER2_DROPS,
@@ -258,7 +259,7 @@ const RARITY_SECTIONS: {
   { rarity: 7, title: "秘蔵の遺物", badgeClass: "bg-brand text-primary-foreground", pool: TIER7_DROPS, columns: "grid-cols-4" },
   { rarity: 6, title: "貴重標本", badgeClass: "bg-brand-soft text-brand", pool: TIER6_DROPS, columns: "grid-cols-4" },
   { rarity: 5, title: "特殊素材", badgeClass: "bg-cat-life-soft text-cat-life", pool: TIER5_DROPS, columns: "grid-cols-4" },
-  { rarity: 4, title: "希少植物", badgeClass: "bg-cat-job-soft text-cat-job", pool: RARE_DROPS, columns: "grid-cols-4" },
+  { rarity: 4, title: "希少植物", badgeClass: "bg-cat-job-soft text-cat-job", pool: RARE4_POOL, columns: "grid-cols-4" },
   { rarity: 3, title: "希少結晶", badgeClass: "bg-frost-soft text-frost", pool: TIER3_DROPS, columns: "grid-cols-4" },
   { rarity: 2, title: "良質素材", badgeClass: "bg-success-soft text-success", pool: TIER2_DROPS, columns: "grid-cols-4" },
   { rarity: 1, title: "採集素材", badgeClass: "bg-muted text-muted-foreground", pool: COMMON_DROPS, columns: "grid-cols-4" },
