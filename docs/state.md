@@ -2,16 +2,24 @@
 
 ## Current
 - Branch: feat/gemini-server-proxy (PR #19, not yet merged)
-- Active task: T025 — review pending (Tier 2 Opus fresh-context review running in background)
-- Current executor: Claude Code
+- Active task: T025 — Tier 2 review passed after fixes; blocked on human merge
+  confirmation + 2 manual actions (see Current Blocker)
+- Current executor: none (waiting on human)
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
 - Latest verification pointer: tasks.md T025
 - Verification mode: standard
 
 ## Current Blocker
-- T025 held pre-merge pending Tier 2 review result (security/deploy class — human
-  confirmation required before merge per CLAUDE.md high-risk gate).
+- T025 held pre-merge: security/deploy class requires explicit human confirmation
+  before merge per CLAUDE.md high-risk gate (Vercel SSO was already lifted for
+  production per the user's earlier confirmation; merging PR #19 to main is the
+  remaining irreversible step).
+- Tier 2 Opus review (2026-08-15) found the route was an unauthenticated
+  free-form LLM relay — fixed by replacing {prompt} with two typed request
+  shapes (kind: "voice" | "gmail"); see D-030 and Review Notes/T025 for the
+  full list of fixes (maxDuration, try/catch, header-based key, no upstream
+  error echo, README fix). Re-verified green; not yet merged.
 - Two manual (human) actions outstanding before family can actually use the app,
   neither is code and neither was done by the agent (secrets / external console):
   1. Add `GEMINI_API_KEY` (same value, no `NEXT_PUBLIC_` prefix) to Vercel project
