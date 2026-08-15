@@ -1,10 +1,13 @@
 # state.md
 
 ## Current
-- Branch: main (feat/reward-world-atlas merged, PR #20 closed, branch deleted)
-- Active task: none — T027 done. Tier 2 Opus fresh-context review ran (pass with nits);
-  2 major + 7 minor/nit findings fixed in a follow-up commit; pnpm verify re-run green
-  (58/58 tests); merged with user's explicit go-ahead in the same session.
+- Branch: main (T028 in progress directly on main pre-branch; will move to a branch
+  before commit per the git workflow)
+- Active task: T028 — resolve all 62 open Dependabot alerts (D-033). Fix applied
+  (shadcn kept + overrides, next bumped to 16.3.1, remaining transitives pinned via
+  scoped pnpm.overrides); pnpm audit 0/62; pnpm verify green; sharp verified working
+  end-to-end via a real /_next/image request. Pending: Tier 2 fresh-context review,
+  then merge.
 - Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
