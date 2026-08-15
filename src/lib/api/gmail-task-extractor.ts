@@ -44,8 +44,6 @@ function isCategory(value: string): value is Category {
 }
 
 export async function extractTasksFromEmails(messages: GmailMessage[]): Promise<TaskCandidate[]> {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey) throw new Error("Gemini API key not set");
   const sanitizedMessages = sanitizeMessages(messages);
 
   const prompt = `
@@ -71,25 +69,18 @@ ${JSON.stringify(sanitizedMessages, null, 2)}
 `.trim();
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" },
-        }),
-      }
-    );
+    const response = await fetch("/api/gemini/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
 
     if (response.status === 429) throw new RateLimitError();
+    const json = (await response.json().catch(() => ({}))) as { text?: string; error?: string };
     if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      throw new Error(`Gemini API error ${response.status}: ${body.slice(0, 200)}`);
+      throw new Error(json.error ?? `Gemini API error ${response.status}`);
     }
-    const json = await response.json();
-    const text: string = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    const text: string = json.text ?? "[]";
     const parsed = JSON.parse(text) as ParsedCandidate[];
 
     return parsed.flatMap((candidate) => {
