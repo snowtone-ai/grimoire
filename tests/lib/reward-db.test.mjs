@@ -14,13 +14,19 @@ globalThis.window ??= globalThis;
 import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { db } from "../../src/lib/db.ts";
-import { grantDropForTask, getCollection } from "../../src/lib/rewardDb.ts";
+import {
+  grantDropForTask,
+  getCollection,
+  getSurveyResetCount,
+  resetSurveyNotes,
+} from "../../src/lib/rewardDb.ts";
 import { PITY_LIMIT, getDropById } from "../../src/lib/domain/drops.ts";
 
 const realRandom = Math.random;
 
 beforeEach(async () => {
   await db.drops.clear();
+  await db.tasks.clear();
 });
 
 afterEach(() => {
@@ -175,4 +181,35 @@ test("granting never loads the whole drops ledger into memory", async () => {
   } finally {
     db.drops.toArray = realToArray;
   }
+});
+
+test("getSurveyResetCount reports the current drops total", async () => {
+  stubRandom(0.5);
+  await grantDropForTask("task-1", "2026-08-15");
+  await grantDropForTask("task-2", "2026-08-16");
+
+  assert.equal(await getSurveyResetCount(), 2);
+});
+
+test("resetSurveyNotes clears drops but leaves tasks alone", async () => {
+  stubRandom(0.5);
+  await grantDropForTask("task-1", "2026-08-15");
+  await db.tasks.add({
+    id: "task-1",
+    title: "t1",
+    dueDate: "2026-08-15",
+    dueTime: null,
+    category: "life",
+    completed: true,
+    completedAt: "2026-08-15T00:00:00.000Z",
+    recurrence: "none",
+    createdAt: "2026-08-15T00:00:00.000Z",
+  });
+
+  await resetSurveyNotes();
+
+  assert.equal(await db.drops.count(), 0);
+  const collection = await getCollection();
+  assert.equal(collection.totalRolls, 0);
+  assert.equal(await db.tasks.count(), 1, "resetSurveyNotes must not touch tasks (calendar)");
 });

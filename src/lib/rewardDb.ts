@@ -106,3 +106,13 @@ export async function getChronicle(now = new Date()): Promise<ChronicleMonth[]> 
   const all: DropRecord[] = await db.drops.toArray();
   return buildChronicle(all, now);
 }
+
+/** リセット前の確認表示用に、ドロップ（調査記録）の件数を取得 */
+export async function getSurveyResetCount(): Promise<number> {
+  return db.drops.count();
+}
+
+/** 調査記録をリセット: drops（素材ドロップ/コレクション/年代記の元データ）を全削除する（取り消し不可） */
+export async function resetSurveyNotes(): Promise<void> {
+  await db.drops.clear();
+}

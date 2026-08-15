@@ -1,12 +1,12 @@
-import { db, type Task, type Streak, type Category } from "./db";
+import { db, type Task, type Streak, type Category } from "./db.ts";
 import {
   doesTaskApplyToDate,
   sortTasksByTime,
   taskForDisplayDate,
   todayDateString,
-} from "./domain/task-date";
-import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant";
-import { calcStreakCount } from "./domain/streak";
+} from "./domain/task-date.ts";
+import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant.ts";
+import { calcStreakCount } from "./domain/streak.ts";
 
 // ── Task CRUD ──────────────────────────────────────────────────────────────
 
@@ -109,6 +109,26 @@ export async function getTasksByCategory(
   category: Category
 ): Promise<Task[]> {
   return db.tasks.where("category").equals(category).toArray();
+}
+
+/** リセット前の確認表示用に、タスク・ストリークの件数を取得 */
+export async function getCalendarResetCounts(): Promise<{
+  tasks: number;
+  streaks: number;
+}> {
+  const [tasks, streaks] = await Promise.all([
+    db.tasks.count(),
+    db.streaks.count(),
+  ]);
+  return { tasks, streaks };
+}
+
+/** カレンダーをリセット: タスクとストリーク記録を全削除する（取り消し不可） */
+export async function resetCalendar(): Promise<void> {
+  await db.transaction("rw", db.tasks, db.streaks, async () => {
+    await db.tasks.clear();
+    await db.streaks.clear();
+  });
 }
 
 // ── Streak CRUD ────────────────────────────────────────────────────────────
