@@ -1,21 +1,32 @@
 # state.md
 
 ## Current
-- Branch: main (T029 merged, PR #22 closed, branch deleted)
-- Active task: none. T029 — calendar reset (tasks+streaks) and survey-notes reset
-  (drops) added to /book's new RESET card, next to ARCHIVE (D-034). pnpm verify
-  green (62/62 tests); browser smoke via Playwright confirmed reveal/cancel/confirm
-  flows for both buttons, empty states render correctly afterward. Tier 1
-  fresh-context Sonnet review found and fixed 1 real bug (failed-delete error
-  message never rendered); re-verified green. Merged to main.
+- Branch: main (T029 merged, PR #22 closed, branch deleted; T030 governance
+  migration committed directly to main — process/config only, no PR needed)
+- Active task: none. T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
+  applied to both global (`~/.claude`, affects all of the user's other repos) and
+  project scope. Global: CLAUDE.md, settings.json (env/fallbackModel/hooks), and
+  guard.mjs (P7: Edit/Write/MultiEdit/NotebookEdit now block `.env`/`.env.*`
+  writes, not just reads) all re-read in full and confirmed correctly migrated —
+  no RTK references remain, Sonnet 5/Opus 5 routing in place. Project:
+  CLAUDE.md rewritten for v11.1.1; `.claude/settings.json`'s dead
+  `"Bash(rm -rf:*)"` deny rule (invalid colon syntax, never matched) fixed to
+  `"Bash(rm -rf *)"`; `.claude/rules/tests.md` added (node:test relative-import
+  lesson moved out of cross-project auto-memory per the memory-layer boundary
+  rule). Product source untouched. Tier 1 self-audit (docs/config-only diff,
+  no auth/billing/DB-schema/production-data class) substituted for Tier 2, same
+  basis as T015.
 - Current executor: none
 - Write lock: none
 - Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
   because 4.18.0 stopped shipping the `dist/tailwind.css` file this app's
   `globals.css` imports as its design-token base. Any future bump of `shadcn`
   must confirm `dist/tailwind.css` still ships before changing the pin.
-- Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
-- Latest verification pointer: tasks.md T026
+- Informational (not a blocker, out of scope for T030): `~/.claude/settings.local.json`
+  has a stale top-level `permissionMode` key not part of the loaded config
+  hierarchy. No fix applied; recorded in D-035.
+- Main agent: Claude Code (Sonnet 5-first; Opus 5 for top-risk review only)
+- Latest verification pointer: tasks.md T030
 - Verification mode: standard
 
 ## Current Blocker
@@ -41,6 +52,9 @@
     owner/editor), so this was always going to be a manual step.
 
 ## Next
+- 2026-08-15: T030 — pm-zero governance migrated v11 -> v11.1.1 (D-035), global
+  + project scope. v11.1.1 chosen over v11.2 (config-only truth patch vs. a
+  version requiring new maintained scripts). No product code touched.
 - 2026-08-15: T027 — reward catalog rebuilt into an 8-region world atlas (308→436 items,
   D-032). Backward compat intentionally broken (user-authorized). RARE4/8 untouched
   (ids/names/photos; flavor text on 24 of 60 was reworded, see D-032 correction).

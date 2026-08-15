@@ -640,3 +640,61 @@
   非互換メジャー系統**を持つ場合は親スコープ(かつメジャー範囲指定、完全一致バージョンは
   避ける)、**単一メジャー系統のみ**であることを`pnpm why`で確認できた場合はbareの
   グローバルoverrideでよい。
+
+## D-035: pm-zero v11.1.1へのガバナンス移行 — グローバル(~/.claude)+プロジェクト双方を完全更新
+- 日付: 2026-08-15
+- 対象: process / security / governance（プロダクトコードは変更なし）
+- 背景: `プロダクト/pm-zero` リポジトリに v11.1.1 と v11.2 の2版が存在し、どちらを本
+  リポジトリの運用基盤とすべきか、ユーザーから選定+完全適用の指示があった。適用範囲を
+  「プロジェクトのみ」か「グローバル(~/.claude、他の全プロダクトに影響)も含めて完全移行」か
+  AskUserQuestionで確認し、ユーザーは「グローバルも含めて完全移行(推奨)」を選択した。
+- 決定(版選定): v11.1.1を採用。v11.2はグラフ再構築(`graph.mjs`/`loop.mjs`等の新規
+  メンテナンス対象スクリプト)を伴う設計変更であるのに対し、v11.1.1は既存ランタイムに対する
+  「設定のみの真正化パッチ」で新規保守コードがゼロ。本リポジトリおよびユーザーの他プロダクトは
+  いずれも個人利用規模であり、v11.2のグラフ機構が要求する規模に見合わないと判断した。
+- 決定(グローバル ~/.claude、v11.1.1のP1-P7/A1-A6修正を適用):
+  - P1: `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1`(サブエージェントの再帰スポーンを禁止)。
+  - P2: RTK(Rust Token Killer)を完全撤去。60-90%圧縮という主張がペア計測ベンチマークで
+    否定されたため、CLAUDE.md/settings.jsonの両方から関連記述を削除。
+  - P3: `CLAUDE_CODE_AUTO_COMPACT_WINDOW=188000`(絶対トークン数)を採用し、旧来の
+    パーセンテージ指定オーバーライドを置き換え。
+  - P4: モデル呼称をOpus 4.8→Opus 5に更新。Proプランでは200Kコンテキスト制約がある旨を
+    明記。
+  - P5: `permissions.allow: ["*"]`をbypassPermissions下でも明示。acceptEditsモードで
+    動くサブエージェントは、たとえメインがbypassPermissionsでも個別に確認を要求し得るため。
+  - P7(最重要のセキュリティ修正): `guard.mjs`にEdit/Write/MultiEdit/NotebookEditの
+    経路を新設し、`.env`/`.env.*`への書き込みも読み取りと同じ正規表現でブロックするように
+    した。従来はReadの二重ガードのみで書き込み経路が無防備だった——エージェントが`.env`を
+    新規作成してステージする方が、実際に秘密情報を漏えいさせる失敗モードに近い。
+  - A2: `PreCompact`フック追加。コンパクション前に`tasks.md`/`docs/state.md`/
+    `docs/issues.md`を`--no-verify`でチェックポイントコミット。
+  - A3: `StopFailure(rate_limit|overloaded)`フック追加。予算上限ヒット時も同様に
+    チェックポイントコミットし、`docs/issues.md`に一行記録。
+  - A4: `.claude/rules/*.md`(frontmatterの`paths:`グロブでマッチしたファイルを
+    Claudeが読んだ時のみロードされる)を、パス限定のSelf-Evolutionルールの新しい置き場として
+    導入。
+  - A5: バージョン再確認のタイミングをSession Start/Version Policy相当のセクションに明記。
+  - A6:「ペア計測での実測」原則をTooling節に明文化し、RTKのような未検証の圧縮率主張を
+    根拠なく採用しない方針を残す。
+  - fallbackModel: `["claude-sonnet-5"]`。ルーティング先モデル(Opusレビュー等)が
+    overloadedのときのみ代替に入り、Proプランのレート制限では発火しない。
+- 決定(プロジェクト側、task-plant): `CLAUDE.md`をv11.1.1へ全面書き換え(ヘッダ改版、
+  Continuity/Autonomy/Self-Review/Self-Evolution/Shell/Version Policy各節を更新、RTKの
+  行を完全削除)。`.claude/settings.json`は不正な`"Bash(rm -rf:*)"`(コロン構文の誤り、
+  一度もマッチしないデッドルールだった)を`"Bash(rm -rf *)"`に修正し、Edit/Write版の
+  `.env*`拒否ルールを追加、`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`を
+  `CLAUDE_CODE_AUTO_COMPACT_WINDOW`に置換。
+- 決定(メモリ層境界の即時適用): 両CLAUDE.mdが定める「ファイルパスに紐づく事実は
+  プロジェクト横断のauto-memoryではなく、そのプロジェクトの`.claude/rules/*.md`に置く」
+  というルール自体をこの移行で新設したため、既存のクロスプロジェクトauto-memoryに
+  混入していたtask-plant固有の教訓(node:testの相対import拡張子問題)を新設した
+  `.claude/rules/tests.md`へ移設し、`MEMORY.md`の対応行と旧メモリファイルを削除した。
+- 不採用案: v11.2の採用(グラフ再構築コストに見合う規模がない)、プロジェクト限定の
+  適用(ユーザーが明示的にグローバル込みの完全移行を選択したため不採用)。
+- 情報共有(修正はせず、範囲外として記録のみ): `~/.claude/settings.local.json`に
+  スキーマ上無効な`permissionMode`トップレベルキーが残存している。ユーザーレベルの
+  `settings.local.json`は読み込み階層に含まれない(仕様上、無効化されている可能性が高い)ため、
+  実害は乏しいと判断し、今回の明示的なファイルセット(グローバル/プロジェクトのcore
+  governanceファイル)には含めず修正しなかった。
+- 将来見直し条件: Codex等の第二エージェントを再導入する場合、または将来pm-zeroの
+  次版が出て台帳/フック責務がさらに変わった場合に再度この節を更新する。

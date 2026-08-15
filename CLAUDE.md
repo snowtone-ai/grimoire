@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v11 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v11.1.1 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -9,24 +9,37 @@
 - Intent: docs/vision.md | Tasks: tasks.md | State: docs/state.md
 - Decisions: docs/decisions.md | Failures: docs/issues.md | Map: docs/repo-map.md
 - Domain vocabulary: CONTEXT.md | Report: HANDOFF-JA.md
+- Scoped rules: .claude/rules/*.md (path-scoped facts; loads only when a matching file
+  is read, not on every session)
 
 ## Startup Read
 - This file, docs/state.md, docs/decisions.md, docs/repo-map.md Summary. Nothing else.
 
 ## Budget (Pro plan, hard wall)
 - One task per session. Plan -> /handoff -> execute for big features.
-- Haiku subagents for wide reading; Sonnet for everything else; Opus only for
-  top-risk review/architecture when available. Never block on Opus.
+- Haiku subagents for wide reading; Sonnet 5 for everything else; Opus 5 only for
+  top-risk review/architecture when available (200K context window on Pro). Never
+  block on Opus.
 - Long builds/tests in background. Batch questions. Compact at checkpoints.
 
 ## Continuity (auto-compact at 50%)
+- Auto-compact trigger is an absolute token target (CLAUDE_CODE_AUTO_COMPACT_WINDOW=
+  188000 in .claude/settings.json), not a percentage.
+- The global PreCompact hook auto-checkpoints tasks.md/docs/state.md/docs/issues.md
+  before compaction fires; still restate active task ID, modified files list, and
+  verify command in your own summary.
 - Checkpoint to tasks.md + docs/state.md and commit after each logical unit.
-- When compacting, always preserve: active task ID, modified files list, verify command.
 - Keep this file lean; @path or rg for detail; subagents for wide reading.
 
 ## Autonomy
 - bypassPermissions is active; never ask permission for tool calls.
-- The global guard hook blocks the dangerous set; if blocked, do not work around it.
+- The global guard hook blocks the dangerous set (destructive shell commands, and
+  .env*/.secret reads AND writes via Read/Edit/Write/MultiEdit); if blocked, do not
+  work around it.
+- For long or multi-session tasks, use /goal <condition> to record the completion
+  condition so it survives compaction/handoff. The evaluator only reads the transcript
+  and cannot run commands -- it gets you continuation, not evidence; still verify with
+  a real command (pnpm verify/test) before declaring the task done.
 - Human gate only for irreversible real-world acts (real money, prod credentials,
   publishing personal data).
 
@@ -41,16 +54,17 @@
 
 ## Self-Review (no human reviewer)
 - Tier 0: verify script + tests + lint (always).
-- Tier 1: fresh-context Sonnet subagent (review classes: 300+ line diff, new external
+- Tier 1: fresh-context Sonnet 5 subagent (review classes: 300+ line diff, new external
   API, critical-workflow changes, and all Tier 2 classes).
-- Tier 2: fresh Opus subagent when available and budget allows (auth, billing, DB schema,
-  RLS/permissions, deploy, security, production data, personal information).
+- Tier 2: fresh Opus 5 subagent when available and budget allows (auth, billing, DB
+  schema, RLS/permissions, deploy, security, production data, personal information).
   Otherwise Tier 1 at high effort; record the substitution in tasks.md Review Notes.
 
 ## Self-Evolution
 - Log failures in docs/issues.md. On 3 repeats, web-search a fix and record the source URL.
-- Promote always-applicable lessons into this file; reference lessons into docs/lessons.md;
-  operator-level lessons into auto-memory.
+- Promote always-applicable lessons into this file; lessons scoped to a subset of this
+  repo's files into .claude/rules/*.md (paths: frontmatter glob); other reference
+  lessons into docs/lessons.md; operator-level lessons into auto-memory.
 
 ## Engineering Role
 - Principal-level full-stack engineer. Readable, testable, minimal, correct code.
@@ -67,7 +81,6 @@
 
 ## Shell
 - PowerShell for all operations. Windows backslash paths. node scripts/name.mjs.
-- RTK compresses CLI output transparently (global hook). rtk gain shows savings.
 
 ## Git (full auto)
 - Never commit to main. Branch per task: <type>/<short-description>.
@@ -84,3 +97,5 @@
 
 ## Version Policy
 - Keep the user's currently configured Claude Code version. Verify in Phase 0 when relevant.
+- If the recorded version above differs from the running one, re-check version-sensitive
+  facts (model names, autocompact behavior, hook semantics) before relying on them.
