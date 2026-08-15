@@ -1,39 +1,26 @@
 # state.md
 
 ## Current
-- Branch: feat/gemini-server-proxy (PR #19, not yet merged)
-- Active task: T026 — reward catalog 5x + hot-path perf; Tier 2 pre-merge review
-  running. T025 (Gemini proxy) reviewed and fixed, riding the same branch.
-- Current executor: Claude Code
+- Branch: main
+- Active task: none — T025 and T026 verified and merged (PR #19).
+- Current executor: none
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
 - Latest verification pointer: tasks.md T026
 - Verification mode: standard
 
 ## Current Blocker
-- T025 held pre-merge: security/deploy class requires explicit human confirmation
-  before merge per CLAUDE.md high-risk gate (Vercel SSO was already lifted for
-  production per the user's earlier confirmation; merging PR #19 to main is the
-  remaining irreversible step).
-- Tier 2 Opus review (2026-08-15) found the route was an unauthenticated
-  free-form LLM relay — fixed by replacing {prompt} with two typed request
-  shapes (kind: "voice" | "gmail"); see D-030 and Review Notes/T025 for the
-  full list of fixes (maxDuration, try/catch, header-based key, no upstream
-  error echo, README fix). Re-verified green; not yet merged.
-- Two manual (human) actions outstanding before family can actually use the app,
-  neither is code and neither was done by the agent (secrets / external console):
-  1. DONE 2026-08-15 (human): `GEMINI_API_KEY` added to the Vercel project env vars.
-  2. OPEN: Google Cloud OAuth consent screen — if the GIS client used by
-     src/lib/api/google-auth.ts is still in "Testing" mode, the family's Google
-     accounts must be added as test users or Gmail/Calendar sign-in fails for
-     them. Confirmed there is NO CLI/API path for this: the IAP OAuth Admin APIs
-     were shut down in March 2026, so it is Cloud Console UI only. Browser
-     automation was unavailable this session (the playwright MCP dropped
-     mid-session and its tools do not re-register until Claude Code restarts),
-     so this needs either a fresh session with playwright available, or a human.
-     Blocked either way until the family's Google addresses are known.
-     Scope note: this only gates the optional Gmail/Calendar import features —
-     the core app works without any Google sign-in.
+- DONE 2026-08-15 (human): `GEMINI_API_KEY` added to the Vercel project env vars.
+- OPEN (human, or an agent session that has browser tools): Google Cloud OAuth
+  consent screen. If the GIS client used by src/lib/api/google-auth.ts is still
+  in "Testing" mode, the family's Google accounts must be added as test users or
+  Gmail/Calendar sign-in fails for them. There is NO CLI/API path for this — the
+  IAP OAuth Admin APIs were shut down in March 2026, so it is Cloud Console UI
+  only. Browser automation was unavailable in the session that did this work (the
+  playwright MCP dropped mid-session; its tools do not re-register until Claude
+  Code restarts). Also blocked until the family's Google addresses are known.
+  Scope: this gates only the optional Gmail/Calendar import — the core app works
+  without any Google sign-in.
 
 ## Next
 - 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
