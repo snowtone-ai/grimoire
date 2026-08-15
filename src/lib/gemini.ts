@@ -1,6 +1,5 @@
 import { type Category } from "./db";
-import { buildTaskParsePrompt } from "./api/gemini-prompts";
-import { RateLimitError, redactSecret } from "./errors";
+import { RateLimitError } from "./errors";
 
 export interface ParsedTask {
   title: string;
@@ -9,16 +8,9 @@ export interface ParsedTask {
   category: Category;
 }
 
-const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
 const VALID_CATEGORIES: Category[] = ["job", "university", "life"];
-
-type GeminiResponse = {
-  candidates?: Array<{
-    content?: { parts?: Array<{ text?: string }> };
-  }>;
-};
 
 function isCategory(value: unknown): value is Category {
   return typeof value === "string" && VALID_CATEGORIES.includes(value as Category);
@@ -60,70 +52,30 @@ export function parseTaskPayload(value: string): ParsedTask {
   };
 }
 
-async function requestGemini(apiKey: string, prompt: string): Promise<string> {
-  const payloads = [
-    {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.1,
-        responseMimeType: "application/json",
-      },
-    },
-    {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1 },
-    },
-    { contents: [{ parts: [{ text: prompt }] }] },
-  ] as const;
-
-  let last400Error = "";
-
-  for (const model of GEMINI_MODELS) {
-    for (const body of payloads) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (response.status === 429) {
-        throw new RateLimitError();
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => "");
-        if (response.status === 400) {
-          last400Error = redactSecret(errorBody);
-          continue;
-        }
-        throw new Error(`Gemini API error ${response.status}: ${redactSecret(errorBody)}`);
-      }
-
-      const data = (await response.json()) as GeminiResponse;
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (content?.trim()) return content;
-    }
-  }
-
-  if (last400Error) {
-    throw new Error(`Gemini API error 400: ${last400Error}`);
-  }
-  throw new Error("Empty response from Gemini API");
-}
-
+// Delegates to the server-side proxy (src/app/api/gemini/generate), which
+// builds the actual prompt itself — the client only sends structured input,
+// so the Gemini API key never ships in the client bundle and the endpoint
+// can't be used as a free-form prompt relay.
 export async function parseTaskFromText(
   text: string,
   todayDate: string
 ): Promise<ParsedTask> {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey) throw new Error("NEXT_PUBLIC_GEMINI_API_KEY is not configured");
   const normalizedText = text.trim().replace(/\s+/g, " ").slice(0, 500);
   if (!normalizedText) throw new Error("Voice input is empty");
 
-  const prompt = buildTaskParsePrompt(normalizedText, todayDate);
-  const content = await requestGemini(apiKey, prompt);
-  return parseTaskPayload(content);
+  const response = await fetch("/api/gemini/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind: "voice", text: normalizedText, todayDate }),
+  });
+
+  if (response.status === 429) throw new RateLimitError();
+
+  const data = (await response.json().catch(() => ({}))) as { text?: string; error?: string };
+
+  if (!response.ok) {
+    throw new Error(data.error ?? `Gemini API error ${response.status}`);
+  }
+  if (!data.text?.trim()) throw new Error("Empty response from Gemini API");
+  return parseTaskPayload(data.text);
 }
