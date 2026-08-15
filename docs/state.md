@@ -2,12 +2,12 @@
 
 ## Current
 - Branch: feat/gemini-server-proxy (PR #19, not yet merged)
-- Active task: T025 — Tier 2 review passed after fixes; blocked on human merge
-  confirmation + 2 manual actions (see Current Blocker)
-- Current executor: none (waiting on human)
+- Active task: T026 — reward catalog 5x + hot-path perf; Tier 2 pre-merge review
+  running. T025 (Gemini proxy) reviewed and fixed, riding the same branch.
+- Current executor: Claude Code
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
-- Latest verification pointer: tasks.md T025
+- Latest verification pointer: tasks.md T026
 - Verification mode: standard
 
 ## Current Blocker
@@ -22,15 +22,24 @@
   error echo, README fix). Re-verified green; not yet merged.
 - Two manual (human) actions outstanding before family can actually use the app,
   neither is code and neither was done by the agent (secrets / external console):
-  1. Add `GEMINI_API_KEY` (same value, no `NEXT_PUBLIC_` prefix) to Vercel project
-     env vars (Production + Preview), then redeploy. The agent cannot read/write
-     .env* secret values.
-  2. Check the Google Cloud OAuth consent screen publishing status for the GIS
-     client used by src/lib/api/google-auth.ts. If it's in "Testing" mode, family
-     members' Google accounts must be added as test users or Gmail/Calendar
-     sign-in will fail for them. The agent has no Google Cloud Console access.
+  1. DONE 2026-08-15 (human): `GEMINI_API_KEY` added to the Vercel project env vars.
+  2. OPEN: Google Cloud OAuth consent screen — if the GIS client used by
+     src/lib/api/google-auth.ts is still in "Testing" mode, the family's Google
+     accounts must be added as test users or Gmail/Calendar sign-in fails for
+     them. Confirmed there is NO CLI/API path for this: the IAP OAuth Admin APIs
+     were shut down in March 2026, so it is Cloud Console UI only. Browser
+     automation was unavailable this session (the playwright MCP dropped
+     mid-session and its tools do not re-register until Claude Code restarts),
+     so this needs either a fresh session with playwright available, or a human.
+     Blocked either way until the family's Google addresses are known.
+     Scope note: this only gates the optional Gmail/Calendar import features —
+     the core app works without any Google sign-in.
 
 ## Next
+- 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
+  reads the whole drops ledger. See D-031. Deferred options recorded there: a
+  Dexie v4 `dropId` index (would make the isNew check fully O(log n)), and more
+  RARE8 entries if additional vista photos are ever sourced.
 - 2026-08-15: T025 — family multi-user access audit found the data layer already
   device-scoped (no code needed); real blockers were Vercel SSO gating prod
   entirely (scoped to preview-only via Vercel settings) and NEXT_PUBLIC_GEMINI_API_KEY
