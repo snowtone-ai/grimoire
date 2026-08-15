@@ -1,18 +1,33 @@
 # state.md
 
 ## Current
-- Branch: main
-- Active task: none — all ledger tasks are verified or closed (T001-T024; zero open agent tasks)
-- Current executor: none
+- Branch: feat/gemini-server-proxy (PR #19, not yet merged)
+- Active task: T025 — review pending (Tier 2 Opus fresh-context review running in background)
+- Current executor: Claude Code
 - Write lock: none
 - Main agent: Claude Code (Sonnet-first; Opus for top-risk review only)
-- Latest verification pointer: tasks.md T023/T024
+- Latest verification pointer: tasks.md T025
 - Verification mode: standard
 
 ## Current Blocker
-- None
+- T025 held pre-merge pending Tier 2 review result (security/deploy class — human
+  confirmation required before merge per CLAUDE.md high-risk gate).
+- Two manual (human) actions outstanding before family can actually use the app,
+  neither is code and neither was done by the agent (secrets / external console):
+  1. Add `GEMINI_API_KEY` (same value, no `NEXT_PUBLIC_` prefix) to Vercel project
+     env vars (Production + Preview), then redeploy. The agent cannot read/write
+     .env* secret values.
+  2. Check the Google Cloud OAuth consent screen publishing status for the GIS
+     client used by src/lib/api/google-auth.ts. If it's in "Testing" mode, family
+     members' Google accounts must be added as test users or Gmail/Calendar
+     sign-in will fail for them. The agent has no Google Cloud Console access.
 
 ## Next
+- 2026-08-15: T025 — family multi-user access audit found the data layer already
+  device-scoped (no code needed); real blockers were Vercel SSO gating prod
+  entirely (scoped to preview-only via Vercel settings) and NEXT_PUBLIC_GEMINI_API_KEY
+  becoming publicly extractable once prod opened up (fixed: moved server-side via
+  new src/app/api/gemini/generate route, PR #19). See D-030.
 - 2026-07-21: Category classification removed (b31d66e) + calendar reborn as the
   調査記録 ember heatmap (T022 / D-027, merged #15).
 - 2026-07-21: Permanent-use survey-notes overhaul on feat/seasonal-chronicle —
