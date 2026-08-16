@@ -28,20 +28,28 @@ const RARITY_STYLE: Record<
 };
 
 /** Quest-clear reward card. Tapping the backdrop or the explicit button closes
- * it; tapping the card itself does not, so reading it cannot dismiss it. */
+ * it; tapping the card itself does not, so reading it cannot dismiss it.
+ *
+ * `replay` re-plays an already-collected drop from the survey notes (D-036):
+ * the user opened it on purpose, so it waits for an explicit close instead of
+ * auto-dismissing, and drops the two "you just got this" tells (NEW badge,
+ * ledger line) that would be false the second time around. */
 export function DropReveal({
   grant,
   onDismiss,
+  replay = false,
 }: {
   grant: GrantResult;
   onDismiss: () => void;
+  replay?: boolean;
 }) {
   const style = RARITY_STYLE[grant.rarity] ?? RARITY_STYLE[1];
 
   useEffect(() => {
+    if (replay) return;
     const timer = setTimeout(onDismiss, style.duration);
     return () => clearTimeout(timer);
-  }, [onDismiss, style.duration]);
+  }, [replay, onDismiss, style.duration]);
 
   return (
     <div
@@ -63,11 +71,13 @@ export function DropReveal({
         <div className="flex items-center gap-2.5">
           <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/60" />
           <p className="font-display text-[13px] font-bold tracking-[0.24em] text-gold">
-            QUEST CLEAR
+            {replay ? "SURVEY RECORD" : "QUEST CLEAR"}
           </p>
           <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/60" />
         </div>
-        <p className="mt-1 text-[10px] font-bold tracking-[0.2em] text-brand">クエスト達成！</p>
+        <p className="mt-1 text-[10px] font-bold tracking-[0.2em] text-brand">
+          {replay ? "調査記録より" : "クエスト達成！"}
+        </p>
 
         <div className="mt-4 flex items-center justify-center">
           {grant.drop.photo ? (
@@ -93,7 +103,7 @@ export function DropReveal({
           >
             {getRarityLabel(grant.rarity)}
           </span>
-          {grant.isNew && (
+          {!replay && grant.isNew && (
             <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-bold tracking-wider text-gold">
               NEW!
             </span>
@@ -103,9 +113,11 @@ export function DropReveal({
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
           {grant.drop.flavor}
         </p>
-        <p className="mt-3 text-[11px] font-semibold text-frost">
-          {grant.isNew ? "調査記録に追加された！" : "調査記録 +1"}
-        </p>
+        {!replay && (
+          <p className="mt-3 text-[11px] font-semibold text-frost">
+            {grant.isNew ? "調査記録に追加された！" : "調査記録 +1"}
+          </p>
+        )}
 
         <button
           type="button"

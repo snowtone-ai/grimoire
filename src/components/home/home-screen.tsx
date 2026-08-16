@@ -27,6 +27,7 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {screen.showMorningLight && <div className="morning-light" aria-hidden />}
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
           <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">

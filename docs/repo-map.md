@@ -12,8 +12,9 @@
 - Package manager: pnpm.
 - Primary source directory: src/.
 - Primary test directory: tests/.
-- Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/book/page.tsx, src/app/layout.tsx.
+- Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/book/page.tsx, src/app/settings/page.tsx, src/app/layout.tsx.
 - Reward core: src/lib/domain/drops.ts, src/lib/rewardDb.ts, src/lib/sound.ts.
+- Presentation/effects core: src/lib/domain/fx.ts (intensity presets), src/lib/fx.ts, src/lib/confetti.ts, src/lib/spark.ts.
 - Verification command: pnpm verify.
 
 ## Directory Map
@@ -35,9 +36,11 @@
 |---|---|---|
 | Home | src/app/page.tsx | Main quest (task) view + drop reveal. |
 | Plant | src/app/plant/page.tsx | Botanical research (monthly growth) view. |
-| Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia). |
+| Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia); tapping a collected entry replays its reveal. |
+| Settings | src/app/settings/page.tsx | Effects intensity, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
 | Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider. |
 | Sound | src/lib/sound.ts | Web-Audio synthesized SFX + haptics (single pentatonic palette). |
+| Effects preset | src/lib/domain/fx.ts | quiet/normal/lively profiles; OS reduced-motion always forces quiet. |
 | Verification | scripts/verify.mjs | Unified local checks. |
 
 ## Common Workflows

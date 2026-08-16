@@ -188,6 +188,18 @@ export function playClear(rarity: number): void {
   haptic([16, 30, 16, 30, 60]);
 }
 
+/** Early-morning greeting — the quietest thing in the palette, a slow open
+ * fifth that resolves upward. Deliberately not a reward sound: nothing has been
+ * earned, the app is just saying good morning (D-036). */
+export function playMorning(): void {
+  const audio = ac();
+  if (!audio) return;
+  const t = audio.currentTime;
+  tone(audio, N.C5, t, 0.9, 0.045, "sine");
+  tone(audio, N.G5, t + 0.22, 0.9, 0.038, "sine");
+  tone(audio, N.C6, t + 0.5, 1.1, 0.03, "sine");
+}
+
 /** All quests for the day cleared — chord swell fanfare. */
 export function playFanfare(): void {
   const audio = ac();

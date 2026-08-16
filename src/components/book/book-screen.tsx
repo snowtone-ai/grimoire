@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
+import { DropReveal } from "@/components/reward/drop-reveal";
 import {
   COMMON_DROPS,
   DROP_CATALOG,
@@ -19,10 +20,16 @@ import {
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
+import { fireDropConfetti } from "@/lib/confetti";
+import { playClear } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
   const [chronicle, setChronicle] = useState<ChronicleMonth[]>([]);
+  // The drop currently replaying its reveal card, or null when none is open.
+  // Lives here (not per grid cell) so exactly one DropReveal ever mounts.
+  const [replayDrop, setReplayDrop] = useState<DropDef | null>(null);
+  const cancelConfettiRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     getCollection()
@@ -34,6 +41,24 @@ export function BookScreen() {
     getChronicle()
       .then(setChronicle)
       .catch((err) => console.error("[book] chronicle load failed:", err));
+  }, []);
+
+  // Leaving /book mid-burst must not let a queued confetti wave fire over
+  // whatever screen the user navigates to next.
+  useEffect(() => {
+    return () => cancelConfettiRef.current();
+  }, []);
+
+  const handleReplay = useCallback((drop: DropDef) => {
+    cancelConfettiRef.current(); // supersede any wave still pending from the last tap
+    playClear(drop.rarity);
+    cancelConfettiRef.current = fireDropConfetti(drop.rarity);
+    setReplayDrop(drop);
+  }, []);
+
+  const handleDismissReplay = useCallback(() => {
+    cancelConfettiRef.current();
+    setReplayDrop(null);
   }, []);
 
   const discovered = counts?.size ?? 0;
@@ -81,9 +106,18 @@ export function BookScreen() {
             counts={counts}
             columns={section.columns}
             renderIcon={section.rarity === 8 ? photoIcon : emojiIcon}
+            onReplay={handleReplay}
           />
         ))}
       </main>
+
+      {replayDrop && (
+        <DropReveal
+          replay
+          grant={{ drop: replayDrop, rarity: replayDrop.rarity, isNew: false }}
+          onDismiss={handleDismissReplay}
+        />
+      )}
 
       <BottomNav />
     </div>
@@ -309,6 +343,7 @@ function Section({
   counts,
   columns,
   renderIcon,
+  onReplay,
 }: {
   title: string;
   rarityBadge: string;
@@ -317,6 +352,7 @@ function Section({
   counts: Map<string, number> | null;
   columns: string;
   renderIcon: (drop: DropDef, isFound: boolean) => React.ReactNode;
+  onReplay: (drop: DropDef) => void;
 }) {
   const foundCount = drops.filter((drop) => (counts?.get(drop.id) ?? 0) > 0).length;
 
@@ -356,15 +392,31 @@ function Section({
                   style={{ backgroundColor: region.accent }}
                 />
               )}
-              {renderIcon(drop, isFound)}
-              <p
-                title={isFound ? drop.name : undefined}
-                className={`mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight ${
-                  isFound ? "text-foreground" : "text-muted-foreground/60"
-                }`}
-              >
-                {isFound ? drop.name : "？？？"}
-              </p>
+              {isFound ? (
+                // Only collected entries replay — an unfound "？？？" slot has
+                // nothing to show, so it stays inert (no button, no focus stop).
+                <button
+                  type="button"
+                  onClick={() => onReplay(drop)}
+                  aria-label={`${drop.name}の記録を見る`}
+                  className="btn-squish block w-full cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-frost"
+                >
+                  {renderIcon(drop, isFound)}
+                  <p
+                    title={drop.name}
+                    className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-foreground"
+                  >
+                    {drop.name}
+                  </p>
+                </button>
+              ) : (
+                <>
+                  {renderIcon(drop, isFound)}
+                  <p className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-muted-foreground/60">
+                    ？？？
+                  </p>
+                </>
+              )}
               {isFound && <span className="sr-only">{region.name}産</span>}
               {count > 1 && (
                 <span className="absolute right-1.5 top-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold text-secondary-foreground tabular-nums">

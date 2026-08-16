@@ -502,3 +502,65 @@ html[data-page-turn] .task-vt {
     transition: none;
   }
 }
+
+/* ── Tap spark: one-frame glint under the finger (D-036) ──────────── */
+/* Spawned by src/lib/spark.ts on any .btn-squish press, then removed on
+   animationend. Positioned at the pointer, so it must not affect layout or
+   intercept the press it is reacting to. */
+@keyframes tap-spark {
+  from { transform: translate(-50%, -50%) scale(0.35); opacity: 0.85; }
+  to { transform: translate(-50%, -50%) scale(2.1); opacity: 0; }
+}
+
+.tap-spark {
+  position: fixed;
+  z-index: 70;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--gold) 70%, transparent) 0%,
+    color-mix(in oklab, var(--frost) 45%, transparent) 45%,
+    transparent 70%
+  );
+  animation: tap-spark 0.42s var(--ease-out-expo) forwards;
+}
+
+/* ── Morning ambience: light across the top on an early open (D-036) ─ */
+/* The user asked for something to greet them when they open the app early. A
+   modal would break F-1 (see today's quests instantly), so this is ambient
+   only: it sits behind the content, never takes a pointer event, and fades
+   out on its own. Enabled by the "にぎやか" preset only. */
+@keyframes morning-light {
+  0% { opacity: 0; transform: translateY(-18px); }
+  22% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+
+.morning-light {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 42vh;
+  /* Same layer as the fixed atmosphere (body::before), so it can never paint
+     over the quest list — it is weather, not UI. */
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--gold) 34%, transparent) 0%,
+    color-mix(in oklab, var(--brand) 16%, transparent) 38%,
+    transparent 100%
+  );
+  animation: morning-light 4.2s var(--ease-fluid) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-spark,
+  .morning-light {
+    display: none;
+  }
+}

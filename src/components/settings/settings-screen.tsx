@@ -12,6 +12,14 @@ import {
   type ParsedBackup,
 } from "@/lib/backup";
 import {
+  FX_INTENSITIES,
+  FX_INTENSITY_LABELS,
+  getStoredFxIntensity,
+  isReducedMotionForced,
+  setFxIntensity,
+  type FxIntensity,
+} from "@/lib/fx";
+import {
   getNotificationPermission,
   requestNotificationPermission,
   sendTestNotification,
@@ -52,6 +60,7 @@ export function SettingsScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
+        <EffectsSection />
         <SoundSection />
         <NotificationSection />
         <BackupSection />
@@ -101,6 +110,62 @@ function SettingsSection({
       />
       {children}
     </section>
+  );
+}
+
+/* One dial, not a wall of switches (D-036). Native radios rather than
+ * aria-checked buttons so arrow-key navigation and grouping come for free. */
+function EffectsSection() {
+  const [intensity, setIntensity] = useState(getStoredFxIntensity);
+  const overridden = isReducedMotionForced();
+
+  function choose(next: FxIntensity) {
+    setFxIntensity(next);
+    setIntensity(next);
+    playTap();
+  }
+
+  return (
+    <SettingsSection overline="EFFECTS" title="演出の強さ">
+      <fieldset>
+        <legend className="sr-only">演出の強さ</legend>
+        <div className="flex gap-1 rounded-xl bg-muted p-1">
+          {FX_INTENSITIES.map((value) => (
+            <label
+              key={value}
+              className="flex-1 cursor-pointer text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-frost rounded-lg"
+            >
+              <input
+                type="radio"
+                name="fx-intensity"
+                value={value}
+                checked={intensity === value}
+                onChange={() => choose(value)}
+                className="sr-only peer"
+              />
+              <span className="block rounded-lg px-2 py-2 text-sm font-semibold text-muted-foreground transition-colors peer-checked:bg-card peer-checked:text-foreground peer-checked:shadow-xs">
+                {FX_INTENSITY_LABELS[value].label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
+        {FX_INTENSITY_LABELS[intensity].description}
+      </p>
+
+      {overridden && (
+        <p className="mt-2.5 rounded-xl bg-muted p-3 text-xs leading-relaxed text-muted-foreground">
+          端末側で「視差効果を減らす」が有効になっているため、いまはこの設定に関わらず
+          「しずか」で動作しています
+        </p>
+      )}
+
+      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80">
+        調査記録の記録をタップして見返す演出は、この設定に関わらずいつでも使えます
+      </p>
+    </SettingsSection>
   );
 }
 

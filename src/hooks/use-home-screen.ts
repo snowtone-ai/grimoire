@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import confetti from "canvas-confetti";
+import { fireAllCompleteConfetti, fireDropConfetti } from "@/lib/confetti";
 import { type Task } from "@/lib/db";
 import {
   getAllTasks,
@@ -26,19 +26,43 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
-import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
+import { withViewTransition } from "@/lib/view-transition";
 import { getTodayBountyClaims, grantDropForTask, type GrantResult } from "@/lib/rewardDb";
 import {
   playClear,
   playFanfare,
+  playMorning,
   playTap,
   playUndo,
   primeAudioOnFirstGesture,
 } from "@/lib/sound";
+import { currentFxProfile } from "@/lib/fx";
 
 /** Set once the user has been asked about notifications, so the home screen
  * asks at most once ever rather than on every all-clear. */
 const NOTIF_PROMPT_KEY = "notif-prompt-shown";
+
+/* Morning greeting (D-036). The user asked for something to happen when they
+ * open the app early — 「朝8時までにタスクチェックのために開いたら…朝の音がなるとか
+ * 光が差すとか」. It is ambient, never a modal: F-1 promises the day's quests are
+ * visible the instant the app opens, so nothing may sit in front of them. Once
+ * per day, before MORNING_UNTIL_HOUR, and only on the "にぎやか" preset. */
+const MORNING_UNTIL_HOUR = 8;
+const MORNING_KEY = "morning-greeted";
+/** Matches the .morning-light animation in globals.css. */
+const MORNING_LIGHT_MS = 4200;
+
+function shouldGreetMorning(today: string): boolean {
+  if (!currentFxProfile().morningAmbience) return false;
+  if (new Date().getHours() >= MORNING_UNTIL_HOUR) return false;
+  try {
+    if (localStorage.getItem(MORNING_KEY) === today) return false;
+    localStorage.setItem(MORNING_KEY, today);
+  } catch {
+    return false; // Without a marker it would greet on every open; skip instead.
+  }
+  return true;
+}
 
 export interface BountyView {
   bounty: BountyDef;
@@ -59,6 +83,7 @@ export function useHomeScreen() {
   const [notifPermission, setNotifPermission] =
     useState<NotificationPermissionState>("unsupported");
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
+  const [showMorningLight, setShowMorningLight] = useState(false);
   const promptedThisSession = useRef(false);
   const [showGmailModal, setShowGmailModal] = useState(false);
   const [dropQueue, setDropQueue] = useState<GrantResult[]>([]);
@@ -125,6 +150,7 @@ export function useHomeScreen() {
   useEffect(() => {
     primeAudioOnFirstGesture();
     const fallback = setTimeout(() => setLoading(false), 1500);
+    let morningTimer: ReturnType<typeof setTimeout> | undefined;
 
     // Deferred to a microtask along with the initial load: reading the
     // permission is synchronous, but setting state straight from an effect body
@@ -136,6 +162,11 @@ export function useHomeScreen() {
         } catch (err) {
           console.error("[home] notif permission check failed:", err);
         }
+        if (shouldGreetMorning(today)) {
+          setShowMorningLight(true);
+          playMorning();
+          morningTimer = setTimeout(() => setShowMorningLight(false), MORNING_LIGHT_MS);
+        }
       })
       .then(() => Promise.all([loadTasks(), refreshStreak(), evaluateBounties()]))
       .catch((err) => console.error("[home] initial load failed:", err))
@@ -144,8 +175,11 @@ export function useHomeScreen() {
         setLoading(false);
       });
 
-    return () => clearTimeout(fallback);
-  }, [loadTasks, refreshStreak, evaluateBounties]);
+    return () => {
+      clearTimeout(fallback);
+      clearTimeout(morningTimer);
+    };
+  }, [loadTasks, refreshStreak, evaluateBounties, today]);
 
   useEffect(() => {
     if (notifPermission === "granted") {
@@ -258,6 +292,7 @@ export function useHomeScreen() {
     streakCount,
     notifPermission,
     showNotifPrompt,
+    showMorningLight,
     showGmailModal,
     setShowAddModal,
     setShowGmailModal,
@@ -302,65 +337,3 @@ async function updateCompletionEffects({
   }
 }
 
-/* Frost & ember palette: star confetti scaled by drop rarity. */
-const EMBER = ["#fb923c", "#fbbf24"];
-const FROST = ["#7dd3fc", "#38bdf8", "#e0f2fe"];
-const GOLD = ["#fbbf24", "#f59e0b", "#fde68a"];
-
-// RARE 1-8 buckets into low(1-3) / mid(4-6) / high(7-8) confetti intensities.
-function fireDropConfetti(rarity: number) {
-  if (prefersReducedMotion()) return;
-  if (rarity <= 3) {
-    confetti({
-      particleCount: 30,
-      spread: 55,
-      startVelocity: 28,
-      shapes: ["star"],
-      scalar: 0.8,
-      origin: { y: 0.6 },
-      colors: [...EMBER, FROST[0]],
-    });
-    return;
-  }
-  if (rarity <= 6) {
-    confetti({
-      particleCount: 70,
-      spread: 75,
-      shapes: ["star"],
-      scalar: 1,
-      origin: { y: 0.55 },
-      colors: [...FROST, EMBER[1]],
-    });
-    return;
-  }
-  confetti({
-    particleCount: 130,
-    spread: 100,
-    startVelocity: 40,
-    shapes: ["star"],
-    scalar: 1.15,
-    origin: { y: 0.5 },
-    colors: [...GOLD, ...FROST],
-  });
-}
-
-function fireAllCompleteConfetti() {
-  if (prefersReducedMotion()) return;
-  const colors = [...EMBER, ...FROST, GOLD[2]];
-  confetti({
-    particleCount: 110,
-    angle: 60,
-    spread: 70,
-    shapes: ["star"],
-    origin: { x: 0, y: 0.6 },
-    colors,
-  });
-  confetti({
-    particleCount: 110,
-    angle: 120,
-    spread: 70,
-    shapes: ["star"],
-    origin: { x: 1, y: 0.6 },
-    colors,
-  });
-}
