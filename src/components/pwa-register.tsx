@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
+import { initTapSparks } from "@/lib/spark";
 
 export function PwaRegister() {
+  // Mounted once in the root layout, which makes it the app-wide place to
+  // install the delegated tap-spark listener (it must cover every screen).
+  useEffect(() => {
+    initTapSparks();
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;

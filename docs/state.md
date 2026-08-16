@@ -1,9 +1,39 @@
 # state.md
 
 ## Current
-- Branch: main (T029 merged, PR #22 closed, branch deleted; T030 governance
-  migration committed directly to main — process/config only, no PR needed)
-- Active task: none. T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
+- Branch: feat/settings-and-fx-presets (T031/T032/T033, one PR — same bundling
+  precedent as T018+T021). Base: main @ 17c6ef1. PR #25 open.
+- MERGE GATE: cleared. The owner explicitly authorised the merge on 2026-08-16
+  after being shown that the diff falls in the 300+ line high-risk class and
+  that merging auto-deploys to the production origin the family uses. Final
+  pnpm verify green (80/80, 8 routes) immediately before merging; squash-merged
+  via PR #25 and the branch deleted.
+- Owner follow-up during the same exchange: asked for the sound-mute button to
+  be moved into settings. Already done in T032 — the home header's FxToggle was
+  removed and rebuilt as the FEEDBACK section of /settings; a grep confirms the
+  only isFxEnabled/setFxEnabled UI in src/ is settings-screen.tsx. The button
+  still appeared in the running app only because this branch had not yet merged.
+- Active task: T031/T032/T033 — VoC-driven effects + settings work (D-036).
+  Six pieces of user feedback were classified as PdM/UX input; two turned out to
+  be defects rather than requests, and the rest were one root cause restated.
+  - T031 (fix): drop reveal auto-dismissed in 2.0-3.4s while asking the user to
+    read seven things, and the overlay's onClick covered the card, so reading it
+    dismissed it. Now 4.0-9.0s by rank + stopPropagation + explicit close button.
+    Deadline notifications existed but could never fire: the SW's setTimeout dies
+    with the SW after seconds of idle, and notifications.ts bailed out entirely
+    once 09:00 had passed (so opening later scheduled nothing, not even the next
+    day). Replaced by catch-up-on-open through a new pure src/lib/domain/
+    reminders.ts + a localStorage delivered-ledger; sw.js CACHE_NAME -> v6.
+  - T032 (feat): /settings created; FxToggle, the notification panel, and
+    /book's ARCHIVE + RESET cards all moved into it. Gear takes the slot the
+    sound toggle vacated. BottomNav unknown paths now resolve to no active tab.
+    Notification permission is asked once, after the first all-clear (F-7).
+  - T033 (feat): effects intensity preset (しずか/ふつう/にぎやか) replacing the
+    proposed pile of toggles; OS reduced-motion always forces しずか. Confetti
+    extracted to src/lib/confetti.ts and made wave/scale driven. Tap sparks via
+    one delegated listener (src/lib/spark.ts). /book entries replay their reveal.
+    Morning ambience on にぎやか only, as an ambient layer behind content.
+- Superseded (kept for history): T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
   applied to both global (`~/.claude`, affects all of the user's other repos) and
   project scope. Global: CLAUDE.md, settings.json (env/fallbackModel/hooks), and
   guard.mjs (P7: Edit/Write/MultiEdit/NotebookEdit now block `.env`/`.env.*`
@@ -16,7 +46,8 @@
   rule). Product source untouched. Tier 1 self-audit (docs/config-only diff,
   no auth/billing/DB-schema/production-data class) substituted for Tier 2, same
   basis as T015.
-- Current executor: none
+- Current executor: Claude Code main agent (2 Sonnet workers used on disjoint
+  scopes: the fx preset model, and the /book replay + drop-reveal replay mode)
 - Write lock: none
 - Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
   because 4.18.0 stopped shipping the `dist/tailwind.css` file this app's
@@ -26,7 +57,13 @@
   has a stale top-level `permissionMode` key not part of the loaded config
   hierarchy. No fix applied; recorded in D-035.
 - Main agent: Claude Code (Sonnet 5-first; Opus 5 for top-risk review only)
-- Latest verification pointer: tasks.md T030
+- Latest verification pointer: tasks.md T033
+- Known local-environment note (not a code issue): a stale
+  `.next/dev/types/validator.ts` referencing a `/book/[dropId]` route that does
+  not exist in the repo failed `pnpm typecheck` mid-session. Deleting that one
+  generated file fixed it. Also worth knowing: the project deny rule
+  `"Bash(rm -rf *)"` (introduced in T030) matches every `rm -rf`, including
+  safe build-cache clears, not just the root/home cases it was meant for.
 - Verification mode: standard
 
 ## Current Blocker
@@ -52,6 +89,18 @@
     owner/editor), so this was always going to be a manual step.
 
 ## Next
+- 2026-08-16: T031/T032/T033 shipped on feat/settings-and-fx-presets (D-036).
+  Deliberately NOT built, and why:
+  - Random unprompted rewards on open: would dilute the 436-item rarity design
+    (D-032). Held until we see whether /book replay already satisfies "もっと見たい".
+  - Real scheduled push (Web Push + VAPID + cron + a subscription store): the
+    app has no backend and no auth today, so this is pure new infrastructure.
+    Catch-up-on-open ships first; decide after a week of real use.
+  - Splitting sound and vibration into two switches: they share one preference
+    in sound.ts, so the label says so instead of promising two.
+  Open follow-up: re-interview the same person after they have used /book
+  replay, and get VoC from the core persona (the ADHD student) — every piece of
+  feedback so far is from one non-persona family member.
 - 2026-08-15: T030 — pm-zero governance migrated v11 -> v11.1.1 (D-035), global
   + project scope. v11.1.1 chosen over v11.2 (config-only truth patch vs. a
   version requiring new maintained scripts). No product code touched.

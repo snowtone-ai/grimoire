@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import confetti from "canvas-confetti";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  cancelPendingConfetti,
+  fireAllCompleteConfetti,
+  fireDropConfetti,
+} from "@/lib/confetti";
 import { type Task } from "@/lib/db";
 import {
   getAllTasks,
@@ -22,20 +26,47 @@ import { getDepartedTaskIds, markDeparted } from "@/lib/departure";
 import {
   getNotificationPermission,
   requestNotificationPermission,
-  scheduleTaskNotifications,
-  sendTestNotification,
+  syncTaskNotifications,
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
-import { prefersReducedMotion, withViewTransition } from "@/lib/view-transition";
+import { withViewTransition } from "@/lib/view-transition";
 import { getTodayBountyClaims, grantDropForTask, type GrantResult } from "@/lib/rewardDb";
 import {
   playClear,
   playFanfare,
+  playMorning,
   playTap,
   playUndo,
   primeAudioOnFirstGesture,
 } from "@/lib/sound";
+import { currentFxProfile } from "@/lib/fx";
+
+/** Set once the user has been asked about notifications, so the home screen
+ * asks at most once ever rather than on every all-clear. */
+const NOTIF_PROMPT_KEY = "notif-prompt-shown";
+
+/* Morning greeting (D-036). The user asked for something to happen when they
+ * open the app early — 「朝8時までにタスクチェックのために開いたら…朝の音がなるとか
+ * 光が差すとか」. It is ambient, never a modal: F-1 promises the day's quests are
+ * visible the instant the app opens, so nothing may sit in front of them. Once
+ * per day, before MORNING_UNTIL_HOUR, and only on the "にぎやか" preset. */
+const MORNING_UNTIL_HOUR = 8;
+const MORNING_KEY = "morning-greeted";
+/** Matches the .morning-light animation in globals.css. */
+const MORNING_LIGHT_MS = 4200;
+
+function shouldGreetMorning(today: string): boolean {
+  if (!currentFxProfile().morningAmbience) return false;
+  if (new Date().getHours() >= MORNING_UNTIL_HOUR) return false;
+  try {
+    if (localStorage.getItem(MORNING_KEY) === today) return false;
+    localStorage.setItem(MORNING_KEY, today);
+  } catch {
+    return false; // Without a marker it would greet on every open; skip instead.
+  }
+  return true;
+}
 
 export interface BountyView {
   bounty: BountyDef;
@@ -55,8 +86,9 @@ export function useHomeScreen() {
   const [streakCount, setStreakCount] = useState(0);
   const [notifPermission, setNotifPermission] =
     useState<NotificationPermissionState>("unsupported");
-  const [notifBannerDismissed, setNotifBannerDismissed] = useState(false);
-  const [testNotifSent, setTestNotifSent] = useState(false);
+  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
+  const [showMorningLight, setShowMorningLight] = useState(false);
+  const promptedThisSession = useRef(false);
   const [showGmailModal, setShowGmailModal] = useState(false);
   const [dropQueue, setDropQueue] = useState<GrantResult[]>([]);
   const [bountyView, setBountyView] = useState<BountyView[]>([]);
@@ -121,10 +153,25 @@ export function useHomeScreen() {
 
   useEffect(() => {
     primeAudioOnFirstGesture();
-    initializeNotificationState(setNotifPermission, setNotifBannerDismissed);
     const fallback = setTimeout(() => setLoading(false), 1500);
+    let morningTimer: ReturnType<typeof setTimeout> | undefined;
 
+    // Deferred to a microtask along with the initial load: reading the
+    // permission is synchronous, but setting state straight from an effect body
+    // triggers a cascading render (react-hooks/set-state-in-effect, see T013).
     Promise.resolve()
+      .then(() => {
+        try {
+          setNotifPermission(getNotificationPermission());
+        } catch (err) {
+          console.error("[home] notif permission check failed:", err);
+        }
+        if (shouldGreetMorning(today)) {
+          setShowMorningLight(true);
+          playMorning();
+          morningTimer = setTimeout(() => setShowMorningLight(false), MORNING_LIGHT_MS);
+        }
+      })
       .then(() => Promise.all([loadTasks(), refreshStreak(), evaluateBounties()]))
       .catch((err) => console.error("[home] initial load failed:", err))
       .finally(() => {
@@ -132,30 +179,63 @@ export function useHomeScreen() {
         setLoading(false);
       });
 
-    return () => clearTimeout(fallback);
-  }, [loadTasks, refreshStreak, evaluateBounties]);
+    return () => {
+      clearTimeout(fallback);
+      clearTimeout(morningTimer);
+    };
+  }, [loadTasks, refreshStreak, evaluateBounties, today]);
 
   useEffect(() => {
     if (notifPermission === "granted") {
-      scheduleTaskNotifications().catch(console.error);
+      syncTaskNotifications().catch(console.error);
     }
   }, [notifPermission]);
+
+  /* An installed PWA is usually resumed, not reloaded, so this hook may not
+   * remount for days. Catch-up delivery has to be re-run when the app comes
+   * back to the foreground, or a session left open overnight would never check
+   * the next morning's 09:00 slot at all. */
+  useEffect(() => {
+    if (notifPermission !== "granted") return;
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        syncTaskNotifications().catch(console.error);
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [notifPermission]);
+
+  // Waves live on document.body outside React, so leaving the screen must take
+  // any queued burst with it.
+  useEffect(() => cancelPendingConfetti, []);
+
+  /* F-7 Must NOT: never ask for notification permission on first launch — ask
+   * once the user has felt the app's value. The first all-quests-cleared moment
+   * is that point, and it is the only place on the home screen that asks; every
+   * later visit to the subject lives in /settings (D-036). */
+  const maybePromptNotification = useCallback(() => {
+    if (promptedThisSession.current) return;
+    if (getNotificationPermission() !== "default") return;
+    try {
+      if (localStorage.getItem(NOTIF_PROMPT_KEY) === "1") return;
+      localStorage.setItem(NOTIF_PROMPT_KEY, "1");
+    } catch {
+      // Storage unavailable: degrade to at most once per session.
+    }
+    promptedThisSession.current = true;
+    setShowNotifPrompt(true);
+  }, []);
 
   async function handleRequestNotification() {
     const result = await requestNotificationPermission();
     setNotifPermission(result);
-    if (result === "granted") await scheduleTaskNotifications();
+    setShowNotifPrompt(false);
+    if (result === "granted") await syncTaskNotifications();
   }
 
-  function handleDismissNotifBanner() {
-    localStorage.setItem("notif-banner-dismissed", "1");
-    setNotifBannerDismissed(true);
-  }
-
-  async function handleTestNotification() {
-    await sendTestNotification();
-    setTestNotifSent(true);
-    setTimeout(() => setTestNotifSent(false), 3000);
+  function dismissNotifPrompt() {
+    setShowNotifPrompt(false);
   }
 
   async function handleToggle(taskId: string) {
@@ -170,6 +250,7 @@ export function useHomeScreen() {
       today,
       refreshStreak,
       setAllCompleteMessage,
+      onAllComplete: maybePromptNotification,
     });
     if (!task.completed) {
       await plant.incrementCompleted();
@@ -192,7 +273,7 @@ export function useHomeScreen() {
     }
     await syncPlantStateFromTasks();
     await evaluateBounties();
-    scheduleTaskNotifications().catch(console.error);
+    syncTaskNotifications().catch(console.error);
   }
 
   function dismissDrop() {
@@ -214,7 +295,7 @@ export function useHomeScreen() {
   function onTasksChanged() {
     Promise.all([loadTasks(true), syncPlantStateFromTasks()]).catch(console.error);
     evaluateBounties().catch(console.error);
-    scheduleTaskNotifications().catch(console.error);
+    syncTaskNotifications().catch(console.error);
   }
 
   return {
@@ -233,35 +314,18 @@ export function useHomeScreen() {
     allCompleteMessage,
     streakCount,
     notifPermission,
-    notifBannerDismissed,
-    testNotifSent,
+    showNotifPrompt,
+    showMorningLight,
     showGmailModal,
     setShowAddModal,
     setShowGmailModal,
     setEditingTask,
     handleRequestNotification,
-    handleDismissNotifBanner,
-    handleTestNotification,
+    dismissNotifPrompt,
     handleToggle,
     openAddModal,
     onTasksChanged,
   };
-}
-
-function initializeNotificationState(
-  setPermission: (state: NotificationPermissionState) => void,
-  setDismissed: (dismissed: boolean) => void
-) {
-  try {
-    setPermission(getNotificationPermission());
-  } catch (err) {
-    console.error("[home] notif permission check failed:", err);
-  }
-  try {
-    setDismissed(localStorage.getItem("notif-banner-dismissed") === "1");
-  } catch (err) {
-    console.error("[home] localStorage read failed:", err);
-  }
 }
 
 async function updateCompletionEffects({
@@ -270,12 +334,14 @@ async function updateCompletionEffects({
   today,
   refreshStreak,
   setAllCompleteMessage,
+  onAllComplete,
 }: {
   isCompleting: boolean;
   allDone: boolean;
   today: string;
   refreshStreak: () => Promise<void>;
   setAllCompleteMessage: (visible: boolean) => void;
+  onAllComplete: () => void;
 }) {
   if (isCompleting && allDone) {
     await recordStreak(today, true);
@@ -284,6 +350,7 @@ async function updateCompletionEffects({
     fireAllCompleteConfetti();
     setAllCompleteMessage(true);
     setTimeout(() => setAllCompleteMessage(false), 3000);
+    onAllComplete();
     return;
   }
   if (isCompleting) return; // Per-completion celebration comes from the drop.
@@ -293,65 +360,3 @@ async function updateCompletionEffects({
   }
 }
 
-/* Frost & ember palette: star confetti scaled by drop rarity. */
-const EMBER = ["#fb923c", "#fbbf24"];
-const FROST = ["#7dd3fc", "#38bdf8", "#e0f2fe"];
-const GOLD = ["#fbbf24", "#f59e0b", "#fde68a"];
-
-// RARE 1-8 buckets into low(1-3) / mid(4-6) / high(7-8) confetti intensities.
-function fireDropConfetti(rarity: number) {
-  if (prefersReducedMotion()) return;
-  if (rarity <= 3) {
-    confetti({
-      particleCount: 30,
-      spread: 55,
-      startVelocity: 28,
-      shapes: ["star"],
-      scalar: 0.8,
-      origin: { y: 0.6 },
-      colors: [...EMBER, FROST[0]],
-    });
-    return;
-  }
-  if (rarity <= 6) {
-    confetti({
-      particleCount: 70,
-      spread: 75,
-      shapes: ["star"],
-      scalar: 1,
-      origin: { y: 0.55 },
-      colors: [...FROST, EMBER[1]],
-    });
-    return;
-  }
-  confetti({
-    particleCount: 130,
-    spread: 100,
-    startVelocity: 40,
-    shapes: ["star"],
-    scalar: 1.15,
-    origin: { y: 0.5 },
-    colors: [...GOLD, ...FROST],
-  });
-}
-
-function fireAllCompleteConfetti() {
-  if (prefersReducedMotion()) return;
-  const colors = [...EMBER, ...FROST, GOLD[2]];
-  confetti({
-    particleCount: 110,
-    angle: 60,
-    spread: 70,
-    shapes: ["star"],
-    origin: { x: 0, y: 0.6 },
-    colors,
-  });
-  confetti({
-    particleCount: 110,
-    angle: 120,
-    spread: 70,
-    shapes: ["star"],
-    origin: { x: 1, y: 0.6 },
-    colors,
-  });
-}

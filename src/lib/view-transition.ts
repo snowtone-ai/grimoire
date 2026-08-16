@@ -1,11 +1,7 @@
 import { flushSync } from "react-dom";
+import { prefersReducedMotion } from "./fx.ts";
 
-export function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
+export { prefersReducedMotion };
 
 /** Commit a React state update inside a native View Transition so the
  * browser FLIP-animates list changes. Falls back to a plain update when

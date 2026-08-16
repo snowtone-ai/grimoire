@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Leaf, Mail, Plus, Volume2, VolumeX } from "lucide-react";
+import { Leaf, Mail, Plus, Settings } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import { todayDateString } from "@/lib/domain/task-date";
 import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain/plant";
-import { isFxEnabled, playTap, setFxEnabled } from "@/lib/sound";
+import { playTap } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { DropReveal } from "@/components/reward/drop-reveal";
 import { BountyBoard } from "./bounty-board";
@@ -28,6 +27,7 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {screen.showMorningLight && <div className="morning-light" aria-hidden />}
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
           <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
@@ -39,7 +39,13 @@ export function HomeScreen() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <FxToggle />
+          <Link
+            href="/settings"
+            aria-label="設定"
+            className="btn-squish flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs"
+          >
+            <Settings className="size-5" />
+          </Link>
           <button
             type="button"
             onClick={() => screen.setShowGmailModal(true)}
@@ -69,15 +75,12 @@ export function HomeScreen() {
         )}
       </div>
 
-      <NotificationPanel
-        permission={screen.notifPermission}
-        dismissed={screen.notifBannerDismissed}
-        hasTasks={screen.tasks.length > 0}
-        testSent={screen.testNotifSent}
-        onRequest={screen.handleRequestNotification}
-        onDismiss={screen.handleDismissNotifBanner}
-        onTest={screen.handleTestNotification}
-      />
+      {screen.showNotifPrompt && (
+        <NotificationPrompt
+          onRequest={screen.handleRequestNotification}
+          onDismiss={screen.dismissNotifPrompt}
+        />
+      )}
 
       <main
         className="flex-1 px-4 pt-4"
@@ -139,29 +142,6 @@ export function HomeScreen() {
         <DropReveal grant={screen.pendingDrop} onDismiss={screen.dismissDrop} />
       )}
     </div>
-  );
-}
-
-function FxToggle() {
-  const [enabled, setEnabled] = useState(isFxEnabled);
-
-  function toggle() {
-    const next = !enabled;
-    setFxEnabled(next);
-    setEnabled(next);
-    if (next) playTap();
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={enabled}
-      aria-label={enabled ? "効果音をオフにする" : "効果音をオンにする"}
-      className="btn-squish flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-xs"
-    >
-      {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
-    </button>
   );
 }
 
@@ -288,72 +268,43 @@ function ProgressRing({
   );
 }
 
-function NotificationPanel({
-  permission,
-  dismissed,
-  hasTasks,
-  testSent,
+/* Asked exactly once, right after the first all-quests-cleared moment — the
+ * point at which the user has felt the app working (F-7 Must NOT forbids
+ * asking on first launch). Every later visit to notification settings lives
+ * in /settings, so nothing permanent sits above the day's quest list. */
+function NotificationPrompt({
   onRequest,
   onDismiss,
-  onTest,
 }: {
-  permission: string;
-  dismissed: boolean;
-  hasTasks: boolean;
-  testSent: boolean;
   onRequest: () => void;
   onDismiss: () => void;
-  onTest: () => void;
 }) {
-  if (!dismissed && permission === "default" && hasTasks) {
-    return (
-      <div className="mx-4 mt-3 rounded-2xl border border-brand/20 bg-brand-soft px-4 py-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-brand">🔔 締切通知を有効にしますか？</p>
-            <p className="mt-0.5 text-xs text-brand/80">締切前日・当日の朝9時にリマインドします</p>
-          </div>
-          <button
-            type="button"
-            aria-label="通知バナーを閉じる"
-            onClick={onDismiss}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand/60 transition-colors hover:text-brand"
-          >
-            <span aria-hidden className="text-lg leading-none">×</span>
-          </button>
+  return (
+    <div className="mx-4 mt-3 animate-pop-in rounded-2xl border border-brand/20 bg-brand-soft px-4 py-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-brand">🔔 締切通知を有効にしますか？</p>
+          <p className="mt-0.5 text-xs text-brand/80">
+            締切前日・当日ぶんを、朝9時以降に最初にアプリを開いたときにお知らせします
+          </p>
         </div>
         <button
           type="button"
-          onClick={onRequest}
-          className="btn-squish mt-2 w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-2.5 text-sm font-bold text-primary-foreground inset-shadow-[0_1px_0_rgba(255,255,255,0.25)]"
-        >
-          通知を許可する
-        </button>
-      </div>
-    );
-  }
-  if (permission !== "granted" || dismissed) return null;
-
-  return (
-    <div className="mx-4 mt-3 rounded-2xl border border-success/20 bg-success-soft px-4 py-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium text-success">🔔 通知が有効です</p>
-        <button
-          type="button"
-          aria-label="通知バナーを閉じる"
+          aria-label="あとにする"
           onClick={onDismiss}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-success/60 transition-colors hover:text-success"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand/60 transition-colors hover:text-brand"
         >
           <span aria-hidden className="text-lg leading-none">×</span>
         </button>
       </div>
       <button
         type="button"
-        onClick={onTest}
-        className="mt-2 w-full rounded-xl border border-success/30 bg-card py-2.5 text-sm font-semibold text-success transition-transform active:scale-[0.98]"
+        onClick={onRequest}
+        className="btn-squish mt-2 w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-2.5 text-sm font-bold text-primary-foreground inset-shadow-[0_1px_0_rgba(255,255,255,0.25)]"
       >
-        {testSent ? "✓ 送信しました！" : "テスト通知を送る"}
+        通知を許可する
       </button>
+      <p className="mt-1.5 text-center text-[11px] text-brand/70">あとから設定画面でも変更できます</p>
     </div>
   );
 }

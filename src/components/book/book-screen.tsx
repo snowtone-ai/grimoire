@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Download, RotateCcw, Upload } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
+import { DropReveal } from "@/components/reward/drop-reveal";
 import {
   COMMON_DROPS,
   DROP_CATALOG,
@@ -17,27 +17,19 @@ import {
   TIER7_DROPS,
   type DropDef,
 } from "@/lib/domain/drops";
-import {
-  getCollection,
-  getChronicle,
-  getSurveyResetCount,
-  resetSurveyNotes,
-} from "@/lib/rewardDb";
-import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
+import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
-import {
-  buildBackupJson,
-  downloadBackup,
-  importBackup,
-  parseBackup,
-  type ParsedBackup,
-} from "@/lib/backup";
-import { playSave, playTap } from "@/lib/sound";
+import { fireDropConfetti } from "@/lib/confetti";
+import { playClear } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
   const [chronicle, setChronicle] = useState<ChronicleMonth[]>([]);
+  // The drop currently replaying its reveal card, or null when none is open.
+  // Lives here (not per grid cell) so exactly one DropReveal ever mounts.
+  const [replayDrop, setReplayDrop] = useState<DropDef | null>(null);
+  const cancelConfettiRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     getCollection()
@@ -49,6 +41,24 @@ export function BookScreen() {
     getChronicle()
       .then(setChronicle)
       .catch((err) => console.error("[book] chronicle load failed:", err));
+  }, []);
+
+  // Leaving /book mid-burst must not let a queued confetti wave fire over
+  // whatever screen the user navigates to next.
+  useEffect(() => {
+    return () => cancelConfettiRef.current();
+  }, []);
+
+  const handleReplay = useCallback((drop: DropDef) => {
+    cancelConfettiRef.current(); // supersede any wave still pending from the last tap
+    playClear(drop.rarity);
+    cancelConfettiRef.current = fireDropConfetti(drop.rarity);
+    setReplayDrop(drop);
+  }, []);
+
+  const handleDismissReplay = useCallback(() => {
+    cancelConfettiRef.current();
+    setReplayDrop(null);
   }, []);
 
   const discovered = counts?.size ?? 0;
@@ -96,282 +106,20 @@ export function BookScreen() {
             counts={counts}
             columns={section.columns}
             renderIcon={section.rarity === 8 ? photoIcon : emojiIcon}
+            onReplay={handleReplay}
           />
         ))}
-
-        <BackupSection onImported={() => {
-          getCollection()
-            .then((summary) => setCounts(summary.counts))
-            .catch(console.error);
-        }} />
-
-        <ResetSection
-          onSurveyReset={() => {
-            setCounts(new Map());
-            setChronicle([]);
-          }}
-        />
       </main>
 
-      <BottomNav />
-    </div>
-  );
-}
-
-function BackupSection({ onImported }: { onImported: () => void }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pending, setPending] = useState<ParsedBackup | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function handleExport() {
-    setMessage(null);
-    try {
-      playTap();
-      downloadBackup(await buildBackupJson());
-      setMessage("バックアップファイルを保存しました");
-    } catch (err) {
-      console.error("[backup] export failed:", err);
-      setMessage("エクスポートに失敗しました");
-    }
-  }
-
-  async function handleFileSelected(file: File | undefined) {
-    setMessage(null);
-    setPending(null);
-    if (!file) return;
-    try {
-      setPending(parseBackup(await file.text()));
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "ファイルを読み込めませんでした");
-    }
-  }
-
-  async function handleImportConfirm() {
-    if (!pending || busy) return;
-    setBusy(true);
-    try {
-      await importBackup(pending.payload);
-      playSave();
-      setMessage(`取り込み完了: クエスト${pending.counts.tasks}件 / ドロップ${pending.counts.drops}件`);
-      setPending(null);
-      onImported();
-    } catch (err) {
-      console.error("[backup] import failed:", err);
-      setMessage("取り込みに失敗しました");
-    } finally {
-      setBusy(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  return (
-    <section
-      aria-label="調査データのバックアップ"
-      className="rounded-2xl border border-border bg-card p-4"
-    >
-      <div className="flex items-center gap-2">
-        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">ARCHIVE</p>
-        <p className="text-xs font-semibold text-muted-foreground">調査データのバックアップ</p>
-      </div>
-      <div
-        aria-hidden
-        className="mt-1.5 mb-3 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
-      />
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handleExport}
-          className="btn-squish flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
-        >
-          <Download className="size-4" aria-hidden />
-          エクスポート
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            playTap();
-            fileInputRef.current?.click();
-          }}
-          className="btn-squish flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
-        >
-          <Upload className="size-4" aria-hidden />
-          インポート
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          className="hidden"
-          aria-label="バックアップファイルを選択"
-          onChange={(event) => handleFileSelected(event.target.files?.[0])}
+      {replayDrop && (
+        <DropReveal
+          replay
+          grant={{ drop: replayDrop, rarity: replayDrop.rarity, isNew: false }}
+          onDismiss={handleDismissReplay}
         />
-      </div>
-      {pending && (
-        <div className="mt-3 rounded-xl bg-brand-soft p-3">
-          <p className="text-sm font-semibold text-brand">
-            クエスト{pending.counts.tasks}件・ドロップ{pending.counts.drops}件を取り込みます
-          </p>
-          <p className="mt-0.5 text-xs text-brand/80">
-            同じIDのデータは上書きされます。既存データが消えることはありません
-          </p>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setPending(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-              className="btn-squish flex-1 rounded-lg border border-border bg-card py-2 text-sm font-semibold text-foreground"
-            >
-              キャンセル
-            </button>
-            <button
-              type="button"
-              onClick={handleImportConfirm}
-              disabled={busy}
-              className="btn-squish flex-1 rounded-lg bg-primary bg-gradient-to-b from-white/20 to-transparent py-2 text-sm font-bold text-primary-foreground disabled:opacity-50"
-            >
-              {busy ? "取り込み中..." : "取り込む"}
-            </button>
-          </div>
-        </div>
       )}
-      <div aria-live="polite">
-        {message && <p className="mt-2.5 text-xs text-muted-foreground">{message}</p>}
-      </div>
-    </section>
-  );
-}
 
-function ResetSection({ onSurveyReset }: { onSurveyReset: () => void }) {
-  return (
-    <section
-      aria-label="データのリセット"
-      className="rounded-2xl border border-destructive/25 bg-card p-4"
-    >
-      <div className="flex items-center gap-2">
-        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-destructive">RESET</p>
-        <p className="text-xs font-semibold text-muted-foreground">データのリセット（取り消し不可）</p>
-      </div>
-      <div
-        aria-hidden
-        className="mt-1.5 mb-3 h-px bg-gradient-to-r from-destructive/35 via-destructive/10 to-transparent"
-      />
-      <div className="space-y-3">
-        <ResetRow
-          label="カレンダーをリセット"
-          description="すべてのクエスト（タスク）とストリーク記録を削除し、カレンダーを空の状態に戻します"
-          loadSummary={async () => {
-            const { tasks, streaks } = await getCalendarResetCounts();
-            return `クエスト${tasks}件・ストリーク記録${streaks}件を完全に削除します`;
-          }}
-          onReset={resetCalendar}
-        />
-        <ResetRow
-          label="調査記録をリセット"
-          description="ドロップ（素材/コレクション/年代記）の記録をすべて削除し、図鑑を空の状態に戻します"
-          loadSummary={async () => {
-            const drops = await getSurveyResetCount();
-            return `ドロップ記録${drops}件を完全に削除します`;
-          }}
-          onReset={async () => {
-            await resetSurveyNotes();
-            onSurveyReset();
-          }}
-        />
-      </div>
-    </section>
-  );
-}
-
-/** Two-tap destructive confirm: tap reveals a count-backed warning panel,
- * a second explicit tap performs the (irreversible) reset. Same pattern as
- * the quest-delete confirm in task-edit-modal.tsx. */
-function ResetRow({
-  label,
-  description,
-  loadSummary,
-  onReset,
-}: {
-  label: string;
-  description: string;
-  loadSummary: () => Promise<string>;
-  onReset: () => Promise<void>;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function startConfirm() {
-    playTap();
-    setMessage(null);
-    setSummary(await loadSummary().catch(() => null));
-    setConfirming(true);
-  }
-
-  async function handleConfirm() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await onReset();
-      setConfirming(false);
-      setMessage("削除しました");
-    } catch (err) {
-      console.error(`[reset] ${label} failed:`, err);
-      setMessage("削除に失敗しました");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!confirming) {
-    return (
-      <div>
-        <button
-          type="button"
-          onClick={startConfirm}
-          className="btn-squish flex w-full items-center justify-center gap-1.5 rounded-xl border border-destructive/30 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
-        >
-          <RotateCcw className="size-4" aria-hidden />
-          {label}
-        </button>
-        <div aria-live="polite">
-          {message && <p className="mt-1.5 text-center text-xs text-muted-foreground">{message}</p>}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3 rounded-xl border border-destructive/25 bg-destructive/10 p-4">
-      <div>
-        <p className="text-sm font-medium text-destructive">{summary ?? description}</p>
-        <p className="mt-1 text-xs text-destructive/80">
-          この操作は取り消せません。必要ならARCHIVEで先にエクスポートしてください
-        </p>
-      </div>
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setConfirming(false)}
-          className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-        >
-          キャンセル
-        </button>
-        <button
-          type="button"
-          onClick={handleConfirm}
-          disabled={busy}
-          className="flex-1 rounded-xl bg-destructive py-2.5 text-sm font-bold text-background transition-opacity disabled:opacity-50"
-        >
-          {busy ? "削除中..." : "本当に削除する"}
-        </button>
-      </div>
-      <div aria-live="polite">
-        {message && <p className="text-center text-xs text-destructive">{message}</p>}
-      </div>
+      <BottomNav />
     </div>
   );
 }
@@ -595,6 +343,7 @@ function Section({
   counts,
   columns,
   renderIcon,
+  onReplay,
 }: {
   title: string;
   rarityBadge: string;
@@ -603,6 +352,7 @@ function Section({
   counts: Map<string, number> | null;
   columns: string;
   renderIcon: (drop: DropDef, isFound: boolean) => React.ReactNode;
+  onReplay: (drop: DropDef) => void;
 }) {
   const foundCount = drops.filter((drop) => (counts?.get(drop.id) ?? 0) > 0).length;
 
@@ -642,15 +392,31 @@ function Section({
                   style={{ backgroundColor: region.accent }}
                 />
               )}
-              {renderIcon(drop, isFound)}
-              <p
-                title={isFound ? drop.name : undefined}
-                className={`mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight ${
-                  isFound ? "text-foreground" : "text-muted-foreground/60"
-                }`}
-              >
-                {isFound ? drop.name : "？？？"}
-              </p>
+              {isFound ? (
+                // Only collected entries replay — an unfound "？？？" slot has
+                // nothing to show, so it stays inert (no button, no focus stop).
+                <button
+                  type="button"
+                  onClick={() => onReplay(drop)}
+                  aria-label={`${drop.name}の記録を見る`}
+                  className="btn-squish block w-full cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-frost"
+                >
+                  {renderIcon(drop, isFound)}
+                  <p
+                    title={drop.name}
+                    className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-foreground"
+                  >
+                    {drop.name}
+                  </p>
+                </button>
+              ) : (
+                <>
+                  {renderIcon(drop, isFound)}
+                  <p className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-muted-foreground/60">
+                    ？？？
+                  </p>
+                </>
+              )}
               {isFound && <span className="sr-only">{region.name}産</span>}
               {count > 1 && (
                 <span className="absolute right-1.5 top-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold text-secondary-foreground tabular-nums">
