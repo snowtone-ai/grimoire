@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fireAllCompleteConfetti, fireDropConfetti } from "@/lib/confetti";
+import {
+  cancelPendingConfetti,
+  fireAllCompleteConfetti,
+  fireDropConfetti,
+} from "@/lib/confetti";
 import { type Task } from "@/lib/db";
 import {
   getAllTasks,
@@ -186,6 +190,25 @@ export function useHomeScreen() {
       syncTaskNotifications().catch(console.error);
     }
   }, [notifPermission]);
+
+  /* An installed PWA is usually resumed, not reloaded, so this hook may not
+   * remount for days. Catch-up delivery has to be re-run when the app comes
+   * back to the foreground, or a session left open overnight would never check
+   * the next morning's 09:00 slot at all. */
+  useEffect(() => {
+    if (notifPermission !== "granted") return;
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        syncTaskNotifications().catch(console.error);
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [notifPermission]);
+
+  // Waves live on document.body outside React, so leaving the screen must take
+  // any queued burst with it.
+  useEffect(() => cancelPendingConfetti, []);
 
   /* F-7 Must NOT: never ask for notification permission on first launch — ask
    * once the user has felt the app's value. The first all-quests-cleared moment

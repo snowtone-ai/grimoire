@@ -90,8 +90,23 @@ let pageTimer: ReturnType<typeof setTimeout> | undefined;
  * Deliver every reminder that is already due and not yet shown, then arm an
  * in-page timer for the next one. Safe to call as often as the task list
  * changes: the delivered ledger makes repeat calls idempotent.
+ *
+ * Runs are serialised. Callers fire this without awaiting (task toggle, task
+ * list change, tab becoming visible), and two overlapping runs would both read
+ * the ledger before either wrote it, so both would decide the same reminder was
+ * undelivered. The Notification `tag` would quietly coalesce the duplicate, but
+ * relying on that is relying on a side effect rather than on the ledger.
  */
-export async function syncTaskNotifications(): Promise<void> {
+let queue: Promise<void> = Promise.resolve();
+
+export function syncTaskNotifications(): Promise<void> {
+  const run = queue.then(runSync);
+  // The chain must never reject, or every later call inherits the failure.
+  queue = run.catch(() => {});
+  return run;
+}
+
+async function runSync(): Promise<void> {
   if (!canNotify()) return;
 
   const today = dateString(0);

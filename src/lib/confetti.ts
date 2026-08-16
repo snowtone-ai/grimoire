@@ -59,15 +59,38 @@ function dropBurst(rarity: number, factor: number): confetti.Options {
   };
 }
 
-/** Fire `waves` bursts spaced by WAVE_GAP_MS. Returns a cancel function so a
- * caller that unmounts early does not throw confetti over the next screen. */
+/* canvas-confetti draws straight onto document.body, outside React's tree, so a
+ * queued wave survives the unmount of whatever screen started it. Every pending
+ * timer is tracked here so a screen can call cancelPendingConfetti() on the way
+ * out and be sure nothing lands on its successor — a per-burst handle is easy to
+ * forget at one of several call sites, which is exactly what happened. */
+const pendingWaves = new Set<ReturnType<typeof setTimeout>>();
+
+/** Fire `waves` bursts spaced by WAVE_GAP_MS. Returns a cancel function for this
+ * burst alone; see cancelPendingConfetti for the screen-level guarantee. */
 function fireWaves(waves: number, fire: () => void): () => void {
   const timers: ReturnType<typeof setTimeout>[] = [];
   fire();
   for (let wave = 1; wave < waves; wave++) {
-    timers.push(setTimeout(fire, wave * WAVE_GAP_MS));
+    const timer = setTimeout(() => {
+      pendingWaves.delete(timer);
+      fire();
+    }, wave * WAVE_GAP_MS);
+    timers.push(timer);
+    pendingWaves.add(timer);
   }
-  return () => timers.forEach(clearTimeout);
+  return () => {
+    for (const timer of timers) {
+      clearTimeout(timer);
+      pendingWaves.delete(timer);
+    }
+  };
+}
+
+/** Drop every wave that has not fired yet, whoever queued it. */
+export function cancelPendingConfetti(): void {
+  for (const timer of pendingWaves) clearTimeout(timer);
+  pendingWaves.clear();
 }
 
 const noop = () => {};
