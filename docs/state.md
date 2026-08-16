@@ -3,11 +3,16 @@
 ## Current
 - Branch: feat/settings-and-fx-presets (T031/T032/T033, one PR — same bundling
   precedent as T018+T021). Base: main @ 17c6ef1. PR #25 open.
-- MERGE GATE: awaiting explicit human confirmation. Verify is green and the
-  Tier 1 fresh-context review passed after fixes, but the diff is +1364/-656
-  (300+ line high-risk class per the global CLAUDE.md) and merging to main
-  auto-deploys to the production origin the family actually uses. Same basis on
-  which T025 stopped before merge. Nothing is merged or deployed yet.
+- MERGE GATE: cleared. The owner explicitly authorised the merge on 2026-08-16
+  after being shown that the diff falls in the 300+ line high-risk class and
+  that merging auto-deploys to the production origin the family uses. Final
+  pnpm verify green (80/80, 8 routes) immediately before merging; squash-merged
+  via PR #25 and the branch deleted.
+- Owner follow-up during the same exchange: asked for the sound-mute button to
+  be moved into settings. Already done in T032 — the home header's FxToggle was
+  removed and rebuilt as the FEEDBACK section of /settings; a grep confirms the
+  only isFxEnabled/setFxEnabled UI in src/ is settings-screen.tsx. The button
+  still appeared in the running app only because this branch had not yet merged.
 - Active task: T031/T032/T033 — VoC-driven effects + settings work (D-036).
   Six pieces of user feedback were classified as PdM/UX input; two turned out to
   be defects rather than requests, and the rest were one root cause restated.
