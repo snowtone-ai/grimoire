@@ -18,7 +18,7 @@ type NavPath = (typeof NAV_ITEMS)[number]["href"];
  * transition Link take over. The marker is cleared after the turn ends. */
 let pageTurnTimer = 0;
 
-function markPageTurn(fromPath: string, toPath: string) {
+function markPageTurn(fromPath: string | null, toPath: string) {
   const fromIndex = NAV_ITEMS.findIndex((item) => item.href === fromPath);
   const toIndex = NAV_ITEMS.findIndex((item) => item.href === toPath);
   const root = document.documentElement;
@@ -29,13 +29,18 @@ function markPageTurn(fromPath: string, toPath: string) {
   }, 700);
 }
 
+const NAV_PATHS = new Set<string>(NAV_ITEMS.map((item) => item.href));
+
+function isNavPath(path: string): path is NavPath {
+  return NAV_PATHS.has(path);
+}
+
 export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
   const pathname = usePathname();
-  const resolvedPath: NavPath =
-    currentPath ??
-    (pathname === "/all" || pathname === "/plant" || pathname === "/book"
-      ? pathname
-      : "/");
+  // Sub-pages that are not themselves tabs (e.g. /settings) must not light up a
+  // tab they are not on, so an unknown path resolves to "no active item".
+  const resolvedPath: NavPath | null =
+    currentPath ?? (isNavPath(pathname) ? pathname : null);
 
   return (
     <nav

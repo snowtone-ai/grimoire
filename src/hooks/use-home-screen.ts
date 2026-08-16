@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { type Task } from "@/lib/db";
 import {
@@ -23,7 +23,6 @@ import {
   getNotificationPermission,
   requestNotificationPermission,
   syncTaskNotifications,
-  sendTestNotification,
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { todayDateString } from "@/lib/domain/task-date";
@@ -36,6 +35,10 @@ import {
   playUndo,
   primeAudioOnFirstGesture,
 } from "@/lib/sound";
+
+/** Set once the user has been asked about notifications, so the home screen
+ * asks at most once ever rather than on every all-clear. */
+const NOTIF_PROMPT_KEY = "notif-prompt-shown";
 
 export interface BountyView {
   bounty: BountyDef;
@@ -55,8 +58,8 @@ export function useHomeScreen() {
   const [streakCount, setStreakCount] = useState(0);
   const [notifPermission, setNotifPermission] =
     useState<NotificationPermissionState>("unsupported");
-  const [notifBannerDismissed, setNotifBannerDismissed] = useState(false);
-  const [testNotifSent, setTestNotifSent] = useState(false);
+  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
+  const promptedThisSession = useRef(false);
   const [showGmailModal, setShowGmailModal] = useState(false);
   const [dropQueue, setDropQueue] = useState<GrantResult[]>([]);
   const [bountyView, setBountyView] = useState<BountyView[]>([]);
@@ -121,10 +124,19 @@ export function useHomeScreen() {
 
   useEffect(() => {
     primeAudioOnFirstGesture();
-    initializeNotificationState(setNotifPermission, setNotifBannerDismissed);
     const fallback = setTimeout(() => setLoading(false), 1500);
 
+    // Deferred to a microtask along with the initial load: reading the
+    // permission is synchronous, but setting state straight from an effect body
+    // triggers a cascading render (react-hooks/set-state-in-effect, see T013).
     Promise.resolve()
+      .then(() => {
+        try {
+          setNotifPermission(getNotificationPermission());
+        } catch (err) {
+          console.error("[home] notif permission check failed:", err);
+        }
+      })
       .then(() => Promise.all([loadTasks(), refreshStreak(), evaluateBounties()]))
       .catch((err) => console.error("[home] initial load failed:", err))
       .finally(() => {
@@ -141,21 +153,32 @@ export function useHomeScreen() {
     }
   }, [notifPermission]);
 
+  /* F-7 Must NOT: never ask for notification permission on first launch — ask
+   * once the user has felt the app's value. The first all-quests-cleared moment
+   * is that point, and it is the only place on the home screen that asks; every
+   * later visit to the subject lives in /settings (D-036). */
+  const maybePromptNotification = useCallback(() => {
+    if (promptedThisSession.current) return;
+    if (getNotificationPermission() !== "default") return;
+    try {
+      if (localStorage.getItem(NOTIF_PROMPT_KEY) === "1") return;
+      localStorage.setItem(NOTIF_PROMPT_KEY, "1");
+    } catch {
+      // Storage unavailable: degrade to at most once per session.
+    }
+    promptedThisSession.current = true;
+    setShowNotifPrompt(true);
+  }, []);
+
   async function handleRequestNotification() {
     const result = await requestNotificationPermission();
     setNotifPermission(result);
+    setShowNotifPrompt(false);
     if (result === "granted") await syncTaskNotifications();
   }
 
-  function handleDismissNotifBanner() {
-    localStorage.setItem("notif-banner-dismissed", "1");
-    setNotifBannerDismissed(true);
-  }
-
-  async function handleTestNotification() {
-    await sendTestNotification();
-    setTestNotifSent(true);
-    setTimeout(() => setTestNotifSent(false), 3000);
+  function dismissNotifPrompt() {
+    setShowNotifPrompt(false);
   }
 
   async function handleToggle(taskId: string) {
@@ -170,6 +193,7 @@ export function useHomeScreen() {
       today,
       refreshStreak,
       setAllCompleteMessage,
+      onAllComplete: maybePromptNotification,
     });
     if (!task.completed) {
       await plant.incrementCompleted();
@@ -233,35 +257,17 @@ export function useHomeScreen() {
     allCompleteMessage,
     streakCount,
     notifPermission,
-    notifBannerDismissed,
-    testNotifSent,
+    showNotifPrompt,
     showGmailModal,
     setShowAddModal,
     setShowGmailModal,
     setEditingTask,
     handleRequestNotification,
-    handleDismissNotifBanner,
-    handleTestNotification,
+    dismissNotifPrompt,
     handleToggle,
     openAddModal,
     onTasksChanged,
   };
-}
-
-function initializeNotificationState(
-  setPermission: (state: NotificationPermissionState) => void,
-  setDismissed: (dismissed: boolean) => void
-) {
-  try {
-    setPermission(getNotificationPermission());
-  } catch (err) {
-    console.error("[home] notif permission check failed:", err);
-  }
-  try {
-    setDismissed(localStorage.getItem("notif-banner-dismissed") === "1");
-  } catch (err) {
-    console.error("[home] localStorage read failed:", err);
-  }
 }
 
 async function updateCompletionEffects({
@@ -270,12 +276,14 @@ async function updateCompletionEffects({
   today,
   refreshStreak,
   setAllCompleteMessage,
+  onAllComplete,
 }: {
   isCompleting: boolean;
   allDone: boolean;
   today: string;
   refreshStreak: () => Promise<void>;
   setAllCompleteMessage: (visible: boolean) => void;
+  onAllComplete: () => void;
 }) {
   if (isCompleting && allDone) {
     await recordStreak(today, true);
@@ -284,6 +292,7 @@ async function updateCompletionEffects({
     fireAllCompleteConfetti();
     setAllCompleteMessage(true);
     setTimeout(() => setAllCompleteMessage(false), 3000);
+    onAllComplete();
     return;
   }
   if (isCompleting) return; // Per-completion celebration comes from the drop.
