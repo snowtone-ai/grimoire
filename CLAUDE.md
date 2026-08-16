@@ -22,9 +22,9 @@
   block on Opus.
 - Long builds/tests in background. Batch questions. Compact at checkpoints.
 
-## Continuity (auto-compact at 50%)
-- Auto-compact fires at 50% of the live context window
-  (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50 in .claude/settings.json). Never set
+## Continuity (auto-compact at 70%)
+- Auto-compact fires at 70% of the live context window
+  (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=70 in .claude/settings.json). Never set
   CLAUDE_CODE_AUTO_COMPACT_WINDOW -- an absolute window takes precedence over the
   percentage and would silently disable it.
 - The global PreCompact hook auto-checkpoints tasks.md/docs/state.md/docs/issues.md
