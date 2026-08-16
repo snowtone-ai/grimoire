@@ -33,6 +33,22 @@
     extracted to src/lib/confetti.ts and made wave/scale driven. Tap sparks via
     one delegated listener (src/lib/spark.ts). /book entries replay their reveal.
     Morning ambience on にぎやか only, as an ambient layer behind content.
+- Superseded (kept for history): T034 — pm-zero v11.1.1 -> v12 governance migration
+  (D-037), project scope only (global `~/.claude` was already on v12 before this task
+  started). CLAUDE.md: header, Startup Read (+docs/issues.md), Budget/Continuity
+  (absolute-window auto-compact replacing the PCT override, "do not split sessions"),
+  Self-Review (Tier 2 retired), Self-Evolution (single machine-detectable-check loop,
+  docs/lessons.md destination removed), Git merge-gate (CI green replacing self-reported
+  verify) all rewritten. `.claude/settings.json` reduced to
+  `{"permissions":{"defaultMode":"bypassPermissions"}}`, removing a real bug (a blanket
+  `.env.*` deny pattern that blocked reading `.env.example` against documented policy)
+  and the dead `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` env key, deferring fully to the
+  already-v12 global deny + guard.mjs. `.github/workflows/ci.yml` added (Section 14
+  migration item 6, task-plant named explicitly in the v12 doc) running the same
+  lint/typecheck/test/build as pnpm verify, with branch protection requiring it.
+  docs/issues.md stripped to the current-blockers-only template. docs/repo-map.md and
+  tasks.md headers relabeled v12. docs/lessons.md/AGENTS.md do not exist in this repo.
+  Product source untouched.
 - Superseded (kept for history): T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
   applied to both global (`~/.claude`, affects all of the user's other repos) and
   project scope. Global: CLAUDE.md, settings.json (env/fallbackModel/hooks), and
@@ -89,6 +105,11 @@
     owner/editor), so this was always going to be a manual step.
 
 ## Next
+- 2026-08-16: T034 — pm-zero governance migrated v11.1.1 -> v12 (D-037), project scope
+  (global already on v12). New: .github/workflows/ci.yml as the merge gate. Removed:
+  Tier 2 review, docs/lessons.md as a promotion destination, "one task per session",
+  the PCT-based auto-compact override, and a project settings.json bug that blocked
+  reading .env.example. No product code touched.
 - 2026-08-16: T031/T032/T033 shipped on feat/settings-and-fx-presets (D-036).
   Deliberately NOT built, and why:
   - Random unprompted rewards on open: would dilute the 436-item rarity design

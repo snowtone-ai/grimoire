@@ -764,3 +764,72 @@
   満たされたかを確認する。満たされない場合にのみ、保留したランダム新規報酬を再検討する。
   通知は起動時キャッチアップ（サーバ不要）で1週間運用し、実際に使われるかを見てから
   Web Push + VAPID + Cron + 購読保存バックエンドという純増インフラ投資の是非を判断する。
+
+## D-037: pm-zero v11.1.1 -> v12へのガバナンス移行 — プロジェクト側完全適用
+- 日付: 2026-08-16
+- 対象: process / governance（プロダクトコードは変更なし）
+- 背景: `プロダクト/pm-zero`リポジトリの`pm-zero-knowledge-v12.md`がv12をリリース済みで、
+  ~/.claude配下(グローバル)は既にv12へ移行済みだった(env二値化、deny再編、
+  `effortLevel`撤去、hooks三本、`~/.claude/CLAUDE.md`書き換え——本セッション開始前に
+  完了済みで、このタスクの対象外)。ユーザーから「pm-zero-knowledge-v12.mdに従い、この
+  リポジトリの該当箇所を全て更新せよ、余計な変更は禁止」との指示があり、v12文書
+  Section 14「Migration from v11.1.1」の残項目(6-8, いずれもプロジェクト側)を本
+  リポジトリに適用した。
+- 決定(v12憲法の適用): 「configの値・scriptのexit code・hookのいずれかでない限り
+  ルールとして採用しない」というv12の唯一の制約に従い、CLAUDE.mdからprose-onlyの
+  ルールを実行可能な形へ置換した:
+  - Startup Readにdocs/issues.mdを追加(Section 14項目7)。現在ブロック中のものだけを
+    残す運用に変更したため、解決済みだったI-001(Service Worker cache.addAll問題、
+    根本原因はD-003で既に恒久記録済み)をdocs/issues.mdから削除。
+  - Budget/Continuity: 「1セッション1タスク」を撤廃(v12 Section 5: 長時間セッションは
+    キャッシュ課金上むしろ安い)。auto-compactの機構を
+    `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=70`から絶対トークン数`CLAUDE_CODE_AUTO_COMPACT_WINDOW`
+    (グローバルで400000済み)へ全面移行——v12文書はPCT_OVERRIDEを「閾値を上げられず、
+    モデル上限前にコンパクションするセッションにしか効かない」既知の欠陥として記録して
+    いる。
+  - Self-Review: Tier 2を完全撤去(v12 Section 8: auth/billing/DB schema/production data
+    クラスは本プロジェクト規模では実質発生しないため、4か月・18プロジェクトの実績で
+    一度も発火の痕跡がないTierを維持するコストが正当化できない)。
+  - Self-Evolution: 4つの昇格先(このファイル/`.claude/rules/*.md`/`docs/lessons.md`/
+    auto-memory)を1つの機械判定ループへ集約(v12 Section 9: 「機械で検出できるか」
+    →YESならscripts/verify.mjsへチェックを追加、NOなら`.claude/rules/<zone>.md`に
+    `paths:`と`由来:`付きで記録)。`docs/lessons.md`は本リポジトリに元々存在せず
+    (Section 14項目8は本リポジトリでは対象なし)、`AGENTS.md`も同様に存在しない。
+  - Git: マージゲートの文言を「final verify green + self-review passed」から
+    「CI green」へ変更(v12 Section 7/12: 自己申告のローカルverifyはマージ根拠になり
+    得ない。GitHub上のCIだけが偽装不可能)。
+- 決定(.github/workflows/ci.yml新設、Section 14項目6・本リポジトリが名指しされた項目):
+  scripts/verify.mjsと同じ4チェック(lint/typecheck/test/build)をGitHub Actions上で
+  実行するワークフローを追加し、branch protectionで必須化した。pnpm/action-setup +
+  actions/setup-node(Node 24、ローカル環境と合わせる)+ `pnpm install --frozen-lockfile`。
+- 決定(.claude/settings.json、v12文書には明記されていないが直接起因する不具合修正):
+  プロジェクト側の`permissions.deny`が`Read(**/.env.*)`のような包括パターンで
+  `.env.example`まで巻き込んでブロックしていた——v12文書Section 4/11が明記する
+  「`.env.example`除外はdeny構文では表現できないため、`.env.*`ファミリーはhook
+  (guard.mjs)側に一任し、deny側は個別ファイル名で狭く書く」という設計と正面から矛盾
+  する実装ミスだった。グローバル側は既にこの設計でv12移行済み(狭いdeny + guard.mjsの
+  例外処理)のため、プロジェクト側の重複かつ矛盾するdeny/envブロックを撤去し、
+  `{"permissions":{"defaultMode":"bypassPermissions"}}`のみに縮小してグローバルの
+  deny+hookへ完全に委譲した。同時に、既にPCT_OVERRIDEの機構的欠陥を理由に撤去対象だった
+  `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`の`env`キーも削除。
+- 決定(バージョンラベルのみの更新): docs/repo-map.mdとtasks.mdの見出しにあった
+  「pm-zero v11」表記をv12に更新。tasks.mdの過去行(T001-T033)は証跡としてそのまま
+  保持し、書き換えない。
+- 決定(範囲外だが必須だったtest修正、CIが初回実行で発見): 新設したci.ymlの初回実行で
+  `tests/lib/domain/plant.test.mjs`の`toLocalDateString is timezone-safe`テストが
+  GitHub ActionsのUTCランナー上で失敗した(80件中1件)。原因はテスト側がJSTホスト前提の
+  期待値をハードコードしていながらプロセスのtimezoneを固定していなかったこと——
+  オーナーのローカル機がJSTだったため今まで一度も顕在化しなかった、まさにv12
+  Section 7が「自己申告のローカルverifyはCIの代替にならない」と述べる典型例。
+  ガバナンス移行タスクの範囲(「余計な変更は禁止」)を厳密に超えるが、このタスク自身が
+  新設した「CI green」マージゲートを満たせなければセッションを完了状態にできないため、
+  最小の修正(`process.env.TZ = "Asia/Tokyo"`をそのテストファイル冒頭に固定)のみ実施。
+  `toLocalDateString`本体はクライアントPWAの「今日」をホストのローカルタイムゾーンで
+  判定する設計として正しく、変更していない。`TZ=UTC node --test`で80/80通過を確認。
+- 不採用案: プロジェクト側`.claude/settings.json`にグローバルと同一のdeny一覧を
+  再度複製すること(グローバルのdenyは`bypassPermissions`下でも全モードで発火する
+  ため、プロジェクト側での複製は保守対象が二重化するだけで実効的な追加保護にならない
+  と判断)。
+- 将来見直し条件: pm-zeroの次版が出て台帳/hook責務がさらに変わった場合、または
+  auth/billing/DB schemaクラスの変更が実際に発生してTier 2相当のレビューが必要になった
+  場合に再度この節を更新する。

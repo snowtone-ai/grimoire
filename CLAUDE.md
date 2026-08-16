@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v11.1.1 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -13,20 +13,23 @@
   is read, not on every session)
 
 ## Startup Read
-- This file, docs/state.md, docs/decisions.md, docs/repo-map.md Summary. Nothing else.
+- This file, docs/state.md, docs/issues.md, docs/decisions.md, docs/repo-map.md Summary.
+  Nothing else.
 
 ## Budget (Pro plan, hard wall)
-- One task per session. Plan -> /handoff -> execute for big features.
-- Haiku subagents for wide reading; Sonnet 5 for everything else; Opus 5 only for
-  top-risk review/architecture when available (200K context window on Pro). Never
-  block on Opus.
-- Long builds/tests in background. Batch questions. Compact at checkpoints.
+- Do not split work across sessions -- long sessions are cheaper (cached input bills at
+  ~10%, one-hour TTL on a subscription). /compact at task boundaries and commit
+  immediately before it.
+- Sonnet 5 for everything by default, at platform-default effort. Explore subagent for
+  wide reading (only the summary returns); planner/reviewer Opus 5 subagents for
+  architecture and final review -- never for single-file fixes or first-attempt
+  debugging. Never block on Opus.
+- Long builds/tests in background. Batch questions.
 
-## Continuity (auto-compact at 70%)
-- Auto-compact fires at 70% of the live context window
-  (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=70 in .claude/settings.json). Never set
-  CLAUDE_CODE_AUTO_COMPACT_WINDOW -- an absolute window takes precedence over the
-  percentage and would silently disable it.
+## Continuity (auto-compact at an absolute window)
+- Auto-compact fires at CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000, set globally in
+  ~/.claude/settings.json. The absolute window takes precedence over any percentage
+  override, so none is set here or in this project's .claude/settings.json.
 - The global PreCompact hook auto-checkpoints tasks.md/docs/state.md/docs/issues.md
   before compaction fires; still restate active task ID, modified files list, and
   verify command in your own summary.
@@ -55,18 +58,24 @@
 - Default cap: <=2 concurrent worker subagents; raise only if budget clearly allows.
 
 ## Self-Review (no human reviewer)
-- Tier 0: verify script + tests + lint (always).
-- Tier 1: fresh-context Sonnet 5 subagent (review classes: 300+ line diff, new external
-  API, critical-workflow changes, and all Tier 2 classes).
-- Tier 2: fresh Opus 5 subagent when available and budget allows (auth, billing, DB
-  schema, RLS/permissions, deploy, security, production data, personal information).
-  Otherwise Tier 1 at high effort; record the substitution in tasks.md Review Notes.
+- Tier 0: verify script + tests + lint, then CI (.github/workflows/ci.yml) on the PR.
+  Nothing merges past a red check; a self-reported local pass is not sufficient on its
+  own.
+- Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
+  changes behaviour, or is hard to undo. Ask for every issue with severity/confidence --
+  do not restrict it to serious issues only, or recall drops.
+- Tier 2 is retired: it fired on auth/billing/DB-schema/deploy/production-data classes
+  that essentially do not occur in this project. If one of those classes ever appears,
+  re-derive the tier rather than re-enabling it from memory.
 
 ## Self-Evolution
-- Log failures in docs/issues.md. On 3 repeats, web-search a fix and record the source URL.
-- Promote always-applicable lessons into this file; lessons scoped to a subset of this
-  repo's files into .claude/rules/*.md (paths: frontmatter glob); other reference
-  lessons into docs/lessons.md; operator-level lessons into auto-memory.
+- On the first surprising failure, ask one question: can a machine detect this?
+  Yes -> add the check to scripts/verify.mjs (+ a reproduction test if it is a bug);
+  the lesson is now a build failure, not a paragraph. No -> write it to
+  .claude/rules/<zone>.md with a paths: frontmatter glob and a `由来:` line naming the
+  failure and date (last resort only). Delete any rules file not needed in six months.
+- docs/issues.md holds only what is currently blocked right now; resolved items leave
+  it. Operator-level lessons go to auto-memory; project facts never do.
 
 ## Engineering Role
 - Principal-level full-stack engineer. Readable, testable, minimal, correct code.
@@ -88,7 +97,8 @@
 - Never commit to main. Branch per task: <type>/<short-description>.
 - Commit after each logical unit; push after every commit; auto-PR to main.
 - Stage only Write-Scope files. Never stage .env* or secrets. gitleaks pre-push if available.
-- Merge: final verify green + fresh-context self-review passed.
+- Merge gate: CI green (.github/workflows/ci.yml runs the same lint/typecheck/test/build
+  as pnpm verify; branch protection requires it). A local pass alone does not merge.
   Low/medium risk: squash-merge + delete branch.
   High-risk classes: stop before irreversible real-world side effects; Japanese summary.
 
