@@ -2,7 +2,12 @@
 
 ## Current
 - Branch: feat/settings-and-fx-presets (T031/T032/T033, one PR — same bundling
-  precedent as T018+T021). Base: main @ 17c6ef1.
+  precedent as T018+T021). Base: main @ 17c6ef1. PR #25 open.
+- MERGE GATE: awaiting explicit human confirmation. Verify is green and the
+  Tier 1 fresh-context review passed after fixes, but the diff is +1364/-656
+  (300+ line high-risk class per the global CLAUDE.md) and merging to main
+  auto-deploys to the production origin the family actually uses. Same basis on
+  which T025 stopped before merge. Nothing is merged or deployed yet.
 - Active task: T031/T032/T033 — VoC-driven effects + settings work (D-036).
   Six pieces of user feedback were classified as PdM/UX input; two turned out to
   be defects rather than requests, and the rest were one root cause restated.
