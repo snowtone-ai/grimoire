@@ -1,9 +1,25 @@
 # state.md
 
 ## Current
-- Branch: main (T029 merged, PR #22 closed, branch deleted; T030 governance
+- Branch: feat/fantasy-item-visual-overhaul (PR #24 open, not merged). T031 —
+  fantasy item collection visual overhaul, prototype phase (D-036). New
+  react-three-fiber-based item codex detail page (`/book/[dropId]`, live
+  rotating 3D model + tap-to-replay burst + params block), app-open flourish,
+  and a magic-burst layer on the task-completion effect. 8 prototype items
+  across 3 new fantasy domains (embercinder/hollowmire/thornveil), built on
+  free CC0 Kenney 3D models + UI frame assets (no paid APIs, no AI image
+  generation — matches the hard Pro-plan budget constraint). `DropDef`
+  extended additively (domain/model/effect/params, all optional); all 436
+  existing items and the 8 world-atlas regions are untouched. `pnpm verify`
+  green (74 tests, 9 routes); Playwright mobile-viewport (390x844) smoke
+  confirmed all 4 new surfaces render. **Blocked on the user's own visual
+  review on their phone** before deciding whether/how to scale to the
+  remaining 428 items — do not merge PR #24 or start T032 (full-catalog
+  rollout) without that confirmation. Tier 1/2 self-review deliberately
+  deferred until direction is confirmed (scope may still change).
+- Previous: main (T029 merged, PR #22 closed, branch deleted; T030 governance
   migration committed directly to main — process/config only, no PR needed)
-- Active task: none. T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
+- Prior active task: none. T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
   applied to both global (`~/.claude`, affects all of the user's other repos) and
   project scope. Global: CLAUDE.md, settings.json (env/fallbackModel/hooks), and
   guard.mjs (P7: Edit/Write/MultiEdit/NotebookEdit now block `.env`/`.env.*`
@@ -16,7 +32,7 @@
   rule). Product source untouched. Tier 1 self-audit (docs/config-only diff,
   no auth/billing/DB-schema/production-data class) substituted for Tier 2, same
   basis as T015.
-- Current executor: none
+- Current executor: none (paused pending user review of T031/PR #24)
 - Write lock: none
 - Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
   because 4.18.0 stopped shipping the `dist/tailwind.css` file this app's
@@ -26,7 +42,7 @@
   has a stale top-level `permissionMode` key not part of the loaded config
   hierarchy. No fix applied; recorded in D-035.
 - Main agent: Claude Code (Sonnet 5-first; Opus 5 for top-risk review only)
-- Latest verification pointer: tasks.md T030
+- Latest verification pointer: tasks.md T031
 - Verification mode: standard
 
 ## Current Blocker
