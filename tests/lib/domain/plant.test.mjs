@@ -1,5 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+
+// toLocalDateString reads Date's local getters, so its own test must pin the
+// process timezone -- otherwise it only passes on a JST host and fails on
+// GitHub Actions' UTC runners.
+process.env.TZ = "Asia/Tokyo";
+
 import {
   calcProgress,
   calcGrowthStage,

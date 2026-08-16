@@ -815,6 +815,17 @@
 - 決定(バージョンラベルのみの更新): docs/repo-map.mdとtasks.mdの見出しにあった
   「pm-zero v11」表記をv12に更新。tasks.mdの過去行(T001-T033)は証跡としてそのまま
   保持し、書き換えない。
+- 決定(範囲外だが必須だったtest修正、CIが初回実行で発見): 新設したci.ymlの初回実行で
+  `tests/lib/domain/plant.test.mjs`の`toLocalDateString is timezone-safe`テストが
+  GitHub ActionsのUTCランナー上で失敗した(80件中1件)。原因はテスト側がJSTホスト前提の
+  期待値をハードコードしていながらプロセスのtimezoneを固定していなかったこと——
+  オーナーのローカル機がJSTだったため今まで一度も顕在化しなかった、まさにv12
+  Section 7が「自己申告のローカルverifyはCIの代替にならない」と述べる典型例。
+  ガバナンス移行タスクの範囲(「余計な変更は禁止」)を厳密に超えるが、このタスク自身が
+  新設した「CI green」マージゲートを満たせなければセッションを完了状態にできないため、
+  最小の修正(`process.env.TZ = "Asia/Tokyo"`をそのテストファイル冒頭に固定)のみ実施。
+  `toLocalDateString`本体はクライアントPWAの「今日」をホストのローカルタイムゾーンで
+  判定する設計として正しく、変更していない。`TZ=UTC node --test`で80/80通過を確認。
 - 不採用案: プロジェクト側`.claude/settings.json`にグローバルと同一のdeny一覧を
   再度複製すること(グローバルのdenyは`bypassPermissions`下でも全モードで発火する
   ため、プロジェクト側での複製は保守対象が二重化するだけで実効的な追加保護にならない
