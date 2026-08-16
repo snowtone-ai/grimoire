@@ -19,5 +19,5 @@
       "PowerShell(git reset --hard*)"
     ]
   },
-  "env": { "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "188000" }
+  "env": { "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70" }
 }

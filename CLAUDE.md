@@ -23,8 +23,10 @@
 - Long builds/tests in background. Batch questions. Compact at checkpoints.
 
 ## Continuity (auto-compact at 50%)
-- Auto-compact trigger is an absolute token target (CLAUDE_CODE_AUTO_COMPACT_WINDOW=
-  188000 in .claude/settings.json), not a percentage.
+- Auto-compact fires at 50% of the live context window
+  (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50 in .claude/settings.json). Never set
+  CLAUDE_CODE_AUTO_COMPACT_WINDOW -- an absolute window takes precedence over the
+  percentage and would silently disable it.
 - The global PreCompact hook auto-checkpoints tasks.md/docs/state.md/docs/issues.md
   before compaction fires; still restate active task ID, modified files list, and
   verify command in your own summary.
@@ -99,3 +101,13 @@
 - Keep the user's currently configured Claude Code version. Verify in Phase 0 when relevant.
 - If the recorded version above differs from the running one, re-check version-sensitive
   facts (model names, autocompact behavior, hook semantics) before relying on them.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
