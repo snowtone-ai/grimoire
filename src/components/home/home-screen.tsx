@@ -311,7 +311,9 @@ function NotificationPanel({
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
             <p className="text-sm font-semibold text-brand">🔔 締切通知を有効にしますか？</p>
-            <p className="mt-0.5 text-xs text-brand/80">締切前日・当日の朝9時にリマインドします</p>
+            <p className="mt-0.5 text-xs text-brand/80">
+              締切前日・当日ぶんを、朝9時以降に最初にアプリを開いたときにお知らせします
+            </p>
           </div>
           <button
             type="button"

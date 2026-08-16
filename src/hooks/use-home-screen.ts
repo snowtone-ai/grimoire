@@ -22,7 +22,7 @@ import { getDepartedTaskIds, markDeparted } from "@/lib/departure";
 import {
   getNotificationPermission,
   requestNotificationPermission,
-  scheduleTaskNotifications,
+  syncTaskNotifications,
   sendTestNotification,
   type NotificationPermissionState,
 } from "@/lib/notifications";
@@ -137,14 +137,14 @@ export function useHomeScreen() {
 
   useEffect(() => {
     if (notifPermission === "granted") {
-      scheduleTaskNotifications().catch(console.error);
+      syncTaskNotifications().catch(console.error);
     }
   }, [notifPermission]);
 
   async function handleRequestNotification() {
     const result = await requestNotificationPermission();
     setNotifPermission(result);
-    if (result === "granted") await scheduleTaskNotifications();
+    if (result === "granted") await syncTaskNotifications();
   }
 
   function handleDismissNotifBanner() {
@@ -192,7 +192,7 @@ export function useHomeScreen() {
     }
     await syncPlantStateFromTasks();
     await evaluateBounties();
-    scheduleTaskNotifications().catch(console.error);
+    syncTaskNotifications().catch(console.error);
   }
 
   function dismissDrop() {
@@ -214,7 +214,7 @@ export function useHomeScreen() {
   function onTasksChanged() {
     Promise.all([loadTasks(true), syncPlantStateFromTasks()]).catch(console.error);
     evaluateBounties().catch(console.error);
-    scheduleTaskNotifications().catch(console.error);
+    syncTaskNotifications().catch(console.error);
   }
 
   return {

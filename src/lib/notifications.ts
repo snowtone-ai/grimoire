@@ -1,4 +1,15 @@
-import { getTasksForDate } from "./taskDb";
+import { getTasksForDate } from "./taskDb.ts";
+import {
+  buildReminders,
+  nextPending,
+  pruneDelivered,
+  selectDue,
+  type DeliveredLedger,
+  type Reminder,
+} from "./domain/reminders.ts";
+
+const DELIVERED_KEY = "notif-delivered";
+const ICON = "/icons/icon-192x192.png";
 
 function dateString(offsetDays: number = 0): string {
   const d = new Date();
@@ -23,75 +34,98 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
   return Notification.requestPermission();
 }
 
-/** すべてのタスクをもとに通知をService Workerへスケジュール送信する */
-export async function scheduleTaskNotifications(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (!("serviceWorker" in navigator)) return;
-  if (!("Notification" in window) || Notification.permission !== "granted")
-    return;
+function canNotify(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "Notification" in window &&
+    Notification.permission === "granted"
+  );
+}
 
-  const sw = await navigator.serviceWorker.ready;
-  if (!sw.active) return;
+function readDelivered(): DeliveredLedger {
+  try {
+    const raw = localStorage.getItem(DELIVERED_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const ledger: Record<string, number> = {};
+    for (const [id, at] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof at === "number" && Number.isFinite(at)) ledger[id] = at;
+    }
+    return ledger;
+  } catch {
+    return {};
+  }
+}
+
+function writeDelivered(ledger: DeliveredLedger): void {
+  try {
+    localStorage.setItem(DELIVERED_KEY, JSON.stringify(ledger));
+  } catch {
+    // Ledger storage is best-effort; a failure only risks a repeat notification.
+  }
+}
+
+/** Show a notification through the Service Worker registration, which is the
+ * only path that works on mobile (the `new Notification()` constructor is not
+ * supported there). Returns false when the platform refuses it. */
+async function show(title: string, body: string, tag: string): Promise<boolean> {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.showNotification(title, { body, icon: ICON, badge: ICON, tag });
+    return true;
+  } catch (err) {
+    console.error("[notifications] show failed:", err);
+    return false;
+  }
+}
+
+/** In-page timer for a reminder that comes due while the app stays open. Unlike
+ * the Service Worker's timers this one is only ever a bonus — the catch-up pass
+ * on the next open is what actually guarantees delivery. */
+let pageTimer: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Deliver every reminder that is already due and not yet shown, then arm an
+ * in-page timer for the next one. Safe to call as often as the task list
+ * changes: the delivered ledger makes repeat calls idempotent.
+ */
+export async function syncTaskNotifications(): Promise<void> {
+  if (!canNotify()) return;
 
   const today = dateString(0);
-  const tomorrow = dateString(1);
-
   const [todayTasks, tomorrowTasks] = await Promise.all([
     getTasksForDate(today),
-    getTasksForDate(tomorrow),
+    getTasksForDate(dateString(1)),
   ]);
 
-  const now = new Date();
+  const reminders = buildReminders({ dateKey: today, todayTasks, tomorrowTasks });
+  const now = Date.now();
+  const delivered: Record<string, number> = pruneDelivered(readDelivered(), now);
 
-  // 今日の朝9:00
-  const todayAt9 = new Date();
-  todayAt9.setHours(9, 0, 0, 0);
-
-  type NotifPayload = {
-    id: string;
-    title: string;
-    body: string;
-    scheduledAt: number;
-  };
-
-  const notifications: NotifPayload[] = [];
-
-  if (todayAt9 > now) {
-    // 未完了の今日タスク → 今日 9:00 に「今日」通知
-    for (const task of todayTasks.filter((t) => !t.completed)) {
-      const timeLabel = task.dueTime ? `（${task.dueTime}）` : "";
-      notifications.push({
-        id: `notif-today-${task.id}`,
-        title: "今日の締切",
-        body: `今日: ${task.title}${timeLabel}`,
-        scheduledAt: todayAt9.getTime(),
-      });
-    }
-
-    // 未完了の明日タスク → 今日 9:00 に「明日」前日通知
-    for (const task of tomorrowTasks.filter((t) => !t.completed)) {
-      const timeLabel = task.dueTime ? `（${task.dueTime}）` : "";
-      notifications.push({
-        id: `notif-tomorrow-${task.id}`,
-        title: "明日の締切リマインダー",
-        body: `明日: ${task.title}${timeLabel}`,
-        scheduledAt: todayAt9.getTime(),
-      });
+  for (const reminder of selectDue(reminders, now, delivered)) {
+    if (await show(reminder.title, reminder.body, reminder.id)) {
+      delivered[reminder.id] = now;
     }
   }
+  writeDelivered(delivered);
 
-  sw.active.postMessage({
-    type: "SCHEDULE_NOTIFICATIONS",
-    notifications,
-  });
+  clearTimeout(pageTimer);
+  const next: Reminder | null = nextPending(reminders, now, delivered);
+  if (next) {
+    pageTimer = setTimeout(() => {
+      void syncTaskNotifications();
+    }, next.dueAt - now + 1000);
+  }
 }
 
 /** テスト通知を即時送信する（動作確認用） */
 export async function sendTestNotification(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (!("serviceWorker" in navigator)) return;
-  if (Notification.permission !== "granted") return;
-
-  const sw = await navigator.serviceWorker.ready;
-  sw.active?.postMessage({ type: "TEST_NOTIFICATION" });
+  if (!canNotify()) return;
+  await show(
+    "Grimoire — テスト通知",
+    "通知が正常に動作しています！締切前日・当日ぶんは、朝9時以降に最初にアプリを開いたときにお知らせします。",
+    "notif-test"
+  );
 }

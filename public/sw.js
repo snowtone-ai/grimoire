@@ -1,54 +1,15 @@
 // Bump this when SW logic changes. All clients discard old caches on activate.
-const CACHE_NAME = "task-manager-v5";
+const CACHE_NAME = "task-manager-v6";
 const NAV_TIMEOUT_MS = 3000;
 
-// ── Scheduled Notification Timers ─────────────────────────────────────────
-/** Map of notification id -> setTimeout timer id */
-const scheduledTimers = new Map();
-
+// Notifications are shown by the page through registration.showNotification(),
+// not scheduled here (D-036). A Service Worker is torn down after a few idle
+// seconds, so any setTimeout parked in it — as an earlier version did — is
+// destroyed long before a reminder hours away could fire. The page owns the
+// timing and a delivered ledger; this worker only has to stay reachable.
 self.addEventListener("message", (event) => {
-  if (!event.data) return;
-
-  if (event.data.type === "SKIP_WAITING") {
+  if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
-    return;
-  }
-
-  if (event.data.type === "SCHEDULE_NOTIFICATIONS") {
-    const { notifications } = event.data;
-
-    for (const timerId of scheduledTimers.values()) {
-      clearTimeout(timerId);
-    }
-    scheduledTimers.clear();
-
-    const now = Date.now();
-    for (const notif of notifications) {
-      const delay = notif.scheduledAt - now;
-      if (delay <= 0) continue;
-
-      const timerId = setTimeout(() => {
-        self.registration.showNotification(notif.title, {
-          body: notif.body,
-          icon: "/icons/icon-192x192.png",
-          badge: "/icons/icon-192x192.png",
-          tag: notif.id,
-          renotify: false,
-        });
-        scheduledTimers.delete(notif.id);
-      }, delay);
-
-      scheduledTimers.set(notif.id, timerId);
-    }
-    return;
-  }
-
-  if (event.data.type === "TEST_NOTIFICATION") {
-    self.registration.showNotification("タスク管理 — テスト通知", {
-      body: "通知が正常に動作しています！締切前日・当日の朝9:00にリマインドします。",
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-192x192.png",
-    });
   }
 });
 

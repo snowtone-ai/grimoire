@@ -7,21 +7,28 @@ import { type GrantResult } from "@/lib/rewardDb";
 
 // Ascending RARE 1-8 ladder: neutral -> cool -> ember -> gold, with the glow
 // and dwell time growing with rank. Badge tokens match the /book sections.
+//
+// Dwell time is sized to READ the card, not to flash it (D-036). The card shows
+// seven pieces of information (banner, art, rarity badge, NEW, name, flavor
+// text, ledger line); the previous 2.0-3.4s could not be read in time, which is
+// exactly what the user reported. Rank still extends the moment, from a rank-1
+// glance to a rank-8 pause.
 const RARITY_STYLE: Record<
   number,
   { badge: string; ring: string; duration: number }
 > = {
-  1: { badge: "bg-muted text-muted-foreground", ring: "", duration: 2000 },
-  2: { badge: "bg-success-soft text-success", ring: "", duration: 2200 },
-  3: { badge: "bg-frost-soft text-frost", ring: "ring-1 ring-frost/40", duration: 2400 },
-  4: { badge: "bg-cat-job-soft text-cat-job", ring: "ring-2 ring-cat-job/50 shadow-[0_0_44px] shadow-cat-job/25", duration: 2600 },
-  5: { badge: "bg-cat-life-soft text-cat-life", ring: "ring-2 ring-cat-life/50 shadow-[0_0_48px] shadow-cat-life/25", duration: 2800 },
-  6: { badge: "bg-brand-soft text-brand", ring: "ring-2 ring-brand/50 shadow-[0_0_52px] shadow-brand/30", duration: 3000 },
-  7: { badge: "bg-brand text-primary-foreground", ring: "ring-2 ring-brand/70 shadow-[0_0_56px] shadow-brand/40", duration: 3200 },
-  8: { badge: "bg-gold-soft text-gold", ring: "ring-2 ring-gold/60 shadow-[0_0_60px] shadow-gold/40", duration: 3400 },
+  1: { badge: "bg-muted text-muted-foreground", ring: "", duration: 4000 },
+  2: { badge: "bg-success-soft text-success", ring: "", duration: 4400 },
+  3: { badge: "bg-frost-soft text-frost", ring: "ring-1 ring-frost/40", duration: 4800 },
+  4: { badge: "bg-cat-job-soft text-cat-job", ring: "ring-2 ring-cat-job/50 shadow-[0_0_44px] shadow-cat-job/25", duration: 5400 },
+  5: { badge: "bg-cat-life-soft text-cat-life", ring: "ring-2 ring-cat-life/50 shadow-[0_0_48px] shadow-cat-life/25", duration: 6000 },
+  6: { badge: "bg-brand-soft text-brand", ring: "ring-2 ring-brand/50 shadow-[0_0_52px] shadow-brand/30", duration: 6800 },
+  7: { badge: "bg-brand text-primary-foreground", ring: "ring-2 ring-brand/70 shadow-[0_0_56px] shadow-brand/40", duration: 7800 },
+  8: { badge: "bg-gold-soft text-gold", ring: "ring-2 ring-gold/60 shadow-[0_0_60px] shadow-gold/40", duration: 9000 },
 };
 
-/** Quest-clear reward card. Tap anywhere to skip; auto-dismisses. */
+/** Quest-clear reward card. Tapping the backdrop or the explicit button closes
+ * it; tapping the card itself does not, so reading it cannot dismiss it. */
 export function DropReveal({
   grant,
   onDismiss,
@@ -45,6 +52,7 @@ export function DropReveal({
     >
       <div
         className={`drop-reveal relative w-full max-w-[280px] overflow-hidden rounded-3xl border border-border bg-card p-5 text-center shadow-xl ${style.ring}`}
+        onClick={(event) => event.stopPropagation()}
       >
         {grant.rarity === 8 && (
           <div
@@ -98,6 +106,14 @@ export function DropReveal({
         <p className="mt-3 text-[11px] font-semibold text-frost">
           {grant.isNew ? "調査記録に追加された！" : "調査記録 +1"}
         </p>
+
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="btn-squish mt-4 w-full rounded-xl border border-border bg-secondary py-2 text-xs font-bold text-secondary-foreground"
+        >
+          閉じる
+        </button>
       </div>
     </div>
   );
