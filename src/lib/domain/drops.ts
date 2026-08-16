@@ -9,6 +9,7 @@ import { LANTERN_RARE1, LANTERN_RARE2, LANTERN_RARE3, LANTERN_RARE5, LANTERN_RAR
 import { GROVE_RARE1, GROVE_RARE2, GROVE_RARE3, GROVE_RARE5, GROVE_RARE6, GROVE_RARE7 } from "./reward-catalog/grove.ts";
 import { SAVANNA_RARE1, SAVANNA_RARE2, SAVANNA_RARE3, SAVANNA_RARE5, SAVANNA_RARE6, SAVANNA_RARE7 } from "./reward-catalog/savanna.ts";
 import { TIDE_RARE1, TIDE_RARE2, TIDE_RARE3, TIDE_RARE5, TIDE_RARE6, TIDE_RARE7 } from "./reward-catalog/tide.ts";
+import { FANTASY_RARE1, FANTASY_RARE2, FANTASY_RARE3, FANTASY_RARE5, FANTASY_RARE6, FANTASY_RARE7 } from "./reward-catalog/fantasy.ts";
 
 /* Material-drop reward domain — pure functions, no side effects. (D-032)
  *
@@ -48,6 +49,19 @@ export interface DropDef {
   /** Season month for RARE4/RARE8 (drives the current-month weighting). */
   month?: number;
   color: string;
+
+  /* --- Fantasy item visual overhaul (prototype, additive-only fields) ---
+   * Independent of `region`; see src/lib/domain/domains.ts. Undefined on all
+   * 436 legacy entries, which keep rendering via the emoji/color-mix path. */
+
+  /** Fantasy-domain id from domains.ts, independent of `region`. */
+  domain?: string;
+  /** Self-hosted glTF/GLB path for the live 3D item-detail viewer. */
+  model?: string;
+  /** Effect-recipe id (src/lib/three/domain-recipes.ts). Falls back to the domain default when absent. */
+  effect?: string;
+  /** MH-codex-style flavor "parameters" shown on the item detail page, ordered for stable display. */
+  params?: { label: string; value: string }[];
 }
 
 const SPECIES_EMOJI: Record<string, string> = {
@@ -89,36 +103,42 @@ function ssrFromSpecies(species: PlantSpecies): DropDef {
 export const COMMON_DROPS: DropDef[] = [
   ...FROST_RARE1, ...AEGIS_RARE1, ...CARAVAN_RARE1, ...CANOPY_RARE1,
   ...LANTERN_RARE1, ...GROVE_RARE1, ...SAVANNA_RARE1, ...TIDE_RARE1,
+  ...FANTASY_RARE1,
 ];
 
 /** RARE2 — good-quality materials. */
 export const TIER2_DROPS: DropDef[] = [
   ...FROST_RARE2, ...AEGIS_RARE2, ...CARAVAN_RARE2, ...CANOPY_RARE2,
   ...LANTERN_RARE2, ...GROVE_RARE2, ...SAVANNA_RARE2, ...TIDE_RARE2,
+  ...FANTASY_RARE2,
 ];
 
 /** RARE3 — crystals and ores. */
 export const TIER3_DROPS: DropDef[] = [
   ...FROST_RARE3, ...AEGIS_RARE3, ...CARAVAN_RARE3, ...CANOPY_RARE3,
   ...LANTERN_RARE3, ...GROVE_RARE3, ...SAVANNA_RARE3, ...TIDE_RARE3,
+  ...FANTASY_RARE3,
 ];
 
 /** RARE5 — special materials. */
 export const TIER5_DROPS: DropDef[] = [
   ...FROST_RARE5, ...AEGIS_RARE5, ...CARAVAN_RARE5, ...CANOPY_RARE5,
   ...LANTERN_RARE5, ...GROVE_RARE5, ...SAVANNA_RARE5, ...TIDE_RARE5,
+  ...FANTASY_RARE5,
 ];
 
 /** RARE6 — precious specimens. */
 export const TIER6_DROPS: DropDef[] = [
   ...FROST_RARE6, ...AEGIS_RARE6, ...CARAVAN_RARE6, ...CANOPY_RARE6,
   ...LANTERN_RARE6, ...GROVE_RARE6, ...SAVANNA_RARE6, ...TIDE_RARE6,
+  ...FANTASY_RARE6,
 ];
 
 /** RARE7 — treasured relics. */
 export const TIER7_DROPS: DropDef[] = [
   ...FROST_RARE7, ...AEGIS_RARE7, ...CARAVAN_RARE7, ...CANOPY_RARE7,
   ...LANTERN_RARE7, ...GROVE_RARE7, ...SAVANNA_RARE7, ...TIDE_RARE7,
+  ...FANTASY_RARE7,
 ];
 
 /** RARE4 — the 12 canonical home-garden specimens (one per season month).

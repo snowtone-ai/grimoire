@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Link } from "next-view-transitions";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Download, RotateCcw, Upload } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
@@ -33,7 +34,7 @@ import {
   parseBackup,
   type ParsedBackup,
 } from "@/lib/backup";
-import { playSave, playTap } from "@/lib/sound";
+import { playPage, playSave, playTap } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
@@ -626,14 +627,12 @@ function Section({
           const count = counts?.get(drop.id) ?? 0;
           const isFound = count > 0;
           const region = getRegionById(drop.region);
-          return (
-            <li
-              key={drop.id}
-              className={`relative rounded-2xl border p-2 text-center transition-colors ${
-                isFound ? "border-transparent" : "border-dashed border-border/70 bg-muted/30"
-              }`}
-              style={isFound ? materialCardStyle(drop) : undefined}
-            >
+          const cardClassName = `relative rounded-2xl border p-2 text-center transition-colors ${
+            isFound ? "border-transparent" : "border-dashed border-border/70 bg-muted/30"
+          }`;
+          const cardStyle = isFound ? materialCardStyle(drop) : undefined;
+          const cardContent = (
+            <>
               {isFound && (
                 <span
                   aria-hidden
@@ -657,6 +656,29 @@ function Section({
                   ×{count}
                 </span>
               )}
+            </>
+          );
+
+          // Only discovered items open the codex detail page — undiscovered
+          // ones stay a static "？？？" placeholder (no route to a spoiler).
+          if (isFound) {
+            return (
+              <li key={drop.id}>
+                <Link
+                  href={`/book/${drop.id}`}
+                  onClick={() => playPage()}
+                  className={`block ${cardClassName}`}
+                  style={cardStyle}
+                >
+                  {cardContent}
+                </Link>
+              </li>
+            );
+          }
+
+          return (
+            <li key={drop.id} className={cardClassName} style={cardStyle}>
+              {cardContent}
             </li>
           );
         })}

@@ -1,9 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { getRarityLabel } from "@/lib/domain/drops";
 import { type GrantResult } from "@/lib/rewardDb";
+import { pickRecipe } from "@/lib/three/domain-recipes";
+import { prefersReducedMotion } from "@/lib/view-transition";
+
+// Lazy: keeps three.js out of the home-screen bundle until a drop actually
+// fires. ssr:false isn't needed (drop-reveal.tsx only ever renders client-
+// side already), but code-splitting still matters for initial load size.
+const RecipeBurst = dynamic(
+  () => import("@/components/three/recipe-burst").then((m) => ({ default: m.RecipeBurst })),
+  { ssr: false }
+);
 
 // Ascending RARE 1-8 ladder: neutral -> cool -> ember -> gold, with the glow
 // and dwell time growing with rank. Badge tokens match the /book sections.
@@ -30,6 +41,7 @@ export function DropReveal({
   onDismiss: () => void;
 }) {
   const style = RARITY_STYLE[grant.rarity] ?? RARITY_STYLE[1];
+  const recipe = pickRecipe(grant.drop.domain, grant.rarity, grant.drop.effect);
 
   useEffect(() => {
     const timer = setTimeout(onDismiss, style.duration);
@@ -43,6 +55,11 @@ export function DropReveal({
       aria-live="polite"
       onClick={onDismiss}
     >
+      {!prefersReducedMotion() && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <RecipeBurst recipe={recipe} color={grant.drop.color} durationMs={style.duration} />
+        </div>
+      )}
       <div
         className={`drop-reveal relative w-full max-w-[280px] overflow-hidden rounded-3xl border border-border bg-card p-5 text-center shadow-xl ${style.ring}`}
       >

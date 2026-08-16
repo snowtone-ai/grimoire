@@ -87,6 +87,13 @@ export const REGIONS: RegionDef[] = [
     blurb: "遠征とは別に、本部の庭では今日も季節の花が調査対象として記録されている。",
     accent: "#e8c868",
   },
+  {
+    id: "fantasy",
+    name: "未踏の異境",
+    subtitle: "地図の外、ドメイン(domains.ts)ごとに語られる新領域",
+    blurb: "地図に載らない領域。区分の詳細はdomainごとのフレーバーに委ねられている。",
+    accent: "#8a7aa8",
+  },
 ];
 
 const REGION_BY_ID: Map<string, RegionDef> = new Map(REGIONS.map((region) => [region.id, region]));

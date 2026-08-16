@@ -10,6 +10,7 @@ import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain
 import { isFxEnabled, playTap, setFxEnabled } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { DropReveal } from "@/components/reward/drop-reveal";
+import { AppOpenFlourish } from "@/components/effects/app-open-flourish";
 import { BountyBoard } from "./bounty-board";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
@@ -138,6 +139,7 @@ export function HomeScreen() {
       {screen.pendingDrop && (
         <DropReveal grant={screen.pendingDrop} onDismiss={screen.dismissDrop} />
       )}
+      <AppOpenFlourish />
     </div>
   );
 }
