@@ -1,13 +1,15 @@
 # state.md
 
 ## Current
-- Branch: feat/notif-toggle-and-replay-fx (T035). Base: main @ c5a6f36. Two
-  user-reported defects: /settings had no way to turn notifications back off
+- 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
+  Two user-reported defects: /settings had no way to turn notifications back off
   once granted (browser permission is a one-way ratchet, so a new app-level
-  notif-enabled flag was needed), and /book's item-tap replay used the exact
+  notif-enabled flag was added), and /book's item-tap replay used the exact
   same star-burst confetti as live task completion (now a distinct per-rarity
-  "twinkle" via fireReplayEffect). pnpm verify green (80/80); browser smoke
-  via Playwright confirmed both fixes with 0 console errors; not yet merged.
+  "twinkle" via fireReplayEffect, distinct in shape and motion from the
+  completion burst). pnpm verify green (80/80); browser smoke via Playwright
+  confirmed both fixes with 0 console errors. CI green on PR #27; squash-merged
+  to main and branch deleted; local checkout back on main @ c07d510.
 - Previous branch: feat/settings-and-fx-presets (T031/T032/T033, one PR — same bundling
   precedent as T018+T021). Base: main @ 17c6ef1. PR #25 open.
 - MERGE GATE: cleared. The owner explicitly authorised the merge on 2026-08-16
