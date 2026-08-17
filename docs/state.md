@@ -22,12 +22,17 @@
   — see tasks.md T036 Evidence for the full list. Re-verified: pnpm verify
   green, plus targeted browser checks of the two highest-risk fixes
   (reduced-motion shine opacity, fx-intensity->six-toggle migration for
-  both "quiet" and "lively" starting states). MERGE GATE: not yet cleared —
-  next step is explicit owner sign-off (production auto-deploys on merge),
-  same precedent as T031-033/T035. Write scope: see tasks.md T036 row
-  (touches fx.ts domain+browser layers, confetti/spark/sound, drop-reveal,
-  plant snowfall, settings screen, 3 new src/components/fx/ files,
-  bottom-nav, layout.tsx, globals.css, docs/repo-map.md).
+  both "quiet" and "lively" starting states). Owner reviewed the sign-off
+  request and asked for all remaining Tier 1 findings to be addressed too,
+  plus a UI request (notification permission button restyled to match the
+  other toggle rows) — see tasks.md T036 Evidence and docs/decisions.md
+  D-040 for the 9 additional fixes and 2 documented accepted tradeoffs.
+  pnpm verify re-confirmed green (82/82 tests). MERGE GATE: still open —
+  re-requesting owner sign-off next, same precedent as T031-033/T035.
+  Write scope: see tasks.md T036 row (touches fx.ts domain+browser layers,
+  confetti/spark/sound, drop-reveal, plant snowfall, settings screen, 3 new
+  src/components/fx/ files, bottom-nav, layout.tsx, globals.css,
+  docs/repo-map.md).
 - 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
   Two user-reported defects: /settings had no way to turn notifications back off
   once granted (browser permission is a one-way ratchet, so a new app-level

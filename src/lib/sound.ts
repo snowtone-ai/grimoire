@@ -17,6 +17,8 @@
  * so the sound and the new per-page CSS transition (T036) agree on identity.
  */
 
+import { rarityBand } from "./domain/rarity-style.ts";
+
 const PREF_KEY = "fx-enabled";
 
 export function isFxEnabled(): boolean {
@@ -226,14 +228,16 @@ export function playPage(theme: "home" | "plant" | "book" | "all" = "home"): voi
 }
 
 /** Quest clear + drop, scaled by rarity band — the same motif, extended.
- * RARE 1-8 buckets into low(1-3) / mid(4-6) / high(7-8). */
+ * Band comes from rarity-style.ts's single low(1-3)/mid(4-6)/high(7-8)
+ * ladder, shared with confetti and drop-reveal rather than re-bucketed here. */
 export function playClear(rarity: number): void {
-  if (rarity <= 3) {
+  const band = rarityBand(rarity);
+  if (band === "low") {
     arpeggio([N.C5, N.E5, N.G5], 0.07, 0.1);
     haptic(12);
     return;
   }
-  if (rarity <= 6) {
+  if (band === "mid") {
     arpeggio([N.C5, N.E5, N.G5, N.C6], 0.08, 0.11);
     haptic([12, 40, 18]);
     return;

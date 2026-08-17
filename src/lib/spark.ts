@@ -49,7 +49,10 @@ function spawnSpark(x: number, y: number): void {
     group.append(mote);
   }
 
-  group.addEventListener("animationend", () => group.remove(), { once: true });
+  // Listen on the core specifically, not the group: `animationend` bubbles
+  // from any child, and the motes (0.4s) finish before the core (0.42s), so a
+  // group-level listener would remove the whole node mid-flash.
+  core.addEventListener("animationend", () => group.remove(), { once: true });
   document.body.append(group);
   // Belt and braces: if the animation never fires (element hidden, animations
   // disabled mid-flight), still drop the node rather than leak it.

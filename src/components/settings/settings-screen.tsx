@@ -27,7 +27,9 @@ import {
   type ParsedBackup,
 } from "@/lib/backup";
 import {
+  EFFECT_KEYS,
   EFFECT_LABELS,
+  EFFECT_SECTIONS,
   getStoredEffectPref,
   isReducedMotionForced,
   setEffectEnabled,
@@ -253,13 +255,31 @@ function EffectToggleRow({
   );
 }
 
+/** Icon per effect key, kept here (not in the domain layer) since it's a
+ * display concern. EFFECT_KEYS/EFFECT_SECTIONS are the source of truth for
+ * which keys exist and which section they belong to, so a new EffectKey
+ * that's missing here fails TypeScript's Record check at compile time
+ * instead of silently having no settings row. */
+const EFFECT_ICONS: Record<EffectKey, ComponentType<{ className?: string }>> = {
+  tapSpark: Sparkles,
+  completion: PartyPopper,
+  morningGreeting: Sunrise,
+  openFlourish: Wand2,
+  ambientParticles: Stars,
+  pageTransitions: ArrowLeftRight,
+};
+
+const BASIC_KEYS = EFFECT_KEYS.filter((key) => EFFECT_SECTIONS[key] === "basic");
+const MORE_KEYS = EFFECT_KEYS.filter((key) => EFFECT_SECTIONS[key] === "more");
+
 function BasicFeedbackSection() {
   return (
     <SettingsSection overline="FEEDBACK" title="基本のフィードバック">
       <div className="space-y-2">
         <SoundToggleRow />
-        <EffectToggleRow effectKey="tapSpark" icon={Sparkles} />
-        <EffectToggleRow effectKey="completion" icon={PartyPopper} />
+        {BASIC_KEYS.map((key) => (
+          <EffectToggleRow key={key} effectKey={key} icon={EFFECT_ICONS[key]} />
+        ))}
       </div>
       <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80">
         調査記録の記録をタップして見返す演出は、この設定に関わらずいつでも使えます
@@ -275,10 +295,9 @@ function MoreEffectsSection() {
         演出をもっと楽しみたい方はこちらもONにしてください
       </p>
       <div className="space-y-2">
-        <EffectToggleRow effectKey="morningGreeting" icon={Sunrise} />
-        <EffectToggleRow effectKey="openFlourish" icon={Wand2} />
-        <EffectToggleRow effectKey="ambientParticles" icon={Stars} />
-        <EffectToggleRow effectKey="pageTransitions" icon={ArrowLeftRight} />
+        {MORE_KEYS.map((key) => (
+          <EffectToggleRow key={key} effectKey={key} icon={EFFECT_ICONS[key]} />
+        ))}
       </div>
     </SettingsSection>
   );
@@ -348,9 +367,21 @@ function NotificationSection() {
           type="button"
           onClick={handleRequest}
           disabled={busy}
-          className="btn-squish mt-3 w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+          aria-pressed={false}
+          className="btn-squish mt-3 flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted disabled:opacity-50"
         >
-          {busy ? "確認中..." : "通知を許可する"}
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <BellOff className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-foreground">締切通知</span>
+            <span className="block text-xs text-muted-foreground">
+              {busy ? "確認中..." : "タップして許可すると、他の演出と同じようにON/OFFできます"}
+            </span>
+          </span>
+          <span aria-hidden className="h-6 w-11 shrink-0 rounded-full bg-muted p-0.5">
+            <span className="block size-5 rounded-full bg-background" />
+          </span>
         </button>
       )}
 

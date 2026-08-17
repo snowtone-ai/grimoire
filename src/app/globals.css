@@ -428,9 +428,15 @@ html[data-page-turn] .task-vt {
   }
   html[data-page-turn][data-page-theme="plant"]::view-transition-old(root) {
     animation: page-bloom-out 0.32s var(--ease-fluid) both;
+    /* Pure scale, not directional slide — pinned to center so it doesn't
+       inherit "left/right center" from the base page-turn rules above on
+       back-navigation (those rules match too, at equal-or-lower specificity,
+       and this theme doesn't otherwise override transform-origin itself). */
+    transform-origin: center center;
   }
   html[data-page-turn][data-page-theme="plant"]::view-transition-new(root) {
     animation: page-bloom-in 0.42s var(--ease-spring) both;
+    transform-origin: center center;
   }
 
   /* "book": parchment/scroll unfurl, matching the survey-notes theme. */
@@ -478,9 +484,12 @@ html[data-page-turn] .task-vt {
   }
   html[data-page-turn][data-page-theme="all"]::view-transition-old(root) {
     animation: page-ember-out 0.22s var(--ease-fluid) both;
+    /* Same center-pin as "plant" above, same reason: pure scale, not a slide. */
+    transform-origin: center center;
   }
   html[data-page-turn][data-page-theme="all"]::view-transition-new(root) {
     animation: page-ember-in 0.26s var(--ease-out-expo) both;
+    transform-origin: center center;
   }
 }
 
@@ -854,6 +863,12 @@ html[data-page-turn] .task-vt {
 }
 
 .open-flourish {
+  /* The backdrop is always near-black regardless of page theme (bg-black/70
+     above), but --gold itself swaps to a darker, lower-lightness value in
+     light mode for contrast against a LIGHT background elsewhere in the app.
+     Against this overlay's always-dark backdrop that swap goes the wrong
+     way, so pin the frame/title/grace-motes to the bright dark-mode value. */
+  --gold: oklch(0.8 0.12 85);
   animation: open-flourish-fade 0.5s var(--ease-fluid) both;
   cursor: pointer;
 }

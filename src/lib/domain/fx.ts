@@ -39,6 +39,23 @@ export const EFFECT_KEYS: readonly EffectKey[] = [
   "pageTransitions",
 ];
 
+export type SettingsSection = "basic" | "more";
+
+/** Assigns every effect to one of the two settings-screen sections
+ * ("基本のフィードバック" / "追加の演出"). settings-screen.tsx filters
+ * EFFECT_KEYS through this map instead of keeping its own hardcoded row
+ * lists, so a future EffectKey can't type-check and ship without a visible
+ * settings row — tests/lib/domain/fx.test.mjs asserts every key here has
+ * exactly one section. */
+export const EFFECT_SECTIONS: Record<EffectKey, SettingsSection> = {
+  tapSpark: "basic",
+  completion: "basic",
+  morningGreeting: "more",
+  openFlourish: "more",
+  ambientParticles: "more",
+  pageTransitions: "more",
+};
+
 export const DEFAULT_EFFECT_PREFS: Record<EffectKey, boolean> = {
   tapSpark: true,
   completion: true,

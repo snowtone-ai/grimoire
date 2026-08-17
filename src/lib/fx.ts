@@ -15,13 +15,15 @@ import {
   DEFAULT_EFFECT_PREFS,
   EFFECT_KEYS,
   EFFECT_LABELS,
+  EFFECT_SECTIONS,
   resolveEffect,
   type EffectKey,
   type EffectLabel,
+  type SettingsSection,
 } from "./domain/fx.ts";
 
-export { DEFAULT_EFFECT_PREFS, EFFECT_KEYS, EFFECT_LABELS };
-export type { EffectKey, EffectLabel };
+export { DEFAULT_EFFECT_PREFS, EFFECT_KEYS, EFFECT_LABELS, EFFECT_SECTIONS };
+export type { EffectKey, EffectLabel, SettingsSection };
 
 const STORAGE_KEY: Record<EffectKey, string> = {
   tapSpark: "fx-tap-enabled",

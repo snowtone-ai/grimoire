@@ -74,17 +74,14 @@ export function OpenFlourish() {
   }
 
   return (
-    <button
-      type="button"
-      autoFocus
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="アプリ起動演出"
       className={`open-flourish fixed inset-0 z-[90] flex w-full flex-col items-center justify-center bg-black/70 ${
         phase === "closing" ? "open-flourish-closing" : ""
       }`}
-      aria-label="演出をスキップ"
       onClick={dismiss}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") dismiss();
-      }}
     >
       <GraceParticles preset="open" />
       <div className="relative flex h-[62vmin] w-[62vmin] max-h-[380px] max-w-[380px] items-center justify-center">
@@ -121,9 +118,17 @@ export function OpenFlourish() {
         </div>
       </div>
 
-      <p className="open-flourish-skip absolute bottom-10 text-[11px] text-white/60">
+      <button
+        type="button"
+        autoFocus
+        onClick={dismiss}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") dismiss();
+        }}
+        className="open-flourish-skip absolute bottom-10 text-[11px] text-white/60"
+      >
         タップしてスキップ
-      </p>
-    </button>
+      </button>
+    </div>
   );
 }

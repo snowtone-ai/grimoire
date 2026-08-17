@@ -4,6 +4,7 @@ import {
   DEFAULT_EFFECT_PREFS,
   EFFECT_KEYS,
   EFFECT_LABELS,
+  EFFECT_SECTIONS,
   resolveEffect,
 } from "../../../src/lib/domain/fx.ts";
 
@@ -39,6 +40,20 @@ test("resolveEffect falls back to the key's own default for an absent stored val
 test("resolveEffect honors an explicit stored value when reducedMotion is false", () => {
   assert.equal(resolveEffect("tapSpark", false, false), false);
   assert.equal(resolveEffect("openFlourish", true, false), true);
+});
+
+test("every effect key has exactly one settings-screen section, and vice versa", () => {
+  for (const key of EFFECT_KEYS) {
+    assert.ok(
+      EFFECT_SECTIONS[key] === "basic" || EFFECT_SECTIONS[key] === "more",
+      `missing/invalid section for ${key}`
+    );
+  }
+  assert.equal(
+    Object.keys(EFFECT_SECTIONS).length,
+    EFFECT_KEYS.length,
+    "EFFECT_SECTIONS has an entry for a key that no longer exists, or is missing one"
+  );
 });
 
 test("EFFECT_LABELS has a non-empty label and description for every key", () => {

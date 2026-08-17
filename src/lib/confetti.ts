@@ -21,7 +21,7 @@
  */
 
 import confetti from "canvas-confetti";
-import { isEffectEnabled } from "./fx.ts";
+import { isEffectEnabled, prefersReducedMotion } from "./fx.ts";
 import { rarityStyle, type RarityBand } from "./domain/rarity-style.ts";
 
 /* canvas-confetti draws straight onto document.body, outside React's tree, so a
@@ -134,9 +134,16 @@ function replayTwinkle(rarity: number): confetti.Options {
 }
 
 /** /book replay effect: a single gentle twinkle, distinct in shape and motion
- * from fireDropConfetti's star bursts, colored by the tapped item's rarity. */
+ * from fireDropConfetti's star bursts, colored by the tapped item's rarity.
+ * Deliberately NOT gated by isEffectEnabled("completion") (D-036, unchanged
+ * by T036): the user tapped an already-collected entry on purpose to look
+ * back at it, which the settings screen promises always works "regardless of
+ * this setting" — that promise has to hold for the twinkle too, not just for
+ * the reveal card underneath it. OS reduced-motion is a different kind of
+ * signal (accessibility, not taste) and still applies, same as every other
+ * visual effect in the app. */
 export function fireReplayEffect(rarity: number): () => void {
-  if (!isEffectEnabled("completion")) return noop;
+  if (prefersReducedMotion()) return noop;
   return fireSequence([() => confetti(replayTwinkle(rarity))], 0);
 }
 
