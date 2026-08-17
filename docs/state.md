@@ -14,13 +14,20 @@
   service-worker cache (task-manager-v6) serving an old settings-screen
   bundle, not a real defect — resolved by unregistering the SW and clearing
   caches.storage from the test browser context; worth remembering this app's
-  SW can mask fresh deploys during dev-server testing. Tier 1 fresh-context
-  reviewer (Opus 5) dispatched, pending. Next steps once reviewer returns:
-  address any findings, then explicit owner sign-off before merge (production
-  auto-deploys on merge). Write scope: see tasks.md T036 row (touches fx.ts
-  domain+browser layers, confetti/spark/sound, drop-reveal, plant snowfall,
-  settings screen, 3 new src/components/fx/ files, bottom-nav, layout.tsx,
-  globals.css).
+  SW can mask fresh deploys during dev-server testing (bit again mid-fix
+  verification — same unregister+cache-clear recovery, now written up in
+  .claude/rules/pwa-dev-testing.md). Tier 1 fresh-context reviewer (Opus 5)
+  returned FAIL on a reduced-motion accessibility bug plus 4 should-fix
+  items; all 5 fixed and 2 of its minor findings addressed alongside them
+  — see tasks.md T036 Evidence for the full list. Re-verified: pnpm verify
+  green, plus targeted browser checks of the two highest-risk fixes
+  (reduced-motion shine opacity, fx-intensity->six-toggle migration for
+  both "quiet" and "lively" starting states). MERGE GATE: not yet cleared —
+  next step is explicit owner sign-off (production auto-deploys on merge),
+  same precedent as T031-033/T035. Write scope: see tasks.md T036 row
+  (touches fx.ts domain+browser layers, confetti/spark/sound, drop-reveal,
+  plant snowfall, settings screen, 3 new src/components/fx/ files,
+  bottom-nav, layout.tsx, globals.css, docs/repo-map.md).
 - 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
   Two user-reported defects: /settings had no way to turn notifications back off
   once granted (browser permission is a one-way ratchet, so a new app-level

@@ -6,6 +6,7 @@ import { getRarityLabel } from "@/lib/domain/drops";
 import { rarityStyle } from "@/lib/domain/rarity-style";
 import { type GrantResult } from "@/lib/rewardDb";
 import { GraceParticles } from "@/components/fx/grace-particles";
+import { isEffectEnabled } from "@/lib/fx";
 
 // Dwell time is sized to READ the card, not to flash it (D-036). The card shows
 // seven pieces of information (banner, art, rarity badge, NEW, name, flavor
@@ -34,9 +35,15 @@ export function DropReveal({
   // Anticipation: a short pre-flip hold, scaled slightly by rank (a higher
   // rank gets a slightly longer held breath before it starts moving).
   const holdMs = 60 + grant.rarity * 5;
-  const spring = grant.rarity >= 4;
-  const shine = grant.rarity >= 6;
-  const glow = grant.rarity >= 6;
+  // The card itself always shows (D-036: it's information, not decoration),
+  // but the juice layered on top of it this round (spring-settle, shine
+  // sweep, glow pulse, rank-8 particles) is exactly what 完了エフェクト
+  // ("completion") toggles off elsewhere, so it must respect that choice too.
+  const juiceEnabled = isEffectEnabled("completion");
+  const spring = juiceEnabled && grant.rarity >= 4;
+  const shine = juiceEnabled && grant.rarity >= 6;
+  const glow = juiceEnabled && grant.rarity >= 6;
+  const particles = juiceEnabled && grant.rarity === 8;
 
   useEffect(() => {
     if (replay) return;
@@ -51,7 +58,7 @@ export function DropReveal({
       aria-live="polite"
       onClick={onDismiss}
     >
-      {grant.rarity === 8 && <GraceParticles preset="reveal" />}
+      {particles && <GraceParticles preset="reveal" />}
       <div className="relative w-full max-w-[280px]">
         {glow && (
           <div

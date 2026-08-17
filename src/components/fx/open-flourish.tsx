@@ -25,26 +25,35 @@ import { GraceParticles } from "./grace-particles";
 
 const SESSION_KEY = "grimoire-flourish-shown";
 const AUTO_DISMISS_MS = 2600;
+const CLOSE_DURATION_MS = 400;
+
+type Phase = "hidden" | "shown" | "closing";
 
 export function OpenFlourish() {
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<Phase>("hidden");
 
   useEffect(() => {
     if (!isEffectEnabled("openFlourish")) return;
-    try {
-      if (sessionStorage.getItem(SESSION_KEY) === "1") return;
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      // sessionStorage unavailable: fall through and show it anyway, once per mount.
-    }
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     // Deferred to a microtask: setting state straight from an effect body
     // triggers a cascading render (react-hooks/set-state-in-effect, see T013).
+    // The sessionStorage check-and-claim also lives inside this microtask
+    // (not synchronously in the effect body) so that React 19 dev/StrictMode's
+    // mount->cleanup->mount double-invoke doesn't let the first, doomed mount
+    // claim the token before its cleanup sets `cancelled`, which would leave
+    // the second mount seeing the token already spent and never showing the
+    // flourish at all.
     Promise.resolve().then(() => {
       if (cancelled) return;
-      setVisible(true);
-      timer = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
+      try {
+        if (sessionStorage.getItem(SESSION_KEY) === "1") return;
+        sessionStorage.setItem(SESSION_KEY, "1");
+      } catch {
+        // sessionStorage unavailable: fall through and show it anyway, once per mount.
+      }
+      setPhase("shown");
+      timer = setTimeout(() => setPhase("closing"), AUTO_DISMISS_MS);
     });
     return () => {
       cancelled = true;
@@ -52,16 +61,25 @@ export function OpenFlourish() {
     };
   }, []);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (phase !== "closing") return;
+    const timer = setTimeout(() => setPhase("hidden"), CLOSE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  if (phase === "hidden") return null;
 
   function dismiss() {
-    setVisible(false);
+    setPhase("closing");
   }
 
   return (
     <button
       type="button"
-      className="open-flourish fixed inset-0 z-[90] flex w-full flex-col items-center justify-center bg-black/70"
+      autoFocus
+      className={`open-flourish fixed inset-0 z-[90] flex w-full flex-col items-center justify-center bg-black/70 ${
+        phase === "closing" ? "open-flourish-closing" : ""
+      }`}
       aria-label="演出をスキップ"
       onClick={dismiss}
       onKeyDown={(event) => {

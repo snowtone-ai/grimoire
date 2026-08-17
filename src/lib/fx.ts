@@ -32,6 +32,38 @@ const STORAGE_KEY: Record<EffectKey, string> = {
   pageTransitions: "fx-transitions-enabled",
 };
 
+const OLD_INTENSITY_KEY = "fx-intensity";
+let migrated = false;
+
+/** One-shot migration from the retired quiet/normal/lively dial (D-036) to the
+ * six independent toggles (D-039). Only the three effects that existed under
+ * the old model are mapped explicitly; the three brand-new ones
+ * (openFlourish/ambientParticles/pageTransitions) simply keep their
+ * off-by-default state, which is what a "quiet" or "normal" user would have
+ * gotten anyway. Without this, a user who had explicitly chosen "quiet" would
+ * silently get tapSpark/completion turned back on after this deploy — the
+ * wrong direction for the ADHD persona D-039 exists to protect. Guarded so it
+ * only touches storage once per page load, and only if the new keys haven't
+ * already been set (e.g. by a previous run of this same migration). */
+function migrateFromIntensity(): void {
+  if (migrated) return;
+  migrated = true;
+  try {
+    const old = localStorage.getItem(OLD_INTENSITY_KEY);
+    if (old === null) return;
+    const alreadyChosen = EFFECT_KEYS.some((key) => localStorage.getItem(STORAGE_KEY[key]) !== null);
+    if (!alreadyChosen) {
+      const enabled = old !== "quiet"; // "normal" and "lively" both had tapSpark/completion on
+      localStorage.setItem(STORAGE_KEY.tapSpark, enabled ? "1" : "0");
+      localStorage.setItem(STORAGE_KEY.completion, enabled ? "1" : "0");
+      localStorage.setItem(STORAGE_KEY.morningGreeting, old === "lively" ? "1" : "0");
+    }
+    localStorage.removeItem(OLD_INTENSITY_KEY);
+  } catch {
+    // Preference storage is best-effort.
+  }
+}
+
 /** OS-level prefers-reduced-motion, guarded for SSR and any matchMedia throw. */
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
@@ -43,6 +75,7 @@ export function prefersReducedMotion(): boolean {
 }
 
 function readStored(key: EffectKey): boolean | null {
+  migrateFromIntensity();
   try {
     const raw = localStorage.getItem(STORAGE_KEY[key]);
     if (raw === "1") return true;

@@ -680,9 +680,12 @@ html[data-page-turn] .task-vt {
   .animate-pop-in,
   .animate-check-pop,
   .animate-breathe,
-  .drop-reveal,
+  .drop-reveal {
+    animation: none !important;
+  }
   .drop-reveal-shine {
     animation: none !important;
+    opacity: 0;
   }
   .drop-reveal-glow::after {
     animation: none !important;
@@ -853,6 +856,20 @@ html[data-page-turn] .task-vt {
 .open-flourish {
   animation: open-flourish-fade 0.5s var(--ease-fluid) both;
   cursor: pointer;
+}
+
+@keyframes open-flourish-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.open-flourish-closing {
+  animation: open-flourish-fade-out 0.4s var(--ease-fluid) both;
+  pointer-events: none;
 }
 
 @keyframes open-flourish-draw {

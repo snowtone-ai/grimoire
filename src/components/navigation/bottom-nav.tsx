@@ -3,7 +3,7 @@
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { BookOpen, Calendar, Home, Sprout } from "lucide-react";
-import { isEffectEnabled } from "@/lib/fx";
+import { getStoredEffectPref, isEffectEnabled } from "@/lib/fx";
 import { playPage } from "@/lib/sound";
 
 const NAV_ITEMS = [
@@ -78,7 +78,12 @@ export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
               aria-current={isActive ? "page" : undefined}
               onClick={() => {
                 if (isActive) return;
-                playPage(isEffectEnabled("pageTransitions") ? item.theme : undefined);
+                // The per-page sound identity follows the user's own stored
+                // choice, not isEffectEnabled's reduced-motion override:
+                // reduced-motion is a visual signal (it does silence the CSS
+                // page-turn theme below), and sound already has its own
+                // separate, motion-independent toggle by design (see fx.ts).
+                playPage(getStoredEffectPref("pageTransitions") ? item.theme : undefined);
                 markPageTurn(resolvedPath, item.href, item.theme);
               }}
               className="group flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5"
