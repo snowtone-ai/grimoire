@@ -9,6 +9,7 @@ import {
 } from "./domain/reminders.ts";
 
 const DELIVERED_KEY = "notif-delivered";
+const ENABLED_KEY = "notif-enabled";
 const ICON = "/icons/icon-192x192.png";
 
 function dateString(offsetDays: number = 0): string {
@@ -39,8 +40,38 @@ function canNotify(): boolean {
     typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
     "Notification" in window &&
-    Notification.permission === "granted"
+    Notification.permission === "granted" &&
+    getNotificationsEnabled()
   );
+}
+
+/** App-level on/off, independent of the browser's Notification permission.
+ * Browsers give a site no way to revoke a "granted" permission itself (only
+ * the user can, from site settings), so once permission is granted the app's
+ * own preference is the only ON/OFF switch that can ever exist for it —
+ * mirrors sound.ts's fx-enabled flag. Defaults to on so already-granted users
+ * are not silently opted out by this flag's introduction. */
+export function getNotificationsEnabled(): boolean {
+  try {
+    return localStorage.getItem(ENABLED_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+/** Also (re)schedules or halts catch-up delivery so the toggle takes effect
+ * immediately, rather than waiting for the next unrelated sync trigger. */
+export function setNotificationsEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(ENABLED_KEY, enabled ? "1" : "0");
+  } catch {
+    // Preference storage is best-effort, matching sound.ts's fx-enabled flag.
+  }
+  if (enabled) {
+    void syncTaskNotifications();
+  } else {
+    clearTimeout(pageTimer);
+  }
 }
 
 function readDelivered(): DeliveredLedger {

@@ -1,10 +1,21 @@
 /* Confetti bursts — frost & ember star palette, scaled by the effects preset.
  *
- * Extracted from use-home-screen so /book can replay a drop's moment with the
- * same visuals the original completion had (D-036). Every burst goes through the
- * current FxProfile, so "しずか" produces nothing at all and "にぎやか" both
- * throws more particles and adds a second wave — the second wave is what answers
- * the report that the confetti was over before the reward card had been read.
+ * Extracted from use-home-screen so /book can replay a drop's moment (D-036).
+ * Every burst goes through the current FxProfile, so "しずか" produces nothing
+ * at all and "にぎやか" both throws more particles and adds a second wave — the
+ * second wave is what answers the report that the confetti was over before the
+ * reward card had been read.
+ *
+ * Replay (tapping an already-collected item in /book) deliberately uses a
+ * different burst than task completion: VoC feedback was that seeing the same
+ * "quest clear" star-shower for an idle browse of the collection made the two
+ * feel identical, when one is an achievement moment and the other is a look
+ * back at something already earned. fireReplayEffect swaps stars for a gentler
+ * radial twinkle and — since the request was for the RARE ladder to read
+ * distinctly there too, not just be a single recolored effect — keys its color
+ * to the tapped item's own rarity rank, ascending through the same
+ * neutral -> green -> cool -> ember -> gold language the /book badges and
+ * drop-reveal ring already use (see RARITY_STYLE in drop-reveal.tsx).
  *
  * Reduced motion needs no separate check here: getFxIntensity() already forces
  * the quiet profile when the OS asks for reduced motion.
@@ -99,6 +110,47 @@ export function fireDropConfetti(rarity: number): () => void {
   const { confettiWaves, confettiScale } = currentFxProfile();
   if (confettiWaves < 1) return noop;
   return fireWaves(confettiWaves, () => confetti(dropBurst(rarity, confettiScale)));
+}
+
+/** One color per RARE rank, ascending along the same ramp as the /book badges
+ * and drop-reveal ring (RARITY_STYLE): neutral -> green -> frost -> job-blue ->
+ * life-purple -> ember -> deep ember -> gold. */
+const RARITY_TWINKLE_COLOR: Record<number, string> = {
+  1: "#9ca3af",
+  2: "#22c55e",
+  3: "#38bdf8",
+  4: "#60a5fa",
+  5: "#c084fc",
+  6: "#fb923c",
+  7: "#ea580c",
+  8: "#fbbf24",
+};
+
+/** Gentle radial twinkle: circles (not stars), falling outward from center
+ * rather than launched upward, scaled by rank in reach and count only — the
+ * shape and motion stay the same across ranks so it always reads as "replay",
+ * distinguishing rank through color and size alone. */
+function replayTwinkle(rarity: number, factor: number): confetti.Options {
+  const color = RARITY_TWINKLE_COLOR[rarity] ?? RARITY_TWINKLE_COLOR[1];
+  return {
+    particleCount: scale(14 + rarity * 3, factor),
+    startVelocity: 10 + rarity,
+    spread: 360,
+    ticks: 90,
+    gravity: 0.5,
+    scalar: 0.5 + rarity * 0.04,
+    shapes: ["circle"],
+    origin: { y: 0.42 },
+    colors: [color, "#ffffff"],
+  };
+}
+
+/** /book replay effect: a single gentle twinkle, distinct in shape and motion
+ * from fireDropConfetti's star bursts, colored by the tapped item's rarity. */
+export function fireReplayEffect(rarity: number): () => void {
+  const { confettiWaves, confettiScale } = currentFxProfile();
+  if (confettiWaves < 1) return noop;
+  return fireWaves(1, () => confetti(replayTwinkle(rarity, confettiScale)));
 }
 
 export function fireAllCompleteConfetti(): () => void {

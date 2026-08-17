@@ -2,7 +2,7 @@
 
 import { Link } from "next-view-transitions";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Download, RotateCcw, Upload, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, Download, RotateCcw, Upload, Volume2, VolumeX } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
   buildBackupJson,
@@ -21,8 +21,10 @@ import {
 } from "@/lib/fx";
 import {
   getNotificationPermission,
+  getNotificationsEnabled,
   requestNotificationPermission,
   sendTestNotification,
+  setNotificationsEnabled,
   syncTaskNotifications,
   type NotificationPermissionState,
 } from "@/lib/notifications";
@@ -223,9 +225,15 @@ function SoundSection() {
   );
 }
 
+/* Once the browser grants Notification permission there is no API to revoke
+ * it again — only the user can, from browser site settings. So "granted" is
+ * not itself an ON state; it only unlocks the app's own preference, toggled
+ * the same way as effects (below), which is the only ON/OFF switch that can
+ * ever exist here. */
 function NotificationSection() {
   const [permission, setPermission] =
     useState<NotificationPermissionState>(getNotificationPermission);
+  const [enabled, setEnabled] = useState(getNotificationsEnabled);
   const [busy, setBusy] = useState(false);
   const [testSent, setTestSent] = useState(false);
   const testTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -238,12 +246,23 @@ function NotificationSection() {
     try {
       const result = await requestNotificationPermission();
       setPermission(result);
-      if (result === "granted") await syncTaskNotifications();
+      if (result === "granted") {
+        setNotificationsEnabled(true);
+        setEnabled(true);
+        await syncTaskNotifications();
+      }
     } catch (err) {
       console.error("[settings] notification request failed:", err);
     } finally {
       setBusy(false);
     }
+  }
+
+  function toggleEnabled() {
+    const next = !enabled;
+    setNotificationsEnabled(next);
+    setEnabled(next);
+    playTap();
   }
 
   async function handleTest() {
@@ -284,16 +303,50 @@ function NotificationSection() {
 
       {permission === "granted" && (
         <div className="mt-3 space-y-2">
-          <p className="rounded-xl bg-success-soft px-3 py-2 text-sm font-medium text-success">
-            通知は有効です
-          </p>
           <button
             type="button"
-            onClick={handleTest}
-            className="btn-squish w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+            onClick={toggleEnabled}
+            aria-pressed={enabled}
+            className="btn-squish flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
           >
-            {testSent ? "✓ 送信しました！" : "テスト通知を送る"}
+            <span
+              className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+                enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {enabled ? <Bell className="size-5" /> : <BellOff className="size-5" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-foreground">締切通知</span>
+              <span className="block text-xs text-muted-foreground">
+                {enabled
+                  ? "有効です。オフにするとお知らせを止められます"
+                  : "オフになっています"}
+              </span>
+            </span>
+            <span
+              aria-hidden
+              className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
+                enabled ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`block size-5 rounded-full bg-background transition-transform ${
+                  enabled ? "translate-x-5" : ""
+                }`}
+              />
+            </span>
           </button>
+
+          {enabled && (
+            <button
+              type="button"
+              onClick={handleTest}
+              className="btn-squish w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              {testSent ? "✓ 送信しました！" : "テスト通知を送る"}
+            </button>
+          )}
         </div>
       )}
     </SettingsSection>
