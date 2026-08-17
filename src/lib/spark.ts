@@ -8,32 +8,59 @@
  * It is a single delegated pointerdown listener rather than a prop on every
  * button: the app already marks every pressable control with `btn-squish`, so
  * one listener covers every screen and no component has to opt in. The spark
- * element removes itself when its animation ends, so nothing accumulates.
+ * group removes itself when its animation ends, so nothing accumulates.
  *
- * Gated by the effects preset — "しずか" (and therefore OS reduced-motion, which
- * forces that preset) produces nothing.
+ * T036 juice pass: the single core flash now flings 2 small motes outward at
+ * randomized angles alongside it (secondary motion) — the same "one physical
+ * material springing apart" idea `.btn-squish` already uses, just on a smaller
+ * scale. Both mote angle and reach are randomized per tap so repeated presses
+ * don't read as a mechanical loop.
+ *
+ * Gated by the "タップの光" effect toggle — off (or OS reduced-motion, which
+ * forces every visual effect off) produces nothing.
  */
 
-import { currentFxProfile } from "./fx.ts";
+import { isEffectEnabled } from "./fx.ts";
 
-const SPARK_CLASS = "tap-spark";
 let attached = false;
 
+const MOTE_COUNT = 2;
+const MOTE_DIST_MIN = 14;
+const MOTE_DIST_MAX = 26;
+
 function spawnSpark(x: number, y: number): void {
-  const spark = document.createElement("span");
-  spark.className = SPARK_CLASS;
-  spark.setAttribute("aria-hidden", "true");
-  spark.style.left = `${x}px`;
-  spark.style.top = `${y}px`;
-  spark.addEventListener("animationend", () => spark.remove(), { once: true });
-  document.body.append(spark);
+  const group = document.createElement("span");
+  group.className = "tap-spark-group";
+  group.setAttribute("aria-hidden", "true");
+  group.style.left = `${x}px`;
+  group.style.top = `${y}px`;
+
+  const core = document.createElement("span");
+  core.className = "tap-spark";
+  group.append(core);
+
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    const mote = document.createElement("span");
+    mote.className = "tap-spark-mote";
+    const angle = Math.random() * 360;
+    const dist = MOTE_DIST_MIN + Math.random() * (MOTE_DIST_MAX - MOTE_DIST_MIN);
+    mote.style.setProperty("--angle", `${angle}deg`);
+    mote.style.setProperty("--dist", `${dist}px`);
+    group.append(mote);
+  }
+
+  // Listen on the core specifically, not the group: `animationend` bubbles
+  // from any child, and the motes (0.4s) finish before the core (0.42s), so a
+  // group-level listener would remove the whole node mid-flash.
+  core.addEventListener("animationend", () => group.remove(), { once: true });
+  document.body.append(group);
   // Belt and braces: if the animation never fires (element hidden, animations
   // disabled mid-flight), still drop the node rather than leak it.
-  setTimeout(() => spark.remove(), 800);
+  setTimeout(() => group.remove(), 800);
 }
 
 function onPointerDown(event: PointerEvent): void {
-  if (!currentFxProfile().microFeedback) return;
+  if (!isEffectEnabled("tapSpark")) return;
   const target = event.target;
   if (!(target instanceof Element)) return;
   if (!target.closest(".btn-squish")) return;

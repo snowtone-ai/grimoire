@@ -9,6 +9,7 @@ import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain
 import { playTap } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { DropReveal } from "@/components/reward/drop-reveal";
+import { GraceParticles } from "@/components/fx/grace-particles";
 import { BountyBoard } from "./bounty-board";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
@@ -27,7 +28,11 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {screen.showMorningLight && <div className="morning-light" aria-hidden />}
+      {screen.showMorningLight && (
+        <div className="morning-light" aria-hidden>
+          <GraceParticles preset="morning" />
+        </div>
+      )}
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
           <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">

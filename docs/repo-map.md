@@ -13,8 +13,8 @@
 - Primary source directory: src/.
 - Primary test directory: tests/.
 - Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/book/page.tsx, src/app/settings/page.tsx, src/app/layout.tsx.
-- Reward core: src/lib/domain/drops.ts, src/lib/rewardDb.ts, src/lib/sound.ts.
-- Presentation/effects core: src/lib/domain/fx.ts (intensity presets), src/lib/fx.ts, src/lib/confetti.ts, src/lib/spark.ts.
+- Reward core: src/lib/domain/drops.ts, src/lib/rewardDb.ts, src/lib/sound.ts, src/lib/domain/rarity-style.ts.
+- Presentation/effects core: src/lib/domain/fx.ts (per-effect ON/OFF toggles), src/lib/fx.ts, src/lib/confetti.ts, src/lib/spark.ts, src/components/fx/.
 - Verification command: pnpm verify.
 
 ## Directory Map
@@ -37,10 +37,11 @@
 | Home | src/app/page.tsx | Main quest (task) view + drop reveal. |
 | Plant | src/app/plant/page.tsx | Botanical research (monthly growth) view. |
 | Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia); tapping a collected entry replays its reveal. |
-| Settings | src/app/settings/page.tsx | Effects intensity, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
-| Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider. |
-| Sound | src/lib/sound.ts | Web-Audio synthesized SFX + haptics (single pentatonic palette). |
-| Effects preset | src/lib/domain/fx.ts | quiet/normal/lively profiles; OS reduced-motion always forces quiet. |
+| Settings | src/app/settings/page.tsx | Per-effect ON/OFF toggles, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
+| Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider, mounts GraceParticlesGate + OpenFlourish. |
+| Sound | src/lib/sound.ts | Web-Audio synthesized SFX + haptics (single pentatonic palette), playPage(theme) per-route identity. |
+| Effects model | src/lib/domain/fx.ts | Six independent EffectKey toggles (tapSpark/completion/morningGreeting/openFlourish/ambientParticles/pageTransitions); OS reduced-motion always forces all six off, sound stays on its own separate fx-enabled toggle. |
+| Ambient/arrival fx | src/components/fx/ | grace-particles.tsx (shared particle primitive), grace-particles-gate.tsx (background layer, excludes /plant), open-flourish.tsx (app-open arrival overlay). |
 | Verification | scripts/verify.mjs | Unified local checks. |
 
 ## Common Workflows

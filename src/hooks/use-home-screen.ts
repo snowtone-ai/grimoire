@@ -40,7 +40,7 @@ import {
   playUndo,
   primeAudioOnFirstGesture,
 } from "@/lib/sound";
-import { currentFxProfile } from "@/lib/fx";
+import { isEffectEnabled } from "@/lib/fx";
 
 /** Set once the user has been asked about notifications, so the home screen
  * asks at most once ever rather than on every all-clear. */
@@ -50,14 +50,15 @@ const NOTIF_PROMPT_KEY = "notif-prompt-shown";
  * open the app early — 「朝8時までにタスクチェックのために開いたら…朝の音がなるとか
  * 光が差すとか」. It is ambient, never a modal: F-1 promises the day's quests are
  * visible the instant the app opens, so nothing may sit in front of them. Once
- * per day, before MORNING_UNTIL_HOUR, and only on the "にぎやか" preset. */
+ * per day, before MORNING_UNTIL_HOUR, and only when the "朝のあいさつ演出" toggle
+ * is on (T036: replaces the old "にぎやか"-only gate). */
 const MORNING_UNTIL_HOUR = 8;
 const MORNING_KEY = "morning-greeted";
 /** Matches the .morning-light animation in globals.css. */
 const MORNING_LIGHT_MS = 4200;
 
 function shouldGreetMorning(today: string): boolean {
-  if (!currentFxProfile().morningAmbience) return false;
+  if (!isEffectEnabled("morningGreeting")) return false;
   if (new Date().getHours() >= MORNING_UNTIL_HOUR) return false;
   try {
     if (localStorage.getItem(MORNING_KEY) === today) return false;

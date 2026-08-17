@@ -3,6 +3,8 @@ import { Cinzel } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
+import { GraceParticlesGate } from "@/components/fx/grace-particles-gate";
+import { OpenFlourish } from "@/components/fx/open-flourish";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -56,6 +58,8 @@ export default function RootLayout({
         </head>
         <body className="min-h-full flex flex-col">
           <PwaRegister />
+          <GraceParticlesGate />
+          <OpenFlourish />
           {children}
         </body>
       </html>
