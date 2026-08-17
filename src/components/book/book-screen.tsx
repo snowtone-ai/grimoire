@@ -20,7 +20,7 @@ import {
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
-import { fireDropConfetti } from "@/lib/confetti";
+import { fireReplayEffect } from "@/lib/confetti";
 import { playClear } from "@/lib/sound";
 
 export function BookScreen() {
@@ -52,7 +52,7 @@ export function BookScreen() {
   const handleReplay = useCallback((drop: DropDef) => {
     cancelConfettiRef.current(); // supersede any wave still pending from the last tap
     playClear(drop.rarity);
-    cancelConfettiRef.current = fireDropConfetti(drop.rarity);
+    cancelConfettiRef.current = fireReplayEffect(drop.rarity);
     setReplayDrop(drop);
   }, []);
 
