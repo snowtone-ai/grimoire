@@ -1,38 +1,19 @@
 # state.md
 
 ## Current
-- 2026-08-17: T036 on feat/aaa-fx-rebuild, base main @ c07d510 (T035), PR #29
-  open. Full effects rebuild (D-038, D-039) — see tasks.md T036 for the
-  complete description. pnpm verify green (lint/typecheck/81 tests/build); CI
-  green on PR #29 (verify job + Vercel preview). Browser smoke complete via
-  Playwright — see tasks.md T036 Evidence for the full list (toggle
-  persistence, reduced-motion hard-override confirmed effect-by-effect while
-  sound stayed independent, /plant particle exclusion, live confetti/
-  drop-reveal fired via a real task+bounty completion, 0 console errors
-  throughout). Test task and screenshot files cleaned up after. Note: an
-  early smoke attempt hit a false-positive runtime error from a stale PWA
-  service-worker cache (task-manager-v6) serving an old settings-screen
-  bundle, not a real defect — resolved by unregistering the SW and clearing
-  caches.storage from the test browser context; worth remembering this app's
-  SW can mask fresh deploys during dev-server testing (bit again mid-fix
-  verification — same unregister+cache-clear recovery, now written up in
-  .claude/rules/pwa-dev-testing.md). Tier 1 fresh-context reviewer (Opus 5)
-  returned FAIL on a reduced-motion accessibility bug plus 4 should-fix
-  items; all 5 fixed and 2 of its minor findings addressed alongside them
-  — see tasks.md T036 Evidence for the full list. Re-verified: pnpm verify
-  green, plus targeted browser checks of the two highest-risk fixes
-  (reduced-motion shine opacity, fx-intensity->six-toggle migration for
-  both "quiet" and "lively" starting states). Owner reviewed the sign-off
-  request and asked for all remaining Tier 1 findings to be addressed too,
-  plus a UI request (notification permission button restyled to match the
-  other toggle rows) — see tasks.md T036 Evidence and docs/decisions.md
-  D-040 for the 9 additional fixes and 2 documented accepted tradeoffs.
-  pnpm verify re-confirmed green (82/82 tests). MERGE GATE: still open —
-  re-requesting owner sign-off next, same precedent as T031-033/T035.
-  Write scope: see tasks.md T036 row (touches fx.ts domain+browser layers,
-  confetti/spark/sound, drop-reveal, plant snowfall, settings screen, 3 new
-  src/components/fx/ files, bottom-nav, layout.tsx, globals.css,
-  docs/repo-map.md).
+- 2026-08-17: T036 shipped — full effects rebuild (D-038 background
+  particles, D-039 per-effect toggles replacing the old intensity dial,
+  D-040 Tier 1 review fixes). Squash-merged via PR #29 to main (1bb8c8e),
+  branch feat/aaa-fx-rebuild deleted, CI green on the merge commit, Vercel
+  production deployment confirmed via the GitHub deployments API. Full
+  narrative in tasks.md T036 (Evidence column has the complete browser-
+  smoke and review-fix record); write scope there too (fx.ts domain+
+  browser layers, confetti/spark/sound, drop-reveal, plant snowfall,
+  settings screen, 3 new src/components/fx/ files, bottom-nav, layout.tsx,
+  globals.css, docs/repo-map.md). Notable operational note from this task:
+  this app's PWA service worker can mask fresh dev-server builds during
+  browser smoke testing with a misleading stale-bundle error — see
+  .claude/rules/pwa-dev-testing.md for the unregister+cache-clear recovery.
 - 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
   Two user-reported defects: /settings had no way to turn notifications back off
   once granted (browser permission is a one-way ratchet, so a new app-level
