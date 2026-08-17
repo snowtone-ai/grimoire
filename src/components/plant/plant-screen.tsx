@@ -107,14 +107,14 @@ export function PlantScreen() {
 /* Eight slow flakes with staggered lanes — ambient, never busy.
  * Hidden entirely under prefers-reduced-motion (globals.css). */
 const SNOWFLAKES = [
-  { left: "6%", size: 3, dur: 17, delay: -3, sway: 26 },
-  { left: "18%", size: 2, dur: 21, delay: -11, sway: -18 },
-  { left: "31%", size: 4, dur: 14, delay: -6, sway: 32 },
-  { left: "44%", size: 2, dur: 23, delay: -1, sway: -24 },
-  { left: "58%", size: 3, dur: 16, delay: -9, sway: 20 },
-  { left: "70%", size: 2, dur: 20, delay: -14, sway: -30 },
-  { left: "83%", size: 4, dur: 15, delay: -5, sway: 22 },
-  { left: "93%", size: 2, dur: 22, delay: -17, sway: -16 },
+  { left: "6%", size: 3, dur: 17, delay: -3, sway: 26, twinkleDur: 3.1, tint: false },
+  { left: "18%", size: 2, dur: 21, delay: -11, sway: -18, twinkleDur: 3.8, tint: true },
+  { left: "31%", size: 4, dur: 14, delay: -6, sway: 32, twinkleDur: 2.9, tint: false },
+  { left: "44%", size: 2, dur: 23, delay: -1, sway: -24, twinkleDur: 3.4, tint: false },
+  { left: "58%", size: 3, dur: 16, delay: -9, sway: 20, twinkleDur: 3.6, tint: true },
+  { left: "70%", size: 2, dur: 20, delay: -14, sway: -30, twinkleDur: 3.2, tint: false },
+  { left: "83%", size: 4, dur: 15, delay: -5, sway: 22, twinkleDur: 4.0, tint: true },
+  { left: "93%", size: 2, dur: 22, delay: -17, sway: -16, twinkleDur: 3.5, tint: false },
 ] as const;
 
 function Snowfall() {
@@ -123,7 +123,7 @@ function Snowfall() {
       {SNOWFLAKES.map((flake) => (
         <span
           key={flake.left}
-          className="snowflake"
+          className={`snowflake${flake.tint ? " snowflake-tint" : ""}`}
           style={{
             left: flake.left,
             width: flake.size,
@@ -131,6 +131,7 @@ function Snowfall() {
             "--dur": `${flake.dur}s`,
             "--delay": `${flake.delay}s`,
             "--sway": `${flake.sway}px`,
+            "--twinkle-dur": `${flake.twinkleDur}s`,
           } as CSSProperties}
         />
       ))}

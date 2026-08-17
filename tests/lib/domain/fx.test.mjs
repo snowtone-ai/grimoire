@@ -1,81 +1,50 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_FX_INTENSITY,
-  FX_INTENSITIES,
-  FX_INTENSITY_LABELS,
-  fxProfile,
-  parseIntensity,
-  resolveIntensity,
+  DEFAULT_EFFECT_PREFS,
+  EFFECT_KEYS,
+  EFFECT_LABELS,
+  resolveEffect,
 } from "../../../src/lib/domain/fx.ts";
 
-test("every intensity produces a profile", () => {
-  for (const intensity of FX_INTENSITIES) {
-    const profile = fxProfile(intensity);
-    assert.equal(typeof profile.microFeedback, "boolean");
-    assert.equal(typeof profile.confettiWaves, "number");
-    assert.equal(typeof profile.confettiScale, "number");
-    assert.equal(typeof profile.celebrationScale, "number");
-    assert.equal(typeof profile.morningAmbience, "boolean");
+test("every effect key has a boolean default", () => {
+  for (const key of EFFECT_KEYS) {
+    assert.equal(typeof DEFAULT_EFFECT_PREFS[key], "boolean");
   }
 });
 
-test("profiles are monotonic in loudness across quiet -> normal -> lively", () => {
-  const [quiet, normal, lively] = FX_INTENSITIES.map(fxProfile);
-
-  assert.ok(quiet.confettiWaves <= normal.confettiWaves);
-  assert.ok(normal.confettiWaves <= lively.confettiWaves);
-
-  assert.ok(quiet.celebrationScale <= normal.celebrationScale);
-  assert.ok(normal.celebrationScale <= lively.celebrationScale);
+test("the two pre-existing lightweight effects default on, the new heavier ones default off", () => {
+  assert.equal(DEFAULT_EFFECT_PREFS.tapSpark, true);
+  assert.equal(DEFAULT_EFFECT_PREFS.completion, true);
+  assert.equal(DEFAULT_EFFECT_PREFS.morningGreeting, false);
+  assert.equal(DEFAULT_EFFECT_PREFS.openFlourish, false);
+  assert.equal(DEFAULT_EFFECT_PREFS.ambientParticles, false);
+  assert.equal(DEFAULT_EFFECT_PREFS.pageTransitions, false);
 });
 
-test("quiet produces no confetti at all", () => {
-  const profile = fxProfile("quiet");
-  assert.equal(profile.confettiWaves, 0);
-  assert.equal(profile.confettiScale, 0);
-});
-
-test("morning ambience is lively-only", () => {
-  assert.equal(fxProfile("quiet").morningAmbience, false);
-  assert.equal(fxProfile("normal").morningAmbience, false);
-  assert.equal(fxProfile("lively").morningAmbience, true);
-});
-
-test("parseIntensity accepts exactly the three literals", () => {
-  assert.equal(parseIntensity("quiet"), "quiet");
-  assert.equal(parseIntensity("normal"), "normal");
-  assert.equal(parseIntensity("lively"), "lively");
-});
-
-test("parseIntensity rejects garbage", () => {
-  for (const garbage of [undefined, null, "", "loud", 3, {}]) {
-    assert.equal(parseIntensity(garbage), null);
+test("resolveEffect forces every key off when reducedMotion is true, even if stored true", () => {
+  for (const key of EFFECT_KEYS) {
+    assert.equal(resolveEffect(key, true, true), false);
+    assert.equal(resolveEffect(key, null, true), false);
   }
 });
 
-test("resolveIntensity forces quiet when reducedMotion is true, even if lively is stored", () => {
-  assert.equal(resolveIntensity("lively", true), "quiet");
-  assert.equal(resolveIntensity("normal", true), "quiet");
-  assert.equal(resolveIntensity(null, true), "quiet");
+test("resolveEffect falls back to the key's own default for an absent stored value", () => {
+  for (const key of EFFECT_KEYS) {
+    assert.equal(resolveEffect(key, null, false), DEFAULT_EFFECT_PREFS[key]);
+    assert.equal(resolveEffect(key, undefined, false), DEFAULT_EFFECT_PREFS[key]);
+  }
 });
 
-test("resolveIntensity falls back to the default for absent/garbage stored values", () => {
-  assert.equal(resolveIntensity(null, false), DEFAULT_FX_INTENSITY);
-  assert.equal(resolveIntensity(undefined, false), DEFAULT_FX_INTENSITY);
-  assert.equal(resolveIntensity("loud", false), DEFAULT_FX_INTENSITY);
-  assert.equal(resolveIntensity(42, false), DEFAULT_FX_INTENSITY);
+test("resolveEffect honors an explicit stored value when reducedMotion is false", () => {
+  assert.equal(resolveEffect("tapSpark", false, false), false);
+  assert.equal(resolveEffect("openFlourish", true, false), true);
 });
 
-test("resolveIntensity honors a valid stored value when reducedMotion is false", () => {
-  assert.equal(resolveIntensity("lively", false), "lively");
-  assert.equal(resolveIntensity("quiet", false), "quiet");
-});
-
-test("FX_INTENSITY_LABELS has an entry for every intensity", () => {
-  for (const intensity of FX_INTENSITIES) {
-    const entry = FX_INTENSITY_LABELS[intensity];
-    assert.ok(entry, `missing label for ${intensity}`);
+test("EFFECT_LABELS has a non-empty label and description for every key", () => {
+  for (const key of EFFECT_KEYS) {
+    const entry = EFFECT_LABELS[key];
+    assert.ok(entry, `missing label for ${key}`);
     assert.equal(typeof entry.label, "string");
     assert.ok(entry.label.length > 0);
     assert.equal(typeof entry.description, "string");

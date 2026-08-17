@@ -3,29 +3,44 @@
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { BookOpen, Calendar, Home, Sprout } from "lucide-react";
+import { isEffectEnabled } from "@/lib/fx";
 import { playPage } from "@/lib/sound";
 
 const NAV_ITEMS = [
-  { href: "/", label: "ホーム", icon: Home },
-  { href: "/all", label: "カレンダー", icon: Calendar },
-  { href: "/plant", label: "研究所", icon: Sprout },
-  { href: "/book", label: "記録", icon: BookOpen },
+  { href: "/", label: "ホーム", icon: Home, theme: "home" },
+  { href: "/all", label: "カレンダー", icon: Calendar, theme: "all" },
+  { href: "/plant", label: "研究所", icon: Sprout, theme: "plant" },
+  { href: "/book", label: "記録", icon: BookOpen, theme: "book" },
 ] as const;
 
 type NavPath = (typeof NAV_ITEMS)[number]["href"];
+type PageTheme = (typeof NAV_ITEMS)[number]["theme"];
 
 /** Mark the html element so CSS picks the page-turn direction, then let the
- * transition Link take over. The marker is cleared after the turn ends. */
+ * transition Link take over. The marker is cleared after the turn ends.
+ *
+ * T036: also stamps data-page-theme from the DESTINATION only — arriving
+ * somewhere always plays that place's motif regardless of which tab you came
+ * from, rather than needing a directional cross-product of every from/to
+ * pair. Gated by the "ページごとの遷移演出" toggle (default off); when off,
+ * data-page-theme is simply never set, so only the existing generic page-turn
+ * CSS applies — current behavior, unchanged. */
 let pageTurnTimer = 0;
 
-function markPageTurn(fromPath: string | null, toPath: string) {
+function markPageTurn(fromPath: string | null, toPath: string, theme: PageTheme) {
   const fromIndex = NAV_ITEMS.findIndex((item) => item.href === fromPath);
   const toIndex = NAV_ITEMS.findIndex((item) => item.href === toPath);
   const root = document.documentElement;
   window.clearTimeout(pageTurnTimer);
   root.dataset.pageTurn = toIndex < fromIndex ? "back" : "fwd";
+  if (isEffectEnabled("pageTransitions")) {
+    root.dataset.pageTheme = theme;
+  } else {
+    delete root.dataset.pageTheme;
+  }
   pageTurnTimer = window.setTimeout(() => {
     delete root.dataset.pageTurn;
+    delete root.dataset.pageTheme;
   }, 700);
 }
 
@@ -63,8 +78,8 @@ export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
               aria-current={isActive ? "page" : undefined}
               onClick={() => {
                 if (isActive) return;
-                playPage();
-                markPageTurn(resolvedPath, item.href);
+                playPage(isEffectEnabled("pageTransitions") ? item.theme : undefined);
+                markPageTurn(resolvedPath, item.href, item.theme);
               }}
               className="group flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5"
             >

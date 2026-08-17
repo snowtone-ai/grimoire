@@ -1,6 +1,18 @@
 # state.md
 
 ## Current
+- 2026-08-17: T036 in progress on feat/aaa-fx-rebuild, base main @ c07d510 (T035).
+  Full effects rebuild (D-038, D-039) — see tasks.md T036 for the complete
+  description. pnpm verify green (lint/typecheck/81 tests/build). Not yet
+  browser-smoke-tested or reviewed; not yet merged. Next steps: Playwright
+  smoke of every toggle/effect combination (incl. reduced-motion forcing every
+  visual toggle off while sound stays independent), clean up any test data
+  created during smoke, Tier 1 fresh-context reviewer pass (large/behavior-
+  changing diff), then explicit owner sign-off before merge (production
+  auto-deploys on merge). Write scope: see tasks.md T036 row (touches fx.ts
+  domain+browser layers, confetti/spark/sound, drop-reveal, plant snowfall,
+  settings screen, 3 new src/components/fx/ files, bottom-nav, layout.tsx,
+  globals.css).
 - 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
   Two user-reported defects: /settings had no way to turn notifications back off
   once granted (browser permission is a one-way ratchet, so a new app-level

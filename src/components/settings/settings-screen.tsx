@@ -1,8 +1,23 @@
 "use client";
 
 import { Link } from "next-view-transitions";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bell, BellOff, Download, RotateCcw, Upload, Volume2, VolumeX } from "lucide-react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Bell,
+  BellOff,
+  Download,
+  PartyPopper,
+  RotateCcw,
+  Sparkles,
+  Stars,
+  Sunrise,
+  Upload,
+  Volume2,
+  VolumeX,
+  Wand2,
+} from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import {
   buildBackupJson,
@@ -12,12 +27,11 @@ import {
   type ParsedBackup,
 } from "@/lib/backup";
 import {
-  FX_INTENSITIES,
-  FX_INTENSITY_LABELS,
-  getStoredFxIntensity,
+  EFFECT_LABELS,
+  getStoredEffectPref,
   isReducedMotionForced,
-  setFxIntensity,
-  type FxIntensity,
+  setEffectEnabled,
+  type EffectKey,
 } from "@/lib/fx";
 import {
   getNotificationPermission,
@@ -62,8 +76,8 @@ export function SettingsScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
-        <EffectsSection />
-        <SoundSection />
+        <BasicFeedbackSection />
+        <MoreEffectsSection />
         <NotificationSection />
         <BackupSection />
         <ResetSection />
@@ -115,65 +129,18 @@ function SettingsSection({
   );
 }
 
-/* One dial, not a wall of switches (D-036). Native radios rather than
- * aria-checked buttons so arrow-key navigation and grouping come for free. */
-function EffectsSection() {
-  const [intensity, setIntensity] = useState(getStoredFxIntensity);
-  const overridden = isReducedMotionForced();
+/* Per-effect ON/OFF toggles replace the old quiet/normal/lively dial (T036 /
+ * D-039). D-036 chose one dial specifically to avoid a 2^N toggle explosion and
+ * the decision-fatigue cost of scanning many switches for an ADHD-persona user;
+ * that is still why this stays a curated set of six rows (not one per animation
+ * detail), split into two sections so scanning the defaults-are-fine section
+ * costs nothing and the "want more" section is opt-in framed, not another wall
+ * of switches to evaluate. */
 
-  function choose(next: FxIntensity) {
-    setFxIntensity(next);
-    setIntensity(next);
-    playTap();
-  }
-
-  return (
-    <SettingsSection overline="EFFECTS" title="演出の強さ">
-      <fieldset>
-        <legend className="sr-only">演出の強さ</legend>
-        <div className="flex gap-1 rounded-xl bg-muted p-1">
-          {FX_INTENSITIES.map((value) => (
-            <label
-              key={value}
-              className="flex-1 cursor-pointer text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-frost rounded-lg"
-            >
-              <input
-                type="radio"
-                name="fx-intensity"
-                value={value}
-                checked={intensity === value}
-                onChange={() => choose(value)}
-                className="sr-only peer"
-              />
-              <span className="block rounded-lg px-2 py-2 text-sm font-semibold text-muted-foreground transition-colors peer-checked:bg-card peer-checked:text-foreground peer-checked:shadow-xs">
-                {FX_INTENSITY_LABELS[value].label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-        {FX_INTENSITY_LABELS[intensity].description}
-      </p>
-
-      {overridden && (
-        <p className="mt-2.5 rounded-xl bg-muted p-3 text-xs leading-relaxed text-muted-foreground">
-          端末側で「視差効果を減らす」が有効になっているため、いまはこの設定に関わらず
-          「しずか」で動作しています
-        </p>
-      )}
-
-      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80">
-        調査記録の記録をタップして見返す演出は、この設定に関わらずいつでも使えます
-      </p>
-    </SettingsSection>
-  );
-}
-
-/* The existing preference gates sound AND haptics together (see sound.ts), so
- * the label says so rather than promising two independent switches. */
-function SoundSection() {
+/* Reused by both sections below: sound keeps its own independent toggle in
+ * sound.ts (fx-enabled) — deliberately not reduced-motion-gated, since that
+ * media query is a motion signal, not an audio one (D-036). */
+function SoundToggleRow() {
   // Lazy initializer rather than an effect: this screen is mounted client-only
   // (dynamic ssr:false), so localStorage is available on first render.
   const [enabled, setEnabled] = useState(isFxEnabled);
@@ -186,7 +153,67 @@ function SoundSection() {
   }
 
   return (
-    <SettingsSection overline="FEEDBACK" title="効果音とバイブ">
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={enabled}
+      className="btn-squish flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
+    >
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+          enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-foreground">
+          効果音とバイブレーション
+        </span>
+        <span className="block text-xs text-muted-foreground">
+          クエスト達成音・操作音と、端末の振動をまとめて切り替えます
+        </span>
+      </span>
+      <span
+        aria-hidden
+        className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
+          enabled ? "bg-primary" : "bg-muted"
+        }`}
+      >
+        <span
+          className={`block size-5 rounded-full bg-background transition-transform ${
+            enabled ? "translate-x-5" : ""
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+/** One row per EffectKey (T036). Same visual pattern as the notification
+ * toggle: icon chip + label/description + pill switch. reduced-motion still
+ * wins even when the stored preference is on, so a note explains that instead
+ * of silently doing nothing. */
+function EffectToggleRow({
+  effectKey,
+  icon: Icon,
+}: {
+  effectKey: EffectKey;
+  icon: ComponentType<{ className?: string }>;
+}) {
+  const [enabled, setEnabled] = useState(() => getStoredEffectPref(effectKey));
+  const reducedMotion = isReducedMotionForced();
+  const label = EFFECT_LABELS[effectKey];
+
+  function toggle() {
+    const next = !enabled;
+    setEffectEnabled(effectKey, next);
+    setEnabled(next);
+    if (next) playTap();
+  }
+
+  return (
+    <div>
       <button
         type="button"
         onClick={toggle}
@@ -198,15 +225,11 @@ function SoundSection() {
             enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
           }`}
         >
-          {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+          <Icon className="size-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-foreground">
-            効果音とバイブレーション
-          </span>
-          <span className="block text-xs text-muted-foreground">
-            クエスト達成音・操作音と、端末の振動をまとめて切り替えます
-          </span>
+          <span className="block text-sm font-semibold text-foreground">{label.label}</span>
+          <span className="block text-xs text-muted-foreground">{label.description}</span>
         </span>
         <span
           aria-hidden
@@ -221,6 +244,42 @@ function SoundSection() {
           />
         </span>
       </button>
+      {enabled && reducedMotion && (
+        <p className="mt-1.5 px-1 text-[11px] leading-relaxed text-muted-foreground/80">
+          端末側で「視差効果を減らす」が有効なため、いまは動作しません
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BasicFeedbackSection() {
+  return (
+    <SettingsSection overline="FEEDBACK" title="基本のフィードバック">
+      <div className="space-y-2">
+        <SoundToggleRow />
+        <EffectToggleRow effectKey="tapSpark" icon={Sparkles} />
+        <EffectToggleRow effectKey="completion" icon={PartyPopper} />
+      </div>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80">
+        調査記録の記録をタップして見返す演出は、この設定に関わらずいつでも使えます
+      </p>
+    </SettingsSection>
+  );
+}
+
+function MoreEffectsSection() {
+  return (
+    <SettingsSection overline="MORE FX" title="追加の演出">
+      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+        演出をもっと楽しみたい方はこちらもONにしてください
+      </p>
+      <div className="space-y-2">
+        <EffectToggleRow effectKey="morningGreeting" icon={Sunrise} />
+        <EffectToggleRow effectKey="openFlourish" icon={Wand2} />
+        <EffectToggleRow effectKey="ambientParticles" icon={Stars} />
+        <EffectToggleRow effectKey="pageTransitions" icon={ArrowLeftRight} />
+      </div>
     </SettingsSection>
   );
 }
