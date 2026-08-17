@@ -1,14 +1,22 @@
 # state.md
 
 ## Current
-- 2026-08-17: T036 in progress on feat/aaa-fx-rebuild, base main @ c07d510 (T035).
-  Full effects rebuild (D-038, D-039) — see tasks.md T036 for the complete
-  description. pnpm verify green (lint/typecheck/81 tests/build). Not yet
-  browser-smoke-tested or reviewed; not yet merged. Next steps: Playwright
-  smoke of every toggle/effect combination (incl. reduced-motion forcing every
-  visual toggle off while sound stays independent), clean up any test data
-  created during smoke, Tier 1 fresh-context reviewer pass (large/behavior-
-  changing diff), then explicit owner sign-off before merge (production
+- 2026-08-17: T036 on feat/aaa-fx-rebuild, base main @ c07d510 (T035), PR #29
+  open. Full effects rebuild (D-038, D-039) — see tasks.md T036 for the
+  complete description. pnpm verify green (lint/typecheck/81 tests/build); CI
+  green on PR #29 (verify job + Vercel preview). Browser smoke complete via
+  Playwright — see tasks.md T036 Evidence for the full list (toggle
+  persistence, reduced-motion hard-override confirmed effect-by-effect while
+  sound stayed independent, /plant particle exclusion, live confetti/
+  drop-reveal fired via a real task+bounty completion, 0 console errors
+  throughout). Test task and screenshot files cleaned up after. Note: an
+  early smoke attempt hit a false-positive runtime error from a stale PWA
+  service-worker cache (task-manager-v6) serving an old settings-screen
+  bundle, not a real defect — resolved by unregistering the SW and clearing
+  caches.storage from the test browser context; worth remembering this app's
+  SW can mask fresh deploys during dev-server testing. Tier 1 fresh-context
+  reviewer (Opus 5) dispatched, pending. Next steps once reviewer returns:
+  address any findings, then explicit owner sign-off before merge (production
   auto-deploys on merge). Write scope: see tasks.md T036 row (touches fx.ts
   domain+browser layers, confetti/spark/sound, drop-reveal, plant snowfall,
   settings screen, 3 new src/components/fx/ files, bottom-nav, layout.tsx,
