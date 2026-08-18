@@ -1,6 +1,22 @@
 # state.md
 
 ## Current
+- 2026-08-19: T039 — Researched Official Blender MCP (blender.org, released
+  2026-04-28) as a possible replacement for the ahujasid/blender-mcp registered in
+  T037. Conclusion: not switching now. Official MCP targets scene inspection/
+  automation (poly-count analysis, data-block renaming, geometry-node docs) while
+  this project's near-term need is external asset sourcing (PolyHaven/Sketchfab/
+  Hyper3D via ahujasid's tool); Official MCP also requires Blender 5.1+, which
+  conflicts with the 4.5 LTS chosen in T037. Corrected D-041's own reasoning in the
+  process: the "Blender 4.x" rationale was traced only to the design log's P-chapter
+  instruction, not independently verified — Blender 5.2 LTS had already been out
+  over a month by the time T037 ran (5.0 Nov 2025 -> 5.1 Mar 2026 -> 5.2 LTS
+  2026-07-14), so that instruction was itself based on a stale assumption. The
+  actual reason to stay on 4.5 LTS is ahujasid/blender-mcp's own compatibility risk
+  on Blender 5.x (Python errors reported on 5.0, 5.1/5.2 unconfirmed) — same
+  conclusion, corrected justification, recorded as a 訂正 addendum to D-041.
+  Official Blender MCP flagged as worth revisiting once modeling/rigging work is
+  underway and a Blender 5.x upgrade is separately justified.
 - 2026-08-19: T038 (D-042) — Grimoire v2 design consult session #1 (moved fully into
   Claude Code per owner's request, replacing the prior claude.ai chat). Branch
   `docs/grimo-dog-design-and-mhw-policy` off main. Read all 3 grimore-v2/ design docs;
