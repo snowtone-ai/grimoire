@@ -41,11 +41,10 @@ retry or work around it; surface it instead, same as the Claude Code guard.
 Note: editing a Codex hook file changes its trust hash, so the human may see a
 one-time "trust this hook?" prompt the first time it fires after this setup.
 
-**RTK usage.** This machine's global `~/.codex/AGENTS.md` defines `rtk` proxy
-conventions (`rtk read`, `rtk git`, `rtk pytest`, `rtk ruff`,
-`rtk proxy powershell -NoProfile -Command "..."`) for token-efficient output.
-Follow those globally-defined conventions in this repo too; they are not
-repeated here to avoid drift between the two copies.
+**RTK usage.** Retired 2026-08-19 (T003/D-003). The global `~/.codex/AGENTS.md`
+no longer defines `rtk` proxy conventions -- read files, run `git`, `pytest`,
+`ruff`, etc. directly instead of through `rtk`. `~/.codex/RTK.md` is kept
+only as a dead record of the old convention; it is no longer imported.
 
 **Model.** Codex runs on this machine's configured OpenAI model (currently
 `gpt-5.5`, set globally), not Sonnet 5. `CLAUDE.md`'s "never switch model
