@@ -1,6 +1,13 @@
 # state.md
 
 ## Current
+- 2026-08-19: T042 (D-045) — [grimore-v2ブランチ] v2のスコープを確定
+  (Q章新規): タスク管理・カレンダーの基本機能、IndexedDB(Dexie)の既存
+  スキーマ/ドメインロジック、.env.localの既存の値(GEMINI_API_KEY、Google
+  OAuth関連等)はすべてそのまま流用する追加型開発であることを明文化。
+  例外: Gmailインポート機能(gmail-import-modal.tsx等)はv2で廃止、
+  Googleカレンダーインポートは現状維持。コード削除は未実施(実装フェーズの
+  個別タスクへ)。
 - 2026-08-19: T041 (D-044) — Gitワークフロー見直し。(1)ドキュメントのみの
   変更はブランチ/PR/CIをスキップしmain直接コミット可という例外を
   CLAUDE.mdと大元のpm-zero(pm-zero-knowledge-v12.md Section 12)の両方に
