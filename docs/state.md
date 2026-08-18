@@ -1,6 +1,32 @@
 # state.md
 
 ## Current
+- 2026-08-19: T038 (D-042) — Grimoire v2 design consult session #1 (moved fully into
+  Claude Code per owner's request, replacing the prior claude.ai chat). Branch
+  `docs/grimo-dog-design-and-mhw-policy` off main. Read all 3 grimore-v2/ design docs;
+  verified T037/D-041 evidence and tasks.md numbering (no issues found); confirmed
+  BlenderMCP still `Pending approval` in `claude mcp list` (owner will run the manual
+  Blender GUI "Connect to Claude" step + approve on next `claude` launch — no
+  automation possible here, unchanged from T037). Two decisions recorded in D-042:
+  (1) 犬系グリモ(水属性)の卵〜成体デザイン確定via 4-question x2-round consult (see
+  grimore-v2/...統合版.md L-2章) — egg=frost/crystal translucent shell, infant=round
+  soft body with fantasy elements confined to ear/tail-tip shape + ambient ripple VFX,
+  child=infant extended (body grows, gradient starts filling in), adult=wolf/husky-base
+  breed with full-body blue gradient, tone shifts cute->cute+cool across the arc; (2)
+  MHW reference-image policy reversed — owner explicitly chose to use the 8 original
+  images as-is for the *background world* (not the grimo creature) after being told
+  twice the legal-risk picture (family now uses the app too per D-030, so the
+  "personal-use-only" copyright exception doesn't cleanly apply; Three.js editing counts
+  as derivative work, not just reproduction; risk is low-probability/non-zero since
+  infringement is complaint-driven). Also researched and answered an owner question
+  mid-session: GPT-5.6 Sol (OpenAI, released 2026-07-09) is real and technically usable
+  here via Codex CLI (still active, MCP-capable, including an official Blender MCP
+  Blender itself shipped in April 2026) — recommended staying single-agent (this
+  project retired the dual-agent Codex+Claude split in D-020 for context-cost reasons
+  that still apply) rather than switching, since no verified capability edge either
+  way was found; flagged the official Blender MCP as a separate, non-model-related
+  thing worth a future look (this project's T037 registered the community
+  ahujasid/blender-mcp addon instead).
 - 2026-08-19: T037 (D-041) — Grimoire v2 kickoff, environment prep only. Branch
   `chore/v2-env-setup` off main. Blender 4.5.10 LTS installed (winget), blender-mcp
   addon installed+enabled+persisted (headless python, save_userpref/save_homefile),
