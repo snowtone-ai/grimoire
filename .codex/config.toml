@@ -1,0 +1,14 @@
+# Project-scoped Codex overrides for Grimoire (grimore-v2).
+#
+# Loaded only because this project's path is marked trusted in the global
+# ~/.codex/config.toml ([projects.'c:\users\chidj\project\プロダクト\task-plant']).
+#
+# Security-sensitive keys (approval_policy, sandbox_mode, sandbox_workspace_write.*,
+# notify, model_provider(s), ...) are silently ignored here by design -- Codex
+# only honors them from ~/.codex/config.toml. See AGENTS.md's "Where Codex
+# differs from Claude Code" section for what's actually in effect for this
+# project (autonomy is already global; the guard hook is already global).
+#
+# Nothing project-specific needs overriding yet. This file exists so the
+# .codex/ directory is present, matching CLAUDE.md's expectation that the
+# repo mirrors pm-zero's default scaffold for every supported agent.

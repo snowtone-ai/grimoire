@@ -1,4 +1,4 @@
-# repo-map.md -- pm-zero v12 Repository Map
+# repo-map.md -- pm-zero v12 Repository Map (grimore-v2)
 
 ## Read Policy
 - Session start: read Summary only.
@@ -7,61 +7,12 @@
 - After structural changes: update only the affected section.
 
 ## Summary
-- App type: Next.js PWA for personal task management (Iceborne-inspired quest/drop reward loop).
-- Main runtime: Next.js 16, React 19, TypeScript, Tailwind CSS v4, next-view-transitions.
-- Package manager: pnpm.
-- Primary source directory: src/.
-- Primary test directory: tests/.
-- Main entry points: src/app/page.tsx, src/app/plant/page.tsx, src/app/book/page.tsx, src/app/settings/page.tsx, src/app/layout.tsx.
-- Reward core: src/lib/domain/drops.ts, src/lib/rewardDb.ts, src/lib/sound.ts, src/lib/domain/rarity-style.ts.
-- Presentation/effects core: src/lib/domain/fx.ts (per-effect ON/OFF toggles), src/lib/fx.ts, src/lib/confetti.ts, src/lib/spark.ts, src/components/fx/.
-- Verification command: pnpm verify.
+（未設定。v2の実装が始まり、ディレクトリ構造が定まり次第記載する。）
 
 ## Directory Map
 | Path | Purpose | Edit Frequency | Notes |
 |---|---|---|---|
-| src/app/ | App Router pages and layout | high | Keep route concerns here. |
-| src/components/ | UI components by screen/domain | high | Keep display logic out of domain modules. |
-| src/hooks/ | React state and side-effect hooks | high | Browser/API side effects belong here. |
-| src/lib/domain/ | Pure task and plant logic | high | Add tests for behavior changes. |
-| src/lib/api/ | External API helpers | medium | Secrets must come from env values. |
-| tests/ | node:test coverage | medium | Domain regressions live here. |
-| public/ | PWA assets | low | Generated icons come from scripts/gen-icons.mjs. |
-| public/plant-rewards/ | Plant reward photo assets | low | Final monthly photos live under `final/`; keep source URLs and selections in docs/plant-reward-image-sources.md and docs/plant-reward-image-selections.md. |
-| docs/ | pm-zero project memory | medium | Vision, state, decisions, issues, repo map. |
-| scripts/ | Project tooling | medium | setup, verify, icon generation. |
 
 ## Entry Points
 | Area | File | Purpose |
 |---|---|---|
-| Home | src/app/page.tsx | Main quest (task) view + drop reveal. |
-| Plant | src/app/plant/page.tsx | Botanical research (monthly growth) view. |
-| Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia); tapping a collected entry replays its reveal. |
-| Settings | src/app/settings/page.tsx | Per-effect ON/OFF toggles, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
-| Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider, mounts GraceParticlesGate + OpenFlourish. |
-| Sound | src/lib/sound.ts | Web-Audio synthesized SFX + haptics (single pentatonic palette), playPage(theme) per-route identity. |
-| Effects model | src/lib/domain/fx.ts | Six independent EffectKey toggles (tapSpark/completion/morningGreeting/openFlourish/ambientParticles/pageTransitions); OS reduced-motion always forces all six off, sound stays on its own separate fx-enabled toggle. |
-| Ambient/arrival fx | src/components/fx/ | grace-particles.tsx (shared particle primitive), grace-particles-gate.tsx (background layer, excludes /plant), open-flourish.tsx (app-open arrival overlay). |
-| Verification | scripts/verify.mjs | Unified local checks. |
-
-## Common Workflows
-| Workflow | Read First | Edit Usually | Verify |
-|---|---|---|---|
-| Domain change | docs/decisions.md, src/lib/domain/ | src/lib/domain/, tests/ | pnpm test |
-| Screen change | docs/vision.md, relevant component | src/components/, src/hooks/ | pnpm lint; pnpm typecheck; pnpm build |
-| External API change | docs/decisions.md | src/lib/api/, src/hooks/ | pnpm lint; pnpm typecheck; pnpm build |
-| pm-zero docs | CLAUDE.md | tasks.md, docs/, scripts/ | git diff --check; pnpm verify |
-
-## Generated / External Files
-| Path | Rule |
-|---|---|
-| node_modules/, .next/, out/, build/ | Ignore. |
-| coverage/, .playwright-mcp/ | Ignore generated verification output. |
-| logs/, screenshots/ | Ignore generated evidence unless explicitly requested. |
-| .env, .env.* except .env.example | Ignore secrets. |
-| *.tsbuildinfo, next-env.d.ts | Ignore generated TypeScript files. |
-
-## Update Rules
-- Keep Summary under 20 lines.
-- Keep each directory note concrete.
-- Move rationale to docs/decisions.md.
