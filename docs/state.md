@@ -1,6 +1,21 @@
 # state.md
 
 ## Current
+- 2026-08-19: T037 (D-041) — Grimoire v2 kickoff, environment prep only. Branch
+  `chore/v2-env-setup` off main. Blender 4.5.10 LTS installed (winget), blender-mcp
+  addon installed+enabled+persisted (headless python, save_userpref/save_homefile),
+  PolyHaven scene toggle pre-set True in the default startup file. blender-mcp
+  registered with Claude Code (`--scope project`); shows Pending approval in
+  `claude mcp list` until the owner approves it at next `claude` launch. Remaining
+  manual step (cannot be automated — the addon refuses to start its socket server in
+  `--background` mode): open Blender GUI once and click "Connect to Claude" in the
+  BlenderMCP sidebar tab. CC0 rigged-quadruped search on Sketchfab came up empty
+  (downloadable+CC0+actually-rigged four-legged models are essentially nonexistent
+  there); Quaternius's "Animated Animal Pack" (CC0, via poly.pizza, Shiba
+  Inu/Husky/Wolf/Fox, Idle/Walk/Run/Jump/Death anims, FBX/glTF/Blend) identified as
+  a strong candidate for the priority 犬(水属性) grimo — listed only, not downloaded,
+  per the owner's explicit "decide next session" instruction. `grimore-v2/` design
+  docs (3 files) added to the repo. No product code touched.
 - 2026-08-17: T036 shipped — full effects rebuild (D-038 background
   particles, D-039 per-effect toggles replacing the old intensity dial,
   D-040 Tier 1 review fixes). Squash-merged via PR #29 to main (1bb8c8e),

@@ -1,0 +1,8 @@
+- http://originkit.dev  無料のアニメーション付きコンポーネントライブラリ
+- http://orbs.jakubantalik.com  アニメーション付き思考オーブコンポーネント
+- http://transitions.dev  ウェブアプリに必須のトランジション
+- http://beautiful-ui-five.vercel.app  AIネイティブインターフェース向けに作られたUI
+- https://21st.dev  巨大なコミュニティライブラリ
+- http://ui.aceternity.com  Reactコンポーネントライブラリ
+- http://component.gallery  95のデザインチェックシステムからのパターン
+- http://agentation.com  UIに注釈を付ける。コーディングエージェントをガイドする
