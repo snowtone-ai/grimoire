@@ -78,6 +78,8 @@
 
 | T038 | done | Claude Code | T037 | grimore-v2/Grimoire_決定事項ログ_統合版_20260819.md, docs/decisions.md, docs/state.md, tasks.md | Grimoire v2設計相談セッション#1(D-042): これまでclaude.aiで行っていた相談フェーズをClaude Codeへ完全移行し、以後は相談・実装を同一エージェントで担当する。T037/D-041の内容とtasks.md採番ルールとの整合を検証(問題なし)。O章の最優先未決定事項だった犬系グリモ(水属性)の卵〜成体デザインを確定(L-2章に記載)。MHW参照画像の利用方針を、アートディレクション参照限定から背景世界(相棒+世界画面)への直接使用へ転換(A章更新、法的リスクを2回明示提示した上でオーナーが採用) | git diff --check(ドキュメントのみ、Tier 0) | 2026-08-19: git diff --check クリーン(空白エラーなし)。製品コード非変更(grimore-v2/*.md, docs/decisions.md, docs/state.md, tasks.mdのみ)。PR経由でmainへマージ後、CI(lint/typecheck/test/build)がドキュメントのみの差分でも green になることを確認してクローズ。 |
 
+| T039 | done | Claude Code | T037 | docs/decisions.md, docs/state.md, tasks.md | Official Blender MCP(blender.org、2026-04-28リリース)を調査し、乗り換えの是非を検証。得意領域がシーン検査・自動化(現行のahujasid/blender-mcpが得意とする外部アセット生成連携とは別領域)であること、Blender 5.1以降が要件でありT037で選定した4.5 LTSとは合わないことを確認し、当面は乗り換えないと結論。あわせてD-041のBlenderバージョン選定理由(「決定事項ログP章の指示」とのみ記録)を裏取りし、Blender 5.2 LTSがT037実行時点で既に1ヶ月以上前から入手可能だった古い前提であったこと、真の理由はahujasid/blender-mcpのBlender 5.x互換性リスク(5.0でPythonエラー報告あり)であったことをD-041へ訂正として追記(結論=4.5 LTS維持は不変) | git diff --check(ドキュメントのみ、Tier 0) | 2026-08-19: git diff --check クリーン。製品コード非変更。 |
+
 ## Execution Pointer
 Current active task, executor, write lock, and latest verification live in docs/state.md.
 
