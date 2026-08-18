@@ -961,3 +961,55 @@
   （D-039本文参照: 強度スケーリングの廃止はトグル数抑制とセットの設計判断であり、
   紙吹雪の波数だけ個別に復活させると同じ2^N問題を部分的に再導入することになる）
   なので、機能追加ではなく本エントリへの明記をもって対応済みとする。
+
+## D-041: Grimoire v2 着手 — 環境準備(Blender/BlenderMCP)を機械的に自動実行
+
+- 日付: 2026-08-19
+- 対象: infra / tooling / v2-kickoff
+- 背景: 現行Grimoire(v1)を土台に、3D相棒(グリモ)+Three.js背景世界を持つv2をほぼ
+  ゼロから作る方針。設計資料は `grimore-v2/` 配下の3ファイル(決定事項ログ統合版、
+  Three.js設計文書、UIコンポーネントサイト集)としてリポジトリに追加。決定事項ログの
+  P章「次のアクション」に列挙された5つの機械的セットアップ作業について、当初は
+  「手順提示のみ」で計画したが、オーナーから「手順提示ではなく実行可能な方法を
+  探して実行せよ」と明示指示があり、自動化可能な範囲を全て自動実行した。
+- 決定(ブランチ): `chore/v2-env-setup` を `main` から作成。v2は「ほぼ0から」の
+  大規模刷新のため、今後の実装は既存のtasks.md/docs/*ledgerの流儀を維持しつつ、
+  機能単位でさらに枝分かれさせる想定(このブランチは環境準備のみに限定)。
+- 決定(Blender): `winget install BlenderFoundation.Blender.LTS.4.5` で
+  Blender 4.5.10 LTSをサイレントインストール(exit 0で確認)。5.x系の最新版ではなく
+  4.5 LTSを選んだ理由: 決定事項ログP章が明示的に「Blender 4.x」を要求しており、
+  ahujasid/blender-mcp addonのbl_info最小要求も`(3, 0, 0)`以上でLTS 4.5との
+  互換性リスクが最も低いため。
+- 決定(BlenderMCPアドオン): `github.com/ahujasid/blender-mcp` の`addon.py`を
+  ダウンロードし、`blender --background --python <setup script>` でheadless実行し
+  `bpy.ops.preferences.addon_install` + `addon_enable` を実施、
+  `bpy.ops.wm.save_userpref()`で永続化を確認(次回Blender起動時に再インストール不要)。
+  同スクリプト内で `bpy.context.scene.blendermcp_use_polyhaven = True` を設定し
+  `bpy.ops.wm.save_homefile()` で既定の起動ファイルとして保存したため、PolyHaven
+  連携は次回Blender起動時点で既にONの状態になる。**唯一自動化できなかった手順**:
+  addon自身が`--background`モードでの明示的なガード
+  (`"cannot start server in background mode... run Blender with a GUI"`)を持つため、
+  ソケットサーバーの起動("Connect to Claude"ボタン)はBlenderのGUIを開いた上で
+  ユーザーが1回クリックする必要がある(サーバーはBlenderのイベントループに依存し、
+  `--background`終了と同時にプロセスごと消えるため、原理的にheadless自動化不可)。
+- 決定(Claude Code側MCP登録): `claude mcp add --scope project blender -- uvx blender-mcp`
+  でこのプロジェクトの`.mcp.json`(既存の`.gitignore`ルールにより追跡対象外、
+  そのままで正しい)に登録済み。`claude mcp list`は`⏸ Pending approval`と表示——
+  これはClaude Codeの新規プロジェクトMCPサーバーに対する標準の一度きり承認ゲートで、
+  次回`claude`起動時にユーザーが承認すれば解消する(セキュリティ上、エージェント側で
+  バイパスすべきではない)。
+- 決定(CC0四足リグ済みベースモデル): Sketchfab API(`api.sketchfab.com/v3/search`)を
+  license=cc0で複数クエリ試行した結果、"downloadable かつ CC0 かつ実際にリグ済み
+  (animCount>0)"の四足生物はほぼ皆無と判明(該当ヒットは考古学スキャン/彫像が
+  大半で、リグ済み創作モデルは大半がSketchfab Storeの有料コンテンツかCC-BY)。
+  代わりに `Quaternius` の "Animated Animal Pack"(poly.pizza経由、CC0確認済み、
+  Idle/Walk/Run/Jump/Deathアニメーション付き、FBX/glTF/Blend形式)を発見——
+  Shiba Inu・Husky・Wolf・Foxを含み、L章のロードマップ最優先である犬(水属性)の
+  参考/叩き台として直接使える。ダウンロード自体はオーナー指示どおり次セッションの
+  選定判断に委ねて未実施、候補提示のみに留めた。
+- 不採用: Mixamo(人型リグ中心で四足動物に非対応)、Sketchfab Storeの有料
+  リグ済みモデル(予算0円方針(G章)に反する)。
+- 将来見直し条件: BlenderのGUI起動+ソケットサーバー接続をオーナーが実施した後、
+  `claude mcp list`でblenderが`✔ Connected`になることを次セッション冒頭で確認する。
+  Quaternius以外の候補(CGTrader等)が必要になった場合、同じCC0/商用可の判定基準で
+  追加調査する。
