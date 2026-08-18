@@ -101,6 +101,8 @@
   as pnpm verify; branch protection requires it). A local pass alone does not merge.
   Low/medium risk: squash-merge + delete branch.
   High-risk classes: stop before irreversible real-world side effects; Japanese summary.
+- Docs-only exception: a change touching only Markdown/doc files (no source, config, or CI
+  files) may commit straight to main, skipping branch/PR/CI. git diff --check still required.
 
 ## Execution Boundaries
 - Handle every error explicitly. Safe values only in output.
