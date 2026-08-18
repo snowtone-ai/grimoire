@@ -1,6 +1,18 @@
 # state.md
 
 ## Current
+- 2026-08-19: T040 (D-043) — Grimoire v2 design consult session #2. O章の未決定
+  事項「妖精の属性：光 or 植物」を光に確定(L-3章新規)。モチーフ=星屑・
+  プリズム系(犬の背景オーロラ/虹系と差別化)、猫(闇/月)との対比を意図的な
+  デザイン思想として採用、発光は「適度に使うが非発光手段も併用」でK章の
+  原則を維持。植物不採用によりアプリ旧名(Task Plant)/plant画面との意味的
+  重複の懸念は解消。卵〜成体の具体的デザインは妖精が5系統中最後に着手する
+  系統のため未着手のまま(次に相談するテーマとしてO章の残り6項目——図鑑/
+  カレンダー詳細設計、タップ反応ライブラリ構成、スプリングボーンパラメータ、
+  エリア間遷移演出、モジュール間共有状態インターフェース仕様——が残る)。
+  セッション中、設計ログのファイル名がオーナー自身の操作により
+  `Grimoire_決定事項ログ_統合版_20260819.md`から`Grimoire_決定事項ログ.md`
+  へ変更された(内容は無変更)。ブランチ `docs/grimo-fairy-light-design`。
 - 2026-08-19: T039 — Researched Official Blender MCP (blender.org, released
   2026-04-28) as a possible replacement for the ahujasid/blender-mcp registered in
   T037. Conclusion: not switching now. Official MCP targets scene inspection/
