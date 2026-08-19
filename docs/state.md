@@ -1,6 +1,15 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-19: T004 (D-005) — Codex CLIの端末実行が全拒否(`CreateProcessAsUserW
+  failed: 5`)される状態を調査・解消。原因はグローバル`~/.codex/config.toml`の
+  `[windows] sandbox = "elevated"`が要求する特権(SeAssignPrimaryTokenPrivilege等)
+  をユーザートークンが持たないこと。`unelevated`へ変更し実行復旧を確認。
+  併せてオーナー依頼のMCP(Playwright/Context7/Blender)を`codex mcp add`で
+  グローバル登録、Anthropic公式`frontend-design` SkillをCodex公式
+  skill-installer経由で`~/.codex/skills/frontend-design`へインストール。
+  Three.js-design.mdが参照するGitHub Skillの URL(https://github.com/MengTo/sylva)
+  をオーナーへ回答。詳細はD-005参照。
 - 2026-08-19: T003 (D-003) — グローバルrtkプロキシ運用を全廃止(D-002の一部を
   訂正)。オーナーが「Codexがまだrtk経由でファイルを読んでいる、消し忘れでは
   ないか」と指摘したのが発端。調査の結果、D-002は意図的にrtkを維持する決定

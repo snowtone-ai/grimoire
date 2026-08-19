@@ -106,3 +106,66 @@ and motivated this reset -- those are kept as-is, not restarted.
   不採用案(b)と同じ理由で、安全機構レイヤーとコマンドプロキシレイヤーを
   引き続き分離している。
 - 将来見直し条件: 特になし(オーナーの明示選択による確定事項)。
+
+## D-005: Codex CLI(Windows)のサンドボックス設定をelevated→unelevatedへ変更、MCP/Skill追加
+
+- 日付: 2026-08-19
+- 対象: tooling / multi-agent
+- 決定: Codex CLIが「CreateProcessAsUserW failed: 5 (アクセスが拒否されました)」で
+  端末実行を全拒否し、`.agents`(実体は`$CODEX_HOME/skills`)への書き込みも拒否
+  されていた件を調査・解消した。原因はグローバル`~/.codex/config.toml`の
+  `[windows] sandbox = "elevated"`。このモードはWindowsの制限トークン生成
+  (CreateProcessAsUserW)にSeAssignPrimaryTokenPrivilege等の特権を要求するが、
+  現在のユーザートークン(`whoami /priv`で確認、管理者昇格なし)にはその特権が
+  無く、失敗していた。`codex sandbox -c windows.sandbox=bogus`のエラー出力から
+  有効値が`elevated`/`unelevated`の2値のみと判明したため、`unelevated`へ変更し
+  実コマンド実行で復旧を確認(`codex doctor`もsandbox項目で0 fail)。この
+  プロジェクトは元々D-002/CLAUDE.mdの方針でOS側サンドボックスを実効的な安全境界
+  とはしておらず(`approval_policy="never"` + `~/.codex/hooks/guard.mjs`が実際の
+  防御層)、Claude Code側のCLAUDE.md「Accepted Risk」と同じ考え方のため、
+  管理者権限昇格ではなく非昇格モードへの変更を選んだ。
+  併せてオーナー要望のMCP/Skillを追加: `codex mcp add`で`playwright`
+  (`npx @playwright/mcp@latest`)、`context7`(`npx -y @upstash/context7-mcp`)、
+  `blender`(`uvx blender-mcp`、既存`.mcp.json`のClaude Code向け設定と同一コマンド)
+  をグローバル`~/.codex/config.toml`へ登録。Anthropic公式`frontend-design`
+  Skill(https://github.com/anthropics/skills の `skills/frontend-design`)は、
+  Codex自身の公式`skill-installer`スキル(`~/.codex/skills/.system/skill-installer`)
+  が提供する`scripts/install-skill-from-github.py --repo anthropics/skills
+  --path skills/frontend-design`をこちらのセッションから直接実行し、
+  `~/.codex/skills/frontend-design`へインストール済み。Chrome DevTools MCPと
+  codegraphは既存設定のまま変更なし(オーナー指示通り重複導入せず)。
+- 採用理由: オーナーが「CodexCLIに環境構築させようとしたら権限エラーで
+  全拒否されたので、Claude Codeの方で全て解決して環境構築してほしい」と
+  明示指示。Codex側は端末実行が拒否された状態だったため自己解決できず、
+  Claude Code側は同じ`~/.codex/`配下への読み書き・端末実行に制限が無かった
+  ため、Claude Code側で直接原因調査・設定変更・MCP登録・Skillインストールを
+  代行した。
+- 不採用案: (a) Codexを管理者権限で起動させ`elevated`のまま維持する →
+  日常の開発ツールを常時管理者権限で動かすことになり、D-002のガード
+  フック(破壊的コマンド/秘密ファイル防御)はそのまま活きるとはいえ、
+  昇格プロセスの攻撃面が広がるため不採用。既にOSサンドボックスを安全境界と
+  見なさない方針(D-002)と整合しない。 (b) `.agents`書き込み制限を個別に
+  緩和する設定を探す → 実体はCODEX_HOMEのファイルシステムACLではなく
+  `elevated`サンドボックスの制限トークン由来の書き込みルート制限だったため、
+  個別緩和ではなく根本原因(サンドボックスモード)を直す方が確実と判断。
+- 既知のギャップ: Context7は無料枠(APIキー無し)で登録した。オーナーが
+  レート制限に当たった場合はcontext7.com/dashboardでAPIキーを取得し
+  `[mcp_servers.context7].args`に`--api-key`を追記する。Codexの
+  `windows.sandbox=unelevated`が将来のCodexバージョンで別モードや別デフォルトに
+  変わる可能性があるため、Codexアップデート後に`CreateProcessAsUserW`系の
+  失敗が再発したら本設定を再確認する。
+- 将来見直し条件: 特になし(オーナーの明示依頼による代行対応)。
+
+# D-003. フロントエンド体験設計の調査基準
+
+- UI、視覚デザイン、音、演出、インタラクションに関する設計判断は、提案前に既存の高品質なプロダクトと、必要に応じて公式ガイドライン・専門的な制作手法を大規模に調査する。
+- 調査結果を踏まえ、要件に適合する3案と推奨案を提示してから決定する。根拠として参照先を添える。
+- 単なる流行の模倣ではなく、Grimoire v2 の目的、画面文脈、アクセシビリティ、実装・運用コストに照らして選定する。
+- 既にユーザーが明示した世界観・操作要件は優先し、調査はそれを検証・具体化するために使う。
+# D-004. フロントエンドのデザインシステム構成
+
+- デザインシステムは、全画面共通の意味トークンを基盤にし、その上へ画面系統ごとの表現トークンを重ねる二層構成とする。
+- 共通層は、ライト・ダークテーマ、文字階層、余白、境界、状態色、フォーカス、操作状態、モーション、アクセシビリティを担う。色を色相名で直接参照せず、用途名で参照する。
+- 表現層は、グリモ・図鑑向けの「自然・研究・素材感」と、ホーム・カレンダー・設定向けの「金属・石・秩序」を分ける。表現層は共通層の可読性、操作性、状態意味を上書きしない。
+- ライトとダークは別の値を持つテーマとして設計し、単純な反転を行わない。各テーマで通常・高コントラスト状態を検証し、本文と背景のコントラストは少なくとも WCAG AA を満たす。
+- コンポーネントは意味トークンだけを参照し、固定の色値や画面固有のスタイルを内部に持ち込まない。
