@@ -940,11 +940,16 @@ export function degenerateFraction(geometry) {
   return total > 0 ? zero / total : 0;
 }
 
-/** Total rendered triangles, honouring instance counts — reported in the HUD. */
+/**
+ * Visible triangles below `root`, honouring instance counts.
+ *
+ * Passing CoralArea.group deliberately excludes the separate sky scene. traverseVisible()
+ * also prunes descendants of hidden parents, unlike a flat `visible` check in traverse().
+ */
 export function countTriangles(root) {
   let tris = 0;
-  root.traverse((o) => {
-    if (!o.isMesh || !o.visible || !o.geometry) return;
+  root.traverseVisible((o) => {
+    if (!o.isMesh || !o.geometry) return;
     const g = o.geometry;
     const n = g.index ? g.index.count : g.getAttribute('position')?.count ?? 0;
     const instances = o.isInstancedMesh ? o.count : 1;

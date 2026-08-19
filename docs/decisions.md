@@ -190,3 +190,74 @@ and motivated this reset -- those are kept as-is, not restarted.
 - 将来見直し条件: オーナーがEXA_API_KEY/FIRECRAWL_API_KEYを取得した時点で
   Codex側`~/.codex/config.toml`の該当`[mcp_servers.*]`エントリに追記して
   有効化する。
+
+## D-007: Codexの無確認実行をshell・MCP・appの三層でグローバル既定化する
+
+- 日付: 2026-08-19
+- 対象: tooling / permissions
+- 公式根拠: Config Reference
+  (https://learn.chatgpt.com/docs/config-file/config-reference)、MCP
+  (https://learn.chatgpt.com/docs/extend/mcp?surface=cli)、Agent approvals & security
+  (https://learn.chatgpt.com/docs/agent-approvals-security)。
+- 決定: 現行のOpenAI公式Config Reference、MCP、Agent approvals文書を正典とし、
+  全プロジェクトの既定を次の三層で揃える。`~/.codex/config.toml`のトップレベルは
+  `approval_policy = "never"`と`default_permissions = ":danger-full-access"`、
+  `[apps._default]`は`default_tools_approval_mode = "approve"`、登録済みの各
+  `[mcp_servers.<id>]`も`default_tools_approval_mode = "approve"`とする。
+  `default_permissions`と旧`[sandbox_workspace_write]`/`sandbox_mode`は併用しない。
+  既存の`[windows] sandbox="unelevated"`、`sandbox_private_desktop=false`は維持する。
+  破壊的コマンドと`.env*`を拒否するguardは承認UIではなく拒否境界なので維持する。
+- 採用理由: `approval_policy`はcommand承認、permission profileはfilesystem/network、
+  app/MCP approval modeは外部tool承認をそれぞれ制御し、互いの代替ではない。
+  `approval_policy="never"`だけではworkspace外操作が拒否され、MCP/appの既定も
+  toolごとにprompt/writesとなり得るため、オーナーの「作業中に一切許可を求めない」
+  要件を満たさない。公式リファレンスは`on-failure`を非推奨として`never`を
+  non-interactive run向けに指定している。
+- 適用する最小差分: 既存の`default_permissions = ":workspace"`を
+  `":danger-full-access"`へ変更し、既存`[apps._default]`へ
+  `default_tools_approval_mode = "approve"`を追加する。さらに
+  `chrome-devtools`、`openaiDeveloperDocs`、`codegraph`、`playwright`、`context7`、
+  `blender`、`exa`、`firecrawl`の各MCP base tableへ同じ既定を追加する。
+- 既知のギャップ: 現セッションのmanaged filesystemはworkspace外をread-onlyとし、
+  グローバルfileへの`apply_patch`を拒否したため差分は未反映(B002)。ChatGPT plugin側は
+  グローバル`full_access`がfeature gateで利用不可であり、低リスク操作を無確認で
+  通し機密操作を拒否する`review_important_actions`へ更新した。`full_access`公開後に
+  切り替える。
+- 将来見直し条件: Codexのpermission profileまたはapp/MCP approval schemaが変更された
+  時点。変更時は必ずOpenAI公式Config Referenceを再確認する。
+
+## D-008: 背景品質判定はprimary scene負荷とmultipass負荷を分離する
+
+- 日付: 2026-08-19
+- 対象: performance / instrumentation
+- 決定: `WebGLRenderer.info.autoReset=false`で1フレーム全体を累積する一方、
+  skyとworldの描画直後を`sceneDrawCalls`として採取し、post pass数と
+  `totalDrawCalls`を別の観測値として公開する。品質ガバナーはp20 FPS、
+  `sceneDrawCalls`、triangles、post passesを独立予算で評価する。triangleの基準値は
+  150,000、T008で承認済みの±2%を明示して縮退条件を`>153,000`とする。
+- 採用理由: Three.jsのrenderer infoはmulti-pass時に手動resetして1フレームを累積する
+  利用法を想定するが、合計GL callsをprimary sceneの50-call予算へ直接比較すると、
+  shadow/occlusion/post処理を二重計上して端末性能に関係なく縮退する。152,490 trianglesも
+  許容差を式へ入れなければ承認値なのに縮退する。観測量と判定予算を同じ意味へ揃える。
+- 検証: pure governor testで152,490はfullを維持し、153,001は縮退圧力になること、
+  headless Chromeでscene/total/postの各値とforced-reduced遷移を確認する。
+- 将来見直し条件: renderer pipelineまたはT008の品質予算を変更した時点。
+
+## D-009: Codexだけのworker subagent上限を4にする
+
+- 日付: 2026-08-19
+- 対象: tooling / multi-agent
+- 公式根拠: Subagents — Global settings
+  (https://learn.chatgpt.com/docs/agent-configuration/subagents#global-settings)。
+- 決定: Codexは必要に応じて最大4つのworker subagentsを同時使用できるようにする。
+  リポジトリの`AGENTS.md`へCodex-only overrideを追加し、実行時上限にはuser-level
+  `~/.codex/config.toml`の`[agents] max_concurrent_threads_per_session = 4`を使う。
+  公式定義どおり、この値はprimary agentを数えない。`CLAUDE.md`とClaude側設定は
+  変更せず、Claudeの既存上限2を維持する。
+- 採用理由: 仕様・実装・独立監査を並列化できる一方、CodexとClaudeの運用差分を
+  `AGENTS.md`へ閉じ込め、正典`CLAUDE.md`を不用意に変えずに済むため。
+- 既知のギャップ: 現セッションのmanaged filesystemはglobal/project双方の
+  `.codex/config.toml`を保護しており、実行時設定の書込みは拒否された(B003)。
+  `AGENTS.md`の運用規則は反映済みだが、runtime capの反映にはオーナー操作と
+  Codex再起動が必要。
+- 将来見直し条件: OpenAI公式の設定キーまたは利用可能な同時thread上限が変わった時点。

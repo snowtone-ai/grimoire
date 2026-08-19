@@ -344,10 +344,11 @@ O章にあった「妖精の属性：光 or 植物」を、2026-08-19の相談�
 
 ## O. 未決定事項（最新版）
 
-- カレンダー画面の詳細設計
-- タップ反応アニメーションのライブラリ構成（パターン数、トリガー条件の詳細）
-- スプリングボーンの具体的パラメータ（実装フェーズで詰める）
-- エリア間の遷移演出
+- カレンダー詳細は F-9、タップ反応の実装基準は E-4〜E-6 および S-5 で解消済み。
+- スプリングボーンは S-4 の部位別初期値を実装開始値とするが、最終値は完成リグの
+  bone length、model scale、collider と実機挙動に合わせて確定する。
+- エリア間の遷移演出は、600 ms の fog cross-dissolve を第一候補として実機評価し、
+  最終採否だけを未決定として残す。
 
 ---
 
@@ -494,3 +495,81 @@ docs/decisions.mdへ誤って記載されていた設計判断を、2026-08-19�
 - 表現層は、グリモ・図鑑向けの「自然・研究・素材感」と、ホーム・カレンダー・設定向けの「金属・石・秩序」を分ける。表現層は共通層の可読性、操作性、状態意味を上書きしない。
 - ライトとダークは別の値を持つテーマとして設計し、単純な反転を行わない。各テーマで通常・高コントラスト状態を検証し、本文と背景のコントラストは少なくとも WCAG AA を満たす。
 - コンポーネントは意味トークンだけを参照し、固定の色値や画面固有のスタイルを内部に持ち込まない。
+
+---
+
+## S. 最高品質化の実装基準（確定・2026-08-19）
+
+外部一次資料と公式実装を再調査した詳細仕様は
+`Grimoire_最高品質化仕様.md` を正本とする。同書の **[外部仕様/事実]**、
+**[採用判断]**、**[初期調整値]** を混同せず、初期値は実機・最終アセットで再調整する。
+
+### S-1. モジュール境界と永続化
+
+- 背景世界、生物、UI chrome、データストアは単独 owner を持ち、bootstrap 以外で
+  相互の実装を import しない。背景が公開する immutable な光・tone・quality snapshot
+  だけを生物と UI が読む。UI は command、データストアは commit 済み projection と
+  event を公開する。area1-coral 試作の `version: 2` は bootstrap adapter だけが読み、
+  packed sRGB を linear 値へ変換した製品契約 `schema: 3` を consumer へ公開する。
+  adapterはdirectionを正規化し、nested tupleをcopy+freezeして不正なfinite/range/hexを拒否する。
+- task、報酬、成長、outbox の関連書込みは一つの IndexedDB transaction へまとめる。
+  演出は commit 前に開始しない。transactional outbox、決定的な `eventId`、15秒の
+  owner lease、consumer inbox/ackにより複数tabの同時実行を抑え、永続効果を一度にする。
+  視聴覚の再生自体はat-least-once + idempotent session keyと明記する。
+  command receiptも同じtransactionへ保存し、曖昧commit後は同じcommandId/payloadHashで
+  同じ結果を返す。別payloadでのcommandId再利用は拒否する。
+- 旧DBはユーザー起点でsnapshotとSHA-256を先に作り、runId付きstagingだけへ書く。
+  検証成功後のactivation transactionで初めて正本へcopyしてactiveへflipする。失敗時は
+  未検証taskを公開せず、旧DB・snapshot・stagingを自動削除しない。
+  同じsource+sourceHashは新runIdを作らず既存runをresume/returnし、native taskとは予約ID
+  namespaceとmigrationRunId付きactive projectionで分離する。
+
+### S-2. 適応品質
+
+- 端末名を真値にせず、120 frame（最低60）の p20 FPS と scene draw call、triangle、
+  post-pass を測る。4秒 warmup、2.5秒継続で full→reduced、8秒継続で復帰、15秒
+  cooldown、同一 session の2回目縮退で reduced lock を初期契約とする。
+- 初期閾値は 48/57 fps、scene draw 50/38、triangle 150k（受入許容 +2%）/100k、
+  post-pass 10/8。full は DPR 1.5、reduced mobile は DPR 1.15・render scale .82 を
+  上限とする。60fpsは固定capではなく最低校正基準とし、native refreshで描画する。
+  Pixel 7a / Xiaomi 14T Pro 各5 run×60秒でp20/p5、100ms超stall、tier遷移を校正する。
+  triangle予算はskyを除くvisible world geometryを数え、全passのrenderer trianglesは診断値に
+  分離する。auto+reducedでwarmup後のp20<40が3秒継続、context loss、shader failure時は
+  rendererを止め、asset不要の生成poster（任意video優先）へ切り替えてHTML操作を維持する。
+
+### S-3. UI、theme、アクセシビリティ
+
+- 共通 semantic token の上に「金属・石・文字階層」と「博物学・自然素材」の表現
+  token を重ねる。表現層は contrast、focus、DOM順、accessible name を上書きしない。
+- WCAG 2.2 AA を最低線とし、通常文字 4.5:1、large text 3:1、UI boundary / focus
+  3:1 を最終合成 pixel で検証する。accent面は専用`onAccent` tokenを使う。icon-only nav は長押し tooltip に加えて常時
+  `aria-label` を持たせ、keyboard、200% zoom、320 CSS px、reduced motion を受入試験にする。
+
+### S-4. 3D / VFX / 生物物理
+
+- linear-sRGB で照明・fog・VFXを合成し、ACES は最終 composite の一箇所だけで適用する。
+  背景の key light direction / linear color / intensity / exposure を契約化し、生物側は
+  clamp して補間する。god rays は radial post-process、fog は各world materialで一度だけ
+  評価する解析的3-band depth/height fog、粒子はinstancingを既定とする。depth-reconstructed
+  raymarchは現行baselineに含めず、desktop実験のDecision Candidateに限る。
+- VRM / Live2D の耳・尻尾・毛先は別 profile とし、固定 timestep と substep、角度 clamp、
+  collider を必須にする。詳細仕様の stiffness / drag / gravity / 最大角は校正用初期値で、
+  最終リグなしに標準値と断定しない。
+
+### S-5. マイクロインタラクションと音
+
+- press は scale .972、y 2 px、押下 70 ms、release spring は stiffness 430 / damping 30 /
+  mass .72 を初期値とする。8 px を超える drag は cancel し、保存失敗時は glow / reward を
+  出さない。glow は最大 opacity .34、blur 14 px、420 ms の余韻を基準に背景光色へ同期する。
+- 音は user gesture 後に開始し、phase-locked な ambient / harmonic / pulse stem を使う。
+  BGM と SFX bus、EQ、fade、polyphony、voice stealing を詳細仕様どおり分離する。操作原因と
+  視覚・SE・触覚は一対一 event で束ね、いずれを無効にしても操作結果を理解可能にする。
+  compressor後にAudioWorklet true-peak limiterを置き、最大polyphony最終mixを-1 dBTP以下で
+  検証する。outboxのcommittedAtはstaleness専用とし、claim時に新しいpresentationIdと
+  monotonic presentationAtを発行してvisual/audio/creatureへ同じlookaheadで配る。
+
+### S-6. 未決定と合格条件
+
+- エリア遷移の最終採否、完成リグの spring 最終値、最終 HDR scene の VFX 値、mastering
+  済み音源の mix 値、icon-only nav の初見理解は物理端末・実アセット試験後に確定する。
+- 実装の合格条件と検証 ID は `Grimoire_最高品質化仕様.md` 第7章を使用する。

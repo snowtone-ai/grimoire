@@ -22,9 +22,10 @@ import {
 } from './materials.js';
 import { PostPipeline } from './passes.js';
 import { makeRng, rand } from './noise.js';
+import { RuntimeQualityGovernor } from './quality.js';
 
 const AREA_ID = 'area-01-coral-plateau';
-const CONTRACT_VERSION = 1;
+const CONTRACT_VERSION = 2;
 
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -63,12 +64,21 @@ export class CoralArea {
     };
     this._motionQuery?.addEventListener?.('change', this._onMotionPreference);
 
-    this.stats = { fps: 0, drawCalls: 0, triangles: 0, programs: 0, buildMs: 0 };
-    this._fpsSamples = [];
-    this._degradeAccum = 0;
-    this._recoverAccum = 0;
-    this._recoverAttempts = 0;
-    this._warmup = 0;
+    this.stats = {
+      fps: 0,
+      fpsP20: 0,
+      drawCalls: 0,
+      totalDrawCalls: 0,
+      primarySceneTriangles: 0,
+      rendererTotalTriangles: 0,
+      postPasses: 0,
+      programs: 0,
+      buildMs: 0,
+      qualityLocked: false,
+      qualityReason: 'initial-full',
+    };
+    this.qualityGovernor = new RuntimeQualityGovernor();
+    this.qualityReason = 'initial-full';
     this._time = 0;
     this._lastFrame = 0;
 
@@ -88,7 +98,8 @@ export class CoralArea {
     // Every pass calls render(); with autoReset the HUD would only ever see the last one.
     this.renderer.info.autoReset = false;
 
-    this.isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    this.isMobile = (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+      && (navigator.maxTouchPoints ?? 0) > 0;
 
     this.camera = new THREE.PerspectiveCamera(params.camera.fov, 1, params.camera.near, params.camera.far);
     this.skyCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -166,6 +177,7 @@ export class CoralArea {
   async rebuild() {
     const token = ++this.buildToken;
     this.building = true;
+    this.qualityGovernor.beginWarmup(this.params.quality.warmupWindow);
     const started = performance.now();
     const p = this.effective;
     const report = (label, frac) => this.onProgress?.(label, frac);
@@ -383,14 +395,11 @@ export class CoralArea {
     report('仕上げ中', 0.95);
 
     this.stats.buildMs = Math.round(performance.now() - started);
-    this.stats.triangles = countTriangles(this.group);
+    // PERF-05: the primary budget is visible world geometry only. The sky is a sibling
+    // scene and repeated occlusion/post rendering is reported separately at render time.
+    this.stats.primarySceneTriangles = countTriangles(this.group);
     this.syncUniforms();
     this.building = false;
-    // Geometry generation runs on the main thread between yielded frames, so the samples
-    // taken during a build describe the builder, not the renderer. Discard them or the
-    // governor degrades a scene that was never actually slow.
-    this._fpsSamples.length = 0;
-    this._degradeAccum = 0;
     this.emit('built', { stats: { ...this.stats } });
     report('完了', 1);
   }
@@ -769,7 +778,42 @@ export class CoralArea {
     const env = Object.freeze({
       version: CONTRACT_VERSION,
       areaId: AREA_ID,
-      quality: this.resolvedTier,
+      quality: Object.freeze({
+        tier: this.resolvedTier,
+        mode: this.params.quality.tier,
+        reason: this.qualityReason,
+        locked: this.qualityGovernor.locked,
+        mobileProfile: this.isMobile,
+        pixelRatio: this._effectiveDpr ?? 1,
+        renderScale: p.quality.renderScale,
+        postPasses: this.post?.getPassCount(p) ?? 0,
+        budgets: Object.freeze({
+          degradeFpsP20: this.params.quality.degradeFps,
+          fallbackFpsP20: this.params.quality.fallbackFps,
+          drawCalls: this.params.quality.drawCallBudgetFull,
+          primarySceneTriangles: this.params.quality.triangleBudgetFull,
+          triangleTolerance: this.params.quality.triangleTolerance,
+          effectiveTriangleLimit: Math.round(
+            this.params.quality.triangleBudgetFull
+              * (1 + this.params.quality.triangleTolerance)
+          ),
+          postPasses: this.params.quality.postPassBudgetFull,
+          recoverFpsP20: this.params.quality.recoverFps,
+          recoverDrawCalls: this.params.quality.recoverDrawCalls,
+          recoverPrimarySceneTriangles: this.params.quality.recoverTriangles,
+          recoverPostPasses: this.params.quality.recoverPostPasses,
+        }),
+        sampling: Object.freeze({
+          frames: this.params.quality.sampleFrames,
+          minimumFrames: this.params.quality.minSamples,
+          warmupSeconds: this.params.quality.warmupWindow,
+          degradeSeconds: this.params.quality.degradeWindow,
+          recoverSeconds: this.params.quality.recoverWindow,
+          fallbackSeconds: this.params.quality.fallbackWindow,
+          cooldownSeconds: this.params.quality.tierDwell,
+          maxAutoDrops: this.params.quality.maxAutoDrops,
+        }),
+      }),
       light: Object.freeze({
         direction: Object.freeze({ x: this._sunDir.x, y: this._sunDir.y, z: this._sunDir.z }),
         color: p.sun.color,
@@ -821,6 +865,7 @@ export class CoralArea {
     const p = this.effective;
     const cap = this.isMobile ? p.quality.pixelRatioCapMobile : p.quality.pixelRatioCap;
     const dpr = Math.min(window.devicePixelRatio || 1, cap) * p.quality.renderScale;
+    this._effectiveDpr = dpr;
     this.cssWidth = cssWidth;
     this.cssHeight = cssHeight;
 
@@ -917,6 +962,9 @@ export class CoralArea {
     r.clear(true, true, false);
     r.render(this.skyScene, this.skyCamera);
     r.render(this.worldScene, this.camera);
+    // `renderer.info` accumulates every pass because autoReset=false. Capture the primary
+    // scene here so its <=50 budget is not confused with the later occlusion/post draws.
+    const sceneDrawCalls = r.info.render.calls;
 
     /* 2. occlusion buffer: bright sky core, every occluder flat black */
     if (p.godrays.enabled) {
@@ -952,7 +1000,10 @@ export class CoralArea {
     post.composite(p, this._time);
     r.setRenderTarget(null);
 
-    this.stats.drawCalls = r.info.render.calls;
+    this.stats.drawCalls = sceneDrawCalls;
+    this.stats.totalDrawCalls = r.info.render.calls;
+    this.stats.rendererTotalTriangles = r.info.render.triangles;
+    this.stats.postPasses = post.getPassCount(p);
     this.stats.programs = r.info.programs?.length ?? 0;
   }
 
@@ -972,88 +1023,42 @@ export class CoralArea {
     if (this.disposed) return;
     const dt = Math.max(0, (now - this._lastFrame) / 1000);
     this._lastFrame = now;
-    if (dt > 0) {
-      this._fpsSamples.push(1 / dt);
-      if (this._fpsSamples.length > 60) this._fpsSamples.shift();
-      this.stats.fps = Math.round(this._fpsSamples.reduce((a, b) => a + b, 0) / this._fpsSamples.length);
-    }
     this.renderFrame(dt);
     this._evaluateQuality(dt);
   }
 
-  /**
-   * G章: drop to `reduced` if the frame rate stays under target for `degradeWindow`.
-   *
-   * Two things this has to get right, both learned the hard way from the measured trace:
-   *
-   * 1. Geometry generation and the first-render shader compile stall the main thread for
-   *    reasons that say nothing about steady-state cost. Measured on this scene: ~2.5 s
-   *    at 28-41 fps immediately after a build, settling to a solid 60 straight after.
-   *    Judging that window degrades a renderer that was never slow — hence `warmupWindow`,
-   *    which covers the build *and* the compile tail that follows it.
-   * 2. Degradation has to be reversible. A one-way ratchet means one transient hitch pins
-   *    the session at half quality forever. It recovers once, and only once: if the device
-   *    genuinely cannot hold the target it will fail again, and the second verdict stands.
-   */
+  /** G章: evaluate measured tail FPS plus explicit GPU-work budgets. */
   _evaluateQuality(dt) {
-    const p = this.params;
-    if (p.quality.tier !== 'auto') {
-      const want = p.quality.tier;
-      if (want !== this.resolvedTier) this.setTier(want);
-      return;
-    }
+    const verdict = this.qualityGovernor.evaluate({
+      dt,
+      currentTier: this.resolvedTier,
+      forcedTier: this.params.quality.tier,
+      building: this.building,
+      drawCalls: this.stats.drawCalls,
+      primarySceneTriangles: this.stats.primarySceneTriangles,
+      postPasses: this.stats.postPasses,
+      config: this.params.quality,
+    });
 
-    if (this.building) {
-      this._warmup = p.quality.warmupWindow;
-      this._degradeAccum = 0;
-      this._recoverAccum = 0;
-      return;
-    }
-    if (this._warmup > 0) {
-      this._warmup -= dt;
-      this._fpsSamples.length = 0;
-      this._degradeAccum = 0;
-      this._recoverAccum = 0;
-      return;
-    }
-    if (this._fpsSamples.length < 30) return;
+    this.stats.fps = Math.round(verdict.metrics.fpsMean);
+    this.stats.fpsP20 = Math.round(verdict.metrics.fpsP20);
+    this.stats.qualityLocked = verdict.metrics.locked;
+    this.stats.qualityReason = verdict.reason;
 
-    const target = p.quality.targetFps;
-
-    if (this.resolvedTier === 'reduced') {
-      if (this._recoverAttempts >= 1) return;
-      // `>=`, and a margin that defaults to 0. On a vsync-capped display the frame rate
-      // cannot exceed the refresh rate, so any margin larger than (refresh - target) is
-      // unreachable and the scene can never climb back: measured a steady 60 fps sitting
-      // in `reduced` forever because the threshold was 61. The hysteresis comes from the
-      // window asymmetry instead — 2.5 s to drop, 8 s to climb.
-      if (this.stats.fps >= target + p.quality.recoverMargin) {
-        this._recoverAccum += dt;
-        if (this._recoverAccum >= p.quality.recoverWindow) {
-          this._recoverAccum = 0;
-          this._recoverAttempts++;
-          this.setTier('full');
-        }
-      } else {
-        this._recoverAccum = Math.max(0, this._recoverAccum - dt * 0.5);
-      }
-      return;
-    }
-
-    if (this.stats.fps < target) {
-      this._degradeAccum += dt;
-      if (this._degradeAccum >= p.quality.degradeWindow) {
-        this._degradeAccum = 0;
-        this.setTier('reduced');
-      }
-    } else {
-      this._degradeAccum = Math.max(0, this._degradeAccum - dt * 0.5);
+    if (verdict.nextTier) {
+      this.setTier(verdict.nextTier, verdict.reason);
+    } else if (verdict.reason !== this.qualityReason) {
+      this.qualityReason = verdict.reason;
+      this._envCache = null;
+      this.emit('environment', this.getEnvironment());
     }
   }
 
-  setTier(tier) {
+  setTier(tier, reason = `manual-${tier}`) {
     if (tier === this.resolvedTier) return;
     this.resolvedTier = tier;
+    this.qualityReason = reason;
+    this.qualityGovernor.acceptTier(tier, reason);
     this.effective = effectiveParams(this.params, tier);
     // The quality tier is a compile-time switch in the world shader.
     for (const key of ['terrain', 'tower', 'branch', 'glow', 'plate', 'fan', 'framing']) {
@@ -1063,7 +1068,9 @@ export class CoralArea {
     }
     this.refreshSkyOctaves();
     this.setSize(this.cssWidth, this.cssHeight);
-    this.emit('tier', { tier });
+    this._envCache = null;
+    this.emit('environment', this.getEnvironment());
+    this.emit('tier', { tier, reason, locked: this.qualityGovernor.locked });
     this.rebuild();
   }
 

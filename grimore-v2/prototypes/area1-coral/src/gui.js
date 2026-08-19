@@ -152,7 +152,7 @@ export class ParamPanel {
     this.hud = document.createElement('div');
     this.hud.className = 'gp-hud';
     this.hudCells = {};
-    for (const [key, label] of [['fps', 'FPS'], ['draws', 'DRAW'], ['tris', 'TRI'], ['tier', 'TIER']]) {
+    for (const [key, label] of [['fps', 'P20 FPS'], ['draws', 'DRAW'], ['tris', 'TRI'], ['tier', 'TIER']]) {
       const cell = document.createElement('div');
       cell.className = 'gp-stat';
       const b = document.createElement('b');
@@ -455,17 +455,28 @@ export class ParamPanel {
 
   updateStats(stats, tier) {
     const fpsCell = this.hudCells.fps;
-    fpsCell.value.textContent = stats.fps > 0 ? String(stats.fps) : '—';
-    fpsCell.cell.classList.toggle('warn', stats.fps > 0 && stats.fps < 50);
+    fpsCell.value.textContent = stats.fpsP20 > 0 ? String(stats.fpsP20) : '—';
+    fpsCell.cell.classList.toggle(
+      'warn', stats.fpsP20 > 0 && stats.fpsP20 < this.params.quality.degradeFps
+    );
 
     this.hudCells.draws.value.textContent = String(stats.drawCalls);
-    this.hudCells.draws.cell.classList.toggle('warn', stats.drawCalls > 50);
+    this.hudCells.draws.cell.classList.toggle(
+      'warn', stats.drawCalls > this.params.quality.drawCallBudgetFull
+    );
 
-    const k = stats.triangles / 1000;
-    this.hudCells.tris.value.textContent = k >= 1 ? `${k.toFixed(0)}k` : String(stats.triangles);
-    this.hudCells.tris.cell.classList.toggle('warn', stats.triangles > 150000);
+    const k = stats.primarySceneTriangles / 1000;
+    this.hudCells.tris.value.textContent = k >= 1
+      ? `${k.toFixed(0)}k`
+      : String(stats.primarySceneTriangles);
+    this.hudCells.tris.cell.classList.toggle(
+      'warn', stats.primarySceneTriangles > this.params.quality.triangleBudgetFull
+        * (1 + this.params.quality.triangleTolerance)
+    );
 
-    this.hudCells.tier.value.textContent = tier === 'reduced' ? 'RED' : 'FULL';
+    this.hudCells.tier.value.textContent = tier === 'reduced'
+      ? (stats.qualityLocked ? 'RED!' : 'RED')
+      : 'FULL';
     this.hudCells.tier.cell.classList.toggle('warn', tier === 'reduced');
   }
 

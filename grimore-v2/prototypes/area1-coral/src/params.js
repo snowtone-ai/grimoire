@@ -612,28 +612,40 @@ export const SCHEMA = {
     note: 'H章「性能判定モジュールが full / reduced を決定し、背景・グリモ・UI が同じ段階を購読する」。',
     params: {
       tier: { label: '品質段階', type: 'select', value: 'auto', options: [
-        { value: 'auto', label: '自動（FPSで縮退）' },
+        { value: 'auto', label: '自動（実測負荷で縮退）' },
         { value: 'full', label: 'full 固定' },
         { value: 'reduced', label: 'reduced 固定' },
       ] },
       pixelRatioCap: { label: 'ピクセル比上限', type: 'range', value: 2.0, min: 0.5, max: 3, step: 0.05, rebuild: 'passes' },
       pixelRatioCapMobile: { label: 'ピクセル比上限（モバイル）', type: 'range', value: 1.5, min: 0.5, max: 3, step: 0.05, rebuild: 'passes' },
       renderScale: { label: '内部解像度スケール', type: 'range', value: 1.0, min: 0.4, max: 1.0, step: 0.05, rebuild: 'passes' },
-      targetFps: { label: '目標FPS', type: 'range', value: 55, min: 24, max: 120, step: 1 },
+      degradeFps: { label: '縮退 p20 FPS', type: 'range', value: 48, min: 15, max: 120, step: 1 },
+      recoverFps: { label: '復帰 p20 FPS', type: 'range', value: 57, min: 15, max: 120, step: 1 },
+      fallbackFps: { label: '静止画化 p20 FPS', type: 'range', value: 40, min: 10, max: 60, step: 1 },
+      fallbackWindow: { label: '静止画化の判定窓（秒）', type: 'range', value: 3, min: 1, max: 10, step: 0.5 },
       degradeWindow: { label: '縮退の判定窓（秒）', type: 'range', value: 2.5, min: 0.5, max: 10, step: 0.1 },
       warmupWindow: {
         label: '生成後の猶予（秒）', type: 'range', value: 4.0, min: 0, max: 15, step: 0.1,
         help: 'ジオメトリ生成とシェーダ初回コンパイルの間はFPSを判定に使わない。実測で生成直後に約2.5秒間28〜41fpsまで落ちてから60fpsに戻る',
       },
-      recoverMargin: {
-        label: '復帰のFPS余裕', type: 'range', value: 0, min: 0, max: 40, step: 1,
-        help: '目標FPSにこれだけ上乗せした値以上を維持し続けたら full に戻す。'
-          + 'vsync上限があるため（リフレッシュレート − 目標FPS）を超える値にすると永久に復帰できない',
-      },
       recoverWindow: {
         label: '復帰の判定窓（秒）', type: 'range', value: 8.0, min: 1, max: 30, step: 0.5,
-        help: '縮退より長くしてハンチングを防ぐ。復帰は1セッション1回限り',
+        help: '縮退より長くしてハンチングを防ぐ。2回目の自動縮退後はセッション中reduced固定',
       },
+      sampleFrames: { label: 'FPS標本数', type: 'range', value: 120, min: 30, max: 240, step: 1 },
+      minSamples: { label: '判定開始標本数', type: 'range', value: 60, min: 10, max: 180, step: 1 },
+      drawCallBudgetFull: { label: 'full draw call上限', type: 'range', value: 50, min: 10, max: 200, step: 1 },
+      triangleBudgetFull: { label: 'full 三角形上限', type: 'range', value: 150000, min: 10000, max: 500000, step: 5000 },
+      triangleTolerance: {
+        label: '三角形予算の許容率', type: 'range', value: 0.02, min: 0, max: 0.1, step: 0.005,
+        help: '参照画の群落密度を保つための明示的な許容幅。150,000 × 1.02 = 153,000を実効上限とする。',
+      },
+      postPassBudgetFull: { label: 'full post pass上限', type: 'range', value: 10, min: 1, max: 30, step: 1 },
+      recoverDrawCalls: { label: '復帰 draw call上限', type: 'range', value: 38, min: 5, max: 150, step: 1 },
+      recoverTriangles: { label: '復帰 三角形上限', type: 'range', value: 100000, min: 5000, max: 400000, step: 5000 },
+      recoverPostPasses: { label: '復帰 post pass上限', type: 'range', value: 8, min: 1, max: 30, step: 1 },
+      tierDwell: { label: '品質段階クールダウン（秒）', type: 'range', value: 15, min: 0, max: 60, step: 1 },
+      maxAutoDrops: { label: '自動縮退の上限回数', type: 'range', value: 2, min: 1, max: 5, step: 1 },
       auditGeometry: {
         label: 'ジオメトリ健全性チェック', type: 'bool', value: true,
         help: '生成した各ジオメトリの退化三角形率を測り、5割超ならコンソールに出す。'
@@ -647,6 +659,7 @@ export const SCHEMA = {
 
 /** Overrides applied to the `reduced` quality tier (G章: Pixel 7a 等での自動縮退). */
 export const REDUCED_TIER = {
+  quality: { pixelRatioCapMobile: 1.15, renderScale: 0.82 },
   towers: { resolution: 38 },
   branchCoral: { count: 54, levels: 3, radialSegments: 4, variants: 4 },
   glowCoral: { count: 12 },

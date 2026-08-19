@@ -492,6 +492,17 @@ export class PostPipeline {
     this.godrayPass.material.needsUpdate = true;
   }
 
+  /** Number of full-screen post-processing draws for the current effective tier. */
+  getPassCount(params) {
+    let passes = 1; // final composite
+    if (params.godrays.enabled) passes += 1 + (params.godrays.blur ? 1 : 0);
+    if (params.bloom.enabled && this.bloomMips.length > 0) {
+      // bright extraction + (n - 1) downsamples + (n - 1) additive upsamples
+      passes += this.bloomMips.length * 2 - 1;
+    }
+    return passes;
+  }
+
   renderGodRays(params, lightScreenPos) {
     const u = this.godrayPass.material.uniforms;
     u.uLightPos.value.copy(lightScreenPos);

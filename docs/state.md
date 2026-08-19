@@ -1,12 +1,21 @@
 # state.md (grimore-v2)
 
 ## Current
-- 2026-08-19: T007 — `prompt.md`を実行中。外部一次資料に基づく
-  `grimore-v2/Grimoire_最高品質化仕様.md`、背景／グリモ／UI／ストア間の
-  一方向契約、IndexedDBのtransactional outboxと一回限りの移行、二系統UI、
-  3D/VFX、スプリング、操作フィードバック、適応音響を仕様化し、陸珊瑚の台地
-  プロトタイプへ端末非依存の実測品質ガバナーを統合する。Codexが統合を担当し、
-  実装と仕様書を分離したワーカー2件が作業中。
+- 2026-08-19: T010 — OpenAI公式Subagents文書で、Codexのworker上限は
+  `[agents] max_concurrent_threads_per_session`（primaryを除外）と確認した。
+  `AGENTS.md`にはCodex-onlyで最大4 workerのoverrideを追加し、`CLAUDE.md`は未変更。
+  実行時設定はglobal/projectの両configがmanaged filesystemに拒否されB003。
+- 2026-08-19: T009 — OpenAI公式の現行Config Reference/MCP/Security文書を再調査し、
+  shell・MCP・appの無確認実行には`approval_policy="never"`だけでなく、
+  `default_permissions=":danger-full-access"`とapps/MCPごとの
+  `default_tools_approval_mode="approve"`が必要と確定(D-007)。ChatGPT pluginの
+  グローバル権限は利用可能な最大値`review_important_actions`へ更新済み。
+  `~/.codex/config.toml`本体はmanaged filesystemのworkspace外書込拒否でB002。
+- 2026-08-19: T007/T008 — `prompt.md`の5領域を一次資料55件、採用判断、正確な
+  初期値、コード/JSON、受入matrixまで仕様化し、決定ログS章へ確定した。陸珊瑚の
+  台地へp20/scene calls/visible triangles/post passesの品質ガバナーと3秒low-p20
+  poster fallbackを統合。Node 15/15、build、headless Chrome D3D11、Markdown/JSON、
+  diff checkに合格し、独立監査はproduct CRITICAL 0/HIGH 0。T007/T008 verified。
 - 2026-08-19: T006 — オーナーがグローバル設定へ
   `windows.sandbox="unelevated"`と`sandbox_private_desktop=false`を反映し、Codexを
   完全再起動したことを確認した。それでも現在の実行ラッパーはMicrosoft Store版
@@ -58,13 +67,15 @@
   （新アプリの雛形作りは今後の別タスク）。
 
 ## Current Blocker
+- T010: Codex実行時上限の`[agents] max_concurrent_threads_per_session = 4`は
+  `~/.codex/config.toml`への反映とCodex再起動が必要。Claude側の変更は不要。
+- T009: グローバル`~/.codex/config.toml`が現在のmanaged filesystemではread-only。
+  D-007の差分は確定済みだが、反映とCodex再起動はオーナー操作が必要。
 - T006: 必要なグローバル設定は反映済み。残る問題はStore版`pwsh.exe`の
   `WindowsApps`起動経路であり、非Store版PowerShellを既定シェルにするか、
   WSL実行へ移す必要がある。設計・実装作業は代替経路で継続できる。
 
 ## Next
-- T007の仕様・実装を統合後、要求別監査、ビルド、テスト、ブラウザ検証、
-  `git diff --check`を行い、決定ログ・台帳・本レポートを確定する。
 - v2全体のアプリ雛形はT007の契約とデザイントークンを入力として別タスクで作る。
 - 残る未決定事項はエリア間の遷移演出。今回確定する共有契約、IndexedDB移行、
   タップ反応、スプリング値は決定ログS章から参照する。

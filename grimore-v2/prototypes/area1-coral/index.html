@@ -39,9 +39,15 @@
     transition:width .25s ease}
 
   #fallback{position:fixed;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;
-    padding:32px;background:#070d18;text-align:center}
+    padding:32px;background:linear-gradient(160deg,#071323,#17364b 55%,#d17a64);text-align:center;
+    overflow:hidden;isolation:isolate;pointer-events:none}
   #fallback[hidden]{display:none}
-  #fallback div{max-width:44ch}
+  #fallback canvas,#fallback video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    z-index:-2}
+  #fallback::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(180deg,rgba(4,10,18,.05),rgba(4,10,18,.7))}
+  #fallback .fallback-copy{max-width:44ch;padding:22px 26px;border:1px solid rgba(219,231,242,.16);
+    border-radius:12px;background:rgba(5,10,20,.62);backdrop-filter:blur(8px)}
   #fallback h2{margin:0 0 10px;font-size:16px;font-weight:600}
   #fallback p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-dim)}
 
@@ -76,10 +82,12 @@
 </div>
 
 <div id="fallback" hidden>
-  <div>
+  <canvas data-fallback-poster aria-hidden="true"></canvas>
+  <video data-fallback-video muted loop playsinline hidden aria-hidden="true"></video>
+  <div class="fallback-copy">
     <h2>この環境では描画できません</h2>
     <p data-detail>WebGL2 が利用できません。</p>
-    <p style="margin-top:10px">実機のアプリでは、この状態のときに静止画へフォールバックします（白画面にはしません）。</p>
+    <p style="margin-top:10px">描画負荷またはGPU状態に応じて、動画または静止画へ安全に切り替えています。</p>
   </div>
 </div>
 

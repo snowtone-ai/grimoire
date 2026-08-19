@@ -22,13 +22,15 @@ Do not duplicate `CLAUDE.md` here; if a rule changes, change it there.
 ## Where Codex differs from Claude Code
 
 **Autonomy.** Claude Code uses `bypassPermissions` (project `.claude/settings.json`)
-plus a global `permissions.deny` layer. Codex has no project-scoped equivalent --
-`approval_policy` and `sandbox_mode` are security-sensitive keys the Codex CLI
-silently ignores in a project-local `.codex/config.toml`; they must live in
-`~/.codex/config.toml`. This machine's global config already sets
-`approval_policy = "never"` and trusts this project's path under
-`[projects.'c:\users\chidj\project\プロダクト\task-plant']`, so autonomy already
-matches Claude Code's `bypassPermissions` -- no project-level action needed here.
+plus a global `permissions.deny` layer. Current Codex versions load trusted
+project-scoped `.codex/config.toml` overrides, but machine-wide defaults belong in
+`~/.codex/config.toml`. Fully non-interactive local/MCP/app operation requires the
+three independent defaults documented by Codex: `approval_policy = "never"`,
+`default_permissions = ":danger-full-access"`, and `default_tools_approval_mode =
+"approve"` under `[apps._default]` and each `[mcp_servers.<id>]`. The global file
+currently has `approval_policy = "never"`, while the remaining defaults are tracked
+as B002 because this managed session cannot write outside the workspace. The
+project trust entry remains `[projects.'c:\users\chidj\project\プロダクト\task-plant']`.
 
 **Guard hook.** Claude Code's destructive-command guard lives at
 `~/.claude/hooks/guard.mjs`. Its Codex port lives at `~/.codex/hooks/guard.mjs`,
@@ -50,6 +52,12 @@ only as a dead record of the old convention; it is no longer imported.
 `gpt-5.5`, set globally), not Sonnet 5. `CLAUDE.md`'s "never switch model
 mid-session" cache-economics rule is Claude-specific (Anthropic prompt caching);
 it does not apply to Codex sessions and can be ignored here.
+
+**Subagents.** Codex may use up to four concurrent worker subagents when useful.
+This overrides `CLAUDE.md`'s default cap of two for Codex only; Claude's cap and
+behavior remain unchanged. The Codex runtime counterpart is the user-level
+`[agents] max_concurrent_threads_per_session = 4` setting (the limit excludes
+the primary agent).
 
 **Verify script reality check.** `scripts/verify.mjs` (kept from `CLAUDE.md`'s
 Commands section) still shells out to `pnpm lint/typecheck/test/build`. Per

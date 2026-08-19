@@ -8,6 +8,7 @@
 import { CoralArea } from './scene.js';
 import { createParams } from './params.js';
 import { ParamPanel } from './gui.js';
+import { SustainedLowFpsFallback, activateFallbackMedia } from './fallback.js';
 
 const canvas = document.getElementById('scene');
 const overlay = document.getElementById('loading');
@@ -16,9 +17,11 @@ const overlayBar = document.getElementById('loading-bar');
 const fallback = document.getElementById('fallback');
 const caption = document.getElementById('caption');
 
-function showFallback(message) {
+function showFallback(message, reason = 'render-unavailable') {
   if (overlay) overlay.hidden = true;
   if (!fallback) return;
+  fallback.dataset.reason = reason;
+  activateFallbackMedia(fallback);
   fallback.hidden = false;
   const detail = fallback.querySelector('[data-detail]');
   if (detail) detail.textContent = message;
@@ -34,7 +37,7 @@ function hasWebGL2() {
 }
 
 if (!hasWebGL2()) {
-  showFallback('この環境では WebGL2 が使えません。背景世界は静止画へのフォールバックが必要です。');
+  showFallback('この環境では WebGL2 が使えないため、軽量な静止画で背景世界を表示しています。', 'webgl2-unavailable');
 } else {
   boot();
 }
@@ -46,9 +49,13 @@ function boot() {
   try {
     area = new CoralArea(canvas, params);
   } catch (error) {
-    showFallback(`レンダラの初期化に失敗しました: ${error?.message ?? error}`);
+    showFallback(`レンダラの初期化に失敗しました: ${error?.message ?? error}`, 'renderer-init-failed');
     return;
   }
+  const perfFallback = new SustainedLowFpsFallback({
+    thresholdFps: params.quality.fallbackFps,
+    durationSeconds: params.quality.fallbackWindow,
+  });
 
   const panel = new ParamPanel(params, {
     onLive: () => {
@@ -109,7 +116,10 @@ function boot() {
 
   document.addEventListener('visibilitychange', () => {
     if (!params.quality.pauseWhenHidden) return;
-    if (document.hidden) area.stop();
+    if (document.hidden) {
+      perfFallback.reset();
+      area.stop();
+    }
     else area.start();
   });
 
@@ -117,14 +127,38 @@ function boot() {
     panel.updateStats({ ...area.stats, ...stats }, area.resolvedTier);
     if (caption) {
       caption.textContent =
-        `${stats.triangles.toLocaleString('ja-JP')} 三角形 / 生成 ${stats.buildMs} ms`;
+        `${stats.primarySceneTriangles.toLocaleString('ja-JP')} primary scene三角形 / 生成 ${stats.buildMs} ms`;
     }
   });
-  area.on('tier', ({ tier }) => panel.showToast(`品質段階を ${tier} に変更しました`));
-  area.on('contextlost', () => showFallback('WebGL コンテキストが失われました。ページを再読み込みしてください。'));
+  area.on('tier', ({ tier, reason }) => {
+    panel.showToast(`品質段階を ${tier} に変更しました（${reason}）`);
+  });
+  area.on('contextlost', () => {
+    area.stop();
+    showFallback('WebGL コンテキストが失われたため、静止画へ切り替えました。', 'webgl-context-lost');
+  });
 
   let statsTimer = setInterval(() => {
     panel.updateStats(area.stats, area.resolvedTier);
+    const governor = area.qualityGovernor;
+    if (perfFallback.update({
+      now: performance.now(),
+      mode: params.quality.tier,
+      tier: area.resolvedTier,
+      fpsP20: area.stats.fpsP20,
+      building: area.building,
+      warmupRemaining: governor.warmupRemaining,
+      sampleCount: governor.samples.length,
+      minimumSamples: params.quality.minSamples,
+    })) {
+      area.stop();
+      clearInterval(statsTimer);
+      showFallback(
+        `reduced品質でも p20 FPS が ${params.quality.fallbackFps} 未満の状態が `
+          + `${params.quality.fallbackWindow} 秒継続したため、静止画へ切り替えました。`,
+        'sustained-low-fps'
+      );
+    }
   }, 500);
   window.addEventListener('pagehide', () => clearInterval(statsTimer));
 
@@ -144,6 +178,7 @@ function boot() {
     params,
     getEnvironment: () => area.getEnvironment(),
     getStats: () => ({ ...area.stats, tier: area.resolvedTier }),
+    fallbackGuard: perfFallback,
     setPreset: (name) => panel.applyPreset(name, true),
     setCollapsed: (v) => panel.setCollapsed(v),
   };
