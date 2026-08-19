@@ -90,6 +90,22 @@
 - test: pnpm test | build: pnpm build | verify: pnpm verify | setup: node scripts/setup.mjs
 - Use only commands that exist in this repository.
 
+## Research Tools (Exa + Firecrawl)
+- Web search: Exa (`claude.ai Exa` connector on Claude; local `exa` MCP on Codex).
+  Use to find candidate sources -- especially before UI/UX decisions, per
+  grimore-v2 R-1's research requirement (survey existing high-quality products
+  + official guidance before proposing a design direction).
+- Page/content analysis: Firecrawl (`claude.ai Firecrawl` connector on Claude;
+  local `firecrawl` MCP on Codex). Use to fetch and extract structured content
+  from a specific URL Exa surfaced, rather than re-searching or guessing at
+  page content from a snippet.
+- Pattern: Exa to find candidates -> Firecrawl to read the best 2-3 in full ->
+  synthesize with sources cited. Don't use one where the other fits better --
+  Exa is for discovery, Firecrawl is for depth on a known URL.
+- Codex's local `exa`/`firecrawl` MCP servers are registered but need
+  `EXA_API_KEY`/`FIRECRAWL_API_KEY` added to `~/.codex/config.toml` before they
+  work -- currently blocked, see docs/issues.md.
+
 ## Shell
 - PowerShell for all operations. Windows backslash paths. node scripts/name.mjs.
 

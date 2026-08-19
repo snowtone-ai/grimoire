@@ -58,6 +58,13 @@ branch as part of the near-from-scratch v2 rebuild -- `pnpm verify` will fail
 until a new scaffold exists. That is a known, already-recorded gap, not a
 regression to silently "fix" by restoring old files or inventing a stopgap.
 
+**Research tools.** Same Exa (search) + Firecrawl (page/content analysis)
+workflow as `CLAUDE.md`'s "Research Tools" section -- but Codex has no
+claude.ai connector equivalent, so both `exa` and `firecrawl` are local MCP
+servers registered in `~/.codex/config.toml`. They need `EXA_API_KEY` /
+`FIRECRAWL_API_KEY` added there before they work -- currently blocked, see
+docs/issues.md.
+
 **CI trigger gap.** `.github/workflows/ci.yml` currently only triggers on
 `push`/`pull_request` to `main`, not on `grimore-v2` -- so on this branch,
 "merge gate: CI green" from `CLAUDE.md`'s Git section is not actually

@@ -1,6 +1,15 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-19: T005 (D-006) — 3件対応。(1) docs/decisions.mdに紛れ込んでいた
+  フロントエンド設計決定2件を`grimore-v2/Grimoire_決定事項ログ.md`のR章へ
+  移設。(2) OpenAI公式`codex-plugin-cc`をClaude Codeへ導入、`/codex:rescue`
+  等でCodexをサブエージェント呼び出し可能に。(3) オーナー依頼のExa(検索)+
+  Firecrawl(ページ解析)運用のため、CodexにローカルMCP`exa`/`firecrawl`を
+  登録(APIキー未設定で現在未稼働、docs/issues.md参照)。Claude側はExa/
+  Firecrawlとも既存のclaude.aiコネクタで代替(Firecrawlは
+  `claude mcp login`実行済み、オーナーのブラウザ承認待ち)。運用ルールを
+  CLAUDE.md/AGENTS.mdに追記。詳細はD-006参照。
 - 2026-08-19: T004 (D-005) — Codex CLIの端末実行が全拒否(`CreateProcessAsUserW
   failed: 5`)される状態を調査・解消。原因はグローバル`~/.codex/config.toml`の
   `[windows] sandbox = "elevated"`が要求する特権(SeAssignPrimaryTokenPrivilege等)

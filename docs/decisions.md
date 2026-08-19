@@ -156,16 +156,37 @@ and motivated this reset -- those are kept as-is, not restarted.
   失敗が再発したら本設定を再確認する。
 - 将来見直し条件: 特になし(オーナーの明示依頼による代行対応)。
 
-# D-003. フロントエンド体験設計の調査基準
+## D-006: docs/decisions.mdへ誤って記載されたフロントエンド設計決定の移設、Claude↔Codex連携プラグイン、Exa/Firecrawl MCPの導入
 
-- UI、視覚デザイン、音、演出、インタラクションに関する設計判断は、提案前に既存の高品質なプロダクトと、必要に応じて公式ガイドライン・専門的な制作手法を大規模に調査する。
-- 調査結果を踏まえ、要件に適合する3案と推奨案を提示してから決定する。根拠として参照先を添える。
-- 単なる流行の模倣ではなく、Grimoire v2 の目的、画面文脈、アクセシビリティ、実装・運用コストに照らして選定する。
-- 既にユーザーが明示した世界観・操作要件は優先し、調査はそれを検証・具体化するために使う。
-# D-004. フロントエンドのデザインシステム構成
-
-- デザインシステムは、全画面共通の意味トークンを基盤にし、その上へ画面系統ごとの表現トークンを重ねる二層構成とする。
-- 共通層は、ライト・ダークテーマ、文字階層、余白、境界、状態色、フォーカス、操作状態、モーション、アクセシビリティを担う。色を色相名で直接参照せず、用途名で参照する。
-- 表現層は、グリモ・図鑑向けの「自然・研究・素材感」と、ホーム・カレンダー・設定向けの「金属・石・秩序」を分ける。表現層は共通層の可読性、操作性、状態意味を上書きしない。
-- ライトとダークは別の値を持つテーマとして設計し、単純な反転を行わない。各テーマで通常・高コントラスト状態を検証し、本文と背景のコントラストは少なくとも WCAG AA を満たす。
-- コンポーネントは意味トークンだけを参照し、固定の色値や画面固有のスタイルを内部に持ち込まない。
+- 日付: 2026-08-19
+- 対象: tooling / multi-agent / docs-hygiene
+- 決定: 3件まとめて対応。
+  (1) docs/decisions.mdに単一`#`見出しで紛れ込んでいた「D-003. フロントエンド
+  体験設計の調査基準」「D-004. フロントエンドのデザインシステム構成」を
+  `grimore-v2/Grimoire_決定事項ログ.md`のR章(R-1/R-2)へ移設。docs/decisions.md
+  はエンジニアリング/インフラ決定専用という既定方針(state.md「Next」)に
+  合わせた。
+  (2) `claude plugin marketplace add openai/codex-plugin-cc` →
+  `claude plugin install codex@openai-codex`でOpenAI公式プラグインを導入。
+  Claude Codeから`/codex:rescue`等でCodex CLIをサブエージェントとして
+  呼び出せるようになった。
+  (3) オーナー要望の「ExaでWeb検索、Firecrawlでページ解析」運用のため、
+  Codexに`codex mcp add`でローカルMCP `exa`(exa-mcp-server)・`firecrawl`
+  (firecrawl-mcp)を登録。ClaudeはExaが既存の`claude.ai Exa`コネクタで
+  代替可能と判明したため新規追加不要、FirecrawlもAPIキー不要のOAuth
+  コネクタ(`claude.ai Firecrawl`)が既存だったため、当初登録したローカル
+  `firecrawl-mcp`は削除し`claude mcp login "claude.ai Firecrawl"`へ切替。
+  運用ルールをCLAUDE.md「Research Tools」節とAGENTS.mdの差分節に追記。
+- 採用理由: (1)はオーナー明示指示。(2)(3)もオーナー明示指示
+  (「ClaudeでCodeXを呼べるプラグインも入れて」「ExaとFirecrawlのMCPを
+  インストールし...運用ルールとしてかけ」)。
+- 不採用案: ClaudeにもFirecrawl/Exaのローカルnpxサーバを追加する →
+  同等機能を持つclaude.aiコネクタが既に存在し二重管理になるため不採用。
+  コネクタを優先しローカルMCPはコネクタが存在しないCodex側だけに限定した。
+- 既知のギャップ: Codexの`exa`/`firecrawl`はAPIキー未設定で未稼働
+  (docs/issues.md参照、オーナーが「なしでいいや」と保留)。Claudeの
+  `claude.ai Firecrawl`コネクタはOAuth認可待ち(ブラウザでの承認が必要、
+  オーナー操作待ち)。
+- 将来見直し条件: オーナーがEXA_API_KEY/FIRECRAWL_API_KEYを取得した時点で
+  Codex側`~/.codex/config.toml`の該当`[mcp_servers.*]`エントリに追記して
+  有効化する。
