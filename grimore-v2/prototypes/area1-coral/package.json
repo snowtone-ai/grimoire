@@ -1,0 +1,16 @@
+{
+  "name": "grimoire-area1-coral",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Grimoire v2 / Area 1 (陸珊瑚の台地) background-world prototype",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:dev": "node build.mjs --no-minify",
+    "serve": "node serve.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "three": "0.169.0"
+  }
+}

@@ -1,6 +1,18 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-19: T007 — `prompt.md`を実行中。外部一次資料に基づく
+  `grimore-v2/Grimoire_最高品質化仕様.md`、背景／グリモ／UI／ストア間の
+  一方向契約、IndexedDBのtransactional outboxと一回限りの移行、二系統UI、
+  3D/VFX、スプリング、操作フィードバック、適応音響を仕様化し、陸珊瑚の台地
+  プロトタイプへ端末非依存の実測品質ガバナーを統合する。Codexが統合を担当し、
+  実装と仕様書を分離したワーカー2件が作業中。
+- 2026-08-19: T006 — オーナーがグローバル設定へ
+  `windows.sandbox="unelevated"`と`sandbox_private_desktop=false`を反映し、Codexを
+  完全再起動したことを確認した。それでも現在の実行ラッパーはMicrosoft Store版
+  PowerShell 7 (`WindowsApps/.../pwsh.exe`)を制限トークンから起動する段階で
+  `CreateProcessAsUserW`の`0xC0070005` (Win32 ERROR_ACCESS_DENIED)が継続する。
+  T007は別のローカル実行経路で停止せず継続している。
 - 2026-08-19: T005 (D-006) — 3件対応。(1) docs/decisions.mdに紛れ込んでいた
   フロントエンド設計決定2件を`grimore-v2/Grimoire_決定事項ログ.md`のR章へ
   移設。(2) OpenAI公式`codex-plugin-cc`をClaude Codeへ導入、`/codex:rescue`
@@ -46,17 +58,13 @@
   （新アプリの雛形作りは今後の別タスク）。
 
 ## Current Blocker
-- none
+- T006: 必要なグローバル設定は反映済み。残る問題はStore版`pwsh.exe`の
+  `WindowsApps`起動経路であり、非Store版PowerShellを既定シェルにするか、
+  WSL実行へ移す必要がある。設計・実装作業は代替経路で継続できる。
 
 ## Next
-- 設計相談はCodex CLIへ引き継ぎ、AGENTS.md → CLAUDE.md → 本ファイル →
-  docs/issues.md → docs/decisions.md → grimore-v2/Grimoire_決定事項ログ.md
-  の順で読んでから継続する。
-- v2の技術スタック・アプリ雛形の作成方針を決めてから実装に着手する。
-- `grimore-v2/Grimoire_決定事項ログ.md` O章の残る未決定事項（図鑑・コレクション
-  画面の詳細設計、カレンダー画面の詳細設計、タップ反応アニメーションのライブラリ
-  構成、スプリングボーンのパラメータ、エリア間の遷移演出、モジュール間の共有
-  状態インターフェース仕様、既存ユーザーのIndexedDBデータの引き継ぎ方針）を
-  相談セッションで詰めていく。設計段階の決定事項は引き続き
-  grimore-v2/Grimoire_決定事項ログ.mdに記載する(docs/decisions.mdは
-  エンジニアリング/インフラ決定専用のまま)。
+- T007の仕様・実装を統合後、要求別監査、ビルド、テスト、ブラウザ検証、
+  `git diff --check`を行い、決定ログ・台帳・本レポートを確定する。
+- v2全体のアプリ雛形はT007の契約とデザイントークンを入力として別タスクで作る。
+- 残る未決定事項はエリア間の遷移演出。今回確定する共有契約、IndexedDB移行、
+  タップ反応、スプリング値は決定ログS章から参照する。
