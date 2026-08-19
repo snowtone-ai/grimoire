@@ -23,10 +23,17 @@
   /* Text is DOM, never painted into the canvas: selectable, searchable, readable by AT. */
   #titleblock{position:fixed;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));
     z-index:10;pointer-events:none;max-width:min(52ch,64vw)}
+  /* The sky behind this corner is the brightest part of the frame (strong backlight, B章),
+     so a text-shadow alone leaves the caption unreadable. A soft scrim sits behind the text
+     inside the block's own stacking context — it darkens the type's ground without putting a
+     visible panel on top of the art. */
+  #titleblock::before{content:"";position:absolute;inset:-40px -110px -46px -60px;z-index:-1;
+    background:radial-gradient(70% 78% at 22% 30%,rgba(3,8,16,.74),rgba(3,8,16,.34) 46%,rgba(3,8,16,0) 72%);
+    pointer-events:none}
   #titleblock h1{margin:0 0 4px;font-size:clamp(15px,2.1vw,20px);font-weight:600;letter-spacing:.03em;
-    text-shadow:0 2px 18px rgba(0,0,0,.75)}
-  #titleblock p{margin:0;font-size:clamp(10.5px,1.35vw,12.5px);line-height:1.6;color:var(--ink-dim);
-    text-shadow:0 1px 12px rgba(0,0,0,.8)}
+    text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 18px rgba(0,0,0,.8)}
+  #titleblock p{margin:0;font-size:clamp(10.5px,1.35vw,12.5px);line-height:1.6;color:rgba(219,231,242,.78);
+    text-shadow:0 1px 3px rgba(0,0,0,.9),0 1px 12px rgba(0,0,0,.85)}
   #caption{margin-top:6px;font-size:10.5px;opacity:.42;font-variant-numeric:tabular-nums}
 
   #loading{position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;
@@ -47,7 +54,10 @@
 
   #legal{position:fixed;left:max(18px,env(safe-area-inset-left));
     bottom:max(12px,env(safe-area-inset-bottom));z-index:10;
-    font-size:9.5px;line-height:1.6;color:rgba(219,231,242,.32);max-width:min(60ch,70vw);
+    font-size:9.5px;line-height:1.6;color:rgba(219,231,242,.52);max-width:min(60ch,70vw);
+    text-shadow:0 1px 3px rgba(0,0,0,.85);pointer-events:none}
+  #legal::before{content:"";position:absolute;inset:-34px -90px -30px -52px;z-index:-1;
+    background:radial-gradient(72% 84% at 26% 66%,rgba(3,8,16,.66),rgba(3,8,16,.30) 48%,rgba(3,8,16,0) 74%);
     pointer-events:none}
 
   @media (prefers-reduced-motion: reduce){

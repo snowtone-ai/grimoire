@@ -35,7 +35,7 @@
 | T005 | done | Claude Code | T004 | docs/decisions.md, grimore-v2/Grimoire_決定事項ログ.md (フロントエンド設計決定2件の移設); ~/.claude.json, ~/.codex/config.toml (グローバル、リポジトリ外、Exa/Firecrawl MCP追加); ~/.claude/plugins相当(グローバル、Codexプラグイン導入); CLAUDE.md, AGENTS.md (Research Tools運用ルール追記); docs/issues.md, docs/state.md | (D-006) docs/decisions.mdに紛れ込んでいたフロントエンド設計決定2件をgrimore-v2/Grimoire_決定事項ログ.mdのR章へ移設。OpenAI公式`codex-plugin-cc`プラグインをClaude Codeへ導入(`/codex:rescue`等でCodexをサブエージェント呼び出し可能に)。オーナー依頼のExa+Firecrawl運用のため、CodexにローカルMCP`exa`/`firecrawl`を登録(APIキー未設定、オーナー確認済みで現状維持)。ClaudeはExa/Firecrawlとも既存claude.aiコネクタで代替(Firecrawlは`claude mcp login`実行、承認待ち)。運用ルールをCLAUDE.md/AGENTS.mdへ追記 | `claude plugin list`で`codex@openai-codex`enabled確認、`codex mcp list`/`claude mcp list`でexa/firecrawl登録確認、git diff --check(ドキュメントのみ、grimore-v2へ直接コミット) | 2026-08-19: 全確認コマンド成功。 |
 | T006 | blocked | Codex | T004 | .codex/config.toml, tasks.md, docs/state.md, docs/issues.md | 現在のCodexセッションで再発したWindowsサンドボックス起動拒否を特定し、通常の端末実行を復旧する | 非Store版PowerShellまたはWSLへ既定実行経路を切り替え、新規セッションで通常コマンドを実行 | 2026-08-19: オーナーがグローバル設定へ`windows.sandbox="unelevated"`と`sandbox_private_desktop=false`を反映し完全再起動したことを確認。それでもラッパーがStore版`WindowsApps/.../pwsh.exe`を制限トークンから起動する段階で`0xC0070005`が継続。T007は別のローカル実行経路で継続。 |
 | T007 | doing | Codex | T005 | prompt.md, tasks.md, docs/state.md, docs/issues.md, docs/repo-map.md, HANDOFF-JA.md, grimore-v2/Grimoire_決定事項ログ.md, grimore-v2/Grimoire_最高品質化仕様.md, grimore-v2/prototypes/area1-coral/ | `prompt.md` の5領域を外部一次資料で調査し、各モジュールを「現状分析・根拠・改善仕様/正確な値・コード/JSON」の順で仕様化する。背景/グリモ/UI/ストアの一方向契約、Pixel 7a/Xiaomi 14T Pro向け自動縮退、IndexedDBの堅牢な移行とexactly-onceイベント、二系統UIとWCAG 2.2 AA、3D/VFX・ACES・共有光、部位別スプリング、押下/グロー、適応BGM/効果音を網羅し、既存背景試作の該当パラメータと品質制御を補強する | 一次資料URL監査、仕様内数値/出典/実装例の要求別照合、試作`npm run build`、ブラウザ実機相当の描画・コンソール・アクセシビリティ・FPS/draw call確認、`git diff --check` | pending |
-| T008 | review | Claude Code | T007 | grimore-v2/prototypes/area1-coral/ (src/*.js, params.js, build.mjs, serve.mjs, index.html, README.md), tasks.md, docs/state.md | `Grimoire_決定事項ログ.md` B章の背景世界1枚目「陸珊瑚の台地」を、あらゆるアプローチから最高品質で完成させる。参照画像(Image1, ©CAPCOM)の構図・トーンに寄せた実装を、315+個の調整可能パラメータ(21グループ)として外出しし、実測に基づいて詳細調整する。B章の構成要素(穴あき岩塔2〜3体・骨色の枝珊瑚・板珊瑚・扇珊瑚・発光珊瑚・前景フレーミング)、C章の固定カメラ、G章のstylized方針とfull/reduced二段品質、H章の環境プリセット契約をすべて満たすこと | `node build.mjs` 成功、ブラウザ実機で 60fps / シーンdraw call <=50 / 三角形 <=150k(±2%)、参照画像との輝度ヒストグラム照合(mean/p50/p95/blown/dark/saturation)、1440x900・375x812縦持ちの両方で構図維持かつ横スクロールなし、コンソール0エラー0警告、reducedティアで10秒間の最小FPS計測、`git diff --check` | 2026-08-19: 下記「T008 Evidence」節に記録。 |
+| T008 | review | Claude Code | T007 | grimore-v2/prototypes/area1-coral/ (src/*.js, params.js, build.mjs, serve.mjs, index.html, README.md), tasks.md, docs/state.md | `Grimoire_決定事項ログ.md` B章の背景世界1枚目「陸珊瑚の台地」を、あらゆるアプローチから最高品質で完成させる。参照画像(Image1, ©CAPCOM)の構図・トーンに寄せた実装を、366個の調整可能パラメータ(23グループ)として外出しし、実測に基づいて詳細調整する。B章の構成要素(穴あき岩塔2〜3体・骨色の枝珊瑚・板珊瑚・扇珊瑚・発光珊瑚・前景フレーミング)、C章の固定カメラ、G章のstylized方針とfull/reduced二段品質、H章の環境プリセット契約をすべて満たすこと | `node build.mjs` 成功、ブラウザ実機で 60fps / シーンdraw call <=50 / 三角形 <=150k(±2%)、参照画像との輝度ヒストグラム照合(mean/p50/p95/blown/dark/saturation)、1440x900・375x812縦持ちの両方で構図維持かつ横スクロールなし、コンソール0エラー0警告、reducedティアで10秒間の最小FPS計測、`git diff --check` | 2026-08-19: 下記「T008 Evidence」節に記録。 |
 
 ## Execution Pointer
 Current active task, executor, write lock, and latest verification live in docs/state.md.
@@ -66,16 +66,20 @@ Current active task, executor, write lock, and latest verification live in docs/
 成立しなくなるため、超過を許容して記録する。距離別2段LOD導入前は同じ見た目で183,092。
 
 ### 参照画像とのトーン照合 (320x200, 輝度)
-| 指標 | 参照 | 実装 |
-|---|---|---|
-| mean | 0.471 | 0.491 |
-| p25 | 0.264 | 0.282 |
-| p50 | 0.430 | 0.444 |
-| p75 | 0.654 | 0.719 |
-| p95 | 0.923 | 0.934 |
-| 白飛び率 (>0.95) | 0.035 | 0.015 |
-| 黒潰れ率 (<0.12) | 0.036 | 0.044 |
-| 彩度 | 0.376 | 0.383 |
+| 指標 | 参照 | 実装(調整前) | 実装(最終) |
+|---|---|---|---|
+| mean | 0.471 | 0.491 | 0.475 |
+| p25 | 0.264 | 0.282 | 0.269 |
+| p50 | 0.430 | 0.444 | 0.416 |
+| p75 | 0.654 | 0.719 | 0.709 |
+| p95 | 0.923 | 0.934 | 0.927 |
+| 白飛び率 (>0.95) | 0.035 | 0.015 | 0.015 |
+| 黒潰れ率 (<0.12) | 0.036 | 0.044 | 0.054 |
+| 彩度 | 0.376 | 0.383 | 0.387 |
+
+ビネットを 0.33 -> 0.44 / 半径 0.72 -> 0.68 に上げた最終調整で、mean・p25・p75・p95 は
+参照へ寄り、黒潰れ率だけが 0.044 -> 0.054 と離れた。画面下端が明るいまま開いていて視線が
+フレームから抜ける問題の対価として受け入れている。
 
 ### その他
 - 1440x900 / 375x812(縦持ち)ともに構図維持。縦持ちは `camera.portraitFovBoost` により垂直画角 41 -> 53.5 度。横スクロールなし。
@@ -95,3 +99,14 @@ Current active task, executor, write lock, and latest verification live in docs/
 | 起動直後に必ず `reduced` へ落ちる | ジオメトリ生成とシェーダ初回コンパイルの停止をFPS判定に算入。実測で生成直後に約2.5秒間28-41fps | `quality.warmupWindow` を追加し生成中と生成直後を判定から除外 |
 | 一度 `reduced` に落ちると永久に戻らない | 復帰経路が存在しなかった。追加後も閾値が `目標55 + 余裕6 = 61fps` で、vsync上限60では到達不能 | 復帰条件を `>=` かつ既定余裕0に変更。ヒステリシスは判定窓の非対称(縮退2.5秒 / 復帰8秒)で確保。復帰は1セッション1回まで |
 | 前景フレーミングが1つも画面に入らない (41個中0個) | ワールドX座標で左右に散らしていたが、4m先のフレーム幅は±2.6mしかない | カメラの視錐台から求めた扇形の縁を基準に配置 (`scatter.frameSpread`) |
+| 板珊瑚が地面に落ちた金色の針金にしか見えない | 薄板は真横から見ると全周がシルエットになる。リム倍率0.55と、上面(0x6b6c3e)より明るい縁色(0xa89b62)が重なって縁だけが焼き付いていた (実測 RGB 227,215,172) | 縁色を上面より暗い暖色 0x847a52 へ、リム倍率を 0.22 へ。併せて `rimScale` をマテリアルごとのパラメータに昇格 (8グループ)。実測 RGB 77,87,144 |
+| 画面左下が白飛びした無地の塊で潰れる | 扇珊瑚の配置内周6.5mは、垂直画角41度では最前列の一枚が画面の約4割を占める距離。厚み1.0の擬似SSSと逆光が重なって完全に飛んでいた | 内周 9.5m、スケール上限 1.25 -> 1.10、透過の厚み 1.0 -> 0.78 |
+| `framing.centerGap` が何も効かない | メートル指定のパラメータを、半画角の比である `frac` に一度も変換していなかった (完全な死にパラメータ) | 深度ごとに `atan((centerGap/2)/d) / halfAngle` を下限として適用 |
+| タイトルと権利表記が読めない | 逆光構図では左上の空が画面で最も明るい。text-shadow だけでは白地に白文字になる | `#titleblock` / `#legal` に自前のスタッキングコンテキスト内側の放射グラデーション暗幕を敷く (アート面にパネルを重ねない) |
+
+### 最終確認 (2026-08-19, 上記修正後の再計測)
+- full: 59-60fps / シーンdraw call 29 (GL計 67) / 三角形 152,490 / プログラム20 / 生成 1,840 ms
+- reduced: 60fps / draw call 57 / 三角形 44,918 / 環境契約の `quality` も `reduced` を発行
+- 1440x900・375x812 ともに横スクロール0・縦スクロール0、縦持ちは垂直画角 53.5 度
+- コンソール 0 エラー / 0 警告
+- 配布物 `dist/artifact.html` (650 KB) は外部リクエスト0件 (fetch/XHR/WebSocket/Worker いずれも不使用)

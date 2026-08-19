@@ -183,6 +183,8 @@ export const SCHEMA = {
   terrain: {
     label: '地形（台地）',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 0.10, min: 0, max: 2, step: 0.01,
+        help: '大きく後退する面はほぼ全域が斜め入射なので、リムをそのまま乗せると面全体が光る' },
       seed: { label: 'シード', type: 'range', value: 20260819, min: 1, max: 99999999, step: 1, rebuild: 'geometry' },
       radius: { label: '半径', type: 'range', value: 96, min: 20, max: 240, step: 1, rebuild: 'geometry' },
       segments: { label: '分割数', type: 'range', value: 104, min: 24, max: 260, step: 4, rebuild: 'geometry' },
@@ -253,6 +255,7 @@ export const SCHEMA = {
     label: '穴あき岩塔（中景）',
     note: 'B章「有機的な穴の空いた岩の塔（2〜3体）」。SDFをマーチングキューブで面出しして生成する。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 0.45, min: 0, max: 2, step: 0.01 },
       count: { label: '本数', type: 'range', value: 3, min: 0, max: 6, step: 1, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 7734, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
       resolution: { label: 'ボクセル解像度', type: 'range', value: 40, min: 20, max: 76, step: 2, rebuild: 'geometry', help: '生成負荷は3乗で効く。品質と生成時間のトレードオフ' },
@@ -286,6 +289,8 @@ export const SCHEMA = {
     label: '枝珊瑚（骨色）',
     note: '逆光でシルエットが立つ主役。L-system風の再帰生成をInstancedMeshで散らす。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 1.00, min: 0, max: 2, step: 0.01,
+        help: '細い枝はシルエットそのものなので満額' },
       count: { label: '本数', type: 'range', value: 222, min: 0, max: 500, step: 1, rebuild: 'geometry' },
       variants: { label: '形状バリエーション数', type: 'range', value: 6, min: 2, max: 12, step: 1, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 4211, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
@@ -323,6 +328,7 @@ export const SCHEMA = {
     label: '発光する青珊瑚',
     note: 'B章の指定要素。K章の訂正どおり「全身発光」ではなく先端側だけを光らせる。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 1.00, min: 0, max: 2, step: 0.01 },
       count: { label: '本数', type: 'range', value: 34, min: 0, max: 160, step: 1, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 991, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
       scaleMin: { label: 'スケール 最小', type: 'range', value: 0.5, min: 0.1, max: 3, step: 0.01, rebuild: 'geometry' },
@@ -349,6 +355,8 @@ export const SCHEMA = {
     label: 'テーブル珊瑚（暖色）',
     note: '寒色一色になるのを防ぐ暖色の受け皿。参照画像の手前側に効いている要素。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 0.22, min: 0, max: 2, step: 0.01,
+        help: '真横から見た薄板は全周がシルエット。0.55では縁だけが白飛びして、テーブル珊瑚ではなく地面に落ちた金色の針金に見えていた' },
       count: { label: '枚数', type: 'range', value: 88, min: 0, max: 320, step: 1, rebuild: 'geometry' },
       variants: { label: '形状バリエーション数', type: 'range', value: 4, min: 2, max: 10, step: 1, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 3120, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
@@ -368,11 +376,13 @@ export const SCHEMA = {
       clusters: { label: '群落の数', type: 'range', value: 11, min: 0, max: 30, step: 1, rebuild: 'geometry', help: '0で均一散布。珊瑚は群落を作るので、数を絞るほど密なブッシュと空き地のコントラストが出る' },
       clusterRadius: { label: '群落の広がり', type: 'range', value: 3.8, min: 0.5, max: 16, step: 0.1, rebuild: 'geometry' },
       slopeLimit: { label: '許容斜度', type: 'range', value: 0.58, min: 0.05, max: 0.95, step: 0.01, rebuild: 'geometry', help: '1に近いほど急な谷壁にも取り付く。参照画像の珊瑚は壁面をびっしり覆っている' },
-      colorTop: { label: '上面の色', type: 'color', value: 0x6b6c3e },
-      colorEdge: { label: '縁の色', type: 'color', value: 0xa89b62 },
+      colorTop: { label: '上面の色', type: 'color', value: 0x93885b },
+      colorEdge: { label: '縁の色', type: 'color', value: 0x847a52,
+        help: '板の縁は全周がシルエットなので、上面より明るい色を置くと逆光で焼き付き、'
+          + 'テーブルではなく地面に落ちた金色の輪郭線になる。上面よりわずかに暗い暖色が正解' },
       colorUnder: { label: '裏面の色', type: 'color', value: 0x3a4046 },
       colorVariance: { label: '色のばらつき', type: 'range', value: 0.16, min: 0, max: 0.6, step: 0.005 },
-      thickness: { label: '透過の厚み', type: 'range', value: 0.20, min: 0, max: 1, step: 0.01 },
+      thickness: { label: '透過の厚み', type: 'range', value: 0.30, min: 0, max: 1, step: 0.01 },
     },
   },
 
@@ -383,6 +393,7 @@ export const SCHEMA = {
     label: '扇珊瑚（薄板）',
     note: '最も薄い部位なので擬似SSSが最も強く出る。逆光での「透け」の見本。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 0.90, min: 0, max: 2, step: 0.01 },
       count: { label: '枚数', type: 'range', value: 42, min: 0, max: 200, step: 1, rebuild: 'geometry' },
       variants: { label: '形状バリエーション数', type: 'range', value: 4, min: 2, max: 8, step: 1, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 6602, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
@@ -394,8 +405,9 @@ export const SCHEMA = {
       curvature: { label: '反り（湾曲）', type: 'range', value: 0.10, min: -1, max: 1, step: 0.01, rebuild: 'geometry' },
       lobes: { label: '縁の切れ込み数', type: 'range', value: 7, min: 0, max: 14, step: 1, rebuild: 'geometry' },
       scaleMin: { label: 'スケール 最小', type: 'range', value: 0.6, min: 0.1, max: 3, step: 0.01, rebuild: 'geometry' },
-      scaleMax: { label: 'スケール 最大', type: 'range', value: 1.25, min: 0.1, max: 5, step: 0.01, rebuild: 'geometry' },
-      areaInner: { label: '配置 内周（カメラから）', type: 'range', value: 6.5, min: 0, max: 40, step: 0.5, rebuild: 'geometry' },
+      scaleMax: { label: 'スケール 最大', type: 'range', value: 1.10, min: 0.1, max: 5, step: 0.01, rebuild: 'geometry' },
+      areaInner: { label: '配置 内周（カメラから）', type: 'range', value: 9.5, min: 0, max: 40, step: 0.5, rebuild: 'geometry',
+        help: '6.5では最前列の一枚がレンズ直前に立ち、逆光の擬似SSSで白飛びした塊になって画面左下を潰していた' },
       areaOuter: { label: '配置 外周（カメラから）', type: 'range', value: 30, min: 2, max: 80, step: 0.5, rebuild: 'geometry' },
       clusters: { label: '群落の数', type: 'range', value: 10, min: 0, max: 30, step: 1, rebuild: 'geometry', help: '0で均一散布。珊瑚は群落を作るので、数を絞るほど密なブッシュと空き地のコントラストが出る' },
       clusterRadius: { label: '群落の広がり', type: 'range', value: 3.2, min: 0.5, max: 16, step: 0.1, rebuild: 'geometry' },
@@ -403,7 +415,7 @@ export const SCHEMA = {
       colorA: { label: '色A（青）', type: 'color', value: 0x7fc4e4 },
       colorB: { label: '色B（桃）', type: 'color', value: 0xdca8bd },
       colorMix: { label: '色Bの比率', type: 'range', value: 0.34, min: 0, max: 1, step: 0.01 },
-      thickness: { label: '透過の厚み', type: 'range', value: 1.0, min: 0, max: 1, step: 0.01 },
+      thickness: { label: '透過の厚み', type: 'range', value: 0.78, min: 0, max: 1, step: 0.01 },
       swayAmount: { label: '揺れ幅', type: 'range', value: 0.045, min: 0, max: 0.3, step: 0.001 },
       swaySpeed: { label: '揺れ速度', type: 'range', value: 0.62, min: 0, max: 3, step: 0.01 },
     },
@@ -417,6 +429,7 @@ export const SCHEMA = {
     note: '参照画像の両脇の土手は滑らかな斜面ではなく岩とサンゴの塊でできている。'
       + 'ハイトフィールドのリング間隔では2〜5mの起伏を持てないので、ジオメトリで割る。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 0.35, min: 0, max: 2, step: 0.01 },
       enabled: { label: '有効', type: 'bool', value: true, rebuild: 'geometry' },
       count: { label: '個数', type: 'range', value: 104, min: 0, max: 400, step: 1, rebuild: 'geometry' },
       variants: { label: '形状バリエーション数', type: 'range', value: 4, min: 2, max: 12, step: 1, rebuild: 'geometry' },
@@ -446,6 +459,7 @@ export const SCHEMA = {
     label: '前景フレーミング',
     note: 'B章「覗き込む構図の枠を作る」。暗く落として画面端だけを縁取る。',
     params: {
+      rimScale: { label: 'リム強度の倍率', type: 'range', value: 1.00, min: 0, max: 2, step: 0.01 },
       enabled: { label: '有効', type: 'bool', value: true, rebuild: 'geometry' },
       seed: { label: 'シード', type: 'range', value: 8801, min: 1, max: 99999, step: 1, rebuild: 'geometry' },
       rockCount: { label: '前景岩の数', type: 'range', value: 8, min: 0, max: 20, step: 1, rebuild: 'geometry' },
@@ -578,8 +592,8 @@ export const SCHEMA = {
       shadowTintAmount: { label: 'シャドウ着色量', type: 'range', value: 0.30, min: 0, max: 1, step: 0.005 },
       highlightTint: { label: 'ハイライトの色', type: 'color', value: 0xfff2dc },
       highlightTintAmount: { label: 'ハイライト着色量', type: 'range', value: 0.13, min: 0, max: 1, step: 0.005 },
-      vignetteAmount: { label: 'ビネット量', type: 'range', value: 0.33, min: 0, max: 1.5, step: 0.005 },
-      vignetteRadius: { label: 'ビネット半径', type: 'range', value: 0.72, min: 0.1, max: 1.5, step: 0.005 },
+      vignetteAmount: { label: 'ビネット量', type: 'range', value: 0.44, min: 0, max: 1.5, step: 0.005 },
+      vignetteRadius: { label: 'ビネット半径', type: 'range', value: 0.68, min: 0.1, max: 1.5, step: 0.005 },
       vignetteSoftness: { label: 'ビネットの柔らかさ', type: 'range', value: 0.62, min: 0.05, max: 2, step: 0.005 },
       chromatic: { label: '色収差', type: 'range', value: 0.0022, min: 0, max: 0.02, step: 0.0001 },
       grainAmount: { label: 'グレイン量', type: 'range', value: 0.030, min: 0, max: 0.2, step: 0.001 },

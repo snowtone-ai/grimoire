@@ -36,6 +36,12 @@ function effectiveParams(params, tier) {
   return copy;
 }
 
+/** Material key -> the parameter group that owns its `rimScale`. */
+const RIM_GROUPS = {
+  terrain: 'terrain', tower: 'towers', branch: 'branchCoral', glow: 'glowCoral',
+  plate: 'plateCoral', fan: 'fanCoral', framing: 'framing', rubble: 'rubble',
+};
+
 export class CoralArea {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -139,17 +145,16 @@ export class CoralArea {
 
   _createMaterials(p) {
     const q = this.resolvedTier;
-    // rimScale: a fresnel rim is a silhouette effect. Large receding surfaces are at a
-    // grazing angle over most of their area, so they take only a fraction of it.
+    const rim = (group) => p[group].rimScale;
     const m = {
-      terrain: createWorldMaterial(this.shared, { albedo: 'terrain', encrust: true, quality: q, rimScale: 0.10 }),
-      tower: createWorldMaterial(this.shared, { albedo: 'tower', encrust: true, quality: q, rimScale: 0.45 }),
-      branch: createWorldMaterial(this.shared, { albedo: 'tip', quality: q, rimScale: 1.0 }),
-      glow: createWorldMaterial(this.shared, { albedo: 'tip', emissive: true, quality: q, rimScale: 1.0 }),
-      plate: createWorldMaterial(this.shared, { albedo: 'plate', quality: q, rimScale: 0.55 }),
-      fan: createWorldMaterial(this.shared, { albedo: 'tip', doubleSided: true, quality: q, rimScale: 0.9 }),
-      framing: createWorldMaterial(this.shared, { albedo: 'tip', framing: true, quality: q, rimScale: 1.0 }),
-      rubble: createWorldMaterial(this.shared, { albedo: 'tower', encrust: true, quality: q, rimScale: 0.35 }),
+      terrain: createWorldMaterial(this.shared, { albedo: 'terrain', encrust: true, quality: q, rimScale: rim('terrain') }),
+      tower: createWorldMaterial(this.shared, { albedo: 'tower', encrust: true, quality: q, rimScale: rim('towers') }),
+      branch: createWorldMaterial(this.shared, { albedo: 'tip', quality: q, rimScale: rim('branchCoral') }),
+      glow: createWorldMaterial(this.shared, { albedo: 'tip', emissive: true, quality: q, rimScale: rim('glowCoral') }),
+      plate: createWorldMaterial(this.shared, { albedo: 'plate', quality: q, rimScale: rim('plateCoral') }),
+      fan: createWorldMaterial(this.shared, { albedo: 'tip', doubleSided: true, quality: q, rimScale: rim('fanCoral') }),
+      framing: createWorldMaterial(this.shared, { albedo: 'tip', framing: true, quality: q, rimScale: rim('framing') }),
+      rubble: createWorldMaterial(this.shared, { albedo: 'tower', encrust: true, quality: q, rimScale: rim('rubble') }),
     };
     const ridge = createRidgeMaterials(this.shared, p.ridges);
     m.ridge = ridge.main;
@@ -520,7 +525,13 @@ export class CoralArea {
         const side = i % 2 === 0 ? -1 : 1;
         const d = cfg.depthZ + rand(rng, -0.9, 2.8);
         // 1.0 puts the object's centre exactly on the frame edge; below that it intrudes.
-        const frac = p.scatter.frameSpread * rand(rng, 0.42, 1.22);
+        // `centerGap` is a width in metres, but `frac` is a fraction of the half-ANGLE, so
+        // it has to be converted at this depth or the parameter does nothing at all — which
+        // is exactly what it did before: a foreground rock could land dead centre at 2 m and
+        // read as a pale slab across the bottom of the frame instead of an edge silhouette.
+        const minFrac = Math.atan((cfg.centerGap * 0.5) / Math.max(0.2, d))
+          / Math.max(1e-3, wedge.halfAngle);
+        const frac = Math.max(minFrac, p.scatter.frameSpread * rand(rng, 0.42, 1.22));
         const a = wedge.angle + side * wedge.halfAngle * frac;
         const x = wedge.x + Math.sin(a) * d;
         const z = wedge.z + Math.cos(a) * d;
@@ -704,6 +715,15 @@ export class CoralArea {
       p.glowCoral.glowStrength, p.glowCoral.glowTipBias,
       this.reducedMotion ? 0 : p.glowCoral.pulseAmount, p.glowCoral.pulseSpeed
     );
+    // A fresnel rim is a silhouette effect, so how much of it a surface should take depends
+    // entirely on that surface's shape: a thin coral branch is all silhouette and takes the
+    // full amount, a large receding terrain plane is at a grazing angle over most of its area
+    // and takes almost none. Live here rather than only at material-creation time so the panel
+    // can tune it without a rebuild.
+    for (const [material, group] of Object.entries(RIM_GROUPS)) {
+      this.materials[material].uniforms.uRimScale.value = p[group].rimScale;
+    }
+
     this.materials.plate.uniforms.uColorB.value.setHex(p.plateCoral.colorEdge);
     this.materials.plate.uniforms.uColorC.value.setHex(p.plateCoral.colorUnder);
     this.materials.framing.uniforms.uColorA.value.setHex(p.framing.color);

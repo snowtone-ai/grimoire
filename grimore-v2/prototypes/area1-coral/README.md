@@ -25,7 +25,7 @@ npm run serve      # http://localhost:5178/
 
 | ファイル | 役割 |
 |---|---|
-| `src/params.js` | **仕様の本体。** 21グループ・315+パラメータのスキーマ、reduced ティア差分、プリセット4種 |
+| `src/params.js` | **仕様の本体。** 23グループ・366パラメータのスキーマ、reduced ティア差分、プリセット4種 |
 | `src/noise.js` | mulberry32 / Perlin / fBm（JS側）と simplex・fBm・木漏れ日（GLSL側） |
 | `src/geometry.js` | 地形ハイトフィールド、マーチングキューブによる岩塔、L-system 風の枝珊瑚、板/扇珊瑚、岩塊、散布 |
 | `src/materials.js` | 共有ユニフォーム、ラップ拡散＋リム＋擬似SSS、3バンド空気遠近、空、遮蔽用マテリアル |
@@ -51,7 +51,10 @@ npm run serve      # http://localhost:5178/
 
 `camera` `sun` `sky` `fog` `surface` `translucency` `dapple` `terrain` `scatter` `towers`
 `branchCoral` `glowCoral` `plateCoral` `fanCoral` `rubble` `framing` `ridges` `motes`
-`godrays` `bloom` `grade` `stage` `quality`
+`godrays` `bloom` `grade` `stage` `quality`（23グループ・366パラメータ）
+
+`rimScale` はマテリアルごとに別のグループが持つ。フレネルリムはシルエットの効果なので、
+細い枝（1.00）と大きく後退する地形面（0.10）で必要量が一桁違う。
 
 プリセット: `① 参照忠実（寒色シアン）` `② 暖色逆光` `③ 深青` `④ 生物発光`
 
@@ -77,3 +80,11 @@ npm run serve      # http://localhost:5178/
 - マーチングキューブのポリゴン予算を削らないこと。溢れは無警告で頂点配列を壊す。
 - 品質ティアの復帰しきい値は vsync 上限を超えられない。
   `recoverMargin` は（リフレッシュレート − 目標FPS）未満に保つ。
+- **薄い形状に強いリムを乗せない。** 板珊瑚は真横から見ると全周がシルエットになるので、
+  リム倍率 0.55 ＋ 上面より明るい縁色で、テーブルではなく地面に落ちた金色の針金に見えていた。
+  縁色は上面よりわずかに暗く、リム倍率は 0.22。
+- **前景の散布は「カメラからの距離」だけでなく画角内での見え方で決める。** 扇珊瑚の内周
+  6.5 m は、41度の画角では最前列の一枚が画面の4割を占める距離。逆光の擬似SSSと合わさって
+  白飛びした塊になり、画面左下を潰していた（9.5 m に後退）。
+- `framing.centerGap` はメートル、`frac` は半画角の比。深度ごとに `atan` で変換しないと
+  パラメータが何もしない（実際に何もしていなかった）。
