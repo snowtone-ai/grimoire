@@ -13,6 +13,9 @@
 # testing
 /coverage
 /.playwright-mcp/
+/test-results/
+/implementation-status-desktop.png
+/report-desktop.png
 
 # next.js
 /.next/

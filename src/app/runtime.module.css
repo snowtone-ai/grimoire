@@ -1,0 +1,319 @@
+.appSurface {
+  position: relative;
+  z-index: var(--layer-content);
+  min-height: 100dvh;
+  padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+}
+
+.mistBeam {
+  position: fixed;
+  z-index: var(--layer-world);
+  top: -18vh;
+  right: 13vw;
+  width: clamp(1.5rem, 5vw, 5rem);
+  height: 94vh;
+  background: var(--color-mist);
+  filter: blur(2.4rem);
+  opacity: 0.07;
+  pointer-events: none;
+  transform: rotate(18deg);
+  transform-origin: top center;
+}
+
+.splash,
+.loading {
+  position: fixed;
+  z-index: var(--layer-splash);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--color-iron);
+  color: var(--color-ink-inverse);
+}
+
+.sealStage {
+  position: relative;
+  display: grid;
+  width: clamp(8.5rem, 34vw, 12rem);
+  aspect-ratio: 1;
+  place-items: center;
+  animation: sealSettle var(--duration-reveal) var(--ease-settle) both;
+}
+
+.seal {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 0 1.1rem var(--color-mist-soft));
+}
+
+.orbit {
+  position: absolute;
+  inset: 3%;
+  border: 1px solid var(--color-mist);
+  border-right-color: transparent;
+  border-radius: var(--radius-round);
+  opacity: 0.4;
+  transform: rotate(-24deg);
+}
+
+.loading {
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-4);
+  padding: var(--space-page);
+}
+
+.loading h1 {
+  max-width: 16ch;
+  font-family: var(--font-lore);
+  font-size: clamp(1.75rem, 8vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.loading p:not(.eyebrow) {
+  max-width: 34rem;
+  color: var(--color-ink-muted);
+}
+
+.eyebrow {
+  color: var(--color-mist);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.retryButton {
+  min-width: 8rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-strong);
+  color: var(--color-ink);
+}
+
+.migrationSheet {
+  position: fixed;
+  z-index: var(--layer-sheet);
+  right: var(--space-page);
+  bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-6);
+  width: min(44rem, calc(100vw - 2 * var(--space-page)));
+  padding: var(--space-6);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  color: var(--color-ink);
+}
+
+.migrationSheet h2 {
+  margin-block: var(--space-1) var(--space-2);
+  font-family: var(--font-lore);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.migrationSheet p:not(.eyebrow) {
+  color: var(--color-ink-muted);
+  font-size: 0.85rem;
+}
+
+.migrationActions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.migrationActions button,
+.migrationActions a {
+  display: inline-grid;
+  min-height: var(--tap-target);
+  padding-inline: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink);
+  place-items: center;
+  text-decoration: none;
+}
+
+.migrationActions a {
+  background: var(--color-iron);
+  color: var(--color-ink-inverse);
+}
+
+.rewardToast {
+  position: fixed;
+  z-index: var(--layer-toast);
+  right: var(--space-page);
+  bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) var(--tap-target);
+  gap: var(--space-3);
+  width: min(24rem, calc(100vw - 2 * var(--space-page)));
+  padding: var(--space-3);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-iron);
+  box-shadow: var(--shadow-float);
+  color: var(--color-ink-inverse);
+  align-items: center;
+}
+
+.rewardToast img {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.rewardToast div {
+  display: grid;
+  min-width: 0;
+}
+
+.rewardToast p,
+.rewardToast small,
+.rewardToast span {
+  color: var(--color-mist);
+  font-size: 0.72rem;
+}
+
+.rewardToast strong,
+.rewardToast small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rewardToast button,
+.rewardClose {
+  width: var(--tap-target);
+  min-width: var(--tap-target);
+  min-height: var(--tap-target);
+  border: 0;
+  background: transparent;
+  color: currentcolor;
+  font-size: 1.35rem;
+}
+
+.rewardBackdrop {
+  position: fixed;
+  z-index: var(--layer-sheet);
+  inset: 0;
+  display: grid;
+  padding: var(--space-page);
+  background: rgb(7 14 13 / 54%);
+  place-items: end center;
+}
+
+.rewardSheet {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
+  gap: var(--space-6);
+  width: min(42rem, 100%);
+  max-height: min(42rem, calc(100dvh - 2 * var(--space-page)));
+  overflow: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  color: var(--color-ink);
+}
+
+.rewardClose {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+
+.rewardPlate {
+  display: grid;
+  min-height: 14rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-muted);
+  place-items: center;
+}
+
+.rewardPlate img {
+  width: min(11rem, 72%);
+  height: auto;
+}
+
+.rewardCopy {
+  display: grid;
+  align-content: center;
+  gap: var(--space-3);
+  padding-right: var(--space-5);
+}
+
+.rewardCopy h2 {
+  font-family: var(--font-lore);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  font-weight: 500;
+}
+
+.rewardCopy > p:not(.eyebrow),
+.rewardCopy small {
+  color: var(--color-ink-muted);
+}
+
+@keyframes sealSettle {
+  from {
+    opacity: 0;
+    transform: translateY(0.45rem) scale(0.972);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:global(html[data-motion='reduced']) .sealStage {
+  animation: none;
+}
+
+@media (max-width: 40rem) {
+  .rewardToast {
+    right: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+  }
+
+  .rewardBackdrop {
+    padding: 0;
+  }
+
+  .rewardSheet {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-5);
+  }
+
+  .rewardPlate {
+    min-height: 11rem;
+  }
+
+  .migrationSheet {
+    right: var(--space-3);
+    bottom: calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom));
+    left: var(--space-3);
+    grid-template-columns: 1fr;
+    width: auto;
+    padding: var(--space-5);
+  }
+
+  .migrationActions {
+    justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html:not([data-motion='full'])) .sealStage {
+    animation: none;
+  }
+}

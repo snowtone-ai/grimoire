@@ -1,6 +1,28 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-20: T017 — 非エンジニア向け現状報告を
+  `docs/implementation-status-2026-08-20.html`として作成。release判定を「保留」とし、
+  5画面、60 tests、E2E 5/6、Catalog 12/720、領域別4段階成熟度、実画面、atomic保存、
+  N+1修正前後、未完了と次の順序を表・SVG graphで可視化した。1280px/390pxでconsole 0、
+  broken image 0、document横overflow 0を実ブラウザ確認。終了前に`pnpm verify`（60 tests、
+  7 static routes）、`pnpm test:e2e`（5 pass/1 Windows WebKit offline skip）、
+  `pnpm audit --prod`（0）を再実行し合格。次の実装入口はT015/T016残差の
+  Catalog 708件、task edit/delete、audio、outbox pump。session checkpointはHANDOFF-JA.md。
+- 2026-08-19: T011–T016統合sliceを実装。Next 16/PWA、wordless魔導書紋章、
+  splash OFF/一定時間/毎回、Home/Calendar/Settings、Dexie durable command、exactly-once
+  reward/growth、versioned export/import、旧DB移行、Area1、discovered-only Catalogを接続した。
+  表示refreshは固定本数のindex/bulk queryへ整理し、reward ledger全走査との二重loopを廃止。
+  discovery日時をinventoryへatomic materializeし、DB v1→v2で一括backfillするため、履歴増加で
+  query回数が増えるN+1経路はない。独立レビューで見つかった各refreshの全active task O(N×R)も、
+  起動時cache＋task作成の差分投影へ変更し、完了/設定/永続化確認で再query・再展開しない回帰を追加。
+  `pnpm verify`はlint/typecheck/60 tests/build全合格、
+  本番Playwrightは5 pass/1 WebKit-offline skip、production audit 0。
+- 2026-08-19: T011 — prompt.mdと追加要望をarchitectureへ確定。negative review/
+  known issueを失敗scenarioへ変換し、durable local-first、occurrence-based recurrence、
+  verified export/import、storage health、future sync portをD-010/docs/architecture.mdへ
+  記録した。オーナー提案の「実装→評価→差分→再調査→再実装」を全sliceのcompletion
+  gateとして採用。wordless魔導書紋章とsplash設定/遷移を決定ログT章へ確定した。
 - 2026-08-19: T010 — OpenAI公式Subagents文書で、Codexのworker上限は
   `[agents] max_concurrent_threads_per_session`（primaryを除外）と確認した。
   `AGENTS.md`にはCodex-onlyで最大4 workerのoverrideを追加し、`CLAUDE.md`は未変更。
@@ -76,6 +98,10 @@
   WSL実行へ移す必要がある。設計・実装作業は代替経路で継続できる。
 
 ## Next
-- v2全体のアプリ雛形はT007の契約とデザイントークンを入力として別タスクで作る。
-- 残る未決定事項はエリア間の遷移演出。今回確定する共有契約、IndexedDB移行、
-  タップ反応、スプリング値は決定ログS章から参照する。
+- T016 fresh-context監査の残findings（Catalog 12/720、edit、outbox pump、audio）を実装する。
+  T015 hardeningとして10k taskの実時間benchmark、
+  multi-tab/QuotaExceeded/physical-device、Google Calendar adapter、audio gestureを順に行う。
+- Catalogは契約上12分類×60枠だが、現時点の実定義は各分類1件（12/720）。量産assetを
+  ダミーで埋めず、個別品質を保ったcontent production taskとして継続する。
+- 残るcreative未決定はエリア間の遷移演出。共有契約、IndexedDB移行、タップ反応、
+  spring値は決定ログS章、起動紋章はT章を参照する。

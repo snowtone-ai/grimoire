@@ -261,3 +261,30 @@ and motivated this reset -- those are kept as-is, not restarted.
   `AGENTS.md`の運用規則は反映済みだが、runtime capの反映にはオーナー操作と
   Codex再起動が必要。
 - 将来見直し条件: OpenAI公式の設定キーまたは利用可能な同時thread上限が変わった時点。
+
+## D-010: Grimoire v2をdurable local-first coreと交換可能adapterで構成する
+
+- 日付: 2026-08-19
+- 対象: product architecture / persistence / extensibility
+- 決定: IndexedDBを端末内正本とするが、browser storage自体を永久backupとは扱わない。
+  domain/application/infrastructure/features/world/bootstrapを依存方向で分離し、すべての
+  durable writeをcommand boundaryへ集約する。command receipt、deterministic event、
+  transactional outbox、consumer ack、tombstone、verified export/import staging、
+  storage persistence/usage healthを初期版の基盤に含める。recurrenceはseriesとoccurrenceを
+  分離し、local wall-clock + IANA time zoneのoccurrence keyで二重完了・DST・月末を扱う。
+  Google Calendarと将来のremote syncはport/adapterで追加し、task truthを所有させない。
+- 採用理由: Todoist/TickTick/Things/Any.do等の公開不具合・negative reviewをscenarioとして
+  調べると、長期利用の破綻は「保存の成否が見えない」「繰り返しを可変pointerで進める」
+  「local storageをbackupと誤認する」「同期providerがdomainを所有する」に集中していた。
+  Web Storage公式資料もdefault storageのeviction可能性を明記するため、local-firstだけでは
+  ユーザーの永続性要求を満たさない。
+- 品質運用: オーナー提案の「実装→評価→目標差分→実利用技術/事例のWeb再調査→再実装」を
+  全vertical sliceのcompletion gateにする。評価は正常系だけでなくquota、crash、multi-tab、
+  time zone、migration中断、context loss、長期dataをfault injectionする。critical/high差分
+  が0になるまで同一証拠を再計測する。
+- 不採用案: 初期版から独自cloud backendを正本にする案は、認証・競合・運用面を先に膨らませ
+  daily useと端末内耐久性の完成を遅らせるため不採用。将来のSyncReplicaPortだけを先に固定する。
+  単純last-write-winsも本文削除/完了競合を黙って失うため不採用。
+- 詳細: docs/architecture.md。
+- 将来見直し条件: 複数端末syncを製品scopeへ追加する時、browser storage仕様が変わる時、
+  または10k tasks / 100k events benchmarkが予算を超えた時。

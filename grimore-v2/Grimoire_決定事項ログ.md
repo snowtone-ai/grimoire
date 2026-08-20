@@ -573,3 +573,21 @@ docs/decisions.mdへ誤って記載されていた設計判断を、2026-08-19�
 - エリア遷移の最終採否、完成リグの spring 最終値、最終 HDR scene の VFX 値、mastering
   済み音源の mix 値、icon-only nav の初見理解は物理端末・実アセット試験後に確定する。
 - 実装の合格条件と検証 ID は `Grimoire_最高品質化仕様.md` 第7章を使用する。
+
+---
+
+## T. 起動紋章と初期導線（確定・2026-08-19）
+
+- v1 logoは流用・改変せず、文字を含まない新規「魔導書の紋章」を作る。broken seal、
+  open grimoire、水滴/卵のcoreを三つの大きな形として読ませ、32px用simple markと
+  splash用atmospheric treatmentを分ける。初稿の細密な紋章は小サイズで潰れるため、
+  splash検討用に限り、navigation markは新たに簡略化する。
+- 起動表示はSettingsで「完全OFF／一定時間／毎回」を選択可能。defaultは一定時間、
+  900ms（hard max 1.2s）。毎回はclient navigationごとではなくfresh app launchごと。
+- 遷移先はHome。旧版dataを検出してもsplash内で移行を強制せず、Homeを使用可能にした後、
+  一度だけnon-destructive migration sheetを提示する。
+- 推奨仕様を採用し、起動音・振動は使わない。reduced motionではstatic emblemを
+  150ms opacity transitionだけで示す。bootstrapが時間内に終わらない場合はsplashを
+  延長せず、現在phaseとretry/recoveryを持つloadingへ切り替える。
+- moodはblackened ironとstoneの静けさへArea 1のcyan mist lightを一度だけ通す。
+  ornate fantasy装飾、常時glow、文字logoは避ける。

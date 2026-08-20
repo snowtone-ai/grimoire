@@ -1,0 +1,524 @@
+.experience {
+  --grimo-light-rgb: 168 231 244;
+  isolation: isolate;
+  min-block-size: 100dvh;
+  overflow: hidden;
+  position: relative;
+  background: #06111a;
+  color: #eff9f7;
+  font-family: var(--font-operation, "Noto Sans JP", sans-serif);
+}
+
+.liveCanvas,
+.posterWorld {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.liveCanvas {
+  z-index: 1;
+}
+
+.posterWorld {
+  z-index: 0;
+  overflow: hidden;
+  background: #123646;
+  box-shadow:
+    inset 42vw -22vh 120px #061018,
+    inset -34vw 28vh 150px #244a52,
+    inset 0 0 80px #06111a;
+}
+
+.posterWorld::before,
+.posterWorld::after {
+  content: "";
+  position: absolute;
+  inset-block-end: -14%;
+  border-radius: 48% 52% 0 0;
+  filter: blur(1px);
+  background: #112d34;
+  box-shadow: inset -30px 8px 70px #071a22, inset 34px 12px 54px #244a52;
+}
+
+.posterWorld::before {
+  inset-inline-start: -17%;
+  inline-size: 62%;
+  block-size: 47%;
+  transform: rotate(8deg);
+}
+
+.posterWorld::after {
+  inset-inline-end: -10%;
+  inline-size: 48%;
+  block-size: 39%;
+  transform: rotate(-12deg);
+}
+
+.sunVeil {
+  position: absolute;
+  inset: -22% -2% auto auto;
+  inline-size: min(72vw, 780px);
+  aspect-ratio: 1;
+  opacity: calc(.5 + var(--grimo-quality) * .28);
+  transform: rotate(17deg) skewX(-17deg);
+  background: rgb(var(--grimo-light-rgb) / .12);
+  clip-path: polygon(46% 0, 61% 0, 100% 100%, 8% 100%);
+  filter: blur(18px);
+}
+
+.farSpireA,
+.farSpireB {
+  position: absolute;
+  inset-block-end: 13%;
+  inline-size: clamp(110px, 22vw, 260px);
+  block-size: 60%;
+  border-radius: 48% 52% 28% 30% / 20% 24% 72% 68%;
+  opacity: .48;
+  background: #244c58;
+  box-shadow: inset -26px 3px 42px #071a22, inset 18px 0 32px #376371;
+  filter: blur(2.5px);
+}
+
+.farSpireA {
+  inset-inline-start: 8%;
+  transform: rotate(-8deg);
+  clip-path: polygon(24% 100%, 8% 67%, 28% 43%, 18% 24%, 45% 0, 73% 22%, 64% 45%, 96% 67%, 74% 100%);
+}
+
+.farSpireB {
+  inset-inline-end: 12%;
+  block-size: 72%;
+  transform: rotate(7deg) scale(.84);
+  clip-path: polygon(17% 100%, 5% 74%, 33% 55%, 24% 34%, 49% 0, 77% 31%, 64% 53%, 95% 74%, 80% 100%);
+}
+
+.coralShelfA,
+.coralShelfB {
+  position: absolute;
+  inset-block-end: 8%;
+  inline-size: 42%;
+  block-size: 30%;
+  border: 1px solid rgb(var(--grimo-light-rgb) / .2);
+  border-radius: 55% 45% 14% 18%;
+  background: #18363b;
+  box-shadow:
+    inset -40px -24px 48px #091b22,
+    inset 26px 12px 38px #315557,
+    0 -8px 44px rgb(var(--grimo-light-rgb) / .08);
+}
+
+.coralShelfA::before,
+.coralShelfA::after,
+.coralShelfB::before,
+.coralShelfB::after {
+  content: "";
+  position: absolute;
+  border: 9px solid #234b50;
+  border-radius: 50%;
+  background: #0c252c;
+}
+
+.coralShelfA::before,
+.coralShelfB::before {
+  inset: 21% auto auto 22%;
+  inline-size: 42px;
+  aspect-ratio: 1;
+}
+
+.coralShelfA::after,
+.coralShelfB::after {
+  inset: 34% 24% auto auto;
+  inline-size: 62px;
+  aspect-ratio: 1;
+}
+
+.coralShelfA {
+  inset-inline-start: -12%;
+  transform: rotate(11deg);
+}
+
+.coralShelfB {
+  inset-inline-end: -16%;
+  transform: scale(.76) rotate(-17deg);
+}
+
+.fogBank {
+  position: absolute;
+  inset: 36% -12% auto;
+  block-size: 43%;
+  opacity: .2;
+  background: #a9d5d2;
+  border-radius: 50%;
+  filter: blur(48px);
+}
+
+.motes {
+  position: absolute;
+  inset: 24% auto auto 15%;
+  inline-size: 2px;
+  block-size: 2px;
+  border-radius: 50%;
+  opacity: calc(.38 + var(--grimo-quality) * .38);
+  background: rgb(var(--grimo-light-rgb) / .72);
+  box-shadow:
+    12vw 9vh 0 rgb(230 250 246 / .42),
+    28vw -7vh 0 rgb(var(--grimo-light-rgb) / .58),
+    43vw 18vh 0 rgb(230 250 246 / .5),
+    61vw 2vh 0 rgb(var(--grimo-light-rgb) / .52),
+    74vw 29vh 0 rgb(230 250 246 / .38),
+    19vw 43vh 0 rgb(var(--grimo-light-rgb) / .46),
+    53vw 54vh 0 rgb(230 250 246 / .42),
+    79vw 62vh 0 rgb(var(--grimo-light-rgb) / .5);
+  animation: mote-drift 28s linear infinite;
+}
+
+.observationHeader {
+  position: absolute;
+  inset-block-start: max(24px, env(safe-area-inset-top));
+  inset-inline-start: clamp(20px, 5vw, 72px);
+  max-inline-size: 72%;
+  z-index: 3;
+  text-shadow: 0 2px 24px #02080a;
+}
+
+.observationHeader p,
+.observationHeader h1,
+.areaSheet p,
+.areaSheet h2 {
+  margin: 0;
+}
+
+.observationHeader p,
+.areaSheet p {
+  color: rgb(224 241 236 / .68);
+  font-size: .69rem;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.observationHeader h1,
+.areaSheet h2 {
+  margin-block-start: 5px;
+  font-family: var(--font-lore, "Shippori Mincho", serif);
+  font-size: clamp(1.05rem, 3vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+
+.statusNotice {
+  position: absolute;
+  inset-block-start: max(92px, calc(env(safe-area-inset-top) + 68px));
+  inset-inline-start: clamp(20px, 5vw, 72px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid rgb(222 241 237 / .19);
+  background: rgb(3 15 20 / .54);
+  color: rgb(232 245 241 / .8);
+  font-size: .72rem;
+  backdrop-filter: blur(12px);
+}
+
+.statusNotice span {
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: 50%;
+  background: rgb(var(--grimo-light-rgb));
+}
+
+.creatureButton {
+  position: absolute;
+  inset: 18% 12% 13%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-inline-size: 48px;
+  min-block-size: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 48%;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.creatureButton:focus-visible,
+.areaTrigger:focus-visible,
+.sheetClose:focus-visible,
+.areaOption:focus-visible {
+  outline: 2px solid #bff3ff;
+  outline-offset: 4px;
+}
+
+.creatureStage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: min(61vw, 320px);
+  filter: drop-shadow(0 22px 38px #02090ca6);
+  transition: filter 260ms ease;
+}
+
+.creatureShadow {
+  position: absolute;
+  inset-block-end: 1%;
+  inline-size: 68%;
+  block-size: 8%;
+  border-radius: 50%;
+  background: #020b10a8;
+  filter: blur(9px);
+  transform: translateY(7px);
+}
+
+.egg {
+  position: relative;
+  inline-size: 100%;
+  overflow: visible;
+  transform-origin: 50% 86%;
+  animation: egg-breathe 6.8s ease-in-out infinite;
+}
+
+.eggAura {
+  animation: aura-breathe 4.8s ease-in-out infinite;
+}
+
+.innerCurrent {
+  animation: current-rise 7s ease-in-out infinite alternate;
+}
+
+.innerCurrentReverse {
+  animation: current-sway 9s ease-in-out infinite alternate;
+}
+
+.creatureStage[data-touch-reaction="1"] .egg {
+  animation: egg-listen 560ms cubic-bezier(.2, .75, .24, 1), egg-breathe 6.8s 560ms ease-in-out infinite;
+}
+
+.creatureStage[data-touch-reaction="2"] .egg {
+  animation: egg-nod 620ms cubic-bezier(.2, .75, .24, 1), egg-breathe 6.8s 620ms ease-in-out infinite;
+}
+
+.creatureStage[data-committed-reaction="true"] {
+  animation: committed-halo 1.2s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.creatureStage[data-committed-reaction="true"] .egg {
+  animation: egg-committed 1.05s cubic-bezier(.16, 1, .3, 1), egg-breathe 6.8s 1.05s ease-in-out infinite;
+}
+
+.areaTrigger,
+.sheetClose {
+  display: grid;
+  place-items: center;
+  min-inline-size: 48px;
+  min-block-size: 48px;
+  padding: 0;
+  border: 1px solid rgb(225 245 240 / .24);
+  color: #e9f7f3;
+  background: rgb(5 20 25 / .26);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.areaTrigger {
+  position: absolute;
+  inset-inline-end: max(20px, env(safe-area-inset-right));
+  inset-block-end: max(104px, calc(env(safe-area-inset-bottom) + 90px));
+  z-index: 4;
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgb(var(--grimo-light-rgb) / .1);
+}
+
+.areaTrigger svg,
+.sheetClose svg {
+  inline-size: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+}
+
+.areaSheet {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 8;
+  max-block-size: min(74dvh, 620px);
+  padding: 12px clamp(20px, 5vw, 52px) max(106px, calc(env(safe-area-inset-bottom) + 92px));
+  overflow-y: auto;
+  border-block-start: 1px solid rgb(213 239 232 / .22);
+  background: rgb(10 29 33 / .985);
+  box-shadow: 0 -28px 80px #0107089e, inset 0 54px 90px rgb(var(--grimo-light-rgb) / .045);
+  backdrop-filter: blur(24px);
+  animation: sheet-enter 420ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.sheetRule {
+  inline-size: 42px;
+  block-size: 2px;
+  margin: 0 auto 18px;
+  background: rgb(220 241 236 / .42);
+}
+
+.areaSheet > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.sheetClose {
+  border-radius: 50%;
+  background: transparent;
+}
+
+.areaList {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 24px;
+}
+
+.areaOption {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 2px 14px;
+  min-block-size: 64px;
+  padding: 12px 14px;
+  border: 1px solid rgb(216 239 233 / .15);
+  border-radius: 5px 18px 5px 5px;
+  color: #eff9f6;
+  text-align: start;
+  background: rgb(222 241 235 / .025);
+  cursor: pointer;
+}
+
+.areaOption > span {
+  grid-row: 1 / 3;
+  align-self: stretch;
+  border-inline-start: 1px solid rgb(221 241 235 / .25);
+}
+
+.areaOption strong {
+  font-family: var(--font-lore, "Shippori Mincho", serif);
+  font-size: .92rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+}
+
+.areaOption small {
+  color: rgb(225 241 237 / .6);
+  font-size: .68rem;
+  letter-spacing: .12em;
+}
+
+.areaOption[data-selected="true"] {
+  border-color: rgb(var(--grimo-light-rgb) / .44);
+  background: rgb(var(--grimo-light-rgb) / .09);
+}
+
+.areaOption[data-selected="true"] > span {
+  border-color: rgb(var(--grimo-light-rgb) / .9);
+  box-shadow: 0 0 12px rgb(var(--grimo-light-rgb) / .42);
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes mote-drift {
+  to { transform: translate3d(38px, -54px, 0); }
+}
+
+@keyframes egg-breathe {
+  0%, 100% { transform: translateY(0) rotate(-.6deg) scale(1); }
+  50% { transform: translateY(-5px) rotate(.7deg) scale(1.006); }
+}
+
+@keyframes aura-breathe {
+  0%, 100% { opacity: .58; transform: scale(.96); transform-origin: center; }
+  50% { opacity: .86; transform: scale(1.04); transform-origin: center; }
+}
+
+@keyframes current-rise {
+  to { transform: translateY(-18px) scaleX(1.06); }
+}
+
+@keyframes current-sway {
+  to { transform: translate(16px, -8px); }
+}
+
+@keyframes egg-listen {
+  0%, 100% { transform: rotate(0); }
+  35% { transform: rotate(-3deg) translateY(-4px); }
+  68% { transform: rotate(1.5deg); }
+}
+
+@keyframes egg-nod {
+  0%, 100% { transform: scaleY(1); }
+  36% { transform: translateY(5px) scale(1.025, .972); }
+  68% { transform: translateY(-3px) scale(.992, 1.012); }
+}
+
+@keyframes egg-committed {
+  0% { transform: scale(1); }
+  28% { transform: translateY(5px) scale(.975, 1.02); }
+  58% { transform: translateY(-11px) scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+@keyframes committed-halo {
+  0% { filter: drop-shadow(0 22px 38px #02090ca6); }
+  34% { filter: drop-shadow(0 0 32px rgb(var(--grimo-light-rgb) / .78)); }
+  100% { filter: drop-shadow(0 22px 38px #02090ca6); }
+}
+
+@keyframes sheet-enter {
+  from { opacity: 0; transform: translateY(22px); }
+}
+
+@media (min-width: 800px) {
+  .creatureButton { inset: 13% 20% 9%; }
+  .creatureStage { inline-size: min(31vw, 380px); }
+  .areaTrigger { inset-inline-end: 48px; }
+  .areaSheet {
+    inset: 0 0 0 auto;
+    inline-size: min(420px, 42vw);
+    max-block-size: none;
+    padding-block-start: max(32px, env(safe-area-inset-top));
+    border-block-start: 0;
+    border-inline-start: 1px solid rgb(213 239 232 / .22);
+    animation-name: panel-enter;
+  }
+}
+
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateX(22px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motes,
+  .egg,
+  .eggAura,
+  .innerCurrent,
+  .innerCurrentReverse,
+  .creatureStage,
+  .areaSheet {
+    animation: none !important;
+    transform: none !important;
+  }
+  .creatureStage[data-committed-reaction="true"] { filter: brightness(1.06); }
+}

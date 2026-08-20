@@ -1,0 +1,165 @@
+:root,
+[data-color-scheme='light'] {
+  color-scheme: light;
+
+  --font-operation: 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --font-lore: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+
+  --color-world: #e9ede8;
+  --color-ground: #dce4de;
+  --color-surface: rgb(247 249 245 / 82%);
+  --color-surface-strong: #f7f9f5;
+  --color-surface-inverse: #0d1311;
+  --color-ink: #111816;
+  --color-ink-muted: #53615c;
+  --color-ink-inverse: #edf4ef;
+  --color-iron: #0d1311;
+  --color-iron-soft: #26302c;
+  --color-line: rgb(17 31 27 / 17%);
+  --color-line-strong: rgb(17 31 27 / 31%);
+  --color-mist: #58cbd2;
+  --color-mist-soft: rgb(88 203 210 / 18%);
+  --color-focus: #087f86;
+  --color-success: #146f56;
+  --color-warning: #805914;
+  --color-danger: #a23b45;
+  --color-scrim: rgb(5 10 9 / 62%);
+
+  --shadow-control: 0 10px 32px rgb(6 17 14 / 13%);
+  --shadow-float: 0 24px 80px rgb(5 16 13 / 18%);
+  --shadow-mineral: inset 0 1px rgb(255 255 255 / 34%),
+    0 0 0 1px rgb(56 94 84 / 10%);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-page: clamp(1rem, 4vw, 4rem);
+
+  --radius-control: 0.625rem;
+  --radius-panel: 1.25rem;
+  --radius-sheet: 1.75rem;
+  --radius-round: 999px;
+
+  --duration-instant: 90ms;
+  --duration-feedback: 180ms;
+  --duration-reveal: 360ms;
+  --duration-ambient: 12000ms;
+  --duration-splash: 900ms;
+  --duration-splash-max: 1200ms;
+  --ease-press: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-ambient: cubic-bezier(0.45, 0, 0.55, 1);
+
+  --tap-target: 2.75rem;
+  --content-max: 78rem;
+  --reading-max: 42rem;
+  --nav-height: 4.25rem;
+  --layer-world: 0;
+  --layer-content: 10;
+  --layer-nav: 30;
+  --layer-sheet: 50;
+  --layer-toast: 70;
+  --layer-splash: 90;
+}
+
+[data-color-scheme='dark'] {
+  color-scheme: dark;
+
+  --color-world: #07100f;
+  --color-ground: #0b1614;
+  --color-surface: rgb(16 27 24 / 82%);
+  --color-surface-strong: #14201d;
+  --color-surface-inverse: #edf4ef;
+  --color-ink: #edf4ef;
+  --color-ink-muted: #a0b2ab;
+  --color-ink-inverse: #101614;
+  --color-iron: #050a09;
+  --color-iron-soft: #1b2925;
+  --color-line: rgb(209 237 227 / 16%);
+  --color-line-strong: rgb(209 237 227 / 30%);
+  --color-mist: #68dbe1;
+  --color-mist-soft: rgb(104 219 225 / 17%);
+  --color-focus: #77e1e5;
+  --color-success: #69caa5;
+  --color-warning: #dfb86a;
+  --color-danger: #f08a92;
+  --color-scrim: rgb(2 6 5 / 74%);
+
+  --shadow-control: 0 12px 38px rgb(0 0 0 / 35%);
+  --shadow-float: 0 30px 90px rgb(0 0 0 / 46%);
+  --shadow-mineral: inset 0 1px rgb(215 255 242 / 10%),
+    0 0 0 1px rgb(190 241 225 / 8%);
+}
+
+:root,
+[data-theme='order'] {
+  --font-heading: var(--font-operation);
+  --expression-edge: var(--color-iron);
+  --expression-accent: var(--color-focus);
+  --expression-opacity: 0.92;
+}
+
+[data-theme='natural-history'] {
+  --font-heading: var(--font-lore);
+  --expression-edge: var(--color-line-strong);
+  --expression-accent: var(--color-mist);
+  --expression-opacity: 0.78;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme]) {
+    color-scheme: dark;
+
+    --color-world: #07100f;
+    --color-ground: #0b1614;
+    --color-surface: rgb(16 27 24 / 82%);
+    --color-surface-strong: #14201d;
+    --color-surface-inverse: #edf4ef;
+    --color-ink: #edf4ef;
+    --color-ink-muted: #a0b2ab;
+    --color-ink-inverse: #101614;
+    --color-iron: #050a09;
+    --color-iron-soft: #1b2925;
+    --color-line: rgb(209 237 227 / 16%);
+    --color-line-strong: rgb(209 237 227 / 30%);
+    --color-mist: #68dbe1;
+    --color-mist-soft: rgb(104 219 225 / 17%);
+    --color-focus: #77e1e5;
+    --color-success: #69caa5;
+    --color-warning: #dfb86a;
+    --color-danger: #f08a92;
+    --color-scrim: rgb(2 6 5 / 74%);
+    --shadow-control: 0 12px 38px rgb(0 0 0 / 35%);
+    --shadow-float: 0 30px 90px rgb(0 0 0 / 46%);
+    --shadow-mineral: inset 0 1px rgb(215 255 242 / 10%),
+      0 0 0 1px rgb(190 241 225 / 8%);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root,
+  [data-color-scheme] {
+    --color-line: currentcolor;
+    --color-line-strong: currentcolor;
+    --color-surface: var(--color-surface-strong);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-color-scheme] {
+    --duration-instant: 1ms;
+    --duration-feedback: 150ms;
+    --duration-reveal: 150ms;
+    --duration-ambient: 1ms;
+  }
+}

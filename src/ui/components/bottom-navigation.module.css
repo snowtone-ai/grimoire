@@ -1,0 +1,85 @@
+.navigation {
+  position: fixed;
+  z-index: var(--layer-nav);
+  right: 0;
+  bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  left: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-1), 2vw, var(--space-3));
+  padding: var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--color-iron) 76%, transparent);
+  box-shadow: var(--shadow-control);
+  pointer-events: auto;
+}
+
+.destination {
+  position: relative;
+  display: grid;
+  width: var(--tap-target);
+  min-height: var(--tap-target);
+  border-radius: var(--radius-round);
+  color: var(--color-ink-inverse);
+  opacity: 0.62;
+  place-items: center;
+  text-decoration: none;
+  transition:
+    opacity var(--duration-feedback) var(--ease-press),
+    transform 70ms var(--ease-press);
+}
+
+.destination:hover,
+.destination:focus-visible,
+.destination[data-current] {
+  opacity: 1;
+}
+
+.destination:active {
+  transform: translateY(2px) scale(0.972);
+}
+
+.currentMark {
+  position: absolute;
+  bottom: 0.34rem;
+  width: 0.8rem;
+  height: 1px;
+  background: var(--color-mist);
+  opacity: 0;
+  box-shadow: 0 0 0.8rem var(--color-mist);
+}
+
+.destination[data-current] .currentMark {
+  opacity: 1;
+}
+
+@media (max-width: 22rem) {
+  .list {
+    gap: 0;
+  }
+}
+
+:global(html[data-motion='reduced']) .destination {
+  transition-duration: var(--duration-instant);
+}
+
+:global(html[data-motion='reduced']) .destination:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html:not([data-motion='full'])) .destination {
+    transition-duration: var(--duration-instant);
+  }
+
+  :global(html:not([data-motion='full'])) .destination:active {
+    transform: none;
+  }
+}

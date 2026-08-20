@@ -1,6 +1,10 @@
 # issues.md
 
 ## Error Log
+- 2026-08-19: production PWAのoffline reloadはChromiumでconsole error/request failure 0まで
+  検証済み。Playwright WebKit 1.58.2 on Windowsは`context.setOffline(true)`後の`page.reload()`で
+  browser内部エラーになるため、その1 caseのみ明示skip。通常のWebKit mobile flow 2件は合格。
+  Safari/iOSのoffline reloadは物理端末またはmacOS WebKitで再検証が必要。
 - 2026-08-19: T010でCodexだけのworker subagent上限を4へ変更しようとしたが、
   managed filesystemがglobal `~/.codex/config.toml`とproject `.codex/config.toml`の
   両方への`apply_patch`を拒否した。Codex専用の運用差分は`AGENTS.md`へ反映済み。
