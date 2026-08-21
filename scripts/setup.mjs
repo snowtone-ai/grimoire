@@ -46,19 +46,13 @@ if (detectUiSurface()) {
     if (result.status !== 0) console.log('skip: shadcn/ui skill install failed or unavailable (non-fatal)')
   }
 
-  const mcpPath = '.mcp.json'
-  const mcpConfig = existsSync(mcpPath) ? JSON.parse(readFileSync(mcpPath, 'utf8')) : { mcpServers: {} }
-  if (!mcpConfig.mcpServers['chrome-devtools']) {
-    mcpConfig.mcpServers['chrome-devtools'] = {
-      type: 'stdio',
-      command: 'npx',
-      args: ['chrome-devtools-mcp@latest'],
-    }
-    await fs.writeFile(mcpPath, `${JSON.stringify(mcpConfig, null, 2)}\n`)
-    console.log('added: chrome-devtools MCP entry in .mcp.json')
-  } else {
-    console.log('skip: chrome-devtools MCP already registered')
-  }
+  // No chrome-devtools MCP here: this repo already has Playwright MCP
+  // registered and in active use for browser verification (T004, T008,
+  // tests/e2e/). impeccable itself prefers the harness's existing browser
+  // tool over a dedicated MCP (see its reference/critique.md), and its own
+  // URL-scan engine falls back to a bundled Puppeteer, not chrome-devtools.
+  // Adding a second overlapping browser-automation MCP is pure redundant
+  // tool-schema cost with no functional gain (D-011 addendum, 2026-08-21).
 } else {
   console.log('no UI surface detected -- skipping frontend tooling provisioning')
 }

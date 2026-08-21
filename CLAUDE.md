@@ -83,9 +83,12 @@
   Neither exists yet in this repo. Once `DESIGN.md` is adopted, `scripts/verify.mjs`'s
   lint step must additionally reject unregistered raw values (`bg-[#...]`, `text-[...px]`,
   `rounded-[...]`, `shadow-[...]`) in changed frontend files, per v12.1 §16.2.
-- Per-project UI tool auto-provisioning (impeccable skill, chrome-devtools MCP, shadcn
-  skill if `shadcn/ui` is a dependency) runs from `scripts/setup.mjs` on framework
-  detection (v12.1 §16.7) -- see that script for the current provisioning state.
+- Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
+  is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
+  (v12.1 §16.7). No chrome-devtools MCP: this repo already has Playwright MCP registered
+  and in active use for browser verification, and impeccable itself prefers the harness's
+  existing browser tool over a dedicated MCP -- adding a second one would be redundant
+  tool-schema cost with no functional gain.
 
 ## Self-Evolution
 - On the first surprising failure, ask one question: can a machine detect this?

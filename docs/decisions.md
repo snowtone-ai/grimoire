@@ -321,3 +321,25 @@ and motivated this reset -- those are kept as-is, not restarted.
   ワークフローファイルの変更だけでは反映されない。
 - 将来見直し条件: pm-zero-knowledgeが次版へ更新された時、またはDESIGN.mdを実際に
   採用してtoken registryが必要になった時。
+
+### D-011 追記(2026-08-21): 重複/不要ツールの削除
+
+- 決定: `chrome-devtools` MCPを`.mcp.json`および`scripts/setup.mjs`のprovisioningから
+  削除した。理由は重複: 本プロジェクトは既にPlaywright MCPをbrowser検証の主経路として
+  登録・常用しており(T004でCodex側に登録、T008のevidence取得、`tests/e2e/`のPlaywright
+  suite)、v12.1 §16.3自身も「Playwright MCP + `run` skill」をこのプロジェクトの機構と
+  名指ししている。加えて`impeccable`自身のコード(`reference/critique.md`、
+  `detector/engines/browser/detect-url.mjs`)を確認したところ、URLスキャンは同梱の
+  Puppeteerにfallbackし、既存harnessのbrowser toolがあればそちらを優先する設計で、
+  chrome-devtools MCPへの依存は無い。二重にbrowser automation MCPを持つのはtool-schema
+  costの純粋な浪費と判断した。あわせて`.claude/settings.local.json`(gitignore対象、
+  ローカルのみ)に残っていた、現行`.mcp.json`のどのサーバーにも対応しない孤立した
+  permission entry(`mcp__bc5f5980-...__search_files`)も削除した。
+- 保持したもの: `blender` MCPは`grimore-v2/Grimoire_決定事項ログ.md`の「資産・データの
+  調達方針」でBlenderMCP経由のPolyHaven連携(CC0モデル・HDRI・テクスチャ)が確定方針として
+  明記されており、製品のasset調達計画に実際に必要なため維持。`frontend-design`
+  プラグインと`context7` MCP(いずれもグローバル、pm-zero v12.1で既に導入済み)は
+  `impeccable`と役割が異なる(前者はdesign-framework scaffolding、後者は自動UI批評
+  detector)ため重複ではなく、いずれもリポジトリ固有の変更ではないため対象外とした。
+- 検証: `pnpm lint`合格(setup.mjs変更の反映確認)、`.mcp.json`に`chrome-devtools`が
+  残っていないことを目視確認。
