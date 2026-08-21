@@ -36,3 +36,4 @@
 - T006: 非Store版PowerShellを導入してCodexの既定シェルを切り替えるか、WSL実行へ
   移行する。`sandbox="unelevated"`と`sandbox_private_desktop=false`の再設定は不要。
 - budget wall hit; session ended by rate limit
+- budget wall hit; session ended by rate limit
