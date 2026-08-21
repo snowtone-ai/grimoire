@@ -78,11 +78,14 @@
   a visual-direction change), generate the design at claude.ai/design via `/design-sync`
   and show it to the owner instead of deciding unilaterally -- they can react to a
   rendered design even though they cannot review a diff.
-- `DESIGN.md` (tokens/typography/spacing/component rules) and `ASSET_REGISTRY.md` are
-  optional, added only on concrete need (per Section 3's rule for every optional file).
-  Neither exists yet in this repo. Once `DESIGN.md` is adopted, `scripts/verify.mjs`'s
-  lint step must additionally reject unregistered raw values (`bg-[#...]`, `text-[...px]`,
-  `rounded-[...]`, `shadow-[...]`) in changed frontend files, per v12.1 §16.2.
+- `DESIGN.md` exists at repo root (authored 2026-08-22, D-012): the target design
+  language for a UI-layer rebuild that has not happened yet -- current `src/app/`,
+  `src/features/*`, `src/ui/` predate it. `ASSET_REGISTRY.md` is still not adopted
+  (no concrete need yet, per Section 3's rule for every optional file). Once the
+  rebuild (T019) lands, `scripts/verify.mjs`'s lint step must additionally reject
+  unregistered raw values in changed UI-layer files per `DESIGN.md` §7's scope and
+  exemption mechanism (v12.1 §16.2) -- not wired yet, since there is no rebuilt UI
+  to lint against.
 - Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
   is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
   (v12.1 §16.7). No chrome-devtools MCP: this repo already has Playwright MCP registered

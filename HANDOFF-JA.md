@@ -1,4 +1,48 @@
-# HANDOFF-JA.md -- pm-zero v12 (grimore-v2)
+# HANDOFF-JA.md -- pm-zero v12.1 (grimore-v2)
+
+## 2026-08-22 セッション終了checkpoint
+
+- オーナー依頼「pm-zeroリポジトリのpm-zero-knowledgeを参照し最新版へ最適化」を実施。
+  `pm-zero-knowledge-v12.1.md`(Section 16 Frontend/UI Operating Layer含む)へ本リポジトリを
+  追随させた(T018/D-011)。`scripts/setup.mjs`をv9.4放置状態から書き直し、UI依存検出時のみ
+  `.claude/skills/impeccable`を冪等provisioning。`scripts/verify.mjs`の必須ファイルcheckへ
+  `AGENTS.md`・`.codex/config.toml`を追加。`.github/workflows/ci.yml`のtrigger branchesへ
+  `grimore-v2`を追加しCI gapを解消。`CLAUDE.md`/`AGENTS.md`をv12.1表記へ更新。
+  `~/.claude/CLAUDE.md`(グローバル)に、v12.1で追加された判断規約(非エンジニアの言葉を
+  製品意図へ翻訳する)が抜けていたため追記した。
+- オーナー指摘を受け、v12.1導入ツールの重複を監査・削除(D-011追記)。`chrome-devtools` MCPを
+  `.mcp.json`/`scripts/setup.mjs`から削除 — Playwright MCPと役割が完全重複しており、
+  `impeccable`自身のコードもharnessの既存browser toolを優先する設計だったため。
+  `.claude/settings.local.json`の孤立permission entryも削除。`blender` MCPは
+  `grimore-v2/Grimoire_決定事項ログ.md`のasset調達方針(BlenderMCP経由PolyHaven連携)に
+  実際に必要なため維持した。
+- オーナー指示で「UI層を`DESIGN.md`準拠へ全面リセット、データ層は維持」の方針を決定。
+  `DESIGN.md`を`docs/vision.md`/`docs/architecture.md` §8(Pass1/Pass2の視覚方針)を出典に
+  0から作成した(D-012)。既存tokens.cssの単純転記ではなく、存在しなかった型scaleを新規設計、
+  color/space/radius/motion/layer tokenの命名registry化、raw-value lintの適用範囲と
+  world-scene値の除外機構、component rule(equal rounded card禁止の判定条件を含む)を
+  明文化。**UI層の実装置き換え自体は今回未着手** — T019として起票し次セッションへ。
+- 変更ファイル: `CLAUDE.md`, `AGENTS.md`, `scripts/setup.mjs`, `scripts/verify.mjs`,
+  `.github/workflows/ci.yml`, `eslint.config.mjs`, `.gitignore`, `.mcp.json`(local),
+  `.claude/settings.local.json`(local), `DESIGN.md`(新規), `docs/decisions.md`(D-011,D-012),
+  `docs/state.md`, `tasks.md`(T018,T019), `~/.claude/CLAUDE.md`(グローバル、リポジトリ外)。
+
+## 検証
+
+- `pnpm verify`(lint/typecheck/test/build)全合格を確認済み(T018時点)。`DESIGN.md`自体は
+  ドキュメントのみのためコード側検証は無く、`git diff --check`で確認。
+- `node scripts/setup.mjs`を2回実行し冪等(2回目は全skip)を確認。
+
+## 次セッションへの引き継ぎ
+
+- **T019(未着手)**: `DESIGN.md`準拠でUI層(`src/app/`, `src/features/*`, `src/ui/`,
+  対応CSS)を作り直す。データ層(`src/domain/`等、T012)には触れない。完了時に
+  `scripts/verify.mjs`のlintへDESIGN.md §7のraw-value lintを配線(blocking、world scene
+  値は明示コメントで除外)。受け入れ基準の詳細はtasks.mdのT019行を参照。
+- 実装着手前に、DESIGN.md §6のcomponent rules(特にrule 2「同一screen内で同じ
+  size/radius/shadowの組み合わせを繰り返さない」)を実際の画面構成(Home/Calendar/
+  Grimo/Catalog/Settings)へどう写像するか、具体的なワイヤーフレームか実装方針の
+  すり合わせが必要になる可能性が高い。
 
 ## 2026-08-20 セッション終了checkpoint
 

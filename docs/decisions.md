@@ -343,3 +343,29 @@ and motivated this reset -- those are kept as-is, not restarted.
   detector)ため重複ではなく、いずれもリポジトリ固有の変更ではないため対象外とした。
 - 検証: `pnpm lint`合格(setup.mjs変更の反映確認)、`.mcp.json`に`chrome-devtools`が
   残っていないことを目視確認。
+
+## D-012: DESIGN.mdを0から構築し、UI層のみ全面リセットする(データ層は維持)
+
+- 日付: 2026-08-22
+- 対象: product design / frontend rebuild scope
+- 決定: オーナー指示により、UI層(`src/app/`, `src/features/*`, `src/ui/`, 対応するCSS)を
+  `DESIGN.md`準拠で全面作り直しする。データ層(`src/domain/`, `src/application/`,
+  `src/infrastructure/` — T012で構築したDexie schema、transaction receipt/outbox、
+  recurrence、storage health等)は無傷のまま維持する。今回のセッションでは`DESIGN.md`の
+  作成のみを行い、UI層の実装置き換え自体はT019として起票し次セッション以降に回した。
+  `DESIGN.md`は既存`tokens.css`/`design-tokens.ts`の単純転記ではなく、
+  `docs/vision.md`と`docs/architecture.md` §8(Pass1/Pass2の視覚方針)を出典として、
+  存在しなかった型scale(operation/lore双方の具体的なsize/line-height)を新規に設計し、
+  color/space/radius/motion/layer tokenを命名registryとして再整理、raw-value lintの
+  適用範囲・除外機構・component rule(equal rounded card禁止の具体的判定条件を含む)を
+  明文化した。
+- 採用理由: pm-zero v12.1 §16の「機械的に検証できる範囲だけ導入する」原則と、オーナーの
+  明示指示(UI層全面リセット、データ層維持、DESIGN.md作成のみを今回のスコープとする)を
+  両立させるため。`docs/architecture.md` §8で既に確定していたPass1/Pass2の視覚方針
+  (iron controls、Noto Sans JP+Shippori Mincho、cyan mist希少性、非対称構図、
+  wordless魔導書紋章)は上書きせず正典として扱い、それを実装可能なtoken/component規約へ
+  具体化する作業として実施した。
+- 検証: DESIGN.md単体のためコード側検証は無し。`git diff --check`のみ(ドキュメントのみ、
+  Markdown/docs-only exceptionでgrimore-v2ブランチへ直接コミット可)。
+- 将来見直し条件: T019(UI層実装)着手時、またはDESIGN.mdの想定と実装が乖離した時に
+  DESIGN.md自体を更新する。

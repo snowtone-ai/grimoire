@@ -1,6 +1,12 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-22: T019起票 (D-012) — オーナー指示でUI層(`src/app/`,`src/features/*`,`src/ui/`)を
+  `DESIGN.md`準拠で全面リセットする方針を決定。データ層(T012)は維持。今回は`DESIGN.md`を
+  `docs/vision.md`/`docs/architecture.md` §8を出典に0から作成するところまでで、UI層の
+  実装置き換え自体はT019として次セッション以降へ。同日: `chrome-devtools` MCPと
+  `.claude/settings.local.json`の孤立permission entryを削除(D-011追記、blender MCPは
+  資産調達方針として維持)。
 - 2026-08-21: T018 (D-011) — pm-zero v12.1(Section 16 Frontend/UI Operating Layer)へ追随。
   `scripts/setup.mjs`をv9.4放置状態から書き直し、UI依存検出時のみ`.claude/skills/impeccable`と
   `.mcp.json`の`chrome-devtools` MCPを冪等provisioning。CLAUDE.md/AGENTS.mdをv12.1表記へ更新し

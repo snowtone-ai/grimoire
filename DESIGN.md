@@ -1,0 +1,266 @@
+# DESIGN.md — Grimoire v2 Design System
+
+Status: **authored 2026-08-22, not yet implemented.** This is the target design
+language for the UI-layer rebuild (pm-zero v12.1 §16, D-011). The current
+`src/app/`, `src/features/*`, `src/ui/`, and their CSS are pre-existing and
+will be replaced against this spec in a future task (see tasks.md). The data
+layer (`src/domain/`, `src/application/`, `src/infrastructure/`) is untouched
+by this document and by the rebuild it describes.
+
+This file is the registry `scripts/verify.mjs`'s raw-value lint (pm-zero v12.1
+§16.2) will check UI-layer changes against once that rebuild lands: a value
+outside this registry, used in a shared or feature UI file, needs a named
+token added here first — not a one-off literal.
+
+---
+
+## 0. Brief (carried from docs/vision.md and docs/architecture.md §8, not restated there — refined here into concrete tokens)
+
+A local-first task app whose reward for finishing today's work is watching a
+living natural-history world grow. The subject is not "productivity app" —
+it is a naturalist's field journal that happens to also get things done.
+Two registers coexist and must stay visually distinct: **operation** (today's
+tasks — brief, legible, gets out of the way) and **lore** (the grimoire world
+— unhurried, spacious, wants to be looked at).
+
+Non-negotiables inherited from architecture.md §8 (already decided, not open
+for revision here):
+- Iron controls floating above a living negative-space world; the world can
+  cross the page field, UI appears only where an action or reading surface
+  is needed.
+- Noto Sans JP for operation, Shippori Mincho for lore/names/catalog headings.
+- Cyan mist is the *only* saturated color, and it is scarce.
+- No dashboard of equal rounded cards. No cyan glow on every control.
+- Signature: a wordless broken grimoire seal (open book + water/egg core),
+  legible at 32–64px with three readable masses, distinct from the v1 logo.
+- Verify at 320 CSS px, 200% zoom, keyboard, screen reader labels, high
+  contrast, reduced motion. WCAG 2.2 AA is the floor, not the target.
+
+What this document adds that architecture.md left as prose: a concrete,
+named token registry: a real type scale (none existed before this file —
+`design-tokens.ts` had font *families* but no sizes), refined spacing/radius
+naming, and component rules that make "no templated dashboard" enforceable
+rather than aspirational.
+
+---
+
+## 1. Color
+
+Six named colors carry the palette; everything else is a tint, an opacity,
+or a state derived from these. Values below are the **light** register;
+dark is the same hue family inverted for legibility, not a new palette (see
+1.2). This mostly ratifies `src/styles/tokens.css`'s existing choices —
+they already fit the brief — and gives them names design conversation can
+use instead of `--color-line-strong`.
+
+| Name | Hex (light) | Hex (dark) | Role |
+|---|---|---|---|
+| **Iron** | `#0d1311` | `#050a09` | Text-on-light, control fills, the "crisp iron control" material |
+| **World** | `#e9ede8` | `#07100f` | Page ground — the negative-space the world lives in |
+| **Ground** | `#dce4de` | `#0b1614` | One step off World; large environmental fields, not text surfaces |
+| **Mist** | `#58cbd2` | `#68dbe1` | The one saturated accent. Focus, committed-event glow, environment reflection only — never decoration |
+| **Stone** | `#53615c` | `#a0b2ab` | Muted ink — captions, secondary reads, disabled states |
+| **Scrim** | `rgb(5 10 9 / 62%)` | `rgb(2 6 5 / 74%)` | Sheet/modal backdrop only |
+
+Status colors are utilitarian, not brand — kept desaturated so Mist stays
+the only color that reads as "alive":
+
+| Name | Hex (light) | Hex (dark) |
+|---|---|---|
+| Success | `#146f56` | `#69caa5` |
+| Warning | `#805914` | `#dfb86a` |
+| Danger | `#a23b45` | `#f08a92` |
+
+### 1.1 Mist governance (the rule most likely to get violated)
+
+Mist appears in exactly three situations: **focus ring**, **committed-event
+glow** (a task completed, a discovery made), and **environment light
+reflection** in the Grimo/Catalog world. If a component wants Mist for any
+other reason — a highlight, a badge, an active-tab indicator — that is the
+signal the component needs redesigning, not a fourth use case for Mist.
+
+### 1.2 Light/dark: inversion, not a second palette
+
+Dark mode is not independently art-directed. World/Ground/Iron invert
+(iron becomes near-black-on-near-black text, world becomes the deep field);
+Mist, Success, Warning, Danger shift toward higher luminance so they hold
+contrast against a dark field, but keep the same hue. `color-scheme` and
+`prefers-color-scheme` drive selection; `data-color-scheme` allows explicit
+override. `prefers-contrast: more` collapses World/Ground toward a shared
+strong surface and forces line colors to `currentcolor` — implement this as
+a token override, never a component-level `@media` block.
+
+### 1.3 Two expression themes (orthogonal to color scheme)
+
+`data-theme` selects **register**, independent of light/dark:
+
+| Theme | Routes | Heading face | Edge treatment | Accent opacity |
+|---|---|---|---|---|
+| `order` | Home, Calendar, Settings | Noto Sans JP | Iron, hairline | 0.92 — present, controlled |
+| `natural-history` | Grimo, Catalog | Shippori Mincho | soft line-strong | 0.78 — recedes, lets the world lead |
+
+This is already wired in `src/app/runtime.tsx`'s route-based theme switch
+and should be preserved by the rebuild, not reinvented.
+
+---
+
+## 2. Type
+
+Two families, one new scale.
+
+- **Operation** — Noto Sans JP, system-ui fallback stack. Every actionable
+  surface: buttons, nav, forms, dates, list rows.
+- **Lore** — Shippori Mincho, serif fallback stack. Names, catalog entries,
+  world/creature copy, empty-state and error voice.
+
+### 2.1 Scale
+
+A restrained scale (ratio ≈1.2, "minor third") — this is a field journal,
+not a marketing page; the type should not compete with the world it frames.
+
+| Token | Size | Line-height | Use |
+|---|---|---|---|
+| `--text-caption` | 0.75rem (12px) | 1.4 | Timestamps, metadata, unit labels |
+| `--text-body` | 0.9375rem (15px) | 1.5 | Default operation text, list rows |
+| `--text-body-lg` | 1.0625rem (17px) | 1.5 | Primary reading surfaces (task detail, settings rows) |
+| `--text-title` | 1.375rem (22px) | 1.3 | Screen titles (operation register) |
+| `--text-lore` | 1.625rem (26px) | 1.35 | Lore/catalog headings, set in Shippori Mincho |
+| `--text-display` | 2.5rem (40px) | 1.15 | Splash/emblem-adjacent moments only — rare |
+
+Weight: operation text uses Regular/Medium only (400/500) — no bold rows;
+emphasis is spacing and Iron/Stone contrast, not weight, to keep Home calm
+per the brief's "gets out of the way." Lore text may use Medium (500) for
+creature/area names to separate them from surrounding description.
+
+---
+
+## 3. Space, radius, shadow
+
+Carried forward from `tokens.css` — these already serve the brief well and
+are not being redesigned, only re-registered so the lint has one source:
+
+| Token | Value |
+|---|---|
+| `--space-1` … `--space-20` | 0.25rem → 5rem, existing 8-step scale |
+| `--space-page` | `clamp(1rem, 4vw, 4rem)` |
+| `--radius-control` | 0.625rem — buttons, chips, inputs |
+| `--radius-panel` | 1.25rem — cards, non-full-screen surfaces |
+| `--radius-sheet` | 1.75rem — bottom sheets, modals |
+| `--radius-round` | 999px — avatars, dots, pills |
+| `--shadow-control` | `0 10px 32px rgb(6 17 14 / 13%)` |
+| `--shadow-float` | `0 24px 80px rgb(5 16 13 / 18%)` |
+| `--shadow-mineral` | inset highlight + hairline — the "mineral edge" signature texture from Pass 1 |
+
+Rule: a panel gets **one** radius tier and **one** shadow tier from this
+table. Mixing `--radius-panel` with `--shadow-float` on a small control (or
+vice versa) is a scale mismatch, not a style choice — it is what "equal
+rounded cards" looks like when it creeps in one component at a time.
+
+## 4. Motion
+
+Carried forward from `design-tokens.ts`'s `interactionTokens` — thorough
+and correct as-is:
+
+| Token | Value | Use |
+|---|---|---|
+| `--duration-instant` | 90ms | Press feedback |
+| `--duration-feedback` | 180ms | Toggle, selection |
+| `--duration-reveal` | 360ms | Sheet/panel entry |
+| `--duration-ambient` | 12000ms | World idle motion loop |
+| `--ease-press` | `cubic-bezier(.2,.8,.25,1)` | Physical press |
+| `--ease-settle` | `cubic-bezier(.16,1,.3,1)` | Arrival, settle |
+| `--ease-ambient` | `cubic-bezier(.45,0,.55,1)` | Slow environmental drift |
+
+Rule: **committed-event glow** (task done, creature discovered) is the only
+animation allowed to use Mist as a light source. Everything else animates
+position, scale, or opacity — never introduces color.
+
+`prefers-reduced-motion: reduce` collapses `--duration-instant/feedback/reveal`
+toward near-zero and removes `--duration-ambient` entirely — this is already
+implemented in `tokens.css` and must be preserved.
+
+## 5. Layout and layers
+
+| Token | Value |
+|---|---|
+| `--breakpoint-compact` | 480px |
+| `--breakpoint-split` | 800px |
+| `--breakpoint-wide` | 1200px |
+| `--content-max` | 78rem |
+| `--reading-max` | 42rem |
+| `--tap-target` | 2.75rem (44px) — WCAG 2.2 AA floor, not aspirational |
+
+Z-stack (`--layer-*`): world 0 · content 10 · navigation 30 · sheet 50 ·
+toast 70 · splash 90. The world layer existing below content, not beside
+it in a grid cell, is what makes "environment can cross the page field"
+true — a rebuilt component must never introduce a layer value outside
+this table.
+
+---
+
+## 6. Component rules
+
+Only one shared component exists today (`bottom-navigation`); the rest are
+per-feature. These rules are what the rebuild's *new* shared components
+must follow — they exist to make Pass 2's rejections structural instead of
+something a reviewer has to notice by eye each time.
+
+1. **Control** (button, chip, input, tab): `--radius-control`,
+   `--shadow-control` only on raised state (not resting), Iron fill or
+   Iron outline — never a filled color chip except for the rare Mist
+   committed-state. Minimum `--tap-target`.
+2. **Panel** (a bounded reading/task surface): `--radius-panel`, no shadow
+   at rest; `--shadow-float` only while actively dragged/focused. A panel
+   never repeats the exact size/radius/shadow combination of a sibling
+   panel on the same screen — if two panels want to look identical, they
+   are the same component, not two panels (this is the concrete form of
+   "no dashboard of equal rounded cards").
+3. **Sheet** (bottom sheet, modal): `--radius-sheet`, `--shadow-mineral`
+   on its top edge, `--ease-settle` entry, Scrim backdrop. Never stacks two
+   sheets.
+4. **Navigation**: Iron on World, hairline top border (`--color-line`), no
+   active-tab color fill — active state is an Iron weight/position change,
+   because color is reserved for Mist (§1.1).
+5. **World surface** (Grimo/Catalog canvas or its CSS/poster fallback):
+   exempt from the token registry for scene-internal values (glow color,
+   blur radius, atmospheric hex) — these are one-off art direction, not
+   reusable design tokens, and the raw-value lint (§7) must not flag them.
+   What is *not* exempt: any chrome drawn on top of the world (buttons,
+   labels, the area-trigger control) still follows rules 1–4.
+6. **Emblem** (the wordless seal): exactly two assets — a ≤64px vector mark
+   with three readable masses, and an atmospheric raster splash treatment.
+   No third variant. Never recolored per-theme; it is Iron-on-World always.
+
+---
+
+## 7. Raw-value lint scope (pm-zero v12.1 §16.2)
+
+Once the UI rebuild lands, `scripts/verify.mjs`'s lint step rejects
+unregistered raw hex/px/radius/shadow values in changed files under:
+
+    src/app/**  src/features/*/[A-Z]*.tsx  src/features/*/*.module.css (chrome parts only)
+    src/ui/**  src/styles/**
+
+**Explicitly exempt** (component rule 5): scene-internal atmosphere values
+inside a feature's world-rendering surface — glow colors, blur radii,
+gradient stops used for mood lighting inside Grimo/Catalog's canvas/CSS
+backdrop. These are marked by a `/* world: scene value, exempt from DESIGN.md */`
+comment on the same line or rule block, which the lint treats as the
+registration mechanism for that exemption — not a loophole, an explicit,
+grep-able opt-out.
+
+Enforcement is decided per D-011 addendum: land as **blocking** from the
+rebuild's first commit, not warn-only — because scope is narrow (chrome
+only) and the exemption path above keeps false positives out of the
+legitimately bespoke scene code.
+
+---
+
+## 8. What this document does not cover
+
+Three.js/world rendering budgets (draw calls, triangle counts, FPS tiers)
+are governed separately by `docs/quality-loop.md` and the area-specific
+decisions in `grimore-v2/Grimoire_決定事項ログ.md` — this file is UI chrome
+only. `ASSET_REGISTRY.md` (illustration/3D asset provenance) is a separate
+optional file, added only when asset volume makes duplication a real risk
+(pm-zero v12.1 §16.6) — not needed yet.
