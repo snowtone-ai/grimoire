@@ -1,6 +1,14 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-21: T018 (D-011) — pm-zero v12.1(Section 16 Frontend/UI Operating Layer)へ追随。
+  `scripts/setup.mjs`をv9.4放置状態から書き直し、UI依存検出時のみ`.claude/skills/impeccable`と
+  `.mcp.json`の`chrome-devtools` MCPを冪等provisioning。CLAUDE.md/AGENTS.mdをv12.1表記へ更新し
+  Section 16項目(DESIGN.md任意採用、Tier 1 UIトリガー、`/design-sync`)を明記。`scripts/verify.mjs`の
+  必須ファイル一覧へAGENTS.md・.codex/config.tomlを追加。`.github/workflows/ci.yml`のtrigger
+  branchesへ`grimore-v2`を追加しCI gapを解消。`eslint.config.mjs`へ`.claude/skills/**`を
+  globalIgnores追加(vendored impeccableコードの警告でlintが割れないように)。`pnpm verify`全合格。
+- 2026-08-21: CodexのExa/Firecrawl MCP登録と関連運用ルールを削除。`codex mcp list`で残存登録なしを確認。
 - 2026-08-20: T017 — 非エンジニア向け現状報告を
   `docs/implementation-status-2026-08-20.html`として作成。release判定を「保留」とし、
   5画面、60 tests、E2E 5/6、Catalog 12/720、領域別4段階成熟度、実画面、atomic保存、

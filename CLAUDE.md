@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12.1 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -62,11 +62,30 @@
   Nothing merges past a red check; a self-reported local pass is not sufficient on its
   own.
 - Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
-  changes behaviour, or is hard to undo. Ask for every issue with severity/confidence --
-  do not restrict it to serious issues only, or recall drops.
+  changes behaviour, is hard to undo, or touches shared UI components or design tokens
+  (v12.1 §16.5). Ask for every issue with severity/confidence -- do not restrict it to
+  serious issues only, or recall drops.
 - Tier 2 is retired: it fired on auth/billing/DB-schema/deploy/production-data classes
   that essentially do not occur in this project. If one of those classes ever appears,
   re-derive the tier rather than re-enabling it from memory.
+
+## Frontend/UI Operating Layer (pm-zero v12.1 §16)
+- Browser self-verification before "done" is already covered by the global judgment
+  instruction (start the dev server, check the changed screen with Playwright MCP at
+  the breakpoints touched, confirm no console/runtime error) -- code-reading is not a
+  substitute.
+- For a change big enough to need sign-off before or mid-implementation (a new screen,
+  a visual-direction change), generate the design at claude.ai/design via `/design-sync`
+  and show it to the owner instead of deciding unilaterally -- they can react to a
+  rendered design even though they cannot review a diff.
+- `DESIGN.md` (tokens/typography/spacing/component rules) and `ASSET_REGISTRY.md` are
+  optional, added only on concrete need (per Section 3's rule for every optional file).
+  Neither exists yet in this repo. Once `DESIGN.md` is adopted, `scripts/verify.mjs`'s
+  lint step must additionally reject unregistered raw values (`bg-[#...]`, `text-[...px]`,
+  `rounded-[...]`, `shadow-[...]`) in changed frontend files, per v12.1 §16.2.
+- Per-project UI tool auto-provisioning (impeccable skill, chrome-devtools MCP, shadcn
+  skill if `shadcn/ui` is a dependency) runs from `scripts/setup.mjs` on framework
+  detection (v12.1 §16.7) -- see that script for the current provisioning state.
 
 ## Self-Evolution
 - On the first surprising failure, ask one question: can a machine detect this?
@@ -89,22 +108,6 @@
 - install: pnpm install | lint: pnpm lint | typecheck: pnpm typecheck
 - test: pnpm test | build: pnpm build | verify: pnpm verify | setup: node scripts/setup.mjs
 - Use only commands that exist in this repository.
-
-## Research Tools (Exa + Firecrawl)
-- Web search: Exa (`claude.ai Exa` connector on Claude; local `exa` MCP on Codex).
-  Use to find candidate sources -- especially before UI/UX decisions, per
-  grimore-v2 R-1's research requirement (survey existing high-quality products
-  + official guidance before proposing a design direction).
-- Page/content analysis: Firecrawl (`claude.ai Firecrawl` connector on Claude;
-  local `firecrawl` MCP on Codex). Use to fetch and extract structured content
-  from a specific URL Exa surfaced, rather than re-searching or guessing at
-  page content from a snippet.
-- Pattern: Exa to find candidates -> Firecrawl to read the best 2-3 in full ->
-  synthesize with sources cited. Don't use one where the other fits better --
-  Exa is for discovery, Firecrawl is for depth on a known URL.
-- Codex's local `exa`/`firecrawl` MCP servers are registered but need
-  `EXA_API_KEY`/`FIRECRAWL_API_KEY` added to `~/.codex/config.toml` before they
-  work -- currently blocked, see docs/issues.md.
 
 ## Shell
 - PowerShell for all operations. Windows backslash paths. node scripts/name.mjs.

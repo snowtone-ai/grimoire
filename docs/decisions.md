@@ -288,3 +288,36 @@ and motivated this reset -- those are kept as-is, not restarted.
 - 詳細: docs/architecture.md。
 - 将来見直し条件: 複数端末syncを製品scopeへ追加する時、browser storage仕様が変わる時、
   または10k tasks / 100k events benchmarkが予算を超えた時。
+
+## D-011: pm-zero v12.1(Frontend/UI Operating Layer)への追随
+
+- 日付: 2026-08-21
+- 対象: tooling / governance / frontend
+- 決定: `pm-zero-knowledge-v12.1.md`のSection 16に合わせ、本リポジトリへ以下を反映した。
+  (1) `scripts/setup.mjs`をv9.4相当の放置状態からv12.1へ書き直し、`package.json`の
+  frontend依存(`next`/`react`等)検出時のみ`.claude/skills/impeccable`導入・
+  `.mcp.json`への`chrome-devtools` MCP登録を冪等に行う(§16.7)。GitHub Copilot向け
+  成果物(`.github/agents`等)はこのプロジェクトの対象外ツールのため導入直後に削除。
+  (2) `CLAUDE.md`のSelf-ReviewにTier 1トリガーとして「共有UIコンポーネント/design
+  tokensへの変更」を追加、`DESIGN.md`採用時のraw-value lint要件を明記(§16.2/16.5)。
+  (3) `scripts/verify.mjs`の必須ファイル一覧へ`AGENTS.md`・`.codex/config.toml`を追加し、
+  pm-zeroのデフォルト16ファイル構成の存在を機械的に検証する。(4) `.github/workflows/ci.yml`
+  のtrigger branchesへ`grimore-v2`を追加し、実運用ブランチでCIが機能する状態にした
+  (従来は`main`のみでT041/D-044由来のgapとしてAGENTS.mdに記録されていた)。
+  (5) `AGENTS.md`から解消済みの旧gap記述(空`package.json`前提のverify失敗注記、
+  上記CI trigger gap注記)を削除し、Codex側の§16対応(Claude専用ツールとの切り分け)を追記。
+  (6) `eslint.config.mjs`へ`.claude/skills/**`のglobalIgnoresを追加(vendored
+  impeccableスクリプトが`--max-warnings=0`を割ることを防止)。
+- 採用理由: オーナーがpm-zeroリポジトリの最新ナレッジ(v12.1)を参照して本リポジトリを
+  最適化するよう明示的に依頼。v12.1の許容基準(config値・script exit code・hookに
+  還元できるものだけ採用)に沿い、判断のいるUI規約(8-phase workflow等)は取り込まず、
+  機械的に検証・実行できる部分のみ導入した。
+- 検証: `pnpm verify`(lint/typecheck/test/build)全合格、`node scripts/setup.mjs`が
+  UI検出→冪等provisioningで正常終了、`.mcp.json`に`chrome-devtools`登録確認、
+  `git diff --check`。
+- 不採用/保留: `DESIGN.md`/`ASSET_REGISTRY.md`とそれに伴うraw-value lintは
+  「具体的必要が生じた時のみ追加」というpm-zero自身の原則により今回は未導入。
+  GitHub branch protectionの`grimore-v2`要求設定はリポジトリ設定(GitHub側)であり
+  ワークフローファイルの変更だけでは反映されない。
+- 将来見直し条件: pm-zero-knowledgeが次版へ更新された時、またはDESIGN.mdを実際に
+  採用してtoken registryが必要になった時。

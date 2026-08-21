@@ -24,5 +24,6 @@ export default defineConfig([
     'test-results/**',
     'next-env.d.ts',
     'grimore-v2/prototypes/**',
+    '.claude/skills/**',
   ]),
 ])

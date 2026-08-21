@@ -62,3 +62,6 @@ credentials.json
 .claude/transcripts/
 .claude/cache/
 .codegraph/
+
+# pm-zero v12.1 Section 16.7 -- reproducible via `node scripts/setup.mjs`, not vendored
+.claude/skills/impeccable/

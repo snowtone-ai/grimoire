@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 const pnpm = 'pnpm'
 const requiredPaths = [
   'CLAUDE.md',
+  'AGENTS.md',
   'HANDOFF-JA.md',
   'tasks.md',
   'docs/vision.md',
@@ -13,6 +14,7 @@ const requiredPaths = [
   'docs/issues.md',
   'docs/repo-map.md',
   '.claude/settings.json',
+  '.codex/config.toml',
 ]
 
 const failures = []
