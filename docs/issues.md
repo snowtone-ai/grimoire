@@ -37,3 +37,4 @@
   移行する。`sandbox="unelevated"`と`sandbox_private_desktop=false`の再設定は不要。
 - budget wall hit; session ended by rate limit
 - budget wall hit; session ended by rate limit
+- budget wall hit; session ended by rate limit
