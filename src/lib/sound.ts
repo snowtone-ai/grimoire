@@ -50,6 +50,24 @@ export function setFxEnabled(enabled: boolean): void {
 
 let ctx: AudioContext | null = null;
 
+/* Every browser blocks audio until the user has interacted with the page, and
+ * a suspended AudioContext does not advance its clock — so anything scheduled
+ * before that first interaction is not dropped, it is *queued*, and fires the
+ * instant the context resumes. Found in browser QA: on a fresh load the
+ * app-open flourish's three-step cue sat silent, then played in full several
+ * seconds later when the user tapped an unrelated button.
+ *
+ * So cues are skipped outright until a gesture has been seen. Silence is the
+ * correct failure here — a sound that arrives detached from the moment it was
+ * describing is worse than no sound at all.
+ *
+ * The one cue this genuinely costs is the app-open flourish, which by
+ * definition fires before the user can have touched anything. Its visual half
+ * still plays in full. There is no way around this on the web: it is the
+ * autoplay policy working as intended, not something a workaround should try
+ * to defeat. */
+let unlocked = false;
+
 function ac(): AudioContext | null {
   if (typeof window === "undefined" || !isFxEnabled()) return null;
   try {
@@ -105,6 +123,10 @@ export function primeAudioOnFirstGesture(): void {
   window.addEventListener(
     "pointerdown",
     () => {
+      // Set before the context work, and on `window` at the bubble phase, so a
+      // cue fired from the very same press's onClick handler is already allowed
+      // through — the first tap of a session should sound like every later one.
+      unlocked = true;
       const audio = ac();
       if (!audio) return;
       for (const src of ALL_CUE_SOURCES) void load(audio, src);
@@ -123,7 +145,7 @@ function emit(audio: AudioContext, buffer: AudioBuffer, gain: number, startAt: n
 }
 
 export function haptic(pattern: number | readonly number[]): void {
-  if (!isFxEnabled()) return;
+  if (!isFxEnabled() || !unlocked) return;
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
       navigator.vibrate(pattern as number | number[]);
@@ -151,6 +173,7 @@ export function playCue(action: SoundAction): void {
 
   if (cue.haptic !== null) haptic(cue.haptic);
 
+  if (!unlocked) return;
   const audio = ac();
   if (!audio) return;
 
