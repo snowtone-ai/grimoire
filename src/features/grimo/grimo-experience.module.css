@@ -14,6 +14,9 @@
   padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--space-4) 0;
 }
 
+/* The screen's title, and the only heading it has: the world is the content, so
+   the area's name is what a reader arriving here needs told. DESIGN.md §2.1
+   lets a place name in the lore register take Medium. */
 .areaName {
   margin: 0;
   padding: var(--space-1) var(--space-3);
@@ -22,6 +25,7 @@
   color: var(--color-chrome-ink);
   font-family: var(--font-lore);
   font-size: var(--text-body);
+  font-weight: var(--weight-medium);
   line-height: var(--leading-body);
   backdrop-filter: blur(var(--blur-chrome));
 }

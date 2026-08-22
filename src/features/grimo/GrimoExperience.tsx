@@ -58,7 +58,7 @@ export function GrimoExperience() {
 
       <WorldSurface area={area} media={media.areas[area.id] ?? null}>
         <div className={styles.topChrome}>
-          <p className={styles.areaName}>{area.name}</p>
+          <h1 className={styles.areaName}>{area.name}</h1>
           {world.unreadObservationCount > 0 ? (
             <IconLink
               href="/catalog"
