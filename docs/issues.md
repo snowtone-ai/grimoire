@@ -42,3 +42,4 @@
 - budget wall hit; session ended by rate limit
 - budget wall hit; session ended by rate limit
 - budget wall hit; session ended by rate limit
+- budget wall hit; session ended by rate limit
