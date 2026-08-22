@@ -118,8 +118,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // `/audio/` covers the interface sounds (D-015) — a few hundred KB in total,
-  // and silence offline would read as the app being broken rather than quiet.
+  // `/audio/` covers the interface sounds (D-015/D-016) — only cues that are
+  // actually wired in `sound-catalog.ts` are ever fetched, so runtime cache
+  // growth stays a few hundred KB even though the vendored pool (unwired,
+  // never requested) is ~2.9MB. Silence offline would read as the app being
+  // broken rather than quiet.
   // World footage is deliberately absent: those files are large, and the world
   // already degrades to its poster and ambience layers without them.
   const isStaticAsset =

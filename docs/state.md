@@ -1,6 +1,14 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-22: T027完了(D-016)。オーナー指示で、D-015で12件だけ導入した
+  Kenney "Interface Sounds"(CC0)をパック全量100件へ拡張し、
+  `public/audio/ui/manifest.json`を新設した。「UIコンポーネントアセット
+  のようにAIが選定を完全に任される」運用のため、category/用途hint/
+  再生時間/配線状況を機械可読で記録。既存12件のファイルと
+  `sound-catalog.ts`の12キューは無変更(新規キュー配線は今回のスコープ外)。
+  同じ資産を`main`ブランチへも独立に配置する作業(main側T042)を並行実施。
+  検証: `node scripts/verify.mjs` all checks passed。
 - 2026-08-22: T026完了。T023で受入基準に挙げながら未実施だったTier 1
   fresh-context reviewer(Opus 5)を実施し、blocking 1件+有効な指摘12件を修正した。
   blocking: カレンダーの`CalendarEntryView.id`は`taskId:date`のoccurrence idなのに
