@@ -1,6 +1,27 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-22: T019-T025完了。今回のスコープ(スプラッシュ映像・背景世界映像・
+  グリモ本体・アイテムアートを除く実装可能な全範囲)を実装し終えた。UI層5画面と
+  共有コンポーネント(T023)、効果音12キュー(T024/D-015)、データ層の再構築(T022)、
+  v1統合機能の移植(T020: Google auth/Calendar/Gmail・Gemini・通知/リマインダー)、
+  図鑑テキスト720件(T021)、DESIGN.md §7 raw-value lintの配線(T019)。
+  `src/app/create-app-port.ts`を合成ルートとして新設し、抽象port
+  (`GoogleIntegrationPort`/`NotificationIntegrationPort`)へ実装を注入した。
+  検証: `node scripts/verify.mjs` all checks passed / `pnpm test` 207 tests /
+  `pnpm test:e2e` 11 passed (chromium-desktop + webkit-mobile) /
+  `pnpm audit --prod` 0 / `git diff --check` クリーン。
+  browser QA(320px/390px/200%拡大/デスクトップ、reduced motion、forced-colors、
+  キーボード、skip link)で横スクロール0・AAコントラスト違反0・consoleエラー0・
+  focus ring欠落0を確認。実機QAで検出し修正した欠陥は7件:
+  (1) `.appSurface`のz-indexがstacking contextを作り、シートがナビゲーションに
+  覆われてタスク編集の確定ボタンが押せない、(2) 移行通知/報酬通知がホームの
+  主要導線を覆う、(3) 合成ルート未配線で設定が「通知に対応していません」と誤表示、
+  (4) 全画面で「ホームを開きました」と読み上げる、(5) 起動オーバーレイのh1が
+  画面のh1と重複、(6) SWが`serviceWorker.ready`待ちでリマインダー配信を恒久停止、
+  (7) SWがv1の`task-manager-v6`キャッシュを永久に残す。いずれも回帰テスト付き。
+  未実施: Tier 1 fresh-context reviewer、CIのgreen確認(PR上)。
+  未使用の`motion`を削除。`three`/`@types/three`はD-013/D-014によりグリモ用に残置。
 - 2026-08-22: T023/T024実装完了。UI層をDESIGN.md準拠で全面再構築した。共有
   コンポーネント(Sheet/Button/IconButton/Field/Switch/Chip/BottomNavigation/
   WorldSurface)と3つのフック(useMediaQuery/useReducedMotion/useModalBehaviour)を
