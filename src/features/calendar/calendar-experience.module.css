@@ -1,274 +1,196 @@
-.page {
+.screen {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
-  gap: clamp(var(--space-8), 5vw, var(--space-16));
-  width: min(100%, var(--content-max));
+  gap: var(--space-8);
+  width: 100%;
+  max-width: var(--content-max);
   min-height: 100dvh;
   margin-inline: auto;
-  padding: clamp(var(--space-8), 7vh, var(--space-16)) var(--space-page) var(--space-16);
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  grid-template-columns: 1fr;
 }
 
-.header,
-.detail > header {
+.screen[data-split] {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 1fr);
+}
+
+.month {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-4);
+  min-width: 0;
 }
 
-.header {
-  margin-bottom: var(--space-8);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-line-strong);
-}
-
-.header h1 {
-  font-family: var(--font-lore);
-  font-size: clamp(2rem, 5vw, 3.7rem);
-  font-weight: 500;
-  letter-spacing: -0.045em;
-  line-height: 1.1;
-}
-
-.eyebrow {
-  color: var(--color-ink-muted);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-
-.monthActions {
+.monthHeader {
   display: flex;
   gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
 }
 
-.monthActions button,
-.closeDetail {
-  display: grid;
-  width: var(--tap-target);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-round);
-  background: transparent;
-  place-items: center;
-}
-
-.weekdays,
-.monthGrid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+.monthTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
+  font-variant-numeric: tabular-nums;
 }
 
 .weekdays {
+  display: grid;
+  gap: var(--space-1);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   color: var(--color-ink-muted);
-  font-size: 0.68rem;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
   text-align: center;
 }
 
-.weekdays span {
-  padding-block: var(--space-2);
-}
-
-.monthGrid {
-  border-top: 1px solid var(--color-line-strong);
-  border-left: 1px solid var(--color-line);
-}
-
-.dayCell {
-  position: relative;
+.grid {
   display: grid;
-  align-content: start;
-  min-width: 0;
-  min-height: clamp(5.1rem, 9vw, 7.3rem);
-  padding: var(--space-2);
+  gap: 1px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: var(--color-line);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   overflow: hidden;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: stretch;
+  min-height: 4.5rem;
+  padding: var(--space-1);
   border: 0;
-  border-right: 1px solid var(--color-line);
-  border-bottom: 1px solid var(--color-line);
-  background: transparent;
-  text-align: left;
+  background: var(--color-surface-strong);
+  text-align: start;
+  transition: background-color var(--duration-instant) var(--ease-press);
 }
 
-.dayCell:hover,
-.dayCell[data-selected] {
-  background: var(--color-surface);
+.cell:hover {
+  background: var(--color-ground);
 }
 
-.dayCell[data-selected]::after {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--color-mist);
-  content: '';
-  pointer-events: none;
-}
-
-.dayCell[data-outside] {
+.cell[data-outside] {
+  background: var(--color-ground);
   color: var(--color-ink-muted);
-  opacity: 0.46;
 }
 
-.dayCell time {
-  display: grid;
-  width: 1.65rem;
-  height: 1.65rem;
-  border-radius: var(--radius-round);
-  font-size: 0.73rem;
-  place-items: center;
+.cell[data-selected] {
+  outline: 2px solid var(--color-iron);
+  outline-offset: -2px;
 }
 
-.dayCell time[data-today] {
-  background: var(--color-iron);
-  color: var(--color-ink-inverse);
+.cellDate {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Today is marked by weight and a hairline underline, not a filled disc —
+   colour stays reserved for Mist (DESIGN.md §1.1). */
+.cell[data-today] .cellDate {
+  color: var(--color-ink);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.22em;
 }
 
 .cellEntries {
-  display: grid;
-  gap: 0.14rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
   min-width: 0;
-  margin-top: var(--space-1);
 }
 
-.cellEntries > span {
+.cellEntry {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.cellSwatch {
+  flex: none;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: var(--radius-round);
+}
+
+.cellEntryTitle {
   overflow: hidden;
   color: var(--color-ink);
-  font-size: clamp(0.55rem, 1vw, 0.7rem);
-  text-overflow: ellipsis;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.cellEntries small {
+.cellMore {
   color: var(--color-ink-muted);
-  font-size: 0.62rem;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
 }
 
-.detail {
+/* The day panel is intentionally a different shape from the month grid: no
+   shared radius/shadow pairing, so the screen never reads as two equal cards
+   (DESIGN.md §6.2). */
+.panel {
   position: sticky;
   top: var(--space-8);
-  align-self: start;
-  min-height: 27rem;
-  padding: var(--space-6) 0;
-  border-top: 2px solid var(--color-iron);
-  border-bottom: 1px solid var(--color-line-strong);
+  min-width: 0;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--color-line);
 }
 
-.detail h2 {
-  margin-top: var(--space-1);
-  font-family: var(--font-lore);
-  font-size: 1.45rem;
-  font-weight: 500;
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-.closeDetail {
-  display: none;
-}
-
-.detailEmpty {
-  display: grid;
-  gap: var(--space-4);
-  padding-block: var(--space-10);
-  color: var(--color-ink-muted);
-}
-
-.detailEmpty a {
-  display: inline-flex;
-  align-items: center;
+.dayHeader {
+  display: flex;
   gap: var(--space-2);
-  width: fit-content;
-  color: var(--color-ink);
+  align-items: center;
+  justify-content: space-between;
 }
 
-.detailList {
-  margin: var(--space-6) 0;
+.dayTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+/* Inside the mobile sheet the sheet already shows the date, so the panel's own
+   heading would repeat it. */
+.dayRows {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.detailList li {
-  display: grid;
-  grid-template-columns: 5.8rem minmax(0, 1fr);
-  gap: var(--space-3);
-  padding-block: var(--space-4);
-  border-top: 1px solid var(--color-line);
-}
-
-.detailList time {
+.dayEmpty {
+  margin: 0;
+  padding: var(--space-6) 0;
   color: var(--color-ink-muted);
-  font-size: 0.75rem;
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: 1.8;
 }
 
-.unavailableNotice {
-  margin-top: var(--space-8);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-warning);
-  color: var(--color-ink-muted);
-  font-size: 0.7rem;
-}
-
-@media (max-width: 50rem) {
-  .page {
-    display: block;
-    padding-inline: var(--space-3);
-  }
-
-  .calendarColumn {
-    width: 100%;
-  }
-
-  .detail {
-    position: fixed;
-    z-index: var(--layer-sheet);
-    right: 0;
-    bottom: 0;
-    left: 0;
-    min-height: 15rem;
-    max-height: min(72dvh, 38rem);
-    padding: var(--space-5) var(--space-page) calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom));
-    overflow-y: auto;
-    border: 1px solid var(--color-line-strong);
-    border-bottom: 0;
-    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-    background: var(--color-surface-strong);
-    box-shadow: var(--shadow-float);
-    transform: translateY(105%);
-    transition: transform var(--duration-reveal) var(--ease-settle);
-  }
-
-  .detail[data-open] {
-    transform: translateY(0);
-  }
-
-  .closeDetail {
-    display: grid;
-  }
-
-  .dayCell {
-    min-height: clamp(3.6rem, 14vw, 5rem);
-    padding: var(--space-1);
-  }
-
-  .cellEntries > span {
-    display: none;
-  }
-
-  .cellEntries:has(> span)::after {
-    width: 0.3rem;
-    height: 0.3rem;
-    margin-left: 0.65rem;
-    border-radius: var(--radius-round);
-    background: var(--color-mist);
-    content: '';
-  }
-
-  .cellEntries small {
-    display: none;
-  }
-}
-
-:global(html[data-motion='reduced']) .detail {
-  transition-duration: var(--duration-instant);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :global(html:not([data-motion='full'])) .detail {
-    transition-duration: var(--duration-instant);
+@media (min-width: 480px) {
+  .cell {
+    min-height: 5.75rem;
+    padding: var(--space-2);
   }
 }

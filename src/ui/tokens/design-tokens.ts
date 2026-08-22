@@ -58,6 +58,22 @@ export const typographyTokens = {
   lore: 'var(--font-lore)',
 } as const
 
+/**
+ * DESIGN.md §2.1. Sizes are in px so a test can assert the scale is monotonic;
+ * CSS consumes the rem tokens, not these numbers. `lore` and `display` are the
+ * only steps allowed to leave the operation register.
+ */
+export const typeScaleTokens = {
+  caption: { px: 12, leading: 1.4, register: 'operation' },
+  body: { px: 15, leading: 1.5, register: 'operation' },
+  bodyLarge: { px: 17, leading: 1.5, register: 'operation' },
+  title: { px: 22, leading: 1.3, register: 'operation' },
+  lore: { px: 26, leading: 1.35, register: 'lore' },
+  display: { px: 40, leading: 1.15, register: 'lore' },
+} as const
+
+export type TypeScaleStep = keyof typeof typeScaleTokens
+
 export type GrimoireTheme = 'natural-history' | 'order'
 export type ColorScheme = 'dark' | 'light' | 'system'
 export type SplashDisplayMode = 'always' | 'off' | 'timed'

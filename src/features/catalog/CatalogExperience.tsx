@@ -1,10 +1,19 @@
 'use client'
 
-import { BookOpen, Search, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
+import { Search, X } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 
 import { useAppReadModel } from '@/app/app-context'
+import type { CatalogDiscoveryView, CreatureObservationView } from '@/app/ui-port'
+import { useSound } from '@/audio'
+import { Chip } from '@/ui/components/chip'
+import { TextInput } from '@/ui/components/field'
+import { IconButton } from '@/ui/components/icon-button'
+import { useModalBehaviour } from '@/ui/hooks/use-modal-behaviour'
 
+import styles from './catalog-experience.module.css'
+import { CREATURE_RECORDS } from './creature-records'
 import { CATALOG_DEFINITIONS } from './definitions'
 import {
   CATALOG_CATEGORIES,
@@ -12,214 +21,284 @@ import {
   type CatalogCategoryId,
   type DiscoveredCatalogEntry,
 } from './model'
-import styles from './catalog-experience.module.css'
 
-type Shelf = 'creatures' | 'items'
-type SortOrder = 'name' | 'recent'
+type Layer = 'creatures' | 'items'
+type Ordering = 'name' | 'recent'
 
-const categoryById = new Map(CATALOG_CATEGORIES.map((category) => [category.id, category]))
+/**
+ * 決定事項ログ M-10 / M-11 — one screen, two journals.
+ *
+ * The item catalog shows only what has been discovered: no empty slots, no
+ * totals, no completion percentage. The creature journal is the opposite by
+ * design — unseen records stay as silhouettes, because the point there is to
+ * suggest that more of the animal exists, not to set a target.
+ */
+export function CatalogExperience() {
+  const { catalogDiscoveries, creatureObservations } = useAppReadModel()
+  const [layer, setLayer] = useState<Layer>('items')
+  const play = useSound()
 
-function formatObservedAt(value: string): string {
-  return new Intl.DateTimeFormat('ja-JP', {
-    dateStyle: 'medium',
-  }).format(new Date(value))
-}
-
-function SpecimenGlyph({ categoryId }: { readonly categoryId: CatalogCategoryId }) {
-  const index = CATALOG_CATEGORIES.findIndex(({ id }) => id === categoryId)
-  const rotation = index * 19
   return (
-    <svg
-      aria-hidden="true"
-      className={styles.specimenGlyph}
-      data-category={categoryId}
-      viewBox="0 0 160 160"
-    >
-      <circle cx="80" cy="80" r="55" />
-      <path d="M80 25c-8 27-29 37-42 58 17-2 30 4 42 30 12-26 25-32 42-30-13-21-34-31-42-58Z" transform={`rotate(${rotation} 80 80)`} />
-      <path d="M45 115c22-14 48-14 70 0M80 42v78" />
-    </svg>
+    <main id="main-content" className={styles.screen}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>図鑑</h1>
+        <div className={styles.layerTabs} role="tablist" aria-label="図鑑の種類">
+          <button
+            type="button"
+            role="tab"
+            className={styles.layerTab}
+            aria-selected={layer === 'items'}
+            onClick={() => {
+              setLayer('items')
+              play('catalogPage')
+            }}
+          >
+            アイテム
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={styles.layerTab}
+            aria-selected={layer === 'creatures'}
+            onClick={() => {
+              setLayer('creatures')
+              play('catalogPage')
+            }}
+          >
+            グリモ
+          </button>
+        </div>
+      </header>
+
+      {layer === 'items' ? (
+        <ItemJournal discoveries={catalogDiscoveries} />
+      ) : (
+        <CreatureJournal observations={creatureObservations} />
+      )}
+    </main>
   )
 }
 
-function ItemDetail({ entry, onClose }: {
+function ItemJournal({
+  discoveries,
+}: {
+  readonly discoveries: readonly CatalogDiscoveryView[]
+}) {
+  const [category, setCategory] = useState<CatalogCategoryId | null>(null)
+  const [query, setQuery] = useState('')
+  const [ordering, setOrdering] = useState<Ordering>('recent')
+  const [openEntry, setOpenEntry] = useState<DiscoveredCatalogEntry | null>(null)
+  const play = useSound()
+
+  const resolved = useMemo(
+    () => resolveDiscoveredCatalog(CATALOG_DEFINITIONS, discoveries),
+    [discoveries],
+  )
+
+  const visible = useMemo(() => {
+    const needle = query.trim()
+    const filtered = resolved.entries.filter((entry) => {
+      if (category !== null && entry.definition.categoryId !== category) return false
+      if (needle !== '' && !entry.definition.name.includes(needle)) return false
+      return true
+    })
+    return ordering === 'name'
+      ? filtered.toSorted((left, right) =>
+          left.definition.name.localeCompare(right.definition.name, 'ja'),
+        )
+      : filtered
+  }, [category, ordering, query, resolved.entries])
+
+  if (resolved.entries.length === 0) {
+    return (
+      <p className={styles.empty}>
+        まだ何も収めていません。タスクを書き留めるか、ひとつ終えると、
+        最初の標本がここに並びます。
+      </p>
+    )
+  }
+
+  return (
+    <>
+      <div className={styles.controls}>
+        <TextInput
+          label="名前で探す"
+          labelHidden
+          type="search"
+          value={query}
+          placeholder="名前で探す"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <div className={styles.orderRow}>
+          <Chip pressed={ordering === 'recent'} onClick={() => setOrdering('recent')}>
+            最近入手
+          </Chip>
+          <Chip pressed={ordering === 'name'} onClick={() => setOrdering('name')}>
+            名前順
+          </Chip>
+        </div>
+        <div className={styles.categoryRow}>
+          <Chip pressed={category === null} onClick={() => setCategory(null)}>
+            すべて
+          </Chip>
+          {CATALOG_CATEGORIES.map((entry) => (
+            <Chip
+              key={entry.id}
+              pressed={category === entry.id}
+              onClick={() => setCategory(entry.id)}
+            >
+              {entry.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <p className={styles.empty}>
+          <Search aria-hidden="true" size={18} strokeWidth={1.6} />
+          その条件に合う標本はまだ見つかっていません。
+        </p>
+      ) : (
+        <ul role="list" className={styles.grid}>
+          {visible.map((entry) => (
+            <li key={entry.definition.id}>
+              <button
+                type="button"
+                className={styles.specimen}
+                onClick={() => {
+                  setOpenEntry(entry)
+                  play('catalogOpen')
+                }}
+              >
+                <span className={styles.plate}>
+                  <Image
+                    src={entry.definition.art.src}
+                    alt=""
+                    width={entry.definition.art.width}
+                    height={entry.definition.art.height}
+                  />
+                  {entry.discovery.quantity > 1 ? (
+                    <span className={styles.quantity}>×{entry.discovery.quantity}</span>
+                  ) : null}
+                </span>
+                <span className={styles.specimenName}>{entry.definition.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {openEntry === null ? null : (
+        <SpecimenDetail
+          entry={openEntry}
+          onClose={() => {
+            setOpenEntry(null)
+            play('catalogPage')
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+/**
+ * 決定事項ログ M-10: the detail is full-screen so the plate can lead. It is not a
+ * sheet — a sheet would keep the grid visible and halve the illustration.
+ */
+function SpecimenDetail({
+  entry,
+  onClose,
+}: {
   readonly entry: DiscoveredCatalogEntry
   readonly onClose: () => void
 }) {
-  const closeButton = useRef<HTMLButtonElement>(null)
-  const dialog = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const previouslyFocused = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null
-    const previousOverflow = document.documentElement.style.overflow
-    document.documentElement.style.overflow = 'hidden'
-    closeButton.current?.focus()
-    const handleKeys = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-        return
-      }
-      if (event.key !== 'Tab' || !dialog.current) return
-      const focusable = [...dialog.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )]
-      const first = focusable[0]
-      const last = focusable.at(-1)
-      if (!first || !last) return
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    window.addEventListener('keydown', handleKeys)
-    return () => {
-      document.documentElement.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeys)
-      previouslyFocused?.focus()
-    }
-  }, [onClose])
+  const surface = useRef<HTMLDivElement>(null)
+  useModalBehaviour(surface, true, onClose)
 
-  const category = categoryById.get(entry.definition.categoryId)
+  const categoryLabel =
+    CATALOG_CATEGORIES.find((category) => category.id === entry.definition.categoryId)
+      ?.label ?? ''
+
   return (
-    <div className={styles.detailBackdrop} role="presentation" onMouseDown={onClose}>
-      <section
-        ref={dialog}
-        className={styles.detail}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="specimen-title"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button ref={closeButton} className={styles.closeButton} type="button" onClick={onClose}>
-          <X aria-hidden="true" size={20} />
-          <span className="sr-only">閉じる</span>
-        </button>
-        <div className={styles.detailPlate}>
-          <SpecimenGlyph categoryId={entry.definition.categoryId} />
-          <span aria-hidden="true">No. {String(entry.definition.sortOrder + 1).padStart(2, '0')}</span>
-        </div>
-        <div className={styles.detailCopy}>
-          <p className={styles.eyebrow}>{category?.label ?? '標本記録'}</p>
-          <h2 id="specimen-title">{entry.definition.name}</h2>
-          <p>{entry.definition.description}</p>
-          <dl>
-            <div><dt>初発見</dt><dd>{formatObservedAt(entry.discovery.firstDiscoveredAt)}</dd></div>
-            <div><dt>最近の発見</dt><dd>{formatObservedAt(entry.discovery.lastDiscoveredAt)}</dd></div>
-            <div><dt>記録数</dt><dd>{entry.discovery.quantity}</dd></div>
-          </dl>
-        </div>
-      </section>
+    <div
+      ref={surface}
+      className={styles.detail}
+      role="dialog"
+      aria-modal="true"
+      aria-label={entry.definition.name}
+      tabIndex={-1}
+    >
+      <div className={styles.detailBar}>
+        <IconButton
+          label="図鑑へ戻る"
+          icon={<X aria-hidden="true" strokeWidth={1.65} />}
+          onClick={onClose}
+        />
+      </div>
+      <figure className={styles.detailFigure}>
+        <Image
+          className={styles.detailPlate}
+          src={entry.definition.art.src}
+          alt={entry.definition.art.alt}
+          width={entry.definition.art.width}
+          height={entry.definition.art.height}
+          priority
+        />
+        <figcaption className={styles.detailCopy}>
+          <p className={styles.detailCategory}>{categoryLabel}</p>
+          <h2 className={styles.detailName}>{entry.definition.name}</h2>
+          <p className={styles.detailDescription}>{entry.definition.description}</p>
+          <p className={styles.detailMeta}>
+            はじめて手にした日 {formatDiscovered(entry.discovery.firstDiscoveredAt)}
+          </p>
+        </figcaption>
+      </figure>
     </div>
   )
 }
 
-export function CatalogExperience() {
-  const { catalogDiscoveries } = useAppReadModel()
-  const [shelf, setShelf] = useState<Shelf>('creatures')
-  const [query, setQuery] = useState('')
-  const [categoryId, setCategoryId] = useState<'all' | CatalogCategoryId>('all')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('recent')
-  const [selected, setSelected] = useState<DiscoveredCatalogEntry | null>(null)
+function formatDiscovered(instant: string): string {
+  const date = new Date(instant)
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+}
 
-  const resolution = useMemo(() => resolveDiscoveredCatalog(
-    CATALOG_DEFINITIONS,
-    catalogDiscoveries.map((discovery) => ({ schema: 1, ...discovery })),
-  ), [catalogDiscoveries])
-  const visibleEntries = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('ja-JP')
-    const result = resolution.entries.filter(({ definition }) => {
-      if (categoryId !== 'all' && definition.categoryId !== categoryId) return false
-      return normalizedQuery.length === 0
-        || definition.name.toLocaleLowerCase('ja-JP').includes(normalizedQuery)
-        || definition.description.toLocaleLowerCase('ja-JP').includes(normalizedQuery)
-    })
-    return [...result].sort((left, right) => sortOrder === 'name'
-      ? left.definition.name.localeCompare(right.definition.name, 'ja-JP')
-      : Date.parse(right.discovery.lastDiscoveredAt) - Date.parse(left.discovery.lastDiscoveredAt))
-  }, [categoryId, query, resolution.entries, sortOrder])
-  const discoveredCategories = new Set(resolution.entries.map(({ definition }) => definition.categoryId))
+function CreatureJournal({
+  observations,
+}: {
+  readonly observations: readonly CreatureObservationView[]
+}) {
+  const observedAt = useMemo(
+    () => new Map(observations.map((entry) => [entry.id, entry.observedAt])),
+    [observations],
+  )
 
   return (
-    <main id="main-content" className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>FIELD ARCHIVE</p>
-          <h1>観察図鑑</h1>
-          <p>出会った姿と、手元に残った標本だけを記します。</p>
-        </div>
-        <BookOpen aria-hidden="true" className={styles.bookMark} />
-      </header>
-
-      <div className={styles.tabs} role="tablist" aria-label="図鑑の種類">
-        <button type="button" role="tab" aria-selected={shelf === 'creatures'} onClick={() => setShelf('creatures')}>グリモ</button>
-        <button type="button" role="tab" aria-selected={shelf === 'items'} onClick={() => setShelf('items')}>アイテム</button>
-      </div>
-
-      {shelf === 'creatures' ? (
-        <section className={styles.creatureLedger} role="tabpanel" aria-label="グリモの観察記録">
-          <div className={styles.creaturePlate}>
-            <span className={styles.waterEgg} aria-hidden="true" />
-            <p>観察個体 01</p>
-          </div>
-          <article>
-            <p className={styles.eyebrow}>WATER LINEAGE · EGG</p>
-            <h2>水の仔、卵の姿</h2>
-            <p>内側を巡る淡い水流は、触れた気配にだけゆっくり向きを変える。まだ名を持たない、最初の観察記録。</p>
-            <dl>
-              <div><dt>段階</dt><dd>卵</dd></div>
-              <div><dt>属性</dt><dd>水</dd></div>
-              <div><dt>観察域</dt><dd>霧光の珊瑚台地</dd></div>
-            </dl>
-          </article>
-        </section>
-      ) : (
-        <section className={styles.itemLedger} role="tabpanel" aria-label="アイテムの標本記録">
-          <div className={styles.tools}>
-            <label className={styles.search}>
-              <Search aria-hidden="true" size={17} />
-              <span className="sr-only">標本名を検索</span>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="標本名を検索" />
-            </label>
-            <select value={categoryId} aria-label="分類" onChange={(event) => setCategoryId(event.target.value as 'all' | CatalogCategoryId)}>
-              <option value="all">すべての分類</option>
-              {CATALOG_CATEGORIES.filter(({ id }) => discoveredCategories.has(id)).map((category) => (
-                <option key={category.id} value={category.id}>{category.label}</option>
-              ))}
-            </select>
-            <select value={sortOrder} aria-label="並び順" onChange={(event) => setSortOrder(event.target.value as SortOrder)}>
-              <option value="recent">最近の発見順</option>
-              <option value="name">名前順</option>
-            </select>
-          </div>
-
-          {visibleEntries.length > 0 ? (
-            <div className={styles.specimenGrid}>
-              {visibleEntries.map((entry) => (
-                <button key={entry.definition.id} type="button" className={styles.specimenCard} onClick={() => setSelected(entry)}>
-                  <span className={styles.specimenPlate}><SpecimenGlyph categoryId={entry.definition.categoryId} /></span>
-                  <span className={styles.specimenCopy}>
-                    <strong>{entry.definition.name}</strong>
-                    <small>{categoryById.get(entry.definition.categoryId)?.label}</small>
-                  </span>
-                  {entry.discovery.quantity > 1 ? <span className={styles.quantity}>×{entry.discovery.quantity}</span> : null}
-                </button>
-              ))}
+    <ul role="list" className={styles.records}>
+      {CREATURE_RECORDS.map((record) => {
+        const seen = observedAt.get(record.id) ?? null
+        return (
+          <li
+            key={record.id}
+            className={styles.record}
+            data-unseen={seen === null ? '' : undefined}
+          >
+            <span className={styles.recordSilhouette} aria-hidden="true" />
+            <div className={styles.recordText}>
+              <p className={styles.recordName}>{seen === null ? '未観察' : record.name}</p>
+              <p className={styles.recordNote}>
+                {seen === null
+                  ? 'グリモのそばで過ごすうちに、そのうち書き加わります。'
+                  : record.note}
+              </p>
+              {seen === null ? null : (
+                <p className={styles.recordMeta}>
+                  はじめて見た日 {formatDiscovered(seen)}
+                </p>
+              )}
             </div>
-          ) : (
-            <div className={styles.emptyState}>
-              <BookOpen aria-hidden="true" size={31} />
-              <h2>{resolution.entries.length === 0 ? 'まだ標本はありません' : '一致する標本がありません'}</h2>
-              <p>{resolution.entries.length === 0 ? 'ホームでタスクを記し、完了すると最初の標本に出会えます。' : '検索語か分類を変えてください。'}</p>
-            </div>
-          )}
-        </section>
-      )}
-
-      {selected ? <ItemDetail entry={selected} onClose={() => setSelected(null)} /> : null}
-    </main>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

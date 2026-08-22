@@ -1,280 +1,150 @@
-.page {
-  width: min(100%, var(--content-max));
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--reading-max);
   min-height: 100dvh;
   margin-inline: auto;
-  padding: clamp(var(--space-8), 8vh, var(--space-20)) var(--space-page) var(--space-16);
+  /* Room at the bottom for the floating nav capsule plus the add bar. */
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-16) + env(safe-area-inset-bottom));
 }
 
 .header {
   display: flex;
+  gap: var(--space-4);
   align-items: flex-start;
   justify-content: space-between;
-  max-width: 54rem;
-  padding-bottom: var(--space-10);
-  border-bottom: 1px solid var(--color-line-strong);
-}
-
-.header h1 {
-  font-family: var(--font-lore);
-  font-size: clamp(2.4rem, 8vw, 5rem);
-  font-weight: 500;
-  letter-spacing: -0.055em;
-  line-height: 1.05;
 }
 
 .eyebrow {
-  margin-bottom: var(--space-2);
+  margin: 0 0 var(--space-1);
   color: var(--color-ink-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.22em;
 }
 
-.settingsLink,
-.checkButton {
-  display: grid;
-  width: var(--tap-target);
-  min-height: var(--tap-target);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-round);
-  background: transparent;
-  color: var(--color-ink);
-  place-items: center;
-  text-decoration: none;
-}
-
-.settingsLink:active,
-.checkButton:active {
-  transform: translateY(2px) scale(0.972);
-}
-
-.workArea {
-  width: min(100%, 49rem);
-  margin-top: clamp(var(--space-8), 7vh, var(--space-16));
-  margin-left: clamp(0rem, 4vw, 5rem);
-}
-
-.sectionHeading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.sectionHeading h2 {
-  font-family: var(--font-lore);
-  font-size: clamp(1.35rem, 3vw, 1.8rem);
-  font-weight: 500;
-}
-
-.sectionHeading span {
-  color: var(--color-ink-muted);
-  font-size: 0.75rem;
-}
-
-.quickAdd {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  min-height: 3.65rem;
-  padding: var(--space-2);
-  border: 1px solid var(--color-iron-soft);
-  border-radius: var(--radius-control);
-  background: var(--color-iron);
-  box-shadow: var(--shadow-control);
-}
-
-.quickAdd input {
-  min-width: 0;
-  padding-inline: var(--space-4);
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--color-ink-inverse);
-}
-
-.quickAdd input::placeholder {
-  color: color-mix(in srgb, var(--color-ink-inverse) 58%, transparent);
-}
-
-.quickAdd input:focus-visible {
-  box-shadow: inset 0 -2px var(--color-focus);
-}
-
-.quickAdd button {
-  display: grid;
-  width: var(--tap-target);
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--color-mist);
-  color: var(--color-ink-inverse);
-  place-items: center;
-}
-
-.quickAdd button:disabled {
-  background: var(--color-iron-soft);
-  color: var(--color-ink-muted);
-}
-
-.quickAdd button:active:not(:disabled) {
-  transform: translateY(2px) scale(0.972);
-}
-
-.error {
-  margin-top: var(--space-3);
-  color: var(--color-danger);
-  font-size: 0.9rem;
-}
-
-.emptyState {
-  display: grid;
-  grid-template-columns: 2rem 1fr;
-  gap: var(--space-2) var(--space-4);
-  padding-block: clamp(var(--space-10), 10vh, var(--space-20));
-  color: var(--color-ink-muted);
-}
-
-.emptyState > span {
-  grid-row: 1 / 3;
-  width: 1px;
-  height: 100%;
-  margin-left: var(--space-4);
-  background: var(--color-mist);
-  opacity: 0.45;
-}
-
-.emptyState p {
-  color: var(--color-ink);
-  font-family: var(--font-lore);
-  font-size: 1.1rem;
-}
-
-.emptyState small {
-  max-width: 36rem;
-}
-
-.taskList {
-  padding: var(--space-5) 0 0;
-  border-bottom: 1px solid var(--color-line);
-}
-
-.taskRow {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--space-4);
-  min-height: 4.15rem;
-  border-top: 1px solid var(--color-line);
-}
-
-.checkButton {
-  width: 2.25rem;
-  min-height: 2.25rem;
-  color: transparent;
-}
-
-.checkButton:hover,
-.checkButton:focus-visible {
-  border-color: var(--color-mist);
-  color: var(--color-mist);
-}
-
-.taskTitle {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.taskRow time {
-  color: var(--color-ink-muted);
-  font-size: 0.78rem;
+.date {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
   font-variant-numeric: tabular-nums;
 }
 
-.completed {
-  margin-top: var(--space-8);
-  border-top: 1px solid var(--color-line);
+.list {
+  min-height: 0;
 }
 
-.completed summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-target);
-  color: var(--color-ink-muted);
-  cursor: pointer;
-  font-size: 0.86rem;
-  list-style: none;
-}
-
-.completed summary::-webkit-details-marker { display: none; }
-.completed[open] summary svg { transform: rotate(180deg); }
-
-.completed ul {
+.rows {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.completed li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 3.5rem;
-  border-top: 1px solid var(--color-line);
+/* The empty state speaks in the lore register: it is the one moment on Home
+   that is about the journal rather than the work. */
+.empty {
+  margin: 0;
+  padding: var(--space-10) 0;
   color: var(--color-ink-muted);
-  text-decoration: line-through;
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 1.8;
+  text-wrap: pretty;
 }
 
-.completed li button {
-  display: grid;
-  width: 2rem;
-  min-height: 2rem;
+.completed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.completedToggle {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.08em;
+}
+
+.completedToggle:hover {
+  color: var(--color-ink);
+}
+
+.completedRule {
+  flex: 1;
+  height: 1px;
+  background: var(--color-line);
+}
+
+.completedLabel {
+  flex: none;
+  order: -1;
+}
+
+.completedChevron {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform var(--duration-feedback) var(--ease-settle);
+}
+
+.completedChevron[data-open] {
+  transform: rotate(180deg);
+}
+
+/* 決定事項ログ F-8: task creation stays a small permanent control, not a
+   floating action button competing with the world. */
+.addBar {
+  position: fixed;
+  inset: auto 0 calc(var(--nav-height) + env(safe-area-inset-bottom));
+  z-index: var(--layer-content);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-page) var(--space-2);
+  pointer-events: none;
+}
+
+.add {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-5);
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-round);
-  background: var(--color-iron-soft);
-  color: var(--color-ink-inverse);
-  place-items: center;
+  background: var(--color-surface-strong);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  box-shadow: var(--shadow-control);
+  transition: border-color var(--duration-instant) var(--ease-press),
+    transform var(--duration-instant) var(--ease-press);
+  pointer-events: auto;
 }
 
-.previewNotice {
-  max-width: 49rem;
-  margin-top: var(--space-10);
-  margin-left: clamp(0rem, 4vw, 5rem);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-warning);
-  color: var(--color-ink-muted);
-  font-size: 0.72rem;
+.add:hover {
+  border-color: var(--color-iron);
 }
 
-@media (max-width: 40rem) {
-  .page {
-    padding-top: var(--space-8);
-  }
-
-  .header {
-    padding-bottom: var(--space-6);
-  }
-
-  .workArea,
-  .previewNotice {
-    margin-left: 0;
-  }
-
-  .emptyState {
-    padding-block: var(--space-10);
-  }
+.add:active {
+  transform: scale(0.975);
 }
 
-:global(html[data-motion='reduced']) .settingsLink:active,
-:global(html[data-motion='reduced']) .checkButton:active,
-:global(html[data-motion='reduced']) .quickAdd button:active:not(:disabled) {
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :global(html:not([data-motion='full'])) .settingsLink:active,
-  :global(html:not([data-motion='full'])) .checkButton:active,
-  :global(html:not([data-motion='full'])) .quickAdd button:active:not(:disabled) {
-    transform: none;
+@media (min-width: 800px) {
+  .screen {
+    padding-top: var(--space-12);
   }
 }

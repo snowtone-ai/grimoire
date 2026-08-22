@@ -1,1 +1,1 @@
-export { HomeExperience } from './home-experience'
+export { HomeExperience } from './HomeExperience'

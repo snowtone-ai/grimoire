@@ -2,16 +2,39 @@ import type {
   AppReadModel,
   AppUiPort,
   BootstrapView,
+  ExternalImportResultView,
+  ImportPreviewView,
+  NotificationView,
   PreferenceView,
+  TaskDraft,
   TaskRowView,
 } from '@/app/ui-port'
+import { DEFAULT_AREA_ID } from '@/world/areas'
 
+/**
+ * An in-memory `AppUiPort` for component tests. It implements the whole
+ * contract — including the parts a given test does not touch — so that a screen
+ * calling an unexercised command fails loudly instead of hitting `undefined`.
+ *
+ * External integrations (Google, notifications, backups) answer "unavailable"
+ * rather than pretending to succeed: a test that needs one is expected to stub
+ * that method, and a screen must render sensibly when they are all switched off.
+ */
 const defaultModel: AppReadModel = {
   bootstrap: { status: 'ready' },
   calendarEntries: [],
   catalogDiscoveries: [],
+  creatureObservations: [],
+  googleLink: {
+    calendarConnected: false,
+    configured: false,
+    gmailConnected: false,
+    lastCalendarImportAt: null,
+    lastGmailImportAt: null,
+  },
   migrationAvailable: false,
   migrationNoticeVisible: false,
+  notifications: { enabled: false, permission: 'default', scheduledCount: 0 },
   preferences: {
     bgmEnabled: true,
     colorScheme: 'system',
@@ -29,12 +52,29 @@ const defaultModel: AppReadModel = {
     usageBytes: null,
   },
   tasksToday: [],
+  world: { selectedAreaId: DEFAULT_AREA_ID, unreadObservationCount: 0 },
+}
+
+const UNAVAILABLE = 'test unavailable'
+
+function rowFromDraft(id: string, draft: TaskDraft, completed: boolean): TaskRowView {
+  return {
+    categoryId: draft.categoryId,
+    completed,
+    id,
+    recurrence: draft.recurrence,
+    title: draft.title,
+    ...(draft.description === undefined ? {} : { description: draft.description }),
+    ...(draft.scheduledTime === undefined ? {} : { scheduledTime: draft.scheduledTime }),
+  }
 }
 
 export class TestUiPort implements AppUiPort {
   private listeners = new Set<() => void>()
 
   private model: AppReadModel
+
+  private nextTaskId = 1
 
   constructor(overrides: Partial<AppReadModel> = {}) {
     this.model = { ...defaultModel, ...overrides }
@@ -48,69 +88,25 @@ export class TestUiPort implements AppUiPort {
   }
 
   setBootstrap(bootstrap: BootstrapView): void {
-    this.model = { ...this.model, bootstrap }
-    this.emit()
-  }
-
-  async acknowledgeMigrationNotice(): Promise<void> {
-    this.model = { ...this.model, migrationNoticeVisible: false }
-    this.emit()
-  }
-
-  async dismissRewardNotice(): Promise<void> {
-    this.model = { ...this.model, rewardNotice: null }
-    this.emit()
-  }
-
-  async createTodayTask({ title }: { readonly title: string }): Promise<void> {
-    const task: TaskRowView = {
-      completed: false,
-      id: `task-${this.model.tasksToday.length + 1}`,
-      title: title.trim(),
-    }
-    this.model = { ...this.model, tasksToday: [...this.model.tasksToday, task] }
-    this.emit()
-  }
-
-  async exportData(): Promise<{ readonly available: boolean; readonly reason?: string }> {
-    return { available: false, reason: 'test unavailable' }
-  }
-
-  async requestPersistentStorage(): Promise<boolean> {
-    return false
-  }
-
-  async loadCalendarRange(): Promise<void> {
-    // Test snapshots are supplied directly by each scenario.
-  }
-
-  async migrateLegacyData(): Promise<{
-    readonly migrated: boolean
-    readonly migratedTaskCount: number
-    readonly reason?: string
-  }> {
-    return { migrated: false, migratedTaskCount: 0, reason: 'test unavailable' }
-  }
-
-  async prepareImport(): Promise<{
-    readonly available: false
-    readonly issue: string
-    readonly rewardCount: 0
-    readonly taskCount: 0
-  }> {
-    return { available: false, issue: 'test unavailable', rewardCount: 0, taskCount: 0 }
-  }
-
-  async activatePreparedImport(): Promise<{
-    readonly activated: false
-    readonly importedTaskCount: 0
-    readonly reason: string
-  }> {
-    return { activated: false, importedTaskCount: 0, reason: 'test unavailable' }
+    this.patch({ bootstrap })
   }
 
   async retryBootstrap(): Promise<void> {
     this.setBootstrap({ status: 'ready' })
+  }
+
+  // --- tasks ---
+
+  async createTask(draft: TaskDraft): Promise<void> {
+    const id = `task-${this.nextTaskId}`
+    this.nextTaskId += 1
+    this.patch({ tasksToday: [...this.model.tasksToday, rowFromDraft(id, draft, false)] })
+  }
+
+  async deleteTask({ taskId }: { readonly taskId: string }): Promise<void> {
+    this.patch({
+      tasksToday: this.model.tasksToday.filter((task) => task.id !== taskId),
+    })
   }
 
   async setTaskCompleted({
@@ -120,24 +116,129 @@ export class TestUiPort implements AppUiPort {
     readonly completed: boolean
     readonly taskId: string
   }): Promise<void> {
-    this.model = {
-      ...this.model,
+    this.patch({
       tasksToday: this.model.tasksToday.map((task) =>
         task.id === taskId ? { ...task, completed } : task,
       ),
-    }
-    this.emit()
+    })
   }
+
+  async updateTask({
+    draft,
+    taskId,
+  }: {
+    readonly draft: TaskDraft
+    readonly taskId: string
+  }): Promise<void> {
+    this.patch({
+      tasksToday: this.model.tasksToday.map((task) =>
+        task.id === taskId ? rowFromDraft(taskId, draft, task.completed) : task,
+      ),
+    })
+  }
+
+  // --- calendar ---
+
+  async loadCalendarRange(): Promise<void> {
+    // Test snapshots are supplied directly by each scenario.
+  }
+
+  // --- world / observations ---
+
+  async markObservationsRead(): Promise<void> {
+    this.patch({ world: { ...this.model.world, unreadObservationCount: 0 } })
+  }
+
+  async selectArea({ areaId }: { readonly areaId: string }): Promise<void> {
+    this.patch({ world: { ...this.model.world, selectedAreaId: areaId } })
+  }
+
+  // --- rewards ---
+
+  async dismissRewardNotice(): Promise<void> {
+    this.patch({ rewardNotice: null })
+  }
+
+  // --- preferences ---
 
   async updatePreferences(patch: Partial<PreferenceView>): Promise<void> {
-    this.model = {
-      ...this.model,
-      preferences: { ...this.model.preferences, ...patch },
-    }
-    this.emit()
+    this.patch({ preferences: { ...this.model.preferences, ...patch } })
   }
 
-  private emit(): void {
+  // --- notifications ---
+
+  async requestNotificationPermission(): Promise<NotificationView['permission']> {
+    return 'denied'
+  }
+
+  async setNotificationsEnabled(enabled: boolean): Promise<void> {
+    this.patch({ notifications: { ...this.model.notifications, enabled } })
+  }
+
+  // --- google ---
+
+  async connectGoogle(): Promise<{
+    readonly connected: boolean
+    readonly reason?: string
+  }> {
+    return { connected: false, reason: UNAVAILABLE }
+  }
+
+  async disconnectGoogle(scope: 'calendar' | 'gmail'): Promise<void> {
+    this.patch({
+      googleLink: {
+        ...this.model.googleLink,
+        ...(scope === 'calendar'
+          ? { calendarConnected: false }
+          : { gmailConnected: false }),
+      },
+    })
+  }
+
+  async importFromGoogleCalendar(): Promise<ExternalImportResultView> {
+    return { cancelled: false, imported: 0, reason: UNAVAILABLE, skipped: 0 }
+  }
+
+  async importFromGmail(): Promise<ExternalImportResultView> {
+    return { cancelled: false, imported: 0, reason: UNAVAILABLE, skipped: 0 }
+  }
+
+  // --- storage, migration, backup ---
+
+  async acknowledgeMigrationNotice(): Promise<void> {
+    this.patch({ migrationNoticeVisible: false })
+  }
+
+  async activatePreparedImport(): Promise<{
+    readonly activated: boolean
+    readonly importedTaskCount: number
+    readonly reason?: string
+  }> {
+    return { activated: false, importedTaskCount: 0, reason: UNAVAILABLE }
+  }
+
+  async exportData(): Promise<{ readonly available: boolean; readonly reason?: string }> {
+    return { available: false, reason: UNAVAILABLE }
+  }
+
+  async migrateLegacyData(): Promise<{
+    readonly migrated: boolean
+    readonly migratedTaskCount: number
+    readonly reason?: string
+  }> {
+    return { migrated: false, migratedTaskCount: 0, reason: UNAVAILABLE }
+  }
+
+  async prepareImport(): Promise<ImportPreviewView> {
+    return { available: false, issue: UNAVAILABLE, rewardCount: 0, taskCount: 0 }
+  }
+
+  async requestPersistentStorage(): Promise<boolean> {
+    return false
+  }
+
+  private patch(next: Partial<AppReadModel>): void {
+    this.model = { ...this.model, ...next }
     for (const listener of this.listeners) listener()
   }
 }

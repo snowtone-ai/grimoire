@@ -7,6 +7,20 @@ will be replaced against this spec in a future task (see tasks.md). The data
 layer (`src/domain/`, `src/application/`, `src/infrastructure/`) is untouched
 by this document and by the rebuild it describes.
 
+**2026-08-22 addendum (D-013):** the background world and splash moved from a
+Three.js build to owner-sourced **video assets** (`anime/`). Component rule 5
+in §6 ("World surface") now covers not only a Three.js canvas but also the
+video layer and its poster/fallback treatment. The video's own tone and color
+stay outside §1's token registry (scene-internal values, same treatment the
+rule already gave Three.js scene internals) and outside the §7 raw-value
+lint. Chrome drawn on top of the video (back navigation, area selection, the
+observation mark, bottom nav) still follows rules 1–4 unchanged.
+
+Rule 6 ("Emblem") stands as written: the app keeps using the 32–64px
+wordless mark even with a video splash. When the video is absent, fails to
+load, or `prefers-reduced-motion` applies, fall back to the static emblem
+treatment.
+
 This file is the registry `scripts/verify.mjs`'s raw-value lint (pm-zero v12.1
 §16.2) will check UI-layer changes against once that rebuild lands: a value
 outside this registry, used in a shared or feature UI file, needs a named

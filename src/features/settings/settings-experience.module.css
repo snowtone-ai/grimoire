@@ -1,328 +1,301 @@
-.page {
-  width: min(100%, var(--content-max));
+/* Order register (決定事項ログ F-15): metal, stone, restrained ornament, clear
+   hierarchy. Sections are separated by a hairline and a numeral, never by a
+   card — a page of cards would read as six competing panels. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--reading-max);
   min-height: 100dvh;
   margin-inline: auto;
-  padding: clamp(var(--space-8), 8vh, var(--space-20)) var(--space-page) var(--space-16);
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
 }
 
 .header {
-  max-width: 54rem;
-  padding-bottom: var(--space-10);
-  border-bottom: 1px solid var(--color-line-strong);
+  padding-bottom: var(--space-6);
 }
 
-.header h1 {
-  font-family: var(--font-lore);
-  font-size: clamp(2.5rem, 8vw, 5rem);
-  font-weight: 500;
-  letter-spacing: -0.055em;
-  line-height: 1.05;
-}
-
-.header > p:last-child {
-  max-width: 35rem;
-  margin-top: var(--space-4);
-  color: var(--color-ink-muted);
-}
-
-.eyebrow,
-.index {
-  color: var(--color-ink-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-
-.settingsBody {
-  width: min(100%, 60rem);
-  margin: var(--space-12) 0 0 clamp(0rem, 5vw, 6rem);
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
 }
 
 .section {
-  display: grid;
-  grid-template-columns: minmax(14rem, 0.72fr) minmax(18rem, 1fr);
-  gap: clamp(var(--space-6), 5vw, var(--space-16));
-  padding-block: var(--space-10);
-  border-top: 1px solid var(--color-line-strong);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-line);
 }
 
-.sectionIntro {
-  display: grid;
-  grid-template-columns: 2rem 1fr;
+.sectionHead {
+  display: flex;
   gap: var(--space-3);
-  align-content: start;
+  align-items: baseline;
+  margin-bottom: var(--space-5);
 }
 
-.sectionIntro h2 {
-  font-family: var(--font-lore);
-  font-size: 1.4rem;
-  font-weight: 500;
-}
-
-.sectionIntro div > p {
-  margin-top: var(--space-2);
+.sectionIndex {
   color: var(--color-ink-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.18em;
+  font-variant-numeric: tabular-nums;
 }
 
-.choiceGroup,
-.segmented {
-  grid-column: 2;
+.sectionTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.choice {
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.choiceGroup legend,
-.segmented legend {
-  margin-bottom: var(--space-3);
-  color: var(--color-ink-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
+.choiceLegend {
+  padding: 0 0 var(--space-2);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
 }
 
-.choiceGroup label {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  gap: var(--space-3);
-  min-height: var(--tap-target);
-  padding-block: var(--space-3);
-  border-top: 1px solid var(--color-line);
-}
-
-.choiceGroup input {
-  min-height: auto;
-  margin-top: 0.28rem;
-  accent-color: var(--color-focus);
-}
-
-.choiceGroup span,
-.switchRows span,
-.migrationRow div {
-  display: grid;
-}
-
-.choiceGroup small,
-.switchRows small,
-.migrationRow small {
-  color: var(--color-ink-muted);
-  font-size: 0.72rem;
-}
-
-.segmented {
+/* One control, split into segments by hairlines — not three separate buttons.
+   The group reads as a single object, which is what a preference is. */
+.choiceOptions {
   display: flex;
-  flex-wrap: wrap;
-  margin-top: var(--space-4);
+  overflow: hidden;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-control);
 }
 
-.segmented legend {
-  width: 100%;
-}
-
-.segmented label {
+.choiceOption {
   position: relative;
   flex: 1;
-  min-width: 6rem;
+  display: flex;
+  min-width: 0;
+  border-inline-start: 1px solid var(--color-line);
 }
 
-.segmented input {
+.choiceOption:first-child {
+  border-inline-start: 0;
+}
+
+.choiceOption input {
   position: absolute;
-  opacity: 0;
-}
-
-.segmented span {
-  display: grid;
-  min-height: var(--tap-target);
-  border: 1px solid var(--color-line-strong);
-  place-items: center;
-  font-size: 0.78rem;
-}
-
-.segmented label + label span {
-  border-left: 0;
-}
-
-.segmented input:checked + span {
-  background: var(--color-iron);
-  color: var(--color-ink-inverse);
-}
-
-.segmented input:focus-visible + span {
-  outline: 0.1875rem solid var(--color-focus);
-  outline-offset: 0.1875rem;
-}
-
-.switchRows {
-  display: grid;
-}
-
-.switchRows > label {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 4rem;
-  border-top: 1px solid var(--color-line);
-}
-
-.switchRows input[role='switch'] {
-  width: 2.7rem;
-  min-height: 1.45rem;
-  accent-color: var(--color-focus);
-}
-
-.healthGrid,
-.dataActions,
-.importPreview,
-.migrationRow,
-.feedback {
-  grid-column: 2;
-}
-
-.healthGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 1px;
+  height: 1px;
   margin: 0;
-  border-top: 1px solid var(--color-line);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.healthGrid > div {
+.choiceOption span {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink-muted);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--duration-feedback) var(--ease-press),
+    color var(--duration-feedback) var(--ease-press);
+}
+
+.choiceOption span:hover {
+  background: var(--color-ground);
+}
+
+.choiceOption input:checked + span {
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+}
+
+.choiceOption input:focus-visible + span {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.choiceHint {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-wrap: pretty;
+}
+
+.switches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.switchLabel {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
   padding: var(--space-4) 0;
   border-bottom: 1px solid var(--color-line);
 }
 
-.healthGrid dt {
+.link:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.linkText {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.linkTitle {
   display: flex;
-  align-items: center;
   gap: var(--space-2);
+  align-items: center;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.linkIcon {
+  display: inline-flex;
   color: var(--color-ink-muted);
-  font-size: 0.7rem;
 }
 
-.healthGrid dd {
-  margin: var(--space-1) 0 0;
-  font-size: 0.95rem;
+.linkDetail {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
 }
 
-.dataActions {
+.linkActions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-5);
 }
 
-.dataActions button,
-.importPicker,
-.importPreview button,
-.migrationRow button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.health {
+  display: grid;
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.health div {
+  min-width: 0;
+}
+
+.health dt {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.health dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  min-height: var(--tap-target);
-  padding-inline: var(--space-4);
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-control);
-  background: transparent;
 }
 
-.importPicker {
-  position: relative;
-  cursor: pointer;
-}
-
-.importPicker input {
+/* Opened by the visible "読み込む" control; keeping the native input out of the
+   tab order avoids exposing two controls for one action. */
+.filePicker {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.importPicker:focus-within {
-  outline: 0.1875rem solid var(--color-focus);
-  outline-offset: 0.1875rem;
-}
-
-.importPreview {
+.preview {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
   padding: var(--space-4);
   border: 1px solid var(--color-line-strong);
-  border-left: 3px solid var(--color-focus);
+  border-radius: var(--radius-panel);
+  background: var(--color-ground);
 }
 
-.importPreview div {
-  display: grid;
+.previewCopy {
+  flex: 1 1 14rem;
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.7;
+  text-wrap: pretty;
 }
 
-.importPreview small {
-  color: var(--color-ink-muted);
-  font-size: 0.72rem;
-}
-
-.dataActions button:disabled,
-.migrationRow button:disabled {
-  color: var(--color-ink-muted);
-  opacity: 0.62;
-}
-
-.migrationRow {
+.legacy {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
-  padding-block: var(--space-4);
-  border-top: 1px solid var(--color-line);
-  border-bottom: 1px solid var(--color-line);
 }
 
-.feedback {
-  margin-top: var(--space-4);
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--color-mist);
-  font-size: 0.8rem;
+.legacy .note {
+  flex: 1 1 14rem;
 }
 
-@media (max-width: 48rem) {
-  .settingsBody {
-    margin-left: 0;
-  }
-
-  .section {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
-  }
-
-  .choiceGroup,
-  .segmented,
-    .healthGrid,
-    .dataActions,
-    .importPreview,
-    .migrationRow,
-  .feedback {
-    grid-column: 1;
-  }
+.about {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-body);
+  line-height: 1.9;
+  text-wrap: pretty;
 }
 
-@media (max-width: 25rem) {
-  .healthGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .migrationRow {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .importPreview {
-    align-items: stretch;
-    flex-direction: column;
-  }
+/* Reserved height, so a message appearing does not push the page (DESIGN.md
+   §4: feedback must not reflow what is under the finger). */
+.status {
+  min-height: 1.7em;
+  margin: var(--space-6) 0 0;
+  color: var(--color-ink);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
 }

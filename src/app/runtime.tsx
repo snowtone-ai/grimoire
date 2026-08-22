@@ -3,29 +3,85 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { type ReactNode, useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useEffectEvent, useState } from 'react'
 
+import { SoundProvider, useSound } from '@/audio'
 import { BottomNavigation } from '@/ui/components/bottom-navigation'
+import { Button } from '@/ui/components/button'
+import { Sheet } from '@/ui/components/sheet'
+import { useReducedMotion } from '@/ui/hooks/use-reduced-motion'
 import type { SplashDisplayMode } from '@/ui/tokens'
+import { loadWorldMediaManifest, type WorldMediaEntry } from '@/world/media-manifest'
 
 import { AppPortProvider, useAppPort, useAppReadModel } from './app-context'
 import { SPLASH_PREFERENCE_CACHE_KEY } from './durable-ui-port'
 import styles from './runtime.module.css'
 import type { RewardNoticeView } from './ui-port'
-import {
-  getSplashDuration,
-  shouldDisplaySplash,
-  SPLASH_SESSION_KEY,
-} from './splash-state'
+import { getSplashDuration, shouldDisplaySplash, SPLASH_SESSION_KEY } from './splash-state'
 
 type StartupState = 'checking' | 'content' | 'loading' | 'splash'
+
+/**
+ * The opening footage (D-013) is owner-supplied and may not exist yet, so the
+ * splash has two bodies: the video when one has been delivered, and the
+ * wordless emblem otherwise. Neither one is allowed to extend startup — the
+ * window is still the 900 ms / 1200 ms hard cap in `splash-state.ts`, and a
+ * longer clip is simply cut off at that point rather than waited on.
+ */
+function SplashBody({ footage }: { readonly footage: WorldMediaEntry | null }) {
+  const reducedMotion = useReducedMotion()
+
+  if (footage !== null && !reducedMotion) {
+    return (
+      <video
+        className={styles.splashFootage}
+        poster={footage.poster ?? undefined}
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        {footage.sources.map((source) => (
+          <source key={source.src} src={source.src} type={source.type} />
+        ))}
+      </video>
+    )
+  }
+
+  return (
+    <div className={styles.sealStage} aria-hidden="true">
+      <span className={styles.orbit} />
+      <Image
+        className={styles.seal}
+        src="/brand/grimoire-seal-inverse.svg"
+        alt=""
+        width={160}
+        height={160}
+        priority
+      />
+    </div>
+  )
+}
 
 export function StartupLayer({ onContentReady }: { readonly onContentReady: () => void }) {
   const port = useAppPort()
   const { bootstrap, preferences } = useAppReadModel()
   const [state, setState] = useState<StartupState>('checking')
+  const [footage, setFootage] = useState<WorldMediaEntry | null>(null)
   const readLaunchPreferences = useEffectEvent(() => preferences)
   const notifyContentReady = useEffectEvent(onContentReady)
+
+  // Fetched, not awaited: if the manifest arrives after the splash has closed,
+  // the emblem was the right thing to show and nothing was delayed for it.
+  useEffect(() => {
+    const controller = new AbortController()
+    void loadWorldMediaManifest(controller.signal).then((manifest) =>
+      setFootage(manifest.splash),
+    )
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     const storedSplashMode = window.localStorage.getItem(SPLASH_PREFERENCE_CACHE_KEY)
@@ -80,9 +136,10 @@ export function StartupLayer({ onContentReady }: { readonly onContentReady: () =
     const failed = bootstrap.status === 'failed'
     return (
       <section className={styles.loading} role="status" aria-live="polite">
-        <p className={styles.eyebrow}>{failed ? '起動の確認' : '起動準備'}</p>
-        <h1>{failed ? 'ホームを開けませんでした' : 'ホームを準備しています'}</h1>
-        <p>
+        <h1 className={styles.loadingTitle}>
+          {failed ? 'ホームを開けませんでした' : 'ホームを準備しています'}
+        </h1>
+        <p className={styles.loadingCopy}>
           {failed
             ? bootstrap.message
             : bootstrap.status === 'loading'
@@ -90,9 +147,7 @@ export function StartupLayer({ onContentReady }: { readonly onContentReady: () =
               : '起動状態をもう一度確認します。'}
         </p>
         {failed ? (
-          <button type="button" className={styles.retryButton} onClick={() => void port.retryBootstrap()}>
-            再試行
-          </button>
+          <Button onClick={() => void port.retryBootstrap()}>再試行</Button>
         ) : null}
       </section>
     )
@@ -101,92 +156,79 @@ export function StartupLayer({ onContentReady }: { readonly onContentReady: () =
   return (
     <div className={styles.splash} role="status" aria-live="polite">
       <span className="sr-only">ホームを開いています</span>
-      {state === 'splash' ? (
-        <div className={styles.sealStage} aria-hidden="true">
-          <span className={styles.orbit} />
-          <Image
-            className={styles.seal}
-            src="/brand/grimoire-seal-inverse.svg"
-            alt=""
-            width={160}
-            height={160}
-            priority
-          />
-        </div>
-      ) : null}
+      {state === 'splash' ? <SplashBody footage={footage} /> : null}
     </div>
   )
 }
 
+const MINI_NOTICE_MS = 3_600
+
+/**
+ * 決定事項ログ M-4 — a first discovery earns the sheet with the full plate and
+ * the whole description; everything already collected, and every reward from
+ * simply writing a task, stays a small notice near the list. The daily loop is
+ * never interrupted by a celebration it has already seen.
+ */
 function RewardPresentation({ notice }: { readonly notice: RewardNoticeView }) {
   const port = useAppPort()
-  const closeButton = useRef<HTMLButtonElement>(null)
+  const play = useSound()
+
+  useEffect(() => {
+    play('discovery')
+  }, [notice.id, play])
 
   useEffect(() => {
     if (notice.presentation !== 'mini') return
-    const timer = window.setTimeout(() => void port.dismissRewardNotice(), 3_600)
+    const timer = window.setTimeout(() => void port.dismissRewardNotice(), MINI_NOTICE_MS)
     return () => window.clearTimeout(timer)
-  }, [notice.id, notice.presentation, port])
-
-  useEffect(() => {
-    if (notice.presentation !== 'sheet') return
-    const previousOverflow = document.documentElement.style.overflow
-    document.documentElement.style.overflow = 'hidden'
-    closeButton.current?.focus()
-    const dismissOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') void port.dismissRewardNotice()
-    }
-    window.addEventListener('keydown', dismissOnEscape)
-    return () => {
-      document.documentElement.style.overflow = previousOverflow
-      window.removeEventListener('keydown', dismissOnEscape)
-    }
   }, [notice.id, notice.presentation, port])
 
   if (notice.presentation === 'mini') {
     return (
-      <aside className={styles.rewardToast} aria-label="獲得した標本" aria-live="polite">
-        <Image src={notice.artSrc} alt="" width={44} height={44} />
-        <div>
-          <p>{notice.kind === 'created' ? '記した報酬' : '完了の報酬'}</p>
-          <strong>{notice.name}</strong>
-          <small>{notice.description}</small>
-          {notice.collapsedCount > 0 ? <span>ほか {notice.collapsedCount}件</span> : null}
-        </div>
-        <button type="button" onClick={() => void port.dismissRewardNotice()} aria-label="獲得表示を閉じる">×</button>
+      <aside className={styles.miniNotice} aria-live="polite">
+        <Image
+          className={styles.miniArt}
+          src={notice.artSrc}
+          alt=""
+          width={40}
+          height={40}
+        />
+        <span className={styles.miniText}>
+          <span className={styles.miniName}>{notice.name}</span>
+          <span className={styles.miniLine}>
+            {notice.collapsedCount > 0
+              ? `ほか ${notice.collapsedCount}件と一緒に図鑑へ`
+              : '図鑑に加わりました'}
+          </span>
+        </span>
       </aside>
     )
   }
 
   return (
-    <div
-      className={styles.rewardBackdrop}
-      role="presentation"
-      onPointerDown={(event) => {
-        if (event.currentTarget === event.target) void port.dismissRewardNotice()
-      }}
+    <Sheet
+      open
+      title={notice.name}
+      description="はじめて見つけました。"
+      onClose={() => void port.dismissRewardNotice()}
     >
-      <section className={styles.rewardSheet} role="dialog" aria-modal="true" aria-labelledby="reward-title">
-        <button
-          ref={closeButton}
-          className={styles.rewardClose}
-          type="button"
-          onClick={() => void port.dismissRewardNotice()}
-          aria-label="初発見を閉じる"
-        >
-          ×
-        </button>
-        <div className={styles.rewardPlate}>
-          <Image src={notice.artSrc} alt={notice.artAlt} width={180} height={180} />
-        </div>
-        <div className={styles.rewardCopy}>
-          <p className={styles.eyebrow}>FIRST OBSERVATION</p>
-          <h2 id="reward-title">{notice.name}</h2>
-          <p>{notice.description}</p>
-          {notice.collapsedCount > 0 ? <small>ほか {notice.collapsedCount}件も図鑑へ記録しました。</small> : null}
-        </div>
-      </section>
-    </div>
+      <div className={styles.rewardBody}>
+        <Image
+          className={styles.rewardPlate}
+          src={notice.artSrc}
+          alt={notice.artAlt}
+          width={220}
+          height={220}
+          priority
+        />
+        <p className={styles.rewardDescription}>{notice.description}</p>
+        {notice.collapsedCount > 0 ? (
+          <p className={styles.rewardMeta}>
+            ほか {notice.collapsedCount}件も図鑑へ記録しました。
+          </p>
+        ) : null}
+      </div>
+    </Sheet>
   )
 }
 
@@ -199,9 +241,10 @@ function RuntimeContent({ children }: { readonly children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement
-    root.dataset.theme = pathname.startsWith('/grimo') || pathname.startsWith('/catalog')
-      ? 'natural-history'
-      : 'order'
+    root.dataset.theme =
+      pathname.startsWith('/grimo') || pathname.startsWith('/catalog')
+        ? 'natural-history'
+        : 'order'
     if (preferences.colorScheme === 'system') delete root.dataset.colorScheme
     else root.dataset.colorScheme = preferences.colorScheme
     if (preferences.motion === 'system') delete root.dataset.motion
@@ -209,33 +252,43 @@ function RuntimeContent({ children }: { readonly children: ReactNode }) {
   }, [pathname, preferences.colorScheme, preferences.motion])
 
   return (
-    <>
-      <div className={styles.mistBeam} aria-hidden="true" />
+    <SoundProvider sfxEnabled={preferences.sfxEnabled}>
       <div className={styles.appSurface}>{children}</div>
       <BottomNavigation pathname={pathname} />
       <StartupLayer onContentReady={handleContentReady} />
-      {contentReady && rewardNotice ? <RewardPresentation notice={rewardNotice} /> : null}
+      {contentReady && rewardNotice !== null ? (
+        <RewardPresentation key={rewardNotice.id} notice={rewardNotice} />
+      ) : null}
       {contentReady && pathname === '/' && migrationNoticeVisible ? (
-        <section className={styles.migrationSheet} aria-labelledby="migration-title">
-          <div>
-            <p className={styles.eyebrow}>OLD RECORDS</p>
-            <h2 id="migration-title">以前のタスクが見つかりました</h2>
-            <p>
-              今のデータを変更せず、内容とバックアップ手順を先に確認できます。
-            </p>
-          </div>
-          <div className={styles.migrationActions}>
-            <button type="button" onClick={() => void port.acknowledgeMigrationNotice()}>
-              後で
-            </button>
-            <Link href="/settings#data" prefetch={false}>移行を確認</Link>
-          </div>
-        </section>
+        <MigrationNotice onDismiss={() => void port.acknowledgeMigrationNotice()} />
       ) : null}
       <span className="sr-only" aria-live="polite">
         {contentReady ? 'ホームを開きました' : ''}
       </span>
-    </>
+    </SoundProvider>
+  )
+}
+
+function MigrationNotice({ onDismiss }: { readonly onDismiss: () => void }) {
+  return (
+    <aside className={styles.migrationNotice} aria-labelledby="migration-title">
+      <div>
+        <h2 id="migration-title" className={styles.migrationTitle}>
+          以前のタスクが見つかりました
+        </h2>
+        <p className={styles.migrationCopy}>
+          今のデータは変えずに、内容と控えの取り方を先に確認できます。
+        </p>
+      </div>
+      <div className={styles.migrationActions}>
+        <Button tone="quiet" onClick={onDismiss}>
+          後で
+        </Button>
+        <Link className={styles.migrationLink} href="/settings" prefetch={false}>
+          移行を確認
+        </Link>
+      </div>
+    </aside>
   )
 }
 

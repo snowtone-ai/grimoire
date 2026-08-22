@@ -1,1 +1,1 @@
-export { SettingsExperience } from './settings-experience'
+export { SettingsExperience } from './SettingsExperience'

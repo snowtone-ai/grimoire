@@ -1,427 +1,302 @@
-.page {
-  width: min(100%, 78rem);
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--content-max);
   min-height: 100dvh;
   margin-inline: auto;
-  padding: clamp(var(--space-8), 7vh, var(--space-16)) var(--space-page) var(--space-20);
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
 }
 
 .header {
   display: flex;
-  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-8);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-line-strong);
 }
 
-.header h1 {
+.title {
+  margin: 0;
   font-family: var(--font-lore);
-  font-size: clamp(2.5rem, 7vw, 5rem);
-  font-weight: 500;
-  letter-spacing: -0.055em;
-  line-height: 1;
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
 }
 
-.header div > p:last-child {
-  margin-top: var(--space-3);
-  color: var(--color-ink-muted);
-}
-
-.eyebrow {
-  color: var(--color-ink-muted);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.17em;
-}
-
-.bookMark {
-  width: clamp(3rem, 8vw, 5.5rem);
-  height: auto;
-  color: var(--color-ink-muted);
-  stroke-width: 0.8;
-}
-
-.tabs {
+/* Two journals, switched by an underline that moves — not by a coloured pill
+   (DESIGN.md §6.4 keeps active state to weight and position). */
+.layerTabs {
   display: flex;
-  width: min(100%, 25rem);
-  margin-top: var(--space-8);
-  border-bottom: 1px solid var(--color-line-strong);
+  gap: var(--space-5);
 }
 
-.tabs button {
-  flex: 1;
+.layerTab {
   min-height: var(--tap-target);
+  padding: 0;
   border: 0;
   border-bottom: 2px solid transparent;
-  background: transparent;
+  background: none;
   color: var(--color-ink-muted);
-}
-
-.tabs button[aria-selected='true'] {
-  border-bottom-color: var(--color-focus);
-  color: var(--color-ink);
-}
-
-.creatureLedger {
-  display: grid;
-  grid-template-columns: minmax(17rem, 0.9fr) minmax(19rem, 1.1fr);
-  gap: clamp(var(--space-8), 8vw, var(--space-20));
-  align-items: center;
-  margin-top: clamp(var(--space-10), 10vh, var(--space-20));
-}
-
-.creaturePlate {
-  position: relative;
-  display: grid;
-  aspect-ratio: 4 / 5;
-  border: 1px solid var(--color-line-strong);
-  place-items: center;
-}
-
-.creaturePlate::before,
-.creaturePlate::after {
-  position: absolute;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: solid var(--color-line-strong);
-  content: '';
-}
-
-.creaturePlate::before {
-  top: var(--space-3);
-  left: var(--space-3);
-  border-width: 1px 0 0 1px;
-}
-
-.creaturePlate::after {
-  right: var(--space-3);
-  bottom: var(--space-3);
-  border-width: 0 1px 1px 0;
-}
-
-.creaturePlate > p {
-  position: absolute;
-  bottom: var(--space-4);
-  left: var(--space-5);
-  color: var(--color-ink-muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-}
-
-.waterEgg {
-  width: 45%;
-  aspect-ratio: 0.72;
-  border: 1px solid color-mix(in srgb, var(--color-focus) 65%, transparent);
-  border-radius: 52% 52% 48% 48% / 62% 62% 38% 38%;
-  background: color-mix(in srgb, var(--color-focus) 22%, transparent);
-  box-shadow: inset -1.4rem -1.8rem 0 color-mix(in srgb, var(--color-iron) 28%, transparent);
-}
-
-.creatureLedger article {
-  max-width: 34rem;
-}
-
-.creatureLedger h2 {
-  margin-top: var(--space-2);
   font-family: var(--font-lore);
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
-  font-weight: 500;
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  transition: border-color var(--duration-feedback) var(--ease-press),
+    color var(--duration-feedback) var(--ease-press);
 }
 
-.creatureLedger article > p:nth-of-type(2) {
-  margin-top: var(--space-5);
-  color: var(--color-ink-muted);
-  line-height: 1.9;
-}
-
-.creatureLedger dl,
-.detailCopy dl {
-  margin-top: var(--space-8);
-  border-top: 1px solid var(--color-line);
-}
-
-.creatureLedger dl div,
-.detailCopy dl div {
-  display: flex;
-  justify-content: space-between;
-  padding-block: var(--space-3);
-  border-bottom: 1px solid var(--color-line);
-}
-
-.creatureLedger dt,
-.detailCopy dt {
-  color: var(--color-ink-muted);
-  font-size: 0.75rem;
-}
-
-.creatureLedger dd,
-.detailCopy dd {
-  margin: 0;
-  font-size: 0.82rem;
-}
-
-.itemLedger {
-  margin-top: var(--space-8);
-}
-
-.tools {
-  display: grid;
-  grid-template-columns: minmax(14rem, 1fr) auto auto;
-  gap: var(--space-2);
-}
-
-.search {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-target);
-  padding-inline: var(--space-3);
-  border: 1px solid var(--color-line-strong);
-}
-
-.search input,
-.tools select {
-  min-height: var(--tap-target);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 0;
-  background: transparent;
+.layerTab:hover {
   color: var(--color-ink);
 }
 
-.search input {
-  width: 100%;
-  min-height: 2rem;
-  border: 0;
-  outline: 0;
+.layerTab[aria-selected='true'] {
+  border-bottom-color: var(--color-iron);
+  color: var(--color-ink);
 }
 
-.tools select {
-  padding-inline: var(--space-3);
-}
-
-.specimenGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.controls {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-8);
 }
 
-.specimenCard {
+.orderRow,
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  list-style: none;
+}
+
+.specimen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: center;
+}
+
+/* The plate is the object; the grid around it stays quiet. One radius tier, no
+   shadow at rest (DESIGN.md §6.2). */
+.plate {
   position: relative;
   display: grid;
-  min-width: 0;
-  padding: 0;
-  border: 1px solid var(--color-line);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-focus));
-  color: var(--color-ink);
-  text-align: left;
-}
-
-.specimenCard:hover {
-  border-color: var(--color-line-strong);
-  transform: translateY(-2px);
-}
-
-.specimenPlate {
-  display: grid;
-  aspect-ratio: 1;
-  border-bottom: 1px solid var(--color-line);
   place-items: center;
-}
-
-.specimenGlyph {
-  width: 68%;
-  height: 68%;
-  fill: color-mix(in srgb, var(--color-focus) 14%, transparent);
-  stroke: var(--color-ink-muted);
-  stroke-width: 1.2;
-}
-
-.specimenGlyph path:last-child {
-  fill: none;
-}
-
-.specimenCopy {
-  display: grid;
-  gap: 0.15rem;
+  aspect-ratio: 1;
   padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: var(--color-ground);
+  transition: border-color var(--duration-feedback) var(--ease-press);
 }
 
-.specimenCopy strong {
-  overflow: hidden;
-  font-family: var(--font-lore);
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.specimen:hover .plate {
+  border-color: var(--color-line-strong);
 }
 
-.specimenCopy small,
-.detailPlate > span {
-  color: var(--color-ink-muted);
-  font-size: 0.68rem;
+.plate img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .quantity {
   position: absolute;
-  top: var(--space-2);
   right: var(--space-2);
-  padding: 0.15rem 0.4rem;
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-surface);
-  font-size: 0.65rem;
-}
-
-.emptyState {
-  display: grid;
-  min-height: 22rem;
-  margin-top: var(--space-8);
-  border: 1px solid var(--color-line);
+  bottom: var(--space-2);
   color: var(--color-ink-muted);
-  place-content: center;
-  place-items: center;
-  text-align: center;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-variant-numeric: tabular-nums;
 }
 
-.emptyState h2 {
-  margin-top: var(--space-3);
-  font-family: var(--font-lore);
+.specimenName {
   color: var(--color-ink);
-  font-weight: 500;
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  overflow-wrap: anywhere;
 }
 
-.emptyState p {
-  max-width: 26rem;
-  margin-top: var(--space-2);
-  font-size: 0.82rem;
-}
-
-.detailBackdrop {
-  position: fixed;
-  z-index: 80;
-  display: grid;
-  background: rgb(5 9 8 / 72%);
-  inset: 0;
-  place-items: center;
+.empty {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-12) 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 1.9;
+  text-align: center;
+  text-wrap: pretty;
 }
 
 .detail {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(17rem, 0.9fr) minmax(18rem, 1.1fr);
-  width: min(58rem, calc(100% - 2rem));
-  max-height: calc(100dvh - 2rem);
-  overflow: auto;
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-surface);
-  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 35%);
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-sheet);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--color-world);
+  animation: detail-in var(--duration-reveal) var(--ease-settle) both;
 }
 
-.closeButton {
-  position: absolute;
-  z-index: 1;
-  top: var(--space-3);
-  right: var(--space-3);
-  display: grid;
-  width: var(--tap-target);
-  min-height: var(--tap-target);
-  border: 1px solid var(--color-line-strong);
-  background: var(--color-surface);
-  color: var(--color-ink);
-  place-items: center;
+.detail:focus {
+  outline: none;
+}
+
+.detailBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--space-4) 0;
+}
+
+.detailFigure {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: center;
+  margin: 0;
+  padding: var(--space-4) var(--space-page)
+    calc(var(--space-12) + env(safe-area-inset-bottom));
 }
 
 .detailPlate {
-  display: grid;
-  min-height: 28rem;
-  border-right: 1px solid var(--color-line);
-  place-items: center;
-}
-
-.detailPlate > span {
-  align-self: end;
-  margin-bottom: var(--space-4);
-  letter-spacing: 0.14em;
+  width: min(100%, 22rem);
+  height: auto;
+  object-fit: contain;
 }
 
 .detailCopy {
-  align-self: center;
-  padding: clamp(var(--space-8), 6vw, var(--space-16));
+  width: 100%;
+  max-width: var(--reading-max);
+  text-align: center;
 }
 
-.detailCopy h2 {
-  margin-top: var(--space-2);
-  font-family: var(--font-lore);
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
-  font-weight: 500;
-}
-
-.detailCopy > p:nth-of-type(2) {
-  margin-top: var(--space-5);
+.detailCategory {
+  margin: 0 0 var(--space-2);
   color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.22em;
+}
+
+.detailName {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-lore);
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
+}
+
+.detailDescription {
+  margin: 0;
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 2;
+  text-wrap: pretty;
+}
+
+.detailMeta {
+  margin: var(--space-6) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* 決定事項ログ M-11: an unobserved record stays as a silhouette. It never shows a
+   total or a percentage, so it reads as "there is more animal", not "you are
+   62% done". */
+.records {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.record:last-child {
+  border-bottom: 0;
+}
+
+.recordSilhouette {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-control);
+  background: var(--color-ground);
+}
+
+.record[data-unseen] .recordSilhouette {
+  background: var(--color-line-strong);
+  opacity: 0.55;
+}
+
+.recordText {
+  min-width: 0;
+}
+
+.recordName {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+}
+
+.record[data-unseen] .recordName {
+  color: var(--color-ink-muted);
+}
+
+.recordNote {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
   line-height: 1.9;
+  text-wrap: pretty;
 }
 
-@media (max-width: 52rem) {
-  .specimenGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .tools {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .search {
-    grid-column: 1 / -1;
-  }
+.recordMeta {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
 }
 
-@media (max-width: 42rem) {
-  .creatureLedger {
-    grid-template-columns: 1fr;
-  }
-
-  .creaturePlate {
-    max-height: 55dvh;
-  }
-
-  .detailBackdrop {
-    align-items: end;
-  }
-
-  .detail {
-    grid-template-columns: 1fr;
-    width: 100%;
-    max-height: 86dvh;
-    border-bottom: 0;
-  }
-
-  .detailPlate {
-    min-height: 15rem;
-    border-right: 0;
-    border-bottom: 1px solid var(--color-line);
+@keyframes detail-in {
+  from {
+    opacity: 0;
   }
 }
 
-@media (max-width: 31rem) {
-  .header {
-    align-items: start;
-  }
-
-  .specimenGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .tools {
-    grid-template-columns: 1fr;
-  }
-
-  .search {
-    grid-column: auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .specimenCard:hover {
-    transform: none;
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
   }
 }

@@ -1,0 +1,99 @@
+.control {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-muted);
+  transition: border-color var(--duration-instant) var(--ease-press),
+    color var(--duration-instant) var(--ease-press),
+    transform var(--duration-instant) var(--ease-press);
+}
+
+.control[data-size='lg'] {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+.control:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.control:disabled {
+  opacity: 0.4;
+}
+
+/* Floating over the world: a translucent ground so the control reads as a
+   thin object above the scene rather than a panel cut into it. */
+.control[data-surface='chrome'] {
+  border-color: var(--color-chrome-line);
+  background: var(--color-chrome-ground);
+  color: var(--color-chrome-ink);
+  backdrop-filter: blur(var(--blur-chrome));
+}
+
+.control[data-surface='chrome']:hover:not(:disabled) {
+  border-color: var(--color-chrome-line-strong);
+  color: var(--color-chrome-ink-strong);
+}
+
+.glyph {
+  display: grid;
+  place-items: center;
+}
+
+.glyph svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.control[data-size='lg'] .glyph svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Fires once per press and removes itself; the element is re-keyed so a rapid
+   second tap restarts the animation instead of waiting for the first to end. */
+.afterglow {
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: inherit;
+  animation: afterglow var(--duration-reveal) var(--ease-settle) forwards;
+  pointer-events: none;
+}
+
+@keyframes afterglow {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-mist-soft);
+    opacity: 0;
+  }
+
+  22% {
+    box-shadow: 0 0 1.25rem 0.125rem var(--color-mist-soft);
+    opacity: 1;
+  }
+
+  100% {
+    box-shadow: 0 0 2.5rem 0.25rem transparent;
+    opacity: 0;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .control {
+    border-color: currentcolor;
+  }
+
+  .afterglow {
+    display: none;
+  }
+}

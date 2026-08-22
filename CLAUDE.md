@@ -86,6 +86,13 @@
   unregistered raw values in changed UI-layer files per `DESIGN.md` §7's scope and
   exemption mechanism (v12.1 §16.2) -- not wired yet, since there is no rebuilt UI
   to lint against.
+- The background world and splash use owner-sourced video assets (`anime/`)
+  per D-013; `src/world/three-coral-runtime.ts` is retired from the
+  production path, and `three` stays in the dependency tree for the Grimo
+  (3D character) use case. The environment contract is supplied from a
+  static per-area JSON descriptor rather than a live scene at runtime. The
+  Grimo production workflow (image generation -> 3D -> rig -> GLB -> R3F) is
+  fixed in D-014.
 - Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
   is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
   (v12.1 §16.7). No chrome-devtools MCP: this repo already has Playwright MCP registered

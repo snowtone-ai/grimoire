@@ -21,6 +21,7 @@ Grimoire v2 は Next 16のlocal-first PWAとして実行可能。製品横断の
 | `grimore-v2/prototypes/area1-coral/` | 陸珊瑚の台地 Three.js 試作 | high | 独立したnpm package |
 | `grimore-v2/prototypes/area1-coral/src/` | scene、pass、geometry計数、品質制御、fallback、GUI | high | `main.js`が統合点 |
 | `grimore-v2/prototypes/area1-coral/test/` | 品質ガバナー、visible geometry、fallbackの純粋テスト | medium | Node test runner |
+| `anime/` | オーナー調達のスプラッシュ・背景世界の動画素材 | low | 2026-08-22 時点で空。素材到着まで world surface は poster / fallback で動作する (D-013) |
 | `docs/` | 状態、決定、障害、リポジトリ地図 | medium | 工学判断のみを記録 |
 | `docs/implementation-status-2026-08-20.html` | 非エンジニア向け実装現在地 | low | 単独HTML、表・SVG graph・実画面を含む |
 | `src/app/` | Next route、bootstrap、UI read model統合 | high | DurableUiPortだけが永続層とfeature UIを接続 |

@@ -2,22 +2,6 @@
   position: relative;
   z-index: var(--layer-content);
   min-height: 100dvh;
-  padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
-}
-
-.mistBeam {
-  position: fixed;
-  z-index: var(--layer-world);
-  top: -18vh;
-  right: 13vw;
-  width: clamp(1.5rem, 5vw, 5rem);
-  height: 94vh;
-  background: var(--color-mist);
-  filter: blur(2.4rem);
-  opacity: 0.07;
-  pointer-events: none;
-  transform: rotate(18deg);
-  transform-origin: top center;
 }
 
 .splash,
@@ -27,8 +11,17 @@
   inset: 0;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background: var(--color-iron);
-  color: var(--color-ink-inverse);
+  color: var(--color-on-iron);
+}
+
+/* Full-bleed and cropped rather than letterboxed: the opening should read as a
+   window into the world, and a black bar around it reads as a video player. */
+.splashFootage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sealStage {
@@ -63,201 +56,164 @@
   padding: var(--space-page);
 }
 
-.loading h1 {
+.loadingTitle {
   max-width: 16ch;
+  margin: 0;
   font-family: var(--font-lore);
-  font-size: clamp(1.75rem, 8vw, 3.5rem);
-  font-weight: 500;
-  line-height: 1.25;
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
 }
 
-.loading p:not(.eyebrow) {
-  max-width: 34rem;
-  color: var(--color-ink-muted);
+.loadingCopy {
+  max-width: var(--reading-max);
+  margin: 0;
+  color: var(--color-on-iron);
+  font-size: var(--text-body);
+  line-height: 1.8;
+  opacity: 0.72;
+  text-wrap: pretty;
 }
 
-.eyebrow {
-  color: var(--color-mist);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-}
-
-.retryButton {
-  min-width: 8rem;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-control);
-  background: var(--color-surface-strong);
-  color: var(--color-ink);
-}
-
-.migrationSheet {
-  position: fixed;
-  z-index: var(--layer-sheet);
-  right: var(--space-page);
-  bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-6);
-  width: min(44rem, calc(100vw - 2 * var(--space-page)));
-  padding: var(--space-6);
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-panel);
-  background: var(--color-surface-strong);
-  box-shadow: var(--shadow-float);
-  color: var(--color-ink);
-}
-
-.migrationSheet h2 {
-  margin-block: var(--space-1) var(--space-2);
-  font-family: var(--font-lore);
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
-.migrationSheet p:not(.eyebrow) {
-  color: var(--color-ink-muted);
-  font-size: 0.85rem;
-}
-
-.migrationActions {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
-}
-
-.migrationActions button,
-.migrationActions a {
-  display: inline-grid;
-  min-height: var(--tap-target);
-  padding-inline: var(--space-4);
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--color-ink);
-  place-items: center;
-  text-decoration: none;
-}
-
-.migrationActions a {
-  background: var(--color-iron);
-  color: var(--color-ink-inverse);
-}
-
-.rewardToast {
+/* 決定事項ログ M-4 — the small notice. It sits above the nav, states what was
+   collected in one line, and dismisses itself. There is no button on it: the
+   thing it announces is already saved, so there is nothing to confirm. */
+.miniNotice {
   position: fixed;
   z-index: var(--layer-toast);
-  right: var(--space-page);
-  bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
-  display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) var(--tap-target);
+  right: var(--space-4);
+  bottom: calc(var(--nav-height) + var(--space-4) + env(safe-area-inset-bottom));
+  left: var(--space-4);
+  display: flex;
   gap: var(--space-3);
-  width: min(24rem, calc(100vw - 2 * var(--space-page)));
-  padding: var(--space-3);
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-panel);
-  background: var(--color-iron);
-  box-shadow: var(--shadow-float);
-  color: var(--color-ink-inverse);
   align-items: center;
+  max-width: 24rem;
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  animation: noticeIn var(--duration-feedback) var(--ease-settle) both;
 }
 
-.rewardToast img {
-  width: 2.75rem;
-  height: 2.75rem;
+.miniArt {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
 }
 
-.rewardToast div {
-  display: grid;
+.miniText {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
-.rewardToast p,
-.rewardToast small,
-.rewardToast span {
-  color: var(--color-mist);
-  font-size: 0.72rem;
-}
-
-.rewardToast strong,
-.rewardToast small {
+.miniName {
   overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rewardToast button,
-.rewardClose {
-  width: var(--tap-target);
-  min-width: var(--tap-target);
-  min-height: var(--tap-target);
-  border: 0;
-  background: transparent;
-  color: currentcolor;
-  font-size: 1.35rem;
+.miniLine {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
 }
 
-.rewardBackdrop {
-  position: fixed;
-  z-index: var(--layer-sheet);
-  inset: 0;
-  display: grid;
-  padding: var(--space-page);
-  background: rgb(7 14 13 / 54%);
-  place-items: end center;
-}
-
-.rewardSheet {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
-  gap: var(--space-6);
-  width: min(42rem, 100%);
-  max-height: min(42rem, calc(100dvh - 2 * var(--space-page)));
-  overflow: auto;
-  padding: var(--space-6);
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
-  background: var(--color-surface-strong);
-  box-shadow: var(--shadow-float);
-  color: var(--color-ink);
-}
-
-.rewardClose {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
+.rewardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: center;
+  text-align: center;
 }
 
 .rewardPlate {
-  display: grid;
-  min-height: 14rem;
-  border: 1px solid var(--color-line);
-  background: var(--color-surface-muted);
-  place-items: center;
-}
-
-.rewardPlate img {
-  width: min(11rem, 72%);
+  width: min(100%, 14rem);
   height: auto;
+  object-fit: contain;
 }
 
-.rewardCopy {
-  display: grid;
-  align-content: center;
-  gap: var(--space-3);
-  padding-right: var(--space-5);
-}
-
-.rewardCopy h2 {
+.rewardDescription {
+  max-width: var(--reading-max);
+  margin: 0;
   font-family: var(--font-lore);
-  font-size: clamp(1.6rem, 5vw, 2.6rem);
-  font-weight: 500;
+  font-size: var(--text-body-lg);
+  line-height: 2;
+  text-wrap: pretty;
 }
 
-.rewardCopy > p:not(.eyebrow),
-.rewardCopy small {
+.rewardMeta {
+  margin: 0;
   color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.migrationNotice {
+  position: fixed;
+  z-index: var(--layer-toast);
+  right: var(--space-4);
+  bottom: calc(var(--nav-height) + var(--space-4) + env(safe-area-inset-bottom));
+  left: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  animation: noticeIn var(--duration-reveal) var(--ease-settle) both;
+}
+
+.migrationTitle {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+.migrationCopy {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.migrationActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+/* Matches the Button control's geometry so the pair reads as one row; a link
+   cannot be a <button> here because it navigates. */
+.migrationLink {
+  display: inline-grid;
+  min-height: var(--tap-target);
+  padding-inline: var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  place-items: center;
+  text-decoration: none;
 }
 
 @keyframes sealSettle {
@@ -272,48 +228,28 @@
   }
 }
 
-:global(html[data-motion='reduced']) .sealStage {
+@keyframes noticeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:global(html[data-motion='reduced']) .sealStage,
+:global(html[data-motion='reduced']) .miniNotice,
+:global(html[data-motion='reduced']) .migrationNotice {
   animation: none;
 }
 
-@media (max-width: 40rem) {
-  .rewardToast {
-    right: var(--space-3);
-    left: var(--space-3);
-    width: auto;
-  }
-
-  .rewardBackdrop {
-    padding: 0;
-  }
-
-  .rewardSheet {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-    width: 100%;
-    padding: var(--space-5);
-  }
-
-  .rewardPlate {
-    min-height: 11rem;
-  }
-
-  .migrationSheet {
-    right: var(--space-3);
-    bottom: calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom));
-    left: var(--space-3);
-    grid-template-columns: 1fr;
-    width: auto;
-    padding: var(--space-5);
-  }
-
-  .migrationActions {
-    justify-content: flex-end;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  :global(html:not([data-motion='full'])) .sealStage {
+  :global(html:not([data-motion='full'])) .sealStage,
+  :global(html:not([data-motion='full'])) .miniNotice,
+  :global(html:not([data-motion='full'])) .migrationNotice {
     animation: none;
   }
 }

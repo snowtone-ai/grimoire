@@ -102,7 +102,7 @@
 
   ::selection {
     background: var(--color-mist);
-    color: var(--color-ink-inverse);
+    color: var(--color-on-mist);
   }
 }
 
@@ -139,15 +139,28 @@
   }
 }
 
+/* Mirrors tokens.css: the OS preference seeds the value, the in-app motion
+   setting overrides it either way (決定事項ログ E-5). */
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html:not([data-motion='full']) {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
+  html:not([data-motion='full']) *,
+  html:not([data-motion='full']) *::before,
+  html:not([data-motion='full']) *::after {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+html[data-motion='reduced'] {
+  scroll-behavior: auto;
+}
+
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
 }
