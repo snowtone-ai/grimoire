@@ -20,7 +20,7 @@ import {
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
-import { cancelEffects, fireReplayEffect } from "@/lib/vfx";
+import { cancelEffects, cancelScreenEffects, fireReplayEffect } from "@/lib/vfx";
 import { playCue } from "@/lib/sound";
 
 export function BookScreen() {
@@ -44,7 +44,7 @@ export function BookScreen() {
 
   // Leaving /book mid-effect must not let the replay sparkle keep drawing over
   // whatever screen the user navigates to next.
-  useEffect(() => cancelEffects, []);
+  useEffect(() => cancelScreenEffects, []);
 
   const handleReplay = useCallback((drop: DropDef) => {
     cancelEffects(); // supersede whatever the previous tap is still drawing

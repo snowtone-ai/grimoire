@@ -84,10 +84,12 @@ export function TaskEditModal({
   async function handleDelete() {
     setDeleting(true);
     try {
-      // The soft downward cue, not an error buzz: deleting a quest the user no
+      await deleteTask(task.id);
+      // After the write, not before: the cue confirms the delete happened, and
+      // firing it first meant a store that threw still sounded like success.
+      // The soft downward cue, not an error buzz — deleting a quest the user no
       // longer wants is a normal, non-punishing outcome.
       playCue("undo");
-      await deleteTask(task.id);
       onDeleted();
       onClose();
     } finally {

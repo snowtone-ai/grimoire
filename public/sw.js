@@ -1,5 +1,5 @@
 // Bump this when SW logic changes. All clients discard old caches on activate.
-const CACHE_NAME = "task-manager-v7";
+const CACHE_NAME = "task-manager-v8";
 const NAV_TIMEOUT_MS = 3000;
 
 // Notifications are shown by the page through registration.showNotification(),
@@ -63,6 +63,16 @@ self.addEventListener("fetch", (event) => {
 
   // Next.js build assets (hashed): cache-first is safe — filenames are content-addressed.
   if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Vendored CC0 effect assets (D-047): immutable, and re-fetching them is
+  // expensive — ~900 KB of cue audio plus ~280 KB of particle textures, all of
+  // which the first gesture of every session requests at once. Under
+  // network-first that was a fresh ~1.2 MB download per app open on cellular.
+  // These files only ever change by being replaced under a new name.
+  if (url.pathname.startsWith("/audio/") || url.pathname.startsWith("/vfx/")) {
     event.respondWith(cacheFirst(request));
     return;
   }

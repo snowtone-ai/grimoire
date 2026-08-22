@@ -54,7 +54,6 @@ export type SoundAction =
   | "pageLab"
   | "pageRecord"
   // REWARD
-  | "reveal"
   | "replay"
   | "bounty"
   | "clearLow"
@@ -111,7 +110,6 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   pageRecord: one("cues/page-record.wav", 0.4),
 
   /* REWARD */
-  reveal: one("ui/glass_002.wav", 0.5),
   /* Looking back at something already earned: a short coin tick, deliberately
    * not the clear jingle. Same rule the replay VFX follows (D-036). */
   replay: one("cues/treasure-light.wav", 0.45, 8),

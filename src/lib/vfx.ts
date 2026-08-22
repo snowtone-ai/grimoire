@@ -63,8 +63,18 @@ export function preloadVfx(): void {
 
 /* The textures are white with an alpha channel, so a tint is one "source-in"
  * fill over a copy — done once per texture+colour pair and kept, because doing
- * it per particle per frame is what makes sprite engines slow. */
+ * it per particle per frame is what makes sprite engines slow.
+ *
+ * Bounded, because the pairs multiply: RARITY_TINT alone resolves to eight
+ * distinct colours and six textures accept it, so an unbounded cache reaches
+ * ~60 entries after a user has seen every rarity band. Each entry is a
+ * 256x256 backing store (~256 KB), which is ~16 MB held for the life of the
+ * tab — not a leak, but not something to hand a mid-range phone either.
+ * Insertion-order eviction is enough: no single scene uses more than 13
+ * texture+colour pairs, so an in-flight effect can never evict its own
+ * entries and thrash. */
 const tinted = new Map<string, HTMLCanvasElement>();
+const MAX_TINTED = 32;
 
 function tint(image: HTMLImageElement, color: string): CanvasImageSource {
   const key = `${image.src}|${color}`;
@@ -80,31 +90,58 @@ function tint(image: HTMLImageElement, color: string): CanvasImageSource {
   octx.globalCompositeOperation = "source-in";
   octx.fillStyle = color;
   octx.fillRect(0, 0, off.width, off.height);
+
+  if (tinted.size >= MAX_TINTED) {
+    const oldest = tinted.keys().next();
+    if (!oldest.done) tinted.delete(oldest.value);
+  }
   tinted.set(key, off);
   return off;
 }
 
 /* ------------------------------------------------------------- canvas ---- */
 
-let canvas: HTMLCanvasElement | null = null;
-let ctx: CanvasRenderingContext2D | null = null;
+/* Two layers, not one.
+ *
+ * Most of what this engine draws is meant to be seen over everything on screen
+ * — a completion burst, the open flourish, a page sweep — so "front" sits at
+ * z-index 95, above even the drop-reveal card and the flourish overlay.
+ *
+ * But not all of it. The morning greeting is weather, not UI: D-036's F-1
+ * settled that its light must never paint over the quest list the user opened
+ * the app to read, which is why `.morning-light` is pinned at z-index -1 with
+ * a comment saying so. Its particle half has to obey the same rule, so it
+ * draws on "behind" — the same layer as the fixed atmosphere.
+ *
+ * (The halo under a high-rank reveal card is a third case and is not drawn
+ * here at all: it has to sit inside that card's own stacking context, so it
+ * lives in drop-reveal.tsx as CSS.) */
+export type VfxLayer = "behind" | "front";
+
+interface Layer {
+  canvas: HTMLCanvasElement | null;
+  ctx: CanvasRenderingContext2D | null;
+  readonly zIndex: string;
+}
+
+const layers: Record<VfxLayer, Layer> = {
+  behind: { canvas: null, ctx: null, zIndex: "-1" },
+  front: { canvas: null, ctx: null, zIndex: "95" },
+};
+
+const LAYER_NAMES: readonly VfxLayer[] = ["behind", "front"];
+
 let frame = 0;
 let lastFrameAt = 0;
 
-function ensureCanvas(): CanvasRenderingContext2D | null {
-  if (ctx) return ctx;
+function ensureLayer(name: VfxLayer): CanvasRenderingContext2D | null {
+  const layer = layers[name];
+  if (layer.ctx) return layer.ctx;
   if (typeof document === "undefined") return null;
 
   const element = document.createElement("canvas");
   element.setAttribute("aria-hidden", "true");
-  /* Above everything, deliberately. Every scene this engine draws is meant to
-   * be seen over whatever is on screen — including the drop-reveal card and the
-   * open-flourish overlay. The one effect that has to sit *behind* something
-   * (the halo under a high-rank reveal card) is not drawn here at all: it lives
-   * in that card's own stacking context as CSS, precisely so this canvas never
-   * has to negotiate z-index with a modal. */
-  element.style.cssText =
-    "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95";
+  element.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:${layer.zIndex}`;
   document.body.append(element);
 
   const context = element.getContext("2d");
@@ -112,36 +149,58 @@ function ensureCanvas(): CanvasRenderingContext2D | null {
     element.remove();
     return null;
   }
-  canvas = element;
-  ctx = context;
-  resize();
+  layer.canvas = element;
+  layer.ctx = context;
+  resizeLayer(layer);
+  /* One listener for both layers, added on the first canvas of a run and
+   * removed in teardown(); the `ctx` guard above makes double-adding
+   * impossible. */
   window.addEventListener("resize", resize, { passive: true });
-  return ctx;
+  return context;
+}
+
+function resizeLayer(layer: Layer): void {
+  if (!layer.canvas || !layer.ctx) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  layer.canvas.width = Math.floor(window.innerWidth * dpr);
+  layer.canvas.height = Math.floor(window.innerHeight * dpr);
+  layer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function resize(): void {
-  if (!canvas || !ctx) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.floor(window.innerWidth * dpr);
-  canvas.height = Math.floor(window.innerHeight * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  for (const name of LAYER_NAMES) resizeLayer(layers[name]);
 }
 
 function teardown(): void {
   if (frame) cancelAnimationFrame(frame);
   frame = 0;
   window.removeEventListener("resize", resize);
-  canvas?.remove();
-  canvas = null;
-  ctx = null;
+  for (const name of LAYER_NAMES) {
+    const layer = layers[name];
+    layer.canvas?.remove();
+    layer.canvas = null;
+    layer.ctx = null;
+  }
 }
 
 /* ---------------------------------------------------------- particles ---- */
+
+/* Who a particle belongs to, which decides whether it survives a screen
+ * unmount. A completion burst belongs to the screen that fired it and must not
+ * land on the next one. A page sweep is the opposite: BottomNav fires it and
+ * *then* navigates, so the screen being left would otherwise delete the very
+ * arrival effect that click just started — which is exactly what happened
+ * before this distinction existed, but only when leaving Home or /book (the
+ * two screens that register an unmount cleanup), so the sweep was present on
+ * two tabs and absent on the other two. */
+type ParticleOwner = "screen" | "global";
 
 interface Particle {
   texture: string;
   color: string;
   motion: VfxMotion;
+  layer: VfxLayer;
+  owner: ParticleOwner;
   x: number;
   y: number;
   vx: number;
@@ -171,8 +230,24 @@ const MAX_PARTICLES = 700;
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
-function spawn(emitter: VfxEmitter, originX: number, originY: number, tintColor: string): void {
+function spawn(
+  emitter: VfxEmitter,
+  originX: number,
+  originY: number,
+  tintColor: string,
+  layer: VfxLayer,
+  owner: ParticleOwner
+): void {
   const color = emitter.color === RARITY_TINT ? tintColor : emitter.color;
+  /* Only tumbling sprites get a random start angle. `expand` and `flash` draw
+   * one sprite whose whole job is its shape, and two of the textures are
+   * directional — flare.png is a horizontal anamorphic light bar, swirl.png a
+   * pair of crescent arcs. Both are used as the single streak in every page
+   * sweep and in the all-clear, with spin 0, so a random angle froze them
+   * there for life: the "horizontal flare across the middle" the scene
+   * promises was horizontal about one time in ninety, and each destination's
+   * arrival motif was unrecognisable from one visit to the next. */
+  const oriented = emitter.motion === "expand" || emitter.motion === "flash";
 
   for (let i = 0; i < emitter.count; i++) {
     const life = rand(emitter.life[0], emitter.life[1]);
@@ -180,6 +255,8 @@ function spawn(emitter: VfxEmitter, originX: number, originY: number, tintColor:
       texture: emitter.texture,
       color,
       motion: emitter.motion,
+      layer,
+      owner,
       x: originX,
       y: originY,
       vx: 0,
@@ -188,7 +265,7 @@ function spawn(emitter: VfxEmitter, originX: number, originY: number, tintColor:
       phase: Math.random() * Math.PI * 2,
       sizeFrom: rand(emitter.size[0], emitter.size[1]),
       sizeTo: rand(emitter.size[0], emitter.size[1]),
-      rotation: Math.random() * Math.PI * 2,
+      rotation: oriented ? 0 : Math.random() * Math.PI * 2,
       spin: rand(emitter.spin[0], emitter.spin[1]) * Math.PI * 2,
       opacity: emitter.opacity,
       delay: emitter.delayMs,
@@ -235,16 +312,18 @@ function envelope(motion: VfxMotion, progress: number): number {
 
 function step(now: number): void {
   frame = 0;
-  const context = ctx;
-  if (!context) return;
 
   const dt = Math.min((now - lastFrameAt) / 1000, 0.05);
   lastFrameAt = now;
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  context.clearRect(0, 0, width, height);
-  context.globalCompositeOperation = "lighter";
+  for (const name of LAYER_NAMES) {
+    const context = layers[name].ctx;
+    if (!context) continue;
+    context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = "lighter";
+  }
 
   for (let i = particles.length - 1; i >= 0; i--) {
     const particle = particles[i];
@@ -288,6 +367,9 @@ function step(now: number): void {
     const alpha = particle.opacity * envelope(particle.motion, progress);
     if (alpha <= 0.01) continue;
 
+    const context = layers[particle.layer].ctx;
+    if (!context) continue;
+
     context.globalAlpha = Math.min(alpha, 1);
     context.save();
     context.translate(particle.x, particle.y);
@@ -296,8 +378,12 @@ function step(now: number): void {
     context.restore();
   }
 
-  context.globalAlpha = 1;
-  context.globalCompositeOperation = "source-over";
+  for (const name of LAYER_NAMES) {
+    const context = layers[name].ctx;
+    if (!context) continue;
+    context.globalAlpha = 1;
+    context.globalCompositeOperation = "source-over";
+  }
 
   if (particles.length > 0) {
     frame = requestAnimationFrame(step);
@@ -314,38 +400,85 @@ function run(): void {
 
 /* ------------------------------------------------------------- public ---- */
 
-function play(scene: VfxScene, tintColor: string, point?: { x: number; y: number }): void {
+interface PlayOptions {
+  point?: { x: number; y: number };
+  layer?: VfxLayer;
+  owner?: ParticleOwner;
+}
+
+function play(scene: VfxScene, tintColor: string, options: PlayOptions = {}): void {
   if (typeof window === "undefined") return;
   /* The one invariant that holds for every scene, with no per-effect exception:
    * OS reduced-motion is an accessibility signal, and everything this engine
    * draws is motion. Individual `fire*` functions add their own preference
    * gate on top; none of them may weaken this one. */
   if (prefersReducedMotion()) return;
-  if (!ensureCanvas()) return;
 
+  const layer = options.layer ?? "front";
+  const owner = options.owner ?? "screen";
+  if (!ensureLayer(layer)) return;
+
+  const point = options.point;
   const originX =
     scene.origin === "point" ? (point?.x ?? window.innerWidth / 2) : scene.origin.x * window.innerWidth;
   const originY =
     scene.origin === "point" ? (point?.y ?? window.innerHeight / 2) : scene.origin.y * window.innerHeight;
 
-  for (const emitter of scene.emitters) spawn(emitter, originX, originY, tintColor);
+  for (const emitter of scene.emitters) {
+    spawn(emitter, originX, originY, tintColor, layer, owner);
+  }
   run();
 }
 
-/** Drop everything currently on screen. Called when a screen unmounts, so a
- * burst queued by one screen never lands on its successor. Unlike the old
+/** Drop everything currently on screen, including effects that would otherwise
+ * survive a navigation. For a deliberate supersede — a second /book entry
+ * tapped while the first is still drawing, or the open flourish being
+ * dismissed — where the old effect is genuinely finished with. Unlike the old
  * confetti canceller this needs no per-call-site handle: there is one engine,
  * and it owns every particle in the app. */
 export function cancelEffects(): void {
   particles.length = 0;
-  if (ctx && canvas) ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   teardown();
+}
+
+/** Drop only what the unmounting screen owns, leaving a page sweep the same
+ * click just fired alone. This is what a screen's unmount cleanup wants: the
+ * point is that *this screen's* burst must not land on its successor, not that
+ * the successor's own arrival effect should be cancelled on arrival. */
+export function cancelScreenEffects(): void {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (particles[i].owner === "screen") particles.splice(i, 1);
+  }
+  if (particles.length === 0) {
+    teardown();
+    return;
+  }
+  /* Something global is still drawing, so the canvases stay — but clear them
+   * now rather than leaving the cancelled sprites up until the next frame. */
+  for (const name of LAYER_NAMES) {
+    layers[name].ctx?.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  }
+}
+
+/* rAF stops while the tab is hidden, which leaves the last drawn frame sitting
+ * on a canvas that is never torn down — and, because dt is clamped, returning
+ * ten minutes later resumes the burst from where it froze and plays out the
+ * remainder as if no time had passed. Neither is what the user means by coming
+ * back to the app, so drop it. */
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.visibilityState === "hidden") cancelEffects();
+    },
+    { passive: true }
+  );
 }
 
 /** A glint under the finger, on every press. */
 export function fireTapSpark(x: number, y: number): void {
   if (!isEffectEnabled("tapSpark")) return;
-  play(TAP_SCENE, "#ffffff", { x, y });
+  play(TAP_SCENE, "#ffffff", { point: { x, y } });
 }
 
 /** Quest cleared / bounty claimed, scaled by the RARE 1-8 ladder. */
@@ -368,20 +501,25 @@ export function fireReplayEffect(rarity: number): void {
   play(replayScene(), rarityStyle(rarity).color);
 }
 
-/** The app-open flourish's particle half. */
+/** The app-open flourish's particle half. Global: it is mounted in the root
+ * layout and belongs to the session, not to whichever screen happens to be
+ * under it when the user navigates mid-flourish. */
 export function fireFlourishEffect(): void {
   if (!isEffectEnabled("openFlourish")) return;
-  play(FLOURISH_SCENE, "#fbbf24");
+  play(FLOURISH_SCENE, "#fbbf24", { owner: "global" });
 }
 
-/** The morning greeting's particle half. */
+/** The morning greeting's particle half. Drawn *behind* the content, matching
+ * `.morning-light`'s own z-index: -1 — F-1 (D-036) settled that this greeting
+ * must never paint over the quest list the user opened the app to read. */
 export function fireMorningEffect(): void {
   if (!isEffectEnabled("morningGreeting")) return;
-  play(MORNING_SCENE, "#fde68a");
+  play(MORNING_SCENE, "#fde68a", { layer: "behind" });
 }
 
-/** Punctuation on a page turn, themed by destination. */
+/** Punctuation on a page turn, themed by destination. Global: BottomNav fires
+ * this and then navigates, so it must outlive the screen being left. */
 export function firePageEffect(path: string): void {
   if (!isEffectEnabled("pageTransitions")) return;
-  play(pageScene(path), "#fde68a");
+  play(pageScene(path), "#fde68a", { owner: "global" });
 }

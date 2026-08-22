@@ -81,15 +81,22 @@ function ac(): AudioContext | null {
 
 const buffers = new Map<string, AudioBuffer>();
 const inflight = new Map<string, Promise<AudioBuffer | null>>();
-/** Sources whose fetch or decode failed. Never retried: a missing asset is a
- * build mistake (the cue-map test catches it), not a transient condition, and
- * retrying would hammer the network on every tap. */
-const failed = new Set<string>();
+/** Sources that are permanently unavailable — a 404, or audio data the browser
+ * cannot decode. Never retried: both mean a build mistake (the cue-map test
+ * catches the first), not a transient condition, and retrying would hammer the
+ * network on every tap.
+ *
+ * A network failure or a 5xx is deliberately NOT in here. This is a PWA whose
+ * first gesture kicks off all ~25 cue fetches at once, so one offline moment —
+ * opening the installed app on a train before the service worker has cached
+ * the audio — would otherwise blacklist the entire cue set and leave the app
+ * silent for the rest of the page-load even after signal came back. */
+const permanentlyFailed = new Set<string>();
 
 function load(audio: AudioContext, src: string): Promise<AudioBuffer | null> {
   const cached = buffers.get(src);
   if (cached) return Promise.resolve(cached);
-  if (failed.has(src)) return Promise.resolve(null);
+  if (permanentlyFailed.has(src)) return Promise.resolve(null);
 
   const pending = inflight.get(src);
   if (pending) return pending;
@@ -97,14 +104,24 @@ function load(audio: AudioContext, src: string): Promise<AudioBuffer | null> {
   const request = (async () => {
     try {
       const response = await fetch(`/audio/${src}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const buffer = await audio.decodeAudioData(await response.arrayBuffer());
-      buffers.set(src, buffer);
-      return buffer;
-    } catch (err) {
-      failed.add(src);
-      console.error(`[sound] could not load ${src}:`, err);
-      return null;
+      if (response.status === 404) {
+        permanentlyFailed.add(src);
+        console.error(`[sound] missing asset ${src}`);
+        return null;
+      }
+      if (!response.ok) return null; // 5xx / offline SW fallback — retry later.
+      const bytes = await response.arrayBuffer();
+      try {
+        const buffer = await audio.decodeAudioData(bytes);
+        buffers.set(src, buffer);
+        return buffer;
+      } catch (err) {
+        permanentlyFailed.add(src);
+        console.error(`[sound] could not decode ${src}:`, err);
+        return null;
+      }
+    } catch {
+      return null; // Network error. Transient by assumption; try again next press.
     } finally {
       inflight.delete(src);
     }
@@ -117,22 +134,34 @@ function load(audio: AudioContext, src: string): Promise<AudioBuffer | null> {
 /** Create and unlock the AudioContext inside the first user gesture, then warm
  * every cue in the background. Without the warm-up the first press of each
  * distinct control would play a beat late while its file downloads; the whole
- * set is well under a megabyte and the service worker caches it after that. */
+ * set is well under a megabyte and the service worker caches it after that.
+ *
+ * MUST be installed app-wide (PwaRegister, in the root layout), not from one
+ * screen. `unlocked` gates every cue and every haptic, so calling this from
+ * the home screen's mount effect left the app completely silent for the whole
+ * page-load whenever it was opened directly at /settings, /book, /all or
+ * /plant — a reload, a bookmark, or a home-screen shortcut.
+ *
+ * Both `pointerdown` and `keydown` count: a keyboard user pressing Enter on a
+ * button never fires a pointer event, and would otherwise get no sound and no
+ * haptics all session. */
 export function primeAudioOnFirstGesture(): void {
   if (typeof window === "undefined") return;
-  window.addEventListener(
-    "pointerdown",
-    () => {
-      // Set before the context work, and on `window` at the bubble phase, so a
-      // cue fired from the very same press's onClick handler is already allowed
-      // through — the first tap of a session should sound like every later one.
-      unlocked = true;
-      const audio = ac();
-      if (!audio) return;
-      for (const src of ALL_CUE_SOURCES) void load(audio, src);
-    },
-    { once: true, passive: true }
-  );
+
+  const unlock = () => {
+    // Set before the context work, and on `window` at the bubble phase, so a
+    // cue fired from the very same press's onClick handler is already allowed
+    // through — the first tap of a session should sound like every later one.
+    unlocked = true;
+    window.removeEventListener("pointerdown", unlock);
+    window.removeEventListener("keydown", unlock);
+    const audio = ac();
+    if (!audio) return;
+    for (const src of ALL_CUE_SOURCES) void load(audio, src);
+  };
+
+  window.addEventListener("pointerdown", unlock, { passive: true });
+  window.addEventListener("keydown", unlock, { passive: true });
 }
 
 function emit(audio: AudioContext, buffer: AudioBuffer, gain: number, startAt: number): void {
@@ -167,13 +196,16 @@ export function playCue(action: SoundAction): void {
   const cue = SOUND_CUES[action];
   if (!cue) return;
 
+  // Before the debounce bookkeeping: a cue that cannot play must not occupy
+  // its action's retrigger window.
+  if (!unlocked) return;
+
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
   if (now - (lastPlayedAt.get(action) ?? -Infinity) < RETRIGGER_MIN_MS) return;
   lastPlayedAt.set(action, now);
 
   if (cue.haptic !== null) haptic(cue.haptic);
 
-  if (!unlocked) return;
   const audio = ac();
   if (!audio) return;
 

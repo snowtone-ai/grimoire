@@ -34,9 +34,11 @@ import { playCue } from "@/lib/sound";
 import { cancelEffects, fireFlourishEffect } from "@/lib/vfx";
 
 const SESSION_KEY = "grimoire-flourish-shown";
-/* Long enough for the last of FLOURISH_SCENE's motes to clear (its slowest
- * start at 560ms and live up to 1.9s). Shorter, and the overlay would fade out
- * from under its own particles. */
+/* Long enough for the last of FLOURISH_SCENE's particles to clear. The
+ * longest-lived is the mote emitter: 460ms delay + up to 2400ms of life =
+ * 2860ms, so the margin here is 140ms, not much. Shorter, and the overlay
+ * would fade out from under its own particles — anyone retuning
+ * FLOURISH_SCENE needs to re-check this number against the mote emitter. */
 const AUTO_DISMISS_MS = 3000;
 const CLOSE_DURATION_MS = 400;
 

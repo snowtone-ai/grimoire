@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  cancelEffects,
+  cancelScreenEffects,
   fireAllClearEffect,
   fireCompletionEffect,
   fireMorningEffect,
@@ -33,7 +33,7 @@ import {
 import { todayDateString } from "@/lib/domain/task-date";
 import { withViewTransition } from "@/lib/view-transition";
 import { getTodayBountyClaims, grantDropForTask, type GrantResult } from "@/lib/rewardDb";
-import { playClear, playCue, primeAudioOnFirstGesture } from "@/lib/sound";
+import { playClear, playCue } from "@/lib/sound";
 import { isEffectEnabled } from "@/lib/fx";
 
 /** Set once the user has been asked about notifications, so the home screen
@@ -150,7 +150,6 @@ export function useHomeScreen() {
   }, [today]);
 
   useEffect(() => {
-    primeAudioOnFirstGesture();
     const fallback = setTimeout(() => setLoading(false), 1500);
     let morningTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -207,7 +206,7 @@ export function useHomeScreen() {
 
   // The effect canvas lives on document.body outside React, so leaving the
   // screen must take any burst still playing with it.
-  useEffect(() => cancelEffects, []);
+  useEffect(() => cancelScreenEffects, []);
 
   /* F-7 Must NOT: never ask for notification permission on first launch — ask
    * once the user has felt the app's value. The first all-quests-cleared moment
