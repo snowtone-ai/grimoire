@@ -7,4 +7,3 @@
 
 ## Escalation
 （なし）
-- 2026-08-23: budget wall hit; session ended by rate limit

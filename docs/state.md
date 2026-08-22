@@ -1,6 +1,35 @@
 # state.md
 
 ## Current
+- 2026-08-23: T044 (D-047) — 効果音とエフェクトを全廃し、vendored Kenney CC0
+  アセット上に作り直した。オーナー指示(任天堂のチーフクリエイター視点で
+  UI/UXを作り直せ)を受けた6項目のうち、動画素材(`素材/*.mp4`)の使用のみ
+  オーナー判断で見送り(v2用に保留)、残り5項目と整合性確認を実施。
+  - 音: D-022の合成エンジンを撤去し、14音のサンプラーへ
+    (`public/audio/cues/`、896KB)。3パックが3レイヤーを1つずつ担当
+    (Interface Sounds=触感、RPG Audio=世界、Music Jingles=報酬)。
+    「何がいつ鳴るか」は`src/lib/domain/sound-cues.ts`だけが決める。
+  - 絵: `canvas-confetti`を依存ごと削除し、Canvas 2D加算合成スプライト
+    エンジン(`src/lib/vfx.ts`、上限700粒、粒子が尽きるとcanvasごと
+    自己解体)へ。シーンは`src/lib/domain/vfx-scenes.ts`に純データで分離
+    (`public/vfx/`、13枚のwhite-alphaテクスチャ296KB)。
+  - 背景の光の粒子 13→44(3層・シード固定PRNG)。ここだけ意図的にCSSのまま
+    (常設レイヤーをcanvas化するとrAFが開きっぱなしになり電池を食う)。
+  - ページ遷移は遷移先ごとに別演出・別音。朝のあいさつ/起動演出も同基盤で
+    作り直し。6つのエフェクトトグルはオーナー指示で全て既定ONへ。
+  - 整合性確認(オーナー要求項目)はテストとブラウザ実機の両方で固定:
+    reduced-motionは全視覚エフェクトを例外なくoffにするが音・振動は
+    止めない(別トグル`fx-enabled`)、/bookリプレイは完了エフェクトの
+    トグルから独立し形も完了バーストと別(発射しない・落ちない)、
+    既定ON化で旧「しずか」ユーザーの選択が覆らないよう
+    `migrateFromIntensity()`が6キーすべてに明示値を書くよう修正。
+  - `pnpm verify`全合格(lint/typecheck/test 99件/build)。Playwright実機
+    スモークで0 console errors。ブラウザQAでのみ露見した実バグを1件修正
+    (suspended AudioContextは時計が進まないため初回ジェスチャ前のcueが
+    捨てられずキューされ、無関係なタップで数秒後にまとめて鳴っていた)。
+  - ブランチ`feat/aaa-fx-sound-overhaul`。Tier 1 fresh-context reviewer
+    (Opus 5)実施、PR作成。**マージはオーナー確認待ち** — mainへのマージは
+    家族が日常利用している本番環境へ自動デプロイされるため。
 - 2026-08-23: T043 (D-046) — オーナー指示で`main`をpm-zero v12.1(Section 16
   Frontend/UI Operating Layer)へ追随させた。CLAUDE.mdのバージョン表記・
   Tier 1条件・新設節、`scripts/setup.mjs`のUIツールauto-provisioning
@@ -12,8 +41,8 @@
   `main`側実装でのみ修正(grimore-v2側は対象外、shadcn未使用のため実害なし)。
   `scripts/setup.mjs`は2回実行して冪等性を確認、`node scripts/verify.mjs`
   全合格(lint/typecheck/test 82件/build)。ブランチ
-  `chore/main-v12-1-frontend-ui-layer`からPR作成、CI待ち・マージはオーナー
-  確認待ち。
+  `chore/main-v12-1-frontend-ui-layer`からPR作成。CI green後、PR #37として
+  squash-mergeされmainへ反映済み(9d7cd1b、2026-08-23)。
 - 2026-08-22: T042 (D-045) — オーナー指示で、grimore-v2ブランチ側でD-015/
   D-016として導入済みのKenney "Interface Sounds"(CC0、100件)を`main`側
   にも`public/audio/ui/`へ配置した。category/用途hint/再生時間を記録した
