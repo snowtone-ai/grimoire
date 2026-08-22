@@ -9,6 +9,8 @@ interface EventBase {
 
 export type CommittedDomainEvent =
   | (EventBase & Readonly<{ type: "taskCreated" }>)
+  | (EventBase & Readonly<{ type: "taskUpdated" }>)
+  | (EventBase & Readonly<{ type: "taskDeleted" }>)
   | (EventBase &
       Readonly<{
         type: "taskOccurrenceCompleted";

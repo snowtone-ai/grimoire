@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 
-const EMPTY_SUBSCRIBE = () => () => {}
+import { listenToMediaQuery, matchMediaSafely } from './media-query-listener'
 
 /**
  * Reads a media query and keeps following it. Server and first client render
@@ -11,16 +11,8 @@ const EMPTY_SUBSCRIBE = () => () => {}
  */
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
-    (onStoreChange) => {
-      if (typeof window === 'undefined' || !window.matchMedia) return EMPTY_SUBSCRIBE()
-      const list = window.matchMedia(query)
-      list.addEventListener('change', onStoreChange)
-      return () => list.removeEventListener('change', onStoreChange)
-    },
-    () => {
-      if (typeof window === 'undefined' || !window.matchMedia) return false
-      return window.matchMedia(query).matches
-    },
+    (onStoreChange) => listenToMediaQuery(matchMediaSafely(query), onStoreChange),
+    () => matchMediaSafely(query)?.matches ?? false,
     () => false,
   )
 }

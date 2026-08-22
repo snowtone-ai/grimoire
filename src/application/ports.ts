@@ -25,7 +25,13 @@ export interface IdFactory {
 export interface CommandReceiptRow<Result = unknown> {
   readonly schemaVersion: 1;
   readonly commandId: CommandId;
-  readonly kind: "createTask" | "completeTaskOccurrence" | "reopenTaskOccurrence";
+  readonly kind:
+    | "createTask"
+    | "updateTask"
+    | "deleteTask"
+    | "completeTaskOccurrence"
+    | "reopenTaskOccurrence"
+    | "importExternalTask";
   readonly payloadHash: PayloadHash;
   readonly result: Result;
   readonly committedAt: IsoInstant;
@@ -100,6 +106,29 @@ export interface SettingRow {
   readonly updatedAt: IsoInstant;
 }
 
+/** One observed record in the Grimo observation journal (決定事項ログ M-11/M-12). */
+export interface CreatureObservationRow {
+  readonly schemaVersion: 1;
+  /** Matches a `CreatureRecordDefinition.id` from `src/features/catalog/creature-records.ts`. */
+  readonly id: string;
+  readonly observedAt: IsoInstant;
+}
+
+/**
+ * De-duplication index for external imports (F-4/H-3): one row per external
+ * source item that has ever been imported, keyed so a second import of the
+ * same source item is recognized before a duplicate task is ever created.
+ */
+export interface ExternalTaskLinkRow {
+  readonly schemaVersion: 1;
+  /** `${provider}:${externalId}`, also the table's primary key. */
+  readonly id: string;
+  readonly provider: "google-calendar" | "gmail";
+  readonly externalId: string;
+  readonly taskId: TaskId;
+  readonly importedAt: IsoInstant;
+}
+
 export interface AtomicWriteTransaction {
   getCommandReceipt(commandId: CommandId): Promise<CommandReceiptRow | undefined>;
   addCommandReceipt(receipt: CommandReceiptRow): Promise<void>;
@@ -119,6 +148,11 @@ export interface AtomicWriteTransaction {
   putInventory(row: InventoryRow): Promise<void>;
   addDomainEvent(row: DomainEventRow): Promise<void>;
   addOutbox(row: OutboxRow): Promise<void>;
+  getExternalTaskLink(
+    provider: ExternalTaskLinkRow["provider"],
+    externalId: string,
+  ): Promise<ExternalTaskLinkRow | undefined>;
+  addExternalTaskLink(row: ExternalTaskLinkRow): Promise<void>;
 }
 
 export interface AtomicStore {
@@ -127,4 +161,53 @@ export interface AtomicStore {
 
 export interface RewardPolicy {
   draw(eventId: EventId): string;
+}
+
+/**
+ * Narrow ports the data layer depends on for browser notifications and Google
+ * linking. `src/integrations/**` (owned by a parallel workstream, T020) is
+ * expected to provide the real implementations; until one is injected, the
+ * composition root wires an honest "unavailable" default (never a throw, never
+ * a faked success) so the rest of the app can render without them.
+ */
+export type NotificationPermissionState = "default" | "denied" | "granted" | "unsupported";
+
+export interface NotificationIntegrationPort {
+  currentPermission(): NotificationPermissionState;
+  requestPermission(): Promise<NotificationPermissionState>;
+  scheduledCount(): number;
+}
+
+export type GoogleLinkScope = "calendar" | "gmail";
+
+export interface GoogleConnectionState {
+  readonly calendarConnected: boolean;
+  readonly gmailConnected: boolean;
+}
+
+/**
+ * One inbound item from an external source, already normalized to the shape
+ * the data layer expects. This is intentionally the same shape as
+ * `src/integrations/imported-item.ts`'s `ImportedScheduleItem` (T020's shared
+ * DTO for "every external import source") without importing it: `application`
+ * depends only on domain and abstract ports, and a structural match is enough
+ * for a real adapter to satisfy this port with zero translation.
+ */
+export interface ExternalScheduleItem {
+  readonly externalId: string;
+  readonly title: string;
+  readonly localDate: string;
+  readonly scheduledTime?: string;
+  readonly description?: string;
+}
+
+export interface GoogleIntegrationPort {
+  isConfigured(): boolean;
+  connectionState(): Promise<GoogleConnectionState>;
+  connect(scope: GoogleLinkScope): Promise<Readonly<{ connected: boolean; reason?: string }>>;
+  disconnect(scope: GoogleLinkScope): Promise<void>;
+  fetchCalendarEvents(
+    range: Readonly<{ fromLocalDate: string; toLocalDate: string }>,
+  ): Promise<readonly ExternalScheduleItem[]>;
+  fetchGmailItems(): Promise<readonly ExternalScheduleItem[]>;
 }

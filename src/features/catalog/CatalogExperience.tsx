@@ -17,6 +17,7 @@ import { CREATURE_RECORDS } from './creature-records'
 import { CATALOG_DEFINITIONS } from './definitions'
 import {
   CATALOG_CATEGORIES,
+  CATALOG_SCHEMA,
   resolveDiscoveredCatalog,
   type CatalogCategoryId,
   type DiscoveredCatalogEntry,
@@ -90,8 +91,15 @@ function ItemJournal({
   const [openEntry, setOpenEntry] = useState<DiscoveredCatalogEntry | null>(null)
   const play = useSound()
 
+  // The port's view carries no persistence schema — that is deliberate, it is
+  // a view — so the version the model validates against is restored here, at
+  // the one boundary where the two shapes meet.
   const resolved = useMemo(
-    () => resolveDiscoveredCatalog(CATALOG_DEFINITIONS, discoveries),
+    () =>
+      resolveDiscoveredCatalog(
+        CATALOG_DEFINITIONS,
+        discoveries.map((entry) => ({ ...entry, schema: CATALOG_SCHEMA })),
+      ),
     [discoveries],
   )
 

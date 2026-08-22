@@ -9,6 +9,22 @@ import type {
 
 export type InvalidDatePolicy = "clamp" | "skip";
 
+/**
+ * Task classification, carried over from v1 unchanged (決定事項ログ F-4). This is
+ * the domain's own copy of the id set: `src/app/ui-port.ts` defines a UI-facing
+ * `TaskCategoryId` with the same literal values on purpose, not by importing this
+ * type, so a domain refactor cannot silently change what a form may submit.
+ */
+export type CategoryId = "job" | "life" | "university";
+
+const CATEGORY_IDS: ReadonlySet<CategoryId> = new Set(["job", "life", "university"]);
+
+export function validateCategoryId(value: CategoryId | null): CategoryId | null {
+  if (value === null) return null;
+  if (!CATEGORY_IDS.has(value)) throw new RangeError("Category ID is invalid");
+  return value;
+}
+
 export type RecurrenceRule =
   | Readonly<{ frequency: "daily"; interval: number }>
   | Readonly<{ frequency: "weekly"; interval: number; weekdays: readonly Weekday[] }>
@@ -41,6 +57,7 @@ export interface TaskRecord {
   readonly seriesId: SeriesId;
   readonly title: string;
   readonly description?: string;
+  readonly categoryId: CategoryId | null;
   readonly schedule: TaskSchedule;
   readonly recurrence: RecurrenceRule | null;
   readonly status: "active" | "tombstone";

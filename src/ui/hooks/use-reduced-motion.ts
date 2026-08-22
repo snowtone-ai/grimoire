@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from 'react'
 
+import { listenToMediaQuery, matchMediaSafely } from './media-query-listener'
+
 /**
  * Whether motion should be suppressed right now.
  *
@@ -20,14 +22,16 @@ function readReducedMotion(): boolean {
   const setting = document.documentElement.dataset.motion
   if (setting === 'reduced') return true
   if (setting === 'full') return false
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  return matchMediaSafely('(prefers-reduced-motion: reduce)')?.matches ?? false
 }
 
 function subscribe(onStoreChange: () => void): () => void {
   if (typeof window === 'undefined') return () => {}
 
-  const list = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-  list?.addEventListener('change', onStoreChange)
+  const stopListening = listenToMediaQuery(
+    matchMediaSafely('(prefers-reduced-motion: reduce)'),
+    onStoreChange,
+  )
 
   // The in-app override is an attribute, so it needs an observer rather than a
   // media-query listener: nothing else notifies us when the user flips it.
@@ -37,7 +41,7 @@ function subscribe(onStoreChange: () => void): () => void {
   })
 
   return () => {
-    list?.removeEventListener('change', onStoreChange)
+    stopListening()
     observer.disconnect()
   }
 }
