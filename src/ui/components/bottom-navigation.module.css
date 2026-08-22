@@ -64,19 +64,23 @@
   );
 }
 
+/* The mark keeps its width and is scaled, not resized: animating `width` makes
+   the browser lay the capsule out again on every frame of a navigation, which
+   is the one moment it is already busy. */
 .currentMark {
   position: absolute;
   bottom: 0.375rem;
-  width: 0;
+  width: 0.875rem;
   height: 0.0625rem;
   border-radius: var(--radius-round);
   background: currentcolor;
   opacity: 0.55;
-  transition: width var(--duration-feedback) var(--ease-settle);
+  transform: scaleX(0);
+  transition: transform var(--duration-feedback) var(--ease-settle);
 }
 
 .destination[data-current] .currentMark {
-  width: 0.875rem;
+  transform: scaleX(1);
 }
 
 /* Spreads from the point that was touched, then dissolves. */
