@@ -180,11 +180,6 @@ export interface NotificationIntegrationPort {
 
 export type GoogleLinkScope = "calendar" | "gmail";
 
-export interface GoogleConnectionState {
-  readonly calendarConnected: boolean;
-  readonly gmailConnected: boolean;
-}
-
 /**
  * One inbound item from an external source, already normalized to the shape
  * the data layer expects. This is intentionally the same shape as
@@ -203,7 +198,6 @@ export interface ExternalScheduleItem {
 
 export interface GoogleIntegrationPort {
   isConfigured(): boolean;
-  connectionState(): Promise<GoogleConnectionState>;
   connect(scope: GoogleLinkScope): Promise<Readonly<{ connected: boolean; reason?: string }>>;
   disconnect(scope: GoogleLinkScope): Promise<void>;
   fetchCalendarEvents(

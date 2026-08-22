@@ -3,6 +3,7 @@ import type {
   AtomicWriteTransaction,
   CommandReceiptRow,
   DomainEventRow,
+  ExternalTaskLinkRow,
   GrowthLedgerRow,
   InventoryRow,
   OutboxRow,
@@ -78,6 +79,17 @@ class DexieWriteTransaction implements AtomicWriteTransaction {
   async addOutbox(row: OutboxRow): Promise<void> {
     await this.database.outbox.add(row);
   }
+
+  getExternalTaskLink(
+    provider: ExternalTaskLinkRow["provider"],
+    externalId: string,
+  ): Promise<ExternalTaskLinkRow | undefined> {
+    return this.database.externalTaskLinks.get(`${provider}:${externalId}`);
+  }
+
+  async addExternalTaskLink(row: ExternalTaskLinkRow): Promise<void> {
+    await this.database.externalTaskLinks.add(row);
+  }
 }
 
 export class DexieAtomicStore implements AtomicStore {
@@ -95,6 +107,7 @@ export class DexieAtomicStore implements AtomicStore {
         this.database.rewardLedger,
         this.database.growthLedger,
         this.database.inventory,
+        this.database.externalTaskLinks,
       ],
       async () => operation(new DexieWriteTransaction(this.database)),
     );

@@ -9,7 +9,13 @@ import {
   type IanaTimeZone,
 } from '@/domain/primitives'
 import { isoWeekday, makeOccurrenceKey, monthlyRecurrence } from '@/domain/recurrence'
-import { normalizeTaskDescription, normalizeTaskTitle, type TaskRecord } from '@/domain/tasks'
+import {
+  normalizeTaskDescription,
+  normalizeTaskTitle,
+  validateCategoryId,
+  type CategoryId,
+  type TaskRecord,
+} from '@/domain/tasks'
 
 import type { GrimoireDatabase } from './schema'
 
@@ -25,6 +31,8 @@ interface LegacyTask {
   readonly id: string
   readonly title: string
   readonly description?: string
+  /** v1's `category` field (決定事項ログ F-4: carried over unchanged, never dropped). */
+  readonly category: CategoryId
   readonly dueDate: string
   readonly dueTime: string | null
   readonly completed: boolean
@@ -116,11 +124,16 @@ function normalizeLegacyTask(value: unknown, index: number): LegacyTask {
     throw new TypeError('旧タスクの繰り返し設定が不正です。')
   }
   if (typeof source.completed !== 'boolean') throw new TypeError('旧タスクの完了状態が不正です。')
+  const category = source.category
+  if (category !== 'job' && category !== 'university' && category !== 'life') {
+    throw new TypeError('旧タスクの分類が不正です。')
+  }
   const description = optionalString(source, 'description')
   return Object.freeze({
     id: requiredString(source, 'id', index),
     title: requiredString(source, 'title', index),
     ...(description === undefined ? {} : { description }),
+    category,
     dueDate: requiredString(source, 'dueDate', index),
     dueTime,
     completed: source.completed,
@@ -161,6 +174,7 @@ async function convertedTask(
     seriesId: seriesId(`migration:${stableHash.slice(0, 32)}`),
     title: normalizeTaskTitle(legacy.title),
     ...(description === undefined ? {} : { description }),
+    categoryId: validateCategoryId(legacy.category),
     schedule: Object.freeze({ localDate: date, localTime: time, timeZone }),
     recurrence: recurrenceFor(legacy, date),
     status: 'active',

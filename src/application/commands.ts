@@ -22,7 +22,9 @@ import {
 import {
   normalizeTaskDescription,
   normalizeTaskTitle,
+  validateCategoryId,
   validateRecurrenceRule,
+  type CategoryId,
   type RecurrenceRule,
   type TaskRecord,
 } from "../domain/tasks";
@@ -33,6 +35,7 @@ export interface CreateTaskPayload {
   readonly seriesId: SeriesId;
   readonly title: string;
   readonly description?: string;
+  readonly categoryId: CategoryId | null;
   readonly schedule: Readonly<{
     localDate: LocalDate;
     localTime: LocalTime;
@@ -52,6 +55,75 @@ export interface CreateTaskResult {
   readonly taskId: TaskId;
   readonly eventId: ReturnType<typeof eventId>;
   readonly rewardItemId: string;
+}
+
+export interface UpdateTaskPayload {
+  readonly taskId: TaskId;
+  readonly title: string;
+  readonly description?: string;
+  readonly categoryId: CategoryId | null;
+  readonly schedule: Readonly<{
+    localDate: LocalDate;
+    localTime: LocalTime;
+    timeZone: IanaTimeZone;
+  }>;
+  readonly recurrence: RecurrenceRule | null;
+}
+
+export interface UpdateTaskCommand {
+  readonly kind: "updateTask";
+  readonly commandId: CommandId;
+  readonly payloadHash: PayloadHash;
+  readonly payload: UpdateTaskPayload;
+}
+
+export interface UpdateTaskResult {
+  readonly taskId: TaskId;
+  readonly eventId: ReturnType<typeof eventId>;
+}
+
+export interface DeleteTaskPayload {
+  readonly taskId: TaskId;
+}
+
+export interface DeleteTaskCommand {
+  readonly kind: "deleteTask";
+  readonly commandId: CommandId;
+  readonly payloadHash: PayloadHash;
+  readonly payload: DeleteTaskPayload;
+}
+
+export interface DeleteTaskResult {
+  readonly taskId: TaskId;
+  readonly deleted: boolean;
+}
+
+export type ExternalTaskProvider = "google-calendar" | "gmail";
+
+export interface ImportExternalTaskPayload {
+  readonly taskId: TaskId;
+  readonly seriesId: SeriesId;
+  readonly provider: ExternalTaskProvider;
+  readonly externalId: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly schedule: Readonly<{
+    localDate: LocalDate;
+    localTime: LocalTime;
+    timeZone: IanaTimeZone;
+  }>;
+}
+
+export interface ImportExternalTaskCommand {
+  readonly kind: "importExternalTask";
+  readonly commandId: CommandId;
+  readonly payloadHash: PayloadHash;
+  readonly payload: ImportExternalTaskPayload;
+}
+
+export interface ImportExternalTaskResult {
+  readonly taskId: TaskId;
+  readonly deduplicated: boolean;
 }
 
 export interface CompleteTaskOccurrencePayload {
@@ -91,8 +163,11 @@ export interface ReopenTaskOccurrenceResult {
 
 type TaskCommand =
   | CreateTaskCommand
+  | UpdateTaskCommand
+  | DeleteTaskCommand
   | CompleteTaskOccurrenceCommand
-  | ReopenTaskOccurrenceCommand;
+  | ReopenTaskOccurrenceCommand
+  | ImportExternalTaskCommand;
 
 function snapshotRecurrence(rule: RecurrenceRule | null): RecurrenceRule | null {
   if (rule === null) return null;
@@ -138,12 +213,69 @@ function snapshotCreateTaskCommand(command: CreateTaskCommand): CreateTaskComman
       ...(command.payload.description === undefined
         ? {}
         : { description: command.payload.description }),
+      categoryId: command.payload.categoryId,
       schedule: Object.freeze({
         localDate: command.payload.schedule.localDate,
         localTime: command.payload.schedule.localTime,
         timeZone: command.payload.schedule.timeZone,
       }),
       recurrence: snapshotRecurrence(command.payload.recurrence),
+    }),
+  });
+}
+
+function snapshotUpdateTaskCommand(command: UpdateTaskCommand): UpdateTaskCommand {
+  return Object.freeze({
+    kind: command.kind,
+    commandId: command.commandId,
+    payloadHash: command.payloadHash,
+    payload: Object.freeze({
+      taskId: command.payload.taskId,
+      title: command.payload.title,
+      ...(command.payload.description === undefined
+        ? {}
+        : { description: command.payload.description }),
+      categoryId: command.payload.categoryId,
+      schedule: Object.freeze({
+        localDate: command.payload.schedule.localDate,
+        localTime: command.payload.schedule.localTime,
+        timeZone: command.payload.schedule.timeZone,
+      }),
+      recurrence: snapshotRecurrence(command.payload.recurrence),
+    }),
+  });
+}
+
+function snapshotDeleteTaskCommand(command: DeleteTaskCommand): DeleteTaskCommand {
+  return Object.freeze({
+    kind: command.kind,
+    commandId: command.commandId,
+    payloadHash: command.payloadHash,
+    payload: Object.freeze({ taskId: command.payload.taskId }),
+  });
+}
+
+function snapshotImportExternalTaskCommand(
+  command: ImportExternalTaskCommand,
+): ImportExternalTaskCommand {
+  return Object.freeze({
+    kind: command.kind,
+    commandId: command.commandId,
+    payloadHash: command.payloadHash,
+    payload: Object.freeze({
+      taskId: command.payload.taskId,
+      seriesId: command.payload.seriesId,
+      provider: command.payload.provider,
+      externalId: command.payload.externalId,
+      title: command.payload.title,
+      ...(command.payload.description === undefined
+        ? {}
+        : { description: command.payload.description }),
+      schedule: Object.freeze({
+        localDate: command.payload.schedule.localDate,
+        localTime: command.payload.schedule.localTime,
+        timeZone: command.payload.schedule.timeZone,
+      }),
     }),
   });
 }
@@ -220,6 +352,7 @@ export class TaskCommandService {
     await assertPayloadHash(snapshot, this.hasher);
     const title = normalizeTaskTitle(snapshot.payload.title);
     const description = normalizeTaskDescription(snapshot.payload.description);
+    const categoryId = validateCategoryId(snapshot.payload.categoryId);
     const recurrence = validateRecurrenceRule(snapshot.payload.recurrence);
     assertRecurrenceStart(snapshot.payload.schedule, recurrence);
     if (snapshot.payload.taskId.startsWith("migration:")) {
@@ -245,6 +378,7 @@ export class TaskCommandService {
         seriesId: snapshot.payload.seriesId,
         title,
         ...(description === undefined ? {} : { description }),
+        categoryId,
         schedule: snapshot.payload.schedule,
         recurrence,
         status: "active",
@@ -290,6 +424,297 @@ export class TaskCommandService {
         attempts: 0,
         createdAt: committedAt,
       });
+      await transaction.addCommandReceipt({
+        schemaVersion: 1,
+        commandId: snapshot.commandId,
+        kind: snapshot.kind,
+        payloadHash: snapshot.payloadHash,
+        result,
+        committedAt,
+      });
+      return result;
+    });
+  }
+
+  /**
+   * Replaces every editable field of an active task. The draft always carries
+   * the form's complete intended state (never a partial patch — see
+   * `TaskEditor.tsx`), so an absent `description` here means "clear it," not
+   * "leave it." `seriesId`, `createdAt`, `origin`, `status`, and
+   * `firstCompletedAt` are the task's identity and history and are preserved
+   * unchanged; H-2's exactly-once reward settlement is keyed by `taskId`, not
+   * by schedule, so editing the schedule cannot re-trigger or lose a reward.
+   */
+  async updateTask(command: UpdateTaskCommand): Promise<UpdateTaskResult> {
+    const snapshot = snapshotUpdateTaskCommand(command);
+    await assertPayloadHash(snapshot, this.hasher);
+    const title = normalizeTaskTitle(snapshot.payload.title);
+    const description = normalizeTaskDescription(snapshot.payload.description);
+    const categoryId = validateCategoryId(snapshot.payload.categoryId);
+    const recurrence = validateRecurrenceRule(snapshot.payload.recurrence);
+    assertRecurrenceStart(snapshot.payload.schedule, recurrence);
+
+    return this.store.write(async (transaction) => {
+      const prior = readReceipt<UpdateTaskResult>(
+        await transaction.getCommandReceipt(snapshot.commandId),
+        snapshot,
+      );
+      if (prior) return prior;
+
+      const task = await transaction.getTask(snapshot.payload.taskId);
+      if (!task || task.status !== "active") {
+        throw new ApplicationError("TASK_NOT_FOUND", "Task does not exist or is deleted");
+      }
+
+      const committedAt = this.clock.now();
+      const updatedEventId = eventId(`event:${snapshot.commandId}:task-updated`);
+      const updatedEvent: CommittedDomainEvent = Object.freeze({
+        schemaVersion: 1,
+        type: "taskUpdated",
+        eventId: updatedEventId,
+        taskId: task.id,
+        committedAt,
+      });
+      const updatedTask: TaskRecord = Object.freeze({
+        schemaVersion: 1,
+        id: task.id,
+        seriesId: task.seriesId,
+        title,
+        ...(description === undefined ? {} : { description }),
+        categoryId,
+        schedule: snapshot.payload.schedule,
+        recurrence,
+        status: "active",
+        ...(task.firstCompletedAt === undefined ? {} : { firstCompletedAt: task.firstCompletedAt }),
+        createdAt: task.createdAt,
+        updatedAt: committedAt,
+        origin: task.origin,
+      });
+
+      await transaction.putTask(updatedTask);
+      await transaction.addDomainEvent({
+        schemaVersion: 1,
+        eventId: updatedEventId,
+        event: updatedEvent,
+        committedAt,
+      });
+      await transaction.addOutbox({
+        schemaVersion: 1,
+        eventId: updatedEventId,
+        event: updatedEvent,
+        state: "pending",
+        attempts: 0,
+        createdAt: committedAt,
+      });
+
+      const result = Object.freeze({ taskId: task.id, eventId: updatedEventId });
+      await transaction.addCommandReceipt({
+        schemaVersion: 1,
+        commandId: snapshot.commandId,
+        kind: snapshot.kind,
+        payloadHash: snapshot.payloadHash,
+        result,
+        committedAt,
+      });
+      return result;
+    });
+  }
+
+  /**
+   * Soft-deletes an active task into a tombstone, consistent with the outbox/
+   * sync design (D-010): nothing is hard-deleted, so a future sync provider
+   * can still observe and converge on the deletion. Deleting an
+   * already-tombstoned task is idempotent and does not re-emit an event.
+   * Reward/growth ledgers are untouched — a deletion never revokes earned value.
+   */
+  async deleteTask(command: DeleteTaskCommand): Promise<DeleteTaskResult> {
+    const snapshot = snapshotDeleteTaskCommand(command);
+    await assertPayloadHash(snapshot, this.hasher);
+
+    return this.store.write(async (transaction) => {
+      const prior = readReceipt<DeleteTaskResult>(
+        await transaction.getCommandReceipt(snapshot.commandId),
+        snapshot,
+      );
+      if (prior) return prior;
+
+      const task = await transaction.getTask(snapshot.payload.taskId);
+      if (!task) {
+        throw new ApplicationError("TASK_NOT_FOUND", "Task does not exist or is deleted");
+      }
+      const committedAt = this.clock.now();
+
+      if (task.status === "tombstone") {
+        const duplicateResult = Object.freeze({ taskId: task.id, deleted: false });
+        await transaction.addCommandReceipt({
+          schemaVersion: 1,
+          commandId: snapshot.commandId,
+          kind: snapshot.kind,
+          payloadHash: snapshot.payloadHash,
+          result: duplicateResult,
+          committedAt,
+        });
+        return duplicateResult;
+      }
+
+      const deletedEventId = eventId(`event:${snapshot.commandId}:task-deleted`);
+      const deletedEvent: CommittedDomainEvent = Object.freeze({
+        schemaVersion: 1,
+        type: "taskDeleted",
+        eventId: deletedEventId,
+        taskId: task.id,
+        committedAt,
+      });
+      const tombstone: TaskRecord = Object.freeze({
+        schemaVersion: 1,
+        id: task.id,
+        seriesId: task.seriesId,
+        title: task.title,
+        ...(task.description === undefined ? {} : { description: task.description }),
+        categoryId: task.categoryId,
+        schedule: task.schedule,
+        recurrence: task.recurrence,
+        status: "tombstone",
+        ...(task.firstCompletedAt === undefined ? {} : { firstCompletedAt: task.firstCompletedAt }),
+        createdAt: task.createdAt,
+        updatedAt: committedAt,
+        origin: task.origin,
+      });
+
+      await transaction.putTask(tombstone);
+      await transaction.addDomainEvent({
+        schemaVersion: 1,
+        eventId: deletedEventId,
+        event: deletedEvent,
+        committedAt,
+      });
+      await transaction.addOutbox({
+        schemaVersion: 1,
+        eventId: deletedEventId,
+        event: deletedEvent,
+        state: "pending",
+        attempts: 0,
+        createdAt: committedAt,
+      });
+
+      const result = Object.freeze({ taskId: task.id, deleted: true });
+      await transaction.addCommandReceipt({
+        schemaVersion: 1,
+        commandId: snapshot.commandId,
+        kind: snapshot.kind,
+        payloadHash: snapshot.payloadHash,
+        result,
+        committedAt,
+      });
+      return result;
+    });
+  }
+
+  /**
+   * Creates a task from an external source (Google Calendar / Gmail),
+   * de-duplicated by `(provider, externalId)` rather than by `commandId`:
+   * separate import runs mint separate command IDs, so commandId-based receipt
+   * idempotency alone would not catch "already imported this on a previous
+   * click" (F-4/H-3). The dedup check and the task/reward/event/outbox/link
+   * writes commit in the same transaction, so a crash cannot leave a link
+   * without its task or a task without its link.
+   */
+  async importExternalTask(command: ImportExternalTaskCommand): Promise<ImportExternalTaskResult> {
+    const snapshot = snapshotImportExternalTaskCommand(command);
+    await assertPayloadHash(snapshot, this.hasher);
+    const title = normalizeTaskTitle(snapshot.payload.title);
+    const description = normalizeTaskDescription(snapshot.payload.description);
+    if (snapshot.payload.taskId.startsWith("migration:")) {
+      throw new ApplicationError("CONSTRAINT", "Native task ID uses a reserved migration prefix");
+    }
+
+    return this.store.write(async (transaction) => {
+      const prior = readReceipt<ImportExternalTaskResult>(
+        await transaction.getCommandReceipt(snapshot.commandId),
+        snapshot,
+      );
+      if (prior) return prior;
+
+      const existingLink = await transaction.getExternalTaskLink(
+        snapshot.payload.provider,
+        snapshot.payload.externalId,
+      );
+      const committedAt = this.clock.now();
+      if (existingLink) {
+        const duplicateResult = Object.freeze({ taskId: existingLink.taskId, deduplicated: true });
+        await transaction.addCommandReceipt({
+          schemaVersion: 1,
+          commandId: snapshot.commandId,
+          kind: snapshot.kind,
+          payloadHash: snapshot.payloadHash,
+          result: duplicateResult,
+          committedAt,
+        });
+        return duplicateResult;
+      }
+
+      const createdEventId = eventId(`task:${snapshot.payload.taskId}:created:v1`);
+      const rewardItemId = this.rewardPolicy.draw(createdEventId);
+      if (rewardItemId.length === 0) {
+        throw new ApplicationError("CONSTRAINT", "Reward policy returned an empty item ID");
+      }
+      const task: TaskRecord = Object.freeze({
+        schemaVersion: 1,
+        id: snapshot.payload.taskId,
+        seriesId: snapshot.payload.seriesId,
+        title,
+        ...(description === undefined ? {} : { description }),
+        categoryId: null,
+        schedule: snapshot.payload.schedule,
+        recurrence: null,
+        status: "active",
+        createdAt: committedAt,
+        updatedAt: committedAt,
+        origin: "import",
+      });
+      const committedEvent = Object.freeze({
+        schemaVersion: 1 as const,
+        type: "taskCreated" as const,
+        eventId: createdEventId,
+        taskId: task.id,
+        committedAt,
+      });
+
+      await transaction.addTask(task);
+      await transaction.addReward({
+        schemaVersion: 1,
+        id: createdEventId,
+        taskId: task.id,
+        eventId: createdEventId,
+        kind: "created",
+        itemId: rewardItemId,
+        committedAt,
+      });
+      await incrementInventory(transaction, rewardItemId, committedAt);
+      await transaction.addDomainEvent({
+        schemaVersion: 1,
+        eventId: createdEventId,
+        event: committedEvent,
+        committedAt,
+      });
+      await transaction.addOutbox({
+        schemaVersion: 1,
+        eventId: createdEventId,
+        event: committedEvent,
+        state: "pending",
+        attempts: 0,
+        createdAt: committedAt,
+      });
+      await transaction.addExternalTaskLink({
+        schemaVersion: 1,
+        id: `${snapshot.payload.provider}:${snapshot.payload.externalId}`,
+        provider: snapshot.payload.provider,
+        externalId: snapshot.payload.externalId,
+        taskId: task.id,
+        importedAt: committedAt,
+      });
+
+      const result = Object.freeze({ taskId: task.id, deduplicated: false });
       await transaction.addCommandReceipt({
         schemaVersion: 1,
         commandId: snapshot.commandId,
@@ -574,4 +999,25 @@ export async function hashReopenTaskOccurrenceCommand(
   hasher: CanonicalHasher,
 ): Promise<PayloadHash> {
   return hasher.hash(canonicalCommandPayload(command as ReopenTaskOccurrenceCommand));
+}
+
+export async function hashUpdateTaskCommand(
+  command: Omit<UpdateTaskCommand, "payloadHash">,
+  hasher: CanonicalHasher,
+): Promise<PayloadHash> {
+  return hasher.hash(canonicalCommandPayload(command as UpdateTaskCommand));
+}
+
+export async function hashDeleteTaskCommand(
+  command: Omit<DeleteTaskCommand, "payloadHash">,
+  hasher: CanonicalHasher,
+): Promise<PayloadHash> {
+  return hasher.hash(canonicalCommandPayload(command as DeleteTaskCommand));
+}
+
+export async function hashImportExternalTaskCommand(
+  command: Omit<ImportExternalTaskCommand, "payloadHash">,
+  hasher: CanonicalHasher,
+): Promise<PayloadHash> {
+  return hasher.hash(canonicalCommandPayload(command as ImportExternalTaskCommand));
 }

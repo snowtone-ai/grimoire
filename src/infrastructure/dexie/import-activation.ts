@@ -50,6 +50,8 @@ export function inspectImportReferences(collections: ExportCollections): ImportD
   checkDuplicates('$.collections.growthLedger', collections.growthLedger.map((row) => row.id))
   checkDuplicates('$.collections.inventory', collections.inventory.map((row) => row.itemId))
   checkDuplicates('$.collections.settings', collections.settings.map((row) => row.key))
+  checkDuplicates('$.collections.creatureObservations', collections.creatureObservations.map((row) => row.id))
+  checkDuplicates('$.collections.externalTaskLinks', collections.externalTaskLinks.map((row) => row.id))
 
   const requireTask = (taskId: string, path: string) => {
     if (!taskIds.has(taskId)) {
@@ -89,6 +91,16 @@ export function inspectImportReferences(collections: ExportCollections): ImportD
   collections.growthLedger.forEach((row, index) => {
     requireTask(row.taskId, `$.collections.growthLedger[${index}].taskId`)
     requireEvent(row.eventId, `$.collections.growthLedger[${index}].eventId`)
+  })
+  collections.externalTaskLinks.forEach((row, index) => {
+    requireTask(row.taskId, `$.collections.externalTaskLinks[${index}].taskId`)
+    if (row.id !== `${row.provider}:${row.externalId}`) {
+      issues.push({
+        code: 'ORPHAN_REFERENCE',
+        path: `$.collections.externalTaskLinks[${index}].id`,
+        message: 'idがprovider/externalIdと一致しません。',
+      })
+    }
   })
 
   const rewardProjection = new Map<string, { quantity: number; first: string; last: string }>()
@@ -145,6 +157,8 @@ async function currentCollections(database: GrimoireDatabase): Promise<ExportCol
     growthLedger: await database.growthLedger.toArray(),
     inventory: await database.inventory.toArray(),
     settings: await database.settings.toArray(),
+    creatureObservations: await database.creatureObservations.toArray(),
+    externalTaskLinks: await database.externalTaskLinks.toArray(),
   }
 }
 
@@ -205,6 +219,8 @@ export async function activateStagedImport(
         database.growthLedger,
         database.inventory,
         database.settings,
+        database.creatureObservations,
+        database.externalTaskLinks,
         database.importRuns,
       ],
       async () => {
@@ -218,6 +234,8 @@ export async function activateStagedImport(
           database.growthLedger.clear(),
           database.inventory.clear(),
           database.settings.clear(),
+          database.creatureObservations.clear(),
+          database.externalTaskLinks.clear(),
         ])
         await database.tasks.bulkAdd([...collections.tasks])
         await database.taskOccurrences.bulkAdd([...collections.taskOccurrences])
@@ -228,6 +246,8 @@ export async function activateStagedImport(
         await database.growthLedger.bulkAdd([...collections.growthLedger])
         await database.inventory.bulkAdd([...collections.inventory])
         await database.settings.bulkAdd([...collections.settings])
+        await database.creatureObservations.bulkAdd([...collections.creatureObservations])
+        await database.externalTaskLinks.bulkAdd([...collections.externalTaskLinks])
         await database.importRuns.update(context.runId, { status: 'active', updatedAt: context.now })
       },
     )

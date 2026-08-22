@@ -1,6 +1,8 @@
 import type {
   CommandReceiptRow,
+  CreatureObservationRow,
   DomainEventRow,
+  ExternalTaskLinkRow,
   GrowthLedgerRow,
   InventoryRow,
   OutboxRow,
@@ -21,6 +23,8 @@ export const EXPORT_COLLECTION_NAMES = [
   "growthLedger",
   "inventory",
   "settings",
+  "creatureObservations",
+  "externalTaskLinks",
 ] as const;
 
 export type ExportCollectionName = (typeof EXPORT_COLLECTION_NAMES)[number];
@@ -35,6 +39,8 @@ export interface ExportCollections {
   readonly growthLedger: readonly GrowthLedgerRow[];
   readonly inventory: readonly InventoryRow[];
   readonly settings: readonly SettingRow[];
+  readonly creatureObservations: readonly CreatureObservationRow[];
+  readonly externalTaskLinks: readonly ExternalTaskLinkRow[];
 }
 export type ExportManifest = Readonly<
   Record<ExportCollectionName, Readonly<{ count: number; sha256: PayloadHash }>>

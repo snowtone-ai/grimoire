@@ -1,7 +1,9 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
   CommandReceiptRow,
+  CreatureObservationRow,
   DomainEventRow,
+  ExternalTaskLinkRow,
   GrowthLedgerRow,
   InventoryRow,
   OutboxRow,
@@ -12,7 +14,7 @@ import type {
 import type { EventId, IsoInstant, TaskId } from "../../domain/primitives";
 import type { TaskRecord } from "../../domain/tasks";
 
-export const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 3;
 
 export const DATABASE_V1_STORES = Object.freeze({
   tasks:
@@ -102,6 +104,9 @@ export interface LocalSnapshotRow {
   readonly verifiedAt?: IsoInstant;
 }
 
+/** categoryId did not exist before v3; every pre-v3 task row backfills to `null` (never dropped). */
+type PreCategoryTaskRecord = Omit<TaskRecord, "categoryId">;
+
 export class GrimoireDatabase extends Dexie {
   tasks!: EntityTable<TaskRecord, "id">;
   taskOccurrences!: EntityTable<TaskOccurrenceRow, "id">;
@@ -119,11 +124,13 @@ export class GrimoireDatabase extends Dexie {
   importRuns!: EntityTable<ImportRunRow, "id">;
   importStaging!: EntityTable<ImportStagingRow, "id">;
   localSnapshots!: EntityTable<LocalSnapshotRow, "id">;
+  creatureObservations!: EntityTable<CreatureObservationRow, "id">;
+  externalTaskLinks!: EntityTable<ExternalTaskLinkRow, "id">;
 
   constructor(name = "GrimoireDB") {
     super(name);
     this.version(1).stores(DATABASE_V1_STORES);
-    this.version(DATABASE_VERSION)
+    this.version(2)
       .stores({ inventory: DATABASE_V1_STORES.inventory })
       .upgrade(async (transaction) => {
         const rewardTable = transaction.table<RewardLedgerRow, string>("rewardLedger");
@@ -155,6 +162,16 @@ export class GrimoireDatabase extends Dexie {
             };
           }),
         );
+      });
+    this.version(DATABASE_VERSION)
+      .stores({
+        creatureObservations: "id",
+        externalTaskLinks: "id,taskId,[provider+externalId]",
+      })
+      .upgrade(async (transaction) => {
+        const tasksTable = transaction.table<PreCategoryTaskRecord, string>("tasks");
+        const tasks = await tasksTable.toArray();
+        await tasksTable.bulkPut(tasks.map((task) => ({ ...task, categoryId: null })));
       });
   }
 }

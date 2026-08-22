@@ -34,6 +34,8 @@ function exportCollections(): ExportCollections {
     rewardLedger: [],
     growthLedger: [],
     inventory: [],
+    creatureObservations: [],
+    externalTaskLinks: [],
     settings: [
       {
         schemaVersion: 1,
@@ -54,6 +56,7 @@ function exportCollectionsWithTask(): ExportCollections {
         id: taskId("task-import-1"),
         seriesId: seriesId("series-import-1"),
         title: "検証対象",
+        categoryId: null,
         schedule: {
           localDate: localDate("2026-08-19"),
           localTime: localTime("09:00"),

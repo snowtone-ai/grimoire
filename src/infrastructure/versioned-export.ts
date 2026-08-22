@@ -135,6 +135,10 @@ function isRecurrenceRule(value: unknown): value is RecurrenceRule | null {
   }
 }
 
+function isCategoryId(value: unknown): boolean {
+  return value === null || value === "job" || value === "life" || value === "university";
+}
+
 function isTaskRecord(value: unknown): boolean {
   if (
     !hasExactKeys(
@@ -144,6 +148,7 @@ function isTaskRecord(value: unknown): boolean {
         "id",
         "seriesId",
         "title",
+        "categoryId",
         "schedule",
         "recurrence",
         "status",
@@ -157,6 +162,7 @@ function isTaskRecord(value: unknown): boolean {
     !parsesString(value.id, taskId) ||
     !parsesString(value.seriesId, seriesId) ||
     typeof value.title !== "string" ||
+    !isCategoryId(value.categoryId) ||
     (value.status !== "active" && value.status !== "tombstone") ||
     (value.origin !== "native" && value.origin !== "migration" && value.origin !== "import") ||
     !parsesString(value.createdAt, isoInstant) ||
@@ -234,6 +240,27 @@ function isCommandResult(kind: unknown, value: unknown): boolean {
       isNonEmptyString(value.rewardItemId)
     );
   }
+  if (kind === "updateTask") {
+    return (
+      hasExactKeys(value, ["taskId", "eventId"]) &&
+      parsesString(value.taskId, taskId) &&
+      parsesString(value.eventId, eventId)
+    );
+  }
+  if (kind === "deleteTask") {
+    return (
+      hasExactKeys(value, ["taskId", "deleted"]) &&
+      parsesString(value.taskId, taskId) &&
+      typeof value.deleted === "boolean"
+    );
+  }
+  if (kind === "importExternalTask") {
+    return (
+      hasExactKeys(value, ["taskId", "deduplicated"]) &&
+      parsesString(value.taskId, taskId) &&
+      typeof value.deduplicated === "boolean"
+    );
+  }
   if (kind === "completeTaskOccurrence") {
     return (
       hasExactKeys(
@@ -278,8 +305,11 @@ function isCommandReceiptRecord(value: unknown): boolean {
     value.schemaVersion === 1 &&
     parsesString(value.commandId, commandId) &&
     (value.kind === "createTask" ||
+      value.kind === "updateTask" ||
+      value.kind === "deleteTask" ||
       value.kind === "completeTaskOccurrence" ||
-      value.kind === "reopenTaskOccurrence") &&
+      value.kind === "reopenTaskOccurrence" ||
+      value.kind === "importExternalTask") &&
     parsesString(value.payloadHash, payloadHash) &&
     isCommandResult(value.kind, value.result) &&
     parsesString(value.committedAt, isoInstant)
@@ -298,7 +328,7 @@ function isCommittedEvent(
   ) {
     return false;
   }
-  if (value.type === "taskCreated") {
+  if (value.type === "taskCreated" || value.type === "taskUpdated" || value.type === "taskDeleted") {
     return hasExactKeys(value, ["schemaVersion", "type", "eventId", "taskId", "committedAt"]);
   }
   if (value.type === "taskOccurrenceCompleted" || value.type === "taskOccurrenceReopened") {
@@ -439,6 +469,28 @@ function isSettingRecord(value: unknown): boolean {
   );
 }
 
+function isCreatureObservationRecord(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["schemaVersion", "id", "observedAt"]) &&
+    value.schemaVersion === 1 &&
+    isNonEmptyString(value.id) &&
+    parsesString(value.observedAt, isoInstant)
+  );
+}
+
+function isExternalTaskLinkRecord(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["schemaVersion", "id", "provider", "externalId", "taskId", "importedAt"]) &&
+    value.schemaVersion === 1 &&
+    isNonEmptyString(value.id) &&
+    (value.provider === "google-calendar" || value.provider === "gmail") &&
+    isNonEmptyString(value.externalId) &&
+    value.id === `${value.provider}:${value.externalId}` &&
+    parsesString(value.taskId, taskId) &&
+    parsesString(value.importedAt, isoInstant)
+  );
+}
+
 const RECORD_VALIDATORS: Readonly<Record<ExportCollectionName, (value: unknown) => boolean>> = {
   tasks: isTaskRecord,
   taskOccurrences: isTaskOccurrenceRecord,
@@ -449,6 +501,8 @@ const RECORD_VALIDATORS: Readonly<Record<ExportCollectionName, (value: unknown) 
   growthLedger: isGrowthRecord,
   inventory: isInventoryRecord,
   settings: isSettingRecord,
+  creatureObservations: isCreatureObservationRecord,
+  externalTaskLinks: isExternalTaskLinkRecord,
 };
 
 function hasRequiredRecordFields(collection: ExportCollectionName, value: unknown): boolean {

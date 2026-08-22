@@ -3,11 +3,21 @@
 import {
   hashCompleteTaskOccurrenceCommand,
   hashCreateTaskCommand,
+  hashDeleteTaskCommand,
+  hashImportExternalTaskCommand,
   hashReopenTaskOccurrenceCommand,
+  hashUpdateTaskCommand,
   TaskCommandService,
+  type ExternalTaskProvider,
 } from '@/application/commands'
 import type { ExportCollections, ValidatedImport } from '@/application/import-export'
-import type { Clock, SettingRow } from '@/application/ports'
+import type {
+  Clock,
+  ExternalScheduleItem,
+  GoogleIntegrationPort,
+  NotificationIntegrationPort,
+  SettingRow,
+} from '@/application/ports'
 import {
   commandId,
   ianaTimeZone,
@@ -16,11 +26,14 @@ import {
   localTime,
   seriesId,
   taskId,
+  type OccurrenceKey,
+  type TaskId,
 } from '@/domain/primitives'
 import { isTaskOccurrence, makeOccurrenceKey, nextOccurrenceDate } from '@/domain/recurrence'
 import { StableWeightedRewardPolicy } from '@/domain/rewards'
 import type { TaskRecord } from '@/domain/tasks'
 import { CATALOG_DEFINITIONS, CATALOG_REWARD_POOL } from '@/features/catalog/definitions'
+import { CREATURE_RECORDS, CREATURE_RECORDS_BY_ID } from '@/features/catalog/creature-records'
 import { WebCryptoCanonicalHasher } from '@/infrastructure/canonical-json'
 import {
   activateStagedImport,
@@ -35,13 +48,19 @@ import {
   requestPersistentStorageFromUserGesture,
 } from '@/infrastructure/storage-health'
 import { buildExportEnvelope, validateImportEnvelope } from '@/infrastructure/versioned-export'
+import { DEFAULT_AREA_ID, findArea } from '@/world/areas'
 
 import type {
   AppReadModel,
   AppUiPort,
   CalendarEntryView,
+  CreatureObservationView,
+  ExternalImportResultView,
+  GoogleLinkView,
+  NotificationView,
   PreferenceView,
   RewardNoticeView,
+  TaskDraft,
   TaskRowView,
 } from './ui-port'
 import { projectCatalogDiscoveries } from './catalog-projection'
@@ -58,11 +77,41 @@ export interface DurableUiPortDiagnostics {
   readonly onTaskProjectionRebuild?: (taskCount: number) => void
 }
 
+/**
+ * Narrow integration ports the composition root may inject (決定事項ログ D-013/6,
+ * T020's `src/integrations/**`). Left unset, `DurableUiPort` falls back to an
+ * honest "unavailable" implementation — never a throw, never a faked success.
+ */
+export interface DurableUiPortIntegrations {
+  readonly google?: GoogleIntegrationPort
+  readonly notifications?: NotificationIntegrationPort
+}
+
 const DATABASE_NAME = 'GrimoireDB'
 const LEGACY_DATABASE_NAME = 'TaskManagerDB'
 const APP_VERSION = '0.1.0'
 const ALL_DAY_SENTINEL = '00:00'
 const MAX_IMPORT_BYTES = 50 * 1_024 * 1_024
+const UNAVAILABLE_GOOGLE_REASON = 'Google連携は未設定です。'
+const EMPTY_OCCURRENCE_KEYS: ReadonlySet<OccurrenceKey> = Object.freeze(new Set<OccurrenceKey>())
+
+const WORLD_AREA_SETTING_KEY = 'world:selected-area-id'
+const OBSERVATIONS_READ_AT_SETTING_KEY = 'world:observations-read-at'
+const NOTIFICATIONS_ENABLED_SETTING_KEY = 'preference:notifications-enabled'
+
+const NULL_GOOGLE_INTEGRATION_PORT: GoogleIntegrationPort = Object.freeze({
+  isConfigured: () => false,
+  connect: async () => Object.freeze({ connected: false, reason: UNAVAILABLE_GOOGLE_REASON }),
+  disconnect: async () => undefined,
+  fetchCalendarEvents: async () => Object.freeze([]),
+  fetchGmailItems: async () => Object.freeze([]),
+})
+
+const NULL_NOTIFICATION_PORT: NotificationIntegrationPort = Object.freeze({
+  currentPermission: () => 'unsupported' as const,
+  requestPermission: async () => 'unsupported' as const,
+  scheduledCount: () => 0,
+})
 
 const DEFAULT_PREFERENCES: PreferenceView = Object.freeze({
   bgmEnabled: true,
@@ -72,12 +121,37 @@ const DEFAULT_PREFERENCES: PreferenceView = Object.freeze({
   splashMode: 'timed',
 })
 
+/**
+ * Every defined observation record, unobserved. Unlike the item catalog,
+ * silhouettes are the correct default — the whole roster is always present
+ * (決定事項ログ M-11), just with `observedAt: null` until something records it.
+ */
+function projectCreatureObservations(
+  rows: readonly Readonly<{ id: string; observedAt: string }>[],
+): readonly CreatureObservationView[] {
+  const observedById = new Map(rows.map((row) => [row.id, row.observedAt]))
+  return Object.freeze(
+    CREATURE_RECORDS.map((record) =>
+      Object.freeze({ id: record.id, observedAt: observedById.get(record.id) ?? null }),
+    ),
+  )
+}
+
 const DEFAULT_MODEL: AppReadModel = Object.freeze({
   bootstrap: Object.freeze({ phase: '端末内データ', status: 'loading' }),
   calendarEntries: Object.freeze([]),
   catalogDiscoveries: Object.freeze([]),
+  creatureObservations: projectCreatureObservations([]),
+  googleLink: Object.freeze({
+    calendarConnected: false,
+    configured: false,
+    gmailConnected: false,
+    lastCalendarImportAt: null,
+    lastGmailImportAt: null,
+  }),
   migrationAvailable: false,
   migrationNoticeVisible: false,
+  notifications: Object.freeze({ enabled: false, permission: 'unsupported', scheduledCount: 0 }),
   preferences: DEFAULT_PREFERENCES,
   rewardNotice: null,
   storageHealth: Object.freeze({
@@ -89,6 +163,7 @@ const DEFAULT_MODEL: AppReadModel = Object.freeze({
     usageBytes: null,
   }),
   tasksToday: Object.freeze([]),
+  world: Object.freeze({ selectedAreaId: DEFAULT_AREA_ID, unreadObservationCount: 0 }),
 })
 
 const preferenceKeys = {
@@ -170,6 +245,10 @@ function optionalInstant(rows: readonly SettingRow[], key: string): string | nul
   }
 }
 
+function settingValue(rows: readonly SettingRow[], key: string): unknown {
+  return rows.find((row) => row.key === key)?.value
+}
+
 async function legacyDatabaseExists(): Promise<boolean> {
   if (typeof indexedDB.databases !== 'function') return false
   try {
@@ -192,10 +271,26 @@ function downloadJson(envelope: unknown, exportedAt: string): void {
   URL.revokeObjectURL(url)
 }
 
+interface GoogleSessionState {
+  readonly calendarConnected: boolean
+  readonly gmailConnected: boolean
+  readonly lastCalendarImportAt: string | null
+  readonly lastGmailImportAt: string | null
+}
+
+const EMPTY_GOOGLE_SESSION: GoogleSessionState = Object.freeze({
+  calendarConnected: false,
+  gmailConnected: false,
+  lastCalendarImportAt: null,
+  lastGmailImportAt: null,
+})
+
 export class DurableUiPort implements AppUiPort {
   private readonly listeners = new Set<() => void>()
   private readonly hasher = new WebCryptoCanonicalHasher()
   private readonly pendingImports = new Map<string, ValidatedImport>()
+  private readonly google: GoogleIntegrationPort
+  private readonly notificationPort: NotificationIntegrationPort
   private database: GrimoireDatabase | null = null
   private commands: TaskCommandService | null = null
   private initialization: Promise<void> | null = null
@@ -206,11 +301,16 @@ export class DurableUiPort implements AppUiPort {
   private projectionDate: string | null = null
   private projectionDirty = true
   private model: AppReadModel = DEFAULT_MODEL
+  private googleSession: GoogleSessionState = EMPTY_GOOGLE_SESSION
 
   constructor(
     private readonly databaseName = DATABASE_NAME,
     private readonly diagnostics: DurableUiPortDiagnostics = {},
-  ) {}
+    integrations: DurableUiPortIntegrations = {},
+  ) {
+    this.google = integrations.google ?? NULL_GOOGLE_INTEGRATION_PORT
+    this.notificationPort = integrations.notifications ?? NULL_NOTIFICATION_PORT
+  }
 
   getSnapshot = (): AppReadModel => this.model
 
@@ -248,10 +348,9 @@ export class DurableUiPort implements AppUiPort {
     await this.initialize()
   }
 
-  async createTodayTask({ title }: { readonly title: string }): Promise<void> {
+  async createTask(draft: TaskDraft): Promise<void> {
     const database = this.requireDatabase()
     const commands = this.requireCommands()
-    const now = new Date()
     const rawTaskId = taskId(randomId('task'))
     const rawSeriesId = seriesId(randomId('series'))
     const timeZone = ianaTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
@@ -261,13 +360,15 @@ export class DurableUiPort implements AppUiPort {
       payload: {
         taskId: rawTaskId,
         seriesId: rawSeriesId,
-        title,
+        title: draft.title,
+        ...(draft.description === undefined ? {} : { description: draft.description }),
+        categoryId: draft.categoryId,
         schedule: {
-          localDate: localDate(formatLocalDate(now)),
-          localTime: localTime(ALL_DAY_SENTINEL),
+          localDate: localDate(draft.localDate),
+          localTime: localTime(draft.scheduledTime ?? ALL_DAY_SENTINEL),
           timeZone,
         },
-        recurrence: null,
+        recurrence: draft.recurrence,
       },
     }
     const result = await commands.createTask({
@@ -285,6 +386,59 @@ export class DurableUiPort implements AppUiPort {
     await this.recordLastWrite()
     await this.refresh()
     this.presentReward(rewardNotice)
+  }
+
+  async updateTask({
+    draft,
+    taskId: rawTaskId,
+  }: {
+    readonly draft: TaskDraft
+    readonly taskId: string
+  }): Promise<void> {
+    const database = this.requireDatabase()
+    const commands = this.requireCommands()
+    const timeZone = ianaTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+    const commandWithoutHash = {
+      kind: 'updateTask' as const,
+      commandId: commandId(randomId('command')),
+      payload: {
+        taskId: taskId(rawTaskId),
+        title: draft.title,
+        ...(draft.description === undefined ? {} : { description: draft.description }),
+        categoryId: draft.categoryId,
+        schedule: {
+          localDate: localDate(draft.localDate),
+          localTime: localTime(draft.scheduledTime ?? ALL_DAY_SENTINEL),
+          timeZone,
+        },
+        recurrence: draft.recurrence,
+      },
+    }
+    await commands.updateTask({
+      ...commandWithoutHash,
+      payloadHash: await hashUpdateTaskCommand(commandWithoutHash, this.hasher),
+    })
+    const updatedTask = await database.tasks.get(commandWithoutHash.payload.taskId)
+    if (updatedTask) this.replaceActiveTask(updatedTask)
+    await this.recordLastWrite()
+    await this.refresh()
+  }
+
+  async deleteTask({ taskId: rawTaskId }: { readonly taskId: string }): Promise<void> {
+    const commands = this.requireCommands()
+    const target = taskId(rawTaskId)
+    const commandWithoutHash = {
+      kind: 'deleteTask' as const,
+      commandId: commandId(randomId('command')),
+      payload: { taskId: target },
+    }
+    await commands.deleteTask({
+      ...commandWithoutHash,
+      payloadHash: await hashDeleteTaskCommand(commandWithoutHash, this.hasher),
+    })
+    this.removeActiveTask(target)
+    await this.recordLastWrite()
+    await this.refresh()
   }
 
   async setTaskCompleted({
@@ -400,6 +554,120 @@ export class DurableUiPort implements AppUiPort {
     if (this.database) await this.refresh()
   }
 
+  async markObservationsRead(): Promise<void> {
+    const database = this.requireDatabase()
+    const updatedAt = systemClock.now()
+    await database.settings.put({
+      schemaVersion: 1,
+      key: OBSERVATIONS_READ_AT_SETTING_KEY,
+      value: updatedAt,
+      updatedAt,
+    })
+    await this.refresh()
+  }
+
+  async selectArea({ areaId }: { readonly areaId: string }): Promise<void> {
+    const database = this.requireDatabase()
+    const updatedAt = systemClock.now()
+    await database.settings.put({
+      schemaVersion: 1,
+      key: WORLD_AREA_SETTING_KEY,
+      value: findArea(areaId).id,
+      updatedAt,
+    })
+    await this.refresh()
+  }
+
+  /**
+   * Not part of `AppUiPort`: the Grimo screen that would trigger an
+   * observation (決定事項ログ M-12) has no creature to render yet (D-014). This
+   * is the durable persistence path a future screen wires up, exercised
+   * directly by tests today the same way `setTaskCompleted` exercises commands.
+   */
+  async recordCreatureObservation(recordId: string): Promise<void> {
+    if (!CREATURE_RECORDS_BY_ID.has(recordId)) {
+      throw new Error('未定義の観察記録IDです。')
+    }
+    const database = this.requireDatabase()
+    const existing = await database.creatureObservations.get(recordId)
+    if (existing) return
+    const observedAt = systemClock.now()
+    await database.creatureObservations.put({ schemaVersion: 1, id: recordId, observedAt })
+    await this.recordLastWrite()
+    await this.refresh()
+  }
+
+  async requestNotificationPermission(): Promise<NotificationView['permission']> {
+    const permission = await this.notificationPort.requestPermission()
+    await this.refresh()
+    return permission
+  }
+
+  async setNotificationsEnabled(enabled: boolean): Promise<void> {
+    const database = this.requireDatabase()
+    const updatedAt = systemClock.now()
+    await database.settings.put({
+      schemaVersion: 1,
+      key: NOTIFICATIONS_ENABLED_SETTING_KEY,
+      value: enabled,
+      updatedAt,
+    })
+    await this.refresh()
+  }
+
+  async connectGoogle(scope: 'calendar' | 'gmail'): Promise<{
+    readonly connected: boolean
+    readonly reason?: string
+  }> {
+    const result = await this.google.connect(scope)
+    if (result.connected) {
+      this.googleSession = Object.freeze({
+        ...this.googleSession,
+        ...(scope === 'calendar' ? { calendarConnected: true } : { gmailConnected: true }),
+      })
+      this.emit()
+    }
+    return result
+  }
+
+  async disconnectGoogle(scope: 'calendar' | 'gmail'): Promise<void> {
+    await this.google.disconnect(scope)
+    this.googleSession = Object.freeze({
+      ...this.googleSession,
+      ...(scope === 'calendar' ? { calendarConnected: false } : { gmailConnected: false }),
+    })
+    this.emit()
+  }
+
+  async importFromGoogleCalendar({
+    fromLocalDate,
+    toLocalDate,
+  }: {
+    readonly fromLocalDate: string
+    readonly toLocalDate: string
+  }): Promise<ExternalImportResultView> {
+    return this.importExternal('google-calendar', () =>
+      this.google.fetchCalendarEvents({ fromLocalDate, toLocalDate }),
+    )
+  }
+
+  async importFromGmail(): Promise<ExternalImportResultView> {
+    return this.importExternal('gmail', () => this.google.fetchGmailItems())
+  }
+
+  async acknowledgeMigrationNotice(): Promise<void> {
+    const database = this.requireDatabase()
+    const updatedAt = systemClock.now()
+    await database.settings.put({
+      schemaVersion: 1,
+      key: 'migration:legacy-notice-dismissed',
+      value: true,
+      updatedAt,
+    })
+    this.model = { ...this.model, migrationNoticeVisible: false }
+    this.emit()
+  }
+
   async migrateLegacyData(): Promise<{
     readonly migrated: boolean
     readonly migratedTaskCount: number
@@ -436,6 +704,8 @@ export class DurableUiPort implements AppUiPort {
         growthLedger: await database.growthLedger.toArray(),
         inventory: await database.inventory.toArray(),
         settings: await database.settings.toArray(),
+        creatureObservations: await database.creatureObservations.toArray(),
+        externalTaskLinks: await database.externalTaskLinks.toArray(),
       }
       const exportedAt = systemClock.now()
       const timeZone = ianaTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
@@ -557,17 +827,74 @@ export class DurableUiPort implements AppUiPort {
     }
   }
 
-  async acknowledgeMigrationNotice(): Promise<void> {
-    const database = this.requireDatabase()
-    const updatedAt = systemClock.now()
-    await database.settings.put({
-      schemaVersion: 1,
-      key: 'migration:legacy-notice-dismissed',
-      value: true,
-      updatedAt,
+  private async importExternal(
+    provider: ExternalTaskProvider,
+    fetchItems: () => Promise<readonly ExternalScheduleItem[]>,
+  ): Promise<ExternalImportResultView> {
+    if (!this.google.isConfigured()) {
+      return { cancelled: false, imported: 0, reason: UNAVAILABLE_GOOGLE_REASON, skipped: 0 }
+    }
+    const commands = this.requireCommands()
+    let items: readonly ExternalScheduleItem[]
+    try {
+      items = await fetchItems()
+    } catch (cause) {
+      return {
+        cancelled: false,
+        imported: 0,
+        reason: cause instanceof Error ? cause.message : '取り込みに失敗しました。',
+        skipped: 0,
+      }
+    }
+    const timeZone = ianaTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+    let imported = 0
+    let skipped = 0
+    for (const item of items) {
+      try {
+        const commandWithoutHash = {
+          kind: 'importExternalTask' as const,
+          commandId: commandId(randomId('command')),
+          payload: {
+            taskId: taskId(randomId('task')),
+            seriesId: seriesId(randomId('series')),
+            provider,
+            externalId: item.externalId,
+            title: item.title,
+            ...(item.description === undefined ? {} : { description: item.description }),
+            schedule: {
+              localDate: localDate(item.localDate),
+              localTime: localTime(item.scheduledTime ?? ALL_DAY_SENTINEL),
+              timeZone,
+            },
+          },
+        }
+        const result = await commands.importExternalTask({
+          ...commandWithoutHash,
+          payloadHash: await hashImportExternalTaskCommand(commandWithoutHash, this.hasher),
+        })
+        if (result.deduplicated) skipped += 1
+        else imported += 1
+      } catch {
+        // One malformed upstream item must not abort an otherwise-good import
+        // batch (F-4/H-3): `imported`/`skipped` stay accurate for what
+        // actually committed, instead of failing the whole run.
+      }
+    }
+    const importedAt = systemClock.now()
+    this.googleSession = Object.freeze({
+      ...this.googleSession,
+      ...(provider === 'google-calendar'
+        ? { lastCalendarImportAt: importedAt }
+        : { lastGmailImportAt: importedAt }),
     })
-    this.model = { ...this.model, migrationNoticeVisible: false }
-    this.emit()
+    if (imported > 0) {
+      await this.recordLastWrite()
+      this.activeTasks = null
+      await this.refresh(false, true)
+    } else {
+      this.emit()
+    }
+    return { cancelled: false, imported, skipped }
   }
 
   private async openDatabase(): Promise<void> {
@@ -603,22 +930,41 @@ export class DurableUiPort implements AppUiPort {
     const taskQuery = shouldQueryTasks
       ? database.tasks.where('status').equals('active').toArray()
       : Promise.resolve(this.activeTasks ?? Object.freeze([]))
-    const [tasks, occurrences, inventory, settings, pendingOperations, storage, legacyExists] =
-      await Promise.all([
-        taskQuery,
-        database.taskOccurrences.where('localDate').equals(today).toArray(),
-        database.inventory.toArray(),
-        database.settings.toArray(),
-        database.outbox.where('state').anyOf('pending', 'processing').count(),
-        inspectStorageHealth(navigator.storage),
-        legacyDatabaseExists(),
-      ])
+    const [
+      tasks,
+      todayOccurrences,
+      rangeOccurrences,
+      inventory,
+      settings,
+      observationRows,
+      pendingOperations,
+      storage,
+      legacyExists,
+    ] = await Promise.all([
+      taskQuery,
+      database.taskOccurrences.where('localDate').equals(today).toArray(),
+      database.taskOccurrences
+        .where('localDate')
+        .between(this.calendarRange.from, this.calendarRange.to, true, true)
+        .toArray(),
+      database.inventory.toArray(),
+      database.settings.toArray(),
+      database.creatureObservations.toArray(),
+      database.outbox.where('state').anyOf('pending', 'processing').count(),
+      inspectStorageHealth(navigator.storage),
+      legacyDatabaseExists(),
+    ])
     if (reloadTasks || this.activeTasks === null) {
       this.activeTasks = Object.freeze(tasks)
       this.projectionDirty = true
     }
-    const completed = new Set(
-      occurrences
+    const completedToday = new Set(
+      todayOccurrences
+        .filter((occurrence) => occurrence.status === 'completed')
+        .map((occurrence) => occurrence.occurrenceKey),
+    )
+    const completedInRange = new Set(
+      rangeOccurrences
         .filter((occurrence) => occurrence.status === 'completed')
         .map((occurrence) => occurrence.occurrenceKey),
     )
@@ -627,7 +973,7 @@ export class DurableUiPort implements AppUiPort {
       const calendarEntries: CalendarEntryView[] = []
       const todayTasks: TodayTaskProjection[] = []
       for (const task of tasks) {
-        const projection = this.projectTask(task, today)
+        const projection = this.projectTask(task, today, completedInRange)
         calendarEntries.push(...projection.calendarEntries)
         if (projection.todayTask) todayTasks.push(projection.todayTask)
       }
@@ -638,22 +984,45 @@ export class DurableUiPort implements AppUiPort {
       this.diagnostics.onTaskProjectionRebuild?.(tasks.length)
     }
     const tasksToday = this.todayProjection.map(({ occurrenceKey: key, row }) =>
-      Object.freeze({ ...row, completed: completed.has(key) }))
+      Object.freeze({ ...row, completed: completedToday.has(key) }))
     const preferences = preferencesFromRows(settings)
     const catalogDiscoveries = projectCatalogDiscoveries(inventory)
+    const creatureObservations = projectCreatureObservations(observationRows)
     const noticeDismissed =
       settings.find((row) => row.key === 'migration:legacy-notice-dismissed')?.value === true
     const migrationCompleted =
       settings.find((row) => row.key === 'migration:legacy-completed')?.value === true
     const migrationAvailable = legacyExists && !migrationCompleted
+    const storedAreaId = settingValue(settings, WORLD_AREA_SETTING_KEY)
+    const selectedAreaId = typeof storedAreaId === 'string' ? findArea(storedAreaId).id : DEFAULT_AREA_ID
+    const readAtValue = settingValue(settings, OBSERVATIONS_READ_AT_SETTING_KEY)
+    const readAt = typeof readAtValue === 'string' ? readAtValue : ''
+    const unreadObservationCount = observationRows.filter(
+      (row) => (row.observedAt as string) > readAt,
+    ).length
+    const notificationsEnabled = settingValue(settings, NOTIFICATIONS_ENABLED_SETTING_KEY) === true
+    const googleLink: GoogleLinkView = Object.freeze({
+      calendarConnected: this.googleSession.calendarConnected,
+      configured: this.google.isConfigured(),
+      gmailConnected: this.googleSession.gmailConnected,
+      lastCalendarImportAt: this.googleSession.lastCalendarImportAt,
+      lastGmailImportAt: this.googleSession.lastGmailImportAt,
+    })
     this.model = Object.freeze({
       bootstrap: markReady || this.model.bootstrap.status === 'ready'
         ? Object.freeze({ status: 'ready' as const })
         : this.model.bootstrap,
       calendarEntries: this.calendarProjection,
       catalogDiscoveries: Object.freeze(catalogDiscoveries),
+      creatureObservations,
+      googleLink,
       migrationAvailable,
       migrationNoticeVisible: migrationAvailable && !noticeDismissed,
+      notifications: Object.freeze({
+        enabled: notificationsEnabled,
+        permission: this.notificationPort.currentPermission(),
+        scheduledCount: this.notificationPort.scheduledCount(),
+      }),
       preferences,
       rewardNotice: this.model.rewardNotice,
       storageHealth: Object.freeze({
@@ -670,6 +1039,7 @@ export class DurableUiPort implements AppUiPort {
         usageBytes: storage.usageBytes ?? null,
       }),
       tasksToday: Object.freeze(tasksToday),
+      world: Object.freeze({ selectedAreaId, unreadObservationCount }),
     })
     window.localStorage.setItem(SPLASH_PREFERENCE_CACHE_KEY, preferences.splashMode)
     this.emit()
@@ -683,7 +1053,7 @@ export class DurableUiPort implements AppUiPort {
       this.projectionDirty = true
       return
     }
-    const projection = this.projectTask(task, today)
+    const projection = this.projectTask(task, today, EMPTY_OCCURRENCE_KEYS)
     this.calendarProjection = Object.freeze([
       ...this.calendarProjection,
       ...projection.calendarEntries,
@@ -693,12 +1063,44 @@ export class DurableUiPort implements AppUiPort {
     }
   }
 
-  private projectTask(task: TaskRecord, today: string): Readonly<{
+  /**
+   * Marks the cached projection dirty rather than re-deriving it in place:
+   * an edit can move a task's date, time, or recurrence, so a targeted patch
+   * of `calendarProjection`/`todayProjection` would need to re-derive the same
+   * membership logic `refresh()` already has. The next `refresh()` rebuilds
+   * from the in-memory `activeTasks` this method just replaced in — no extra
+   * database query, same discipline as `appendActiveTask`.
+   */
+  private replaceActiveTask(task: TaskRecord): void {
+    if (this.activeTasks === null) return
+    const index = this.activeTasks.findIndex((existing) => existing.id === task.id)
+    if (index === -1) return
+    this.activeTasks = Object.freeze([
+      ...this.activeTasks.slice(0, index),
+      task,
+      ...this.activeTasks.slice(index + 1),
+    ])
+    this.projectionDirty = true
+  }
+
+  private removeActiveTask(removedTaskId: TaskId): void {
+    if (this.activeTasks === null) return
+    this.activeTasks = Object.freeze(
+      this.activeTasks.filter((existing) => existing.id !== removedTaskId),
+    )
+    this.projectionDirty = true
+  }
+
+  private projectTask(
+    task: TaskRecord,
+    today: string,
+    completedInRange: ReadonlySet<OccurrenceKey>,
+  ): Readonly<{
     calendarEntries: readonly CalendarEntryView[]
     todayTask?: TodayTaskProjection
   }> {
     const calendarEntries = this.occurrencesInCalendarRange(task)
-      .map((occurrenceDate) => this.calendarEntry(task, occurrenceDate))
+      .map((occurrenceDate) => this.calendarEntry(task, occurrenceDate, completedInRange))
     const todayValue = localDate(today)
     if (!isTaskOccurrence(task, todayValue)) return Object.freeze({ calendarEntries })
     const key = makeOccurrenceKey(task.seriesId, task.schedule, todayValue)
@@ -707,9 +1109,12 @@ export class DurableUiPort implements AppUiPort {
       todayTask: Object.freeze({
         occurrenceKey: key,
         row: Object.freeze({
-          id: task.id,
-          title: task.title,
+          categoryId: task.categoryId,
           completed: false,
+          id: task.id,
+          recurrence: task.recurrence,
+          title: task.title,
+          ...(task.description === undefined ? {} : { description: task.description }),
           ...(task.schedule.localTime === ALL_DAY_SENTINEL
             ? {}
             : { scheduledTime: task.schedule.localTime }),
@@ -741,10 +1146,18 @@ export class DurableUiPort implements AppUiPort {
     return result
   }
 
-  private calendarEntry(task: TaskRecord, occurrenceDate: string): CalendarEntryView {
+  private calendarEntry(
+    task: TaskRecord,
+    occurrenceDate: string,
+    completedInRange: ReadonlySet<OccurrenceKey>,
+  ): CalendarEntryView {
+    const key = makeOccurrenceKey(task.seriesId, task.schedule, localDate(occurrenceDate))
     return Object.freeze({
+      categoryId: task.categoryId,
+      completed: completedInRange.has(key),
       id: `${task.id}:${occurrenceDate}`,
       localDate: occurrenceDate,
+      recurrence: task.recurrence,
       title: task.title,
       ...(task.schedule.localTime === ALL_DAY_SENTINEL
         ? {}
