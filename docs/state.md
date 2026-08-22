@@ -1,6 +1,14 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-23: T046完了(D-011追記)。`main`ブランチのpm-zero v12.1追随作業(main側
+  T043/D-046)を実施中に、`scripts/setup.mjs`の`hasShadcn()`冪等性判定が
+  実際のインストール先(`.claude/skills/shadcn`)ではなく誤った名前
+  (`.claude/skills/shadcn-ui`)を見ているバグを発見。mainで先に修正・確認した上で、
+  本ブランチにも同じ修正を適用した。本ブランチの`package.json`はshadcnに
+  未依存のため実運用では未発火(dormant)だったバグ。pm-zero本体のナレッジ
+  (`pm-zero-knowledge-v12.1.md`)側には具体的パスの記述がなく、修正不要と確認済み。
+  検証: `node scripts/setup.mjs`が例外なく完走。
 - 2026-08-22: T027完了(D-016)。オーナー指示で、D-015で12件だけ導入した
   Kenney "Interface Sounds"(CC0)をパック全量100件へ拡張し、
   `public/audio/ui/manifest.json`を新設した。「UIコンポーネントアセット

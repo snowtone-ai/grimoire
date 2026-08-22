@@ -41,9 +41,11 @@ if (detectUiSurface()) {
     console.log('skip: .claude/skills/impeccable already present')
   }
 
-  if (hasShadcn() && !existsSync('.claude/skills/shadcn-ui')) {
+  if (hasShadcn() && !existsSync('.claude/skills/shadcn')) {
     const result = spawnSync('npx', ['skills', 'add', 'shadcn/ui'], { stdio: 'inherit', shell: process.platform === 'win32' })
     if (result.status !== 0) console.log('skip: shadcn/ui skill install failed or unavailable (non-fatal)')
+  } else if (hasShadcn()) {
+    console.log('skip: .claude/skills/shadcn already present')
   }
 
   // No chrome-devtools MCP here: this repo already has Playwright MCP

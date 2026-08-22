@@ -344,6 +344,25 @@ and motivated this reset -- those are kept as-is, not restarted.
 - 検証: `pnpm lint`合格(setup.mjs変更の反映確認)、`.mcp.json`に`chrome-devtools`が
   残っていないことを目視確認。
 
+### D-011 追記(2026-08-23): shadcn skillパス判定のバグ修正(T046)
+
+- 決定: `scripts/setup.mjs`の`hasShadcn()`冪等性判定を`.claude/skills/shadcn-ui`から
+  `.claude/skills/shadcn`へ修正した。`main`ブランチのpm-zero v12.1追随作業(main側
+  T043/D-046)で`npx skills add shadcn/ui`を実際に実行して確認したところ、実際に
+  書き込まれるディレクトリ名は`shadcn`(`.agents/skills/shadcn`へのsymlink)であり
+  `shadcn-ui`ではなかった。誤ったパスを判定していたため、常にfalseとなり
+  再実行のたびに毎回再インストールを試みる状態だった。
+- 影響範囲: 本ブランチの`package.json`はshadcnに未依存のため`hasShadcn()`自体が
+  falseを返し、このバグは実運用では未発火(dormant)だった。将来shadcn/uiを
+  導入した際に無駄な再インストールが発生するのを防ぐため、mainでの修正発見を機に
+  本ブランチにも適用した。
+- 検証: `node scripts/setup.mjs`を本ブランチのworktreeで実行し正常終了を確認
+  (impeccable分岐のみ発火、shadcn分岐はpackage.json未依存のため未発火)。
+- 参考: pm-zero本体のナレッジ(`pm-zero-knowledge-v12.1.md` §16.7)は
+  `npx skills add shadcn/ui`を実行する条件のみを定めており、冪等性判定に使う
+  具体的なパスは指定していない。バグは各プロジェクトの`scripts/setup.mjs`実装側の
+  誤りであり、pm-zero本体のナレッジファイル側の修正は不要と判断した。
+
 ## D-012: DESIGN.mdを0から構築し、UI層のみ全面リセットする(データ層は維持)
 
 - 日付: 2026-08-22
