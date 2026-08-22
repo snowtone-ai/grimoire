@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored by scripts/setup.mjs (pm-zero v12.1 §16.7); not our code to lint.
+    ".claude/skills/**",
   ]),
 ]);
 

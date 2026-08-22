@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12.1 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -62,11 +62,33 @@
   Nothing merges past a red check; a self-reported local pass is not sufficient on its
   own.
 - Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
-  changes behaviour, or is hard to undo. Ask for every issue with severity/confidence --
-  do not restrict it to serious issues only, or recall drops.
+  changes behaviour, is hard to undo, or touches shared UI components or design tokens
+  (v12.1 §16.5). Ask for every issue with severity/confidence -- do not restrict it to
+  serious issues only, or recall drops.
 - Tier 2 is retired: it fired on auth/billing/DB-schema/deploy/production-data classes
   that essentially do not occur in this project. If one of those classes ever appears,
   re-derive the tier rather than re-enabling it from memory.
+
+## Frontend/UI Operating Layer (pm-zero v12.1 §16)
+- Browser self-verification before "done" is already covered by the global judgment
+  instruction (start the dev server, check the changed screen with Playwright MCP at
+  the breakpoints touched, confirm no console/runtime error) -- code-reading is not a
+  substitute.
+- For a change big enough to need sign-off before or mid-implementation (a new screen,
+  a visual-direction change), generate the design at claude.ai/design via `/design-sync`
+  and show it to the owner instead of deciding unilaterally -- they can react to a
+  rendered design even though they cannot review a diff.
+- `DESIGN.md` is not adopted here (no concrete need yet, per Section 3's rule for every
+  optional file): this app's screens (Home/Calendar/Book/Plant/Settings) predate the
+  token-registry pattern and there is no current plan to retrofit one. §7's raw-value
+  lint therefore stays unwired in `scripts/verify.mjs` -- it only activates once a
+  project adopts `DESIGN.md`.
+- Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
+  is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
+  (v12.1 §16.7). No chrome-devtools MCP: Playwright MCP is already registered globally
+  (user scope) and in active use for browser verification across this operator's
+  projects -- adding a second, overlapping browser-automation MCP would be redundant
+  tool-schema cost with no functional gain.
 
 ## Self-Evolution
 - On the first surprising failure, ask one question: can a machine detect this?
