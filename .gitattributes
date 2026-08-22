@@ -1,0 +1,4 @@
+# Vendored third-party text. Its formatting is the author's, not ours: a licence
+# is a document to reproduce verbatim, so `git diff --check` must not ask anyone
+# to edit it into compliance (Kenney "Interface Sounds", CC0 — see D-015).
+public/audio/ui/LICENSE.txt -whitespace
