@@ -5,6 +5,8 @@
  * This intentionally avoids Web Storage persistence for read-only API tokens.
  */
 
+import { redactSecret } from "../shared/errors";
+
 export type GoogleScope = "gmail" | "calendar";
 
 const SCOPES: Record<GoogleScope, string> = {
@@ -177,4 +179,40 @@ export function revokeToken(scope: GoogleScope): void {
   // Local state is cleared unconditionally so the UI reflects "disconnected" immediately.
   getOAuth2()?.revoke?.(token);
   delete tokenMap[scope];
+}
+
+/**
+ * v2 addition (T020): matches `GoogleIntegrationPort.connect` in
+ * src/application/ports.ts exactly by name and signature. Turns a rejected
+ * requestGoogleToken into a `{connected: false, reason}` result instead of a
+ * thrown error — a user closing the consent popup, or the app running
+ * without NEXT_PUBLIC_GOOGLE_CLIENT_ID configured, are expected outcomes for
+ * this call, not faults. `reason` is shown to the user directly by the
+ * Settings screen, so it is redacted the same way any other user-facing
+ * error text in this codebase is.
+ */
+export async function connect(
+  scope: GoogleScope,
+): Promise<{ readonly connected: boolean; readonly reason?: string }> {
+  if (!isGoogleConfigured()) {
+    return { connected: false, reason: "Google連携が構成されていません" };
+  }
+  try {
+    await requestGoogleToken(scope);
+    return { connected: true };
+  } catch (err) {
+    if (err instanceof Error && err.name === "GISCancelled") {
+      return { connected: false, reason: "認証がキャンセルされました" };
+    }
+    return { connected: false, reason: redactSecret(err) };
+  }
+}
+
+/**
+ * v2 addition (T020): matches `GoogleIntegrationPort.disconnect` in
+ * src/application/ports.ts exactly by name and signature — an async wrapper
+ * around the already-synchronous revokeToken.
+ */
+export async function disconnect(scope: GoogleScope): Promise<void> {
+  revokeToken(scope);
 }
