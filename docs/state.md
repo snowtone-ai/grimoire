@@ -27,9 +27,17 @@
     スモークで0 console errors。ブラウザQAでのみ露見した実バグを1件修正
     (suspended AudioContextは時計が進まないため初回ジェスチャ前のcueが
     捨てられずキューされ、無関係なタップで数秒後にまとめて鳴っていた)。
-  - ブランチ`feat/aaa-fx-sound-overhaul`。Tier 1 fresh-context reviewer
-    (Opus 5)実施、PR作成。**マージはオーナー確認待ち** — mainへのマージは
-    家族が日常利用している本番環境へ自動デプロイされるため。
+  - Tier 1 fresh-context reviewer(Opus 5)がBLOCKER 1件+MAJOR 5件を返し、
+    すべて実在。全件修正済み(9a61f81)。特に重いもの3件:
+    (a)音の解錠をホーム画面から仕掛けていたため/settings・/book・/all・
+    /plantを直接開くと全ページロードで無音、(b)既定ON化の移行が、D-039の
+    移行を既に実行済みの実ユーザー全員に対して無効(引き金をキーの存在へ
+    変更、テスト8件で固定)、(c)朝のあいさつ演出がD-036 F-1に反して
+    コンテンツの前面に出ていた(エンジンを2レイヤー化)。詳細はD-047 §7と
+    tasks.mdのReview Notes。テスト99→107件。
+  - ブランチ`feat/aaa-fx-sound-overhaul`、PR #38。CI green。
+    **マージはオーナー確認待ち** — mainへのマージは家族が日常利用している
+    本番環境へ自動デプロイされるため。
 - 2026-08-23: T043 (D-046) — オーナー指示で`main`をpm-zero v12.1(Section 16
   Frontend/UI Operating Layer)へ追随させた。CLAUDE.mdのバージョン表記・
   Tier 1条件・新設節、`scripts/setup.mjs`のUIツールauto-provisioning
