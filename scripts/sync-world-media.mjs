@@ -172,18 +172,36 @@ function main() {
     console.log(`[world-media] ignored: ${ignored.join(', ')}`)
   }
   const sourceNames = new Set(readdirSync(SOURCE_DIR))
-  pruneStaleOutputs(OUTPUT_DIR, sourceNames)
-  pruneStaleOutputs(AUDIO_OUTPUT_DIR, sourceNames)
+  pruneStaleOutputs(OUTPUT_DIR, sourceNames, isWorldOutput)
+  pruneStaleOutputs(AUDIO_OUTPUT_DIR, sourceNames, isAudioOutput)
 }
 
-function pruneStaleOutputs(directory, sourceNames) {
+/**
+ * Removes only what this script could have written. The rule is narrow on
+ * purpose: these directories are shared with the repository (a `.gitkeep`, a
+ * licence file, hand-placed assets), and a sync step that deletes a file it did
+ * not create is a data-loss bug waiting for the first person who puts something
+ * there by hand.
+ */
+function pruneStaleOutputs(directory, sourceNames, isOwnOutput) {
   if (!existsSync(directory)) return
   for (const fileName of readdirSync(directory)) {
     if (fileName === 'manifest.json') continue
+    if (fileName.startsWith('.')) continue
+    if (!isOwnOutput(fileName)) continue
     if (sourceNames.has(fileName)) continue
     rmSync(join(directory, fileName))
     console.log(`[world-media] removed stale ${fileName}`)
   }
+}
+
+function isWorldOutput(fileName) {
+  const { kind } = classify(fileName)
+  return kind === 'video' || kind === 'poster'
+}
+
+function isAudioOutput(fileName) {
+  return classify(fileName).kind === 'audio'
 }
 
 function writeManifest({ areas, bgm = {}, splash }) {
