@@ -1156,3 +1156,62 @@
   タスクが起票された時点で、この配置済みプールをそのまま使う(再取得・
   再ライセンス確認は不要)。それまでは`src/lib/sound.ts`の合成エンジンが
   唯一の効果音経路のまま。
+
+## D-046: main を pm-zero v12.1(Frontend/UI Operating Layer)へ追随させる
+
+- 日付: 2026-08-23
+- 対象: governance / tooling / CLAUDE.md
+- 決定: オーナー指示により、`grimore-v2`ブランチ側でT018(D-011)として先に
+  適用済みの pm-zero v12.1(`pm-zero-knowledge-v12.1.md` Section 16、
+  Frontend/UI Operating Layer)へ`main`も追随させる。憲法(config値・
+  script exit code・hookへ還元できる部分のみ導入する採用基準)自体は
+  v12から不変で、今回追加されるのはSection 16の1層のみ。適用した差分は
+  次のとおり。
+  - `CLAUDE.md`: ヘッダーを「pm-zero v12」→「pm-zero v12.1」へ、
+    Self-ReviewのTier 1条件へ「shared UI components or design tokens」を
+    追記、新設「Frontend/UI Operating Layer」節を追加。ただし
+    `grimore-v2`側の同節はDESIGN.md/Grimo制作ワークフローなどv2固有の
+    記述を含むため丸ごとの転記はせず、`main`の実状(DESIGN.md未採用、
+    shadcn/uiを実際に使用中)に合わせて書き直した。
+  - `scripts/setup.mjs`: v9.4放置状態(ディレクトリ作成のみ)から、UI
+    framework検出時にimpeccable skill・(package.jsonにshadcnがある場合)
+    shadcn/ui skillを冪等にauto-provisioningするv12.1 §16.7準拠の実装へ
+    書き直した(`grimore-v2`の実装を移植)。実行して動作確認済み:
+    1回目でimpeccable(既存流用)とshadcn skillを導入、2回目は両方
+    skip(冪等性確認)。chrome-devtools MCPは追加しない
+    (Playwright MCPがグローバル登録済みで重複コスト回避、K2と同じ理由)。
+  - `eslint.config.mjs`: `.claude/skills/**`をglobalIgnoresへ追加
+    (vendored skillコードはlint対象外)。
+  - `.gitignore`: `.claude/skills/**`・`.agents/`(`npx skills add`が実体を
+    書き込む先。`.claude/skills/`側はそこへのsymlink)・`skills-lock.json`
+    を追加。`grimore-v2`は`.claude/skills/impeccable/`を個別指定していたが、
+    `main`ではshadcn skillも動くため、より広い`.claude/skills/**`パターンを
+    採用した。
+  - 副次的に判明した`grimore-v2`側`scripts/setup.mjs`の潜在バグを`main`
+    実装では修正済み: shadcn skill導入後の実際の配置先は`.claude/skills/
+    shadcn`(symlink)だが、既存冪等性チェックは存在しない
+    `.claude/skills/shadcn-ui`を見ていたため、2回目以降の実行で毎回
+    再インストールを試みる状態だった。`grimore-v2`側は元々shadcnへ依存
+    していないため実害はなく、今回は`main`側の実装のみ修正し
+    `grimore-v2`側は対象外とした(要求範囲外)。
+  - `.github/workflows/ci.yml`: 変更なし。`grimore-v2`のT018では
+    grimore-v2ブランチをCI trigger対象へ追加する差分があったが、`main`は
+    既にtrigger対象そのものなので該当なし。`.mcp.json`もgitignore対象の
+    ローカル専用ファイルであり、かつcontext7 MCP/frontend-designプラグイン
+    はSection 16のT1(グローバルuser-scope、`~/.claude/`側で既に導入済み)
+    のため、プロジェクト側の変更は不要。
+- 採用理由: (a) 同じオペレーターが同じマシンで両ブランチを行き来する以上、
+  「AIが判断すべき事柄」の運用基盤(UIツール自動provisioning、Tier 1の
+  UIトリガー)は両ブランチで揃っているべきで、揃っていないと`grimore-v2`
+  で効いていた安全策が`main`側の作業では静かに効かなくなる、
+  (b) v12.1自体が「config値・script exit code・hookへ還元できる部分のみ」
+  という受入基準を通過済みの内容であり、`main`固有の再評価は不要、
+  (c) 実際に手を動かして検証(setup.mjs実行・verify green)した範囲でしか
+  記録していないため、机上のドキュメント更新だけで終わっていない。
+- 不採用案: `grimore-v2`のCLAUDE.md Frontend/UI Operating Layer節を
+  そのまま転記する → DESIGN.md §9-10やGrimo制作ワークフローなど`main`に
+  存在しない概念への参照を含み、`main`の開発者(未来のAIセッション含む)を
+  誤誘導するため不採用。実状に合わせて書き直した。
+- 将来見直し条件: `main`がDESIGN.mdを採用する具体的必要が生じた時点で、
+  raw-value lint(K1)を`scripts/verify.mjs`へ配線する。pm-zero本体が
+  v12.2等へ更新された場合はupdate.mdの当該sectionを再度参照する。

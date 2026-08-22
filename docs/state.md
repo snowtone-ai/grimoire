@@ -1,6 +1,19 @@
 # state.md
 
 ## Current
+- 2026-08-23: T043 (D-046) — オーナー指示で`main`をpm-zero v12.1(Section 16
+  Frontend/UI Operating Layer)へ追随させた。CLAUDE.mdのバージョン表記・
+  Tier 1条件・新設節、`scripts/setup.mjs`のUIツールauto-provisioning
+  (impeccable/shadcn skill、v9.4放置状態から書き直し)、
+  `eslint.config.mjs`/`.gitignore`のvendored skillコード除外を追加。
+  `main`の実状(DESIGN.md未採用、shadcn/ui使用中)に合わせて内容は書き直し、
+  `grimore-v2`側の記述を丸ごと転記していない。副次的にgrimore-v2側
+  `scripts/setup.mjs`のshadcn skill冪等性チェックパスの誤りを発見、
+  `main`側実装でのみ修正(grimore-v2側は対象外、shadcn未使用のため実害なし)。
+  `scripts/setup.mjs`は2回実行して冪等性を確認、`node scripts/verify.mjs`
+  全合格(lint/typecheck/test 82件/build)。ブランチ
+  `chore/main-v12-1-frontend-ui-layer`からPR作成、CI待ち・マージはオーナー
+  確認待ち。
 - 2026-08-22: T042 (D-045) — オーナー指示で、grimore-v2ブランチ側でD-015/
   D-016として導入済みのKenney "Interface Sounds"(CC0、100件)を`main`側
   にも`public/audio/ui/`へ配置した。category/用途hint/再生時間を記録した
