@@ -202,10 +202,17 @@ function formatUtcDate(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * The current month, plus one day either side. The Calendar screen replaces
+ * this with its own visible grid as soon as it mounts; the padding is for
+ * everything that reads the projection before then. Reminders need tomorrow,
+ * and on the last day of a month a range that stopped at the month boundary
+ * would silently have no "明日" entries to arm.
+ */
 function initialCalendarRange(): Readonly<{ from: string; to: string }> {
   const now = new Date()
-  const first = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
-  const last = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0))
+  const first = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 0))
+  const last = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1))
   return Object.freeze({ from: formatUtcDate(first), to: formatUtcDate(last) })
 }
 

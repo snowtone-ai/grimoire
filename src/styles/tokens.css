@@ -120,6 +120,11 @@
   --reading-max: 42rem;
   --nav-height: 4.25rem;
 
+  /* The band a screen's fixed bottom control occupies above the navigation —
+     one tap target plus the bar's own bottom padding. Notices and toasts add
+     it to their offset so they never settle on top of a primary action. */
+  --action-band: calc(var(--tap-target) + var(--space-2));
+
   /* DESIGN.md §5. Custom properties cannot be read inside a media query, so
      these three values also appear as literals in `@media (min-width: …)`.
      Registering them here is what makes those literals legal. */

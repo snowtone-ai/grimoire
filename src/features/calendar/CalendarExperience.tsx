@@ -146,7 +146,7 @@ export function CalendarExperience() {
   )
 
   return (
-    <main id="main-content" className={styles.screen} data-split={splitView ? '' : undefined}>
+    <main id="main-content" tabIndex={-1} className={styles.screen} data-split={splitView ? '' : undefined}>
       <section className={styles.month} aria-label="月表示">
         <header className={styles.monthHeader}>
           <IconButton

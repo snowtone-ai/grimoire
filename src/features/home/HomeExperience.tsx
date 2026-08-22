@@ -56,7 +56,7 @@ export function HomeExperience() {
   }
 
   return (
-    <main id="main-content" className={styles.screen}>
+    <main id="main-content" tabIndex={-1} className={styles.screen}>
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>今日</p>

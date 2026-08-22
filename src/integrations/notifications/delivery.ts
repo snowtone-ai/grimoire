@@ -105,10 +105,18 @@ function writeDelivered(ledger: DeliveredLedger): void {
 
 /** Show a notification through the Service Worker registration, which is the
  * only path that works on mobile (the `new Notification()` constructor is not
- * supported there). Returns false when the platform refuses it. */
+ * supported there). Returns false when the platform refuses it.
+ *
+ * Asks for the registration rather than awaiting `navigator.serviceWorker.ready`:
+ * `ready` waits for an *active* worker and never settles when none is
+ * installed, so on a device where registration was refused — or in development,
+ * where it is deliberately skipped — the first show hung forever and the
+ * serialised queue behind it never moved again. `getRegistration()` resolves to
+ * undefined instead of waiting. */
 async function show(title: string, body: string, tag: string): Promise<boolean> {
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration === undefined || registration.active === null) return false;
     await registration.showNotification(title, { body, icon: ICON, badge: ICON, tag });
     return true;
   } catch (err) {

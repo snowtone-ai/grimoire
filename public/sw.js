@@ -40,16 +40,20 @@ self.addEventListener('install', (event) => {
   event.waitUntil(installShell())
 })
 
+/**
+ * Every cache on this origin except the current one is deleted, not only the
+ * ones this worker named. The v1 app shipped to the same origin under
+ * `task-manager-v*`, so a prefix filter would leave its shell cached forever on
+ * every device that ever ran it — dead megabytes, and a stale copy of an app
+ * this one replaces. Cache storage is origin-scoped and this app owns the
+ * origin, so anything here that is not `CACHE_NAME` is ours to clear.
+ */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
       .then((names) =>
-        Promise.all(
-          names
-            .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
-            .map((name) => caches.delete(name)),
-        ),
+        Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))),
       )
       .then(() => self.clients.claim()),
   )

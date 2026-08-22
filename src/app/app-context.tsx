@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 
+import { createAppPort } from './create-app-port'
 import { DurableUiPort } from './durable-ui-port'
 import type { AppReadModel, AppUiPort } from './ui-port'
 
@@ -21,7 +22,7 @@ export function AppPortProvider({
   readonly children: ReactNode
   readonly port?: AppUiPort
 }) {
-  const [resolvedPort] = useState<AppUiPort>(() => port ?? new DurableUiPort())
+  const [resolvedPort] = useState<AppUiPort>(() => port ?? createAppPort())
 
   useEffect(() => {
     if (resolvedPort instanceof DurableUiPort) void resolvedPort.initialize()

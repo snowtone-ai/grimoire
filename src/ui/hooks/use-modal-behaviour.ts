@@ -80,7 +80,16 @@ export function useModalBehaviour(
     return () => {
       document.removeEventListener('keydown', onKeyDown, true)
       root.style.overflow = restoreOverflow
-      previouslyFocused?.focus?.()
+      // A sheet can outlive the control that opened it: completing a task moves
+      // its row into the collapsed done group, so the checkbox that raised the
+      // discovery sheet is already detached when the sheet closes. Calling
+      // `focus()` on a detached node does nothing at all and quietly leaves the
+      // caret on <body>, restarting a keyboard user at the top of the document.
+      if (previouslyFocused !== null && previouslyFocused.isConnected) {
+        previouslyFocused.focus()
+        return
+      }
+      document.getElementById('main-content')?.focus()
     }
   }, [containerRef, open])
 }

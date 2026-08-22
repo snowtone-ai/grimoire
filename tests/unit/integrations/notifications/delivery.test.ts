@@ -16,11 +16,32 @@ function stubNotification(permission: NotificationPermission): void {
 
 function stubServiceWorker(): { showNotification: ReturnType<typeof vi.fn> } {
   const showNotification = vi.fn(async () => undefined);
+  const registration = { active: {}, showNotification };
   Object.defineProperty(navigator, "serviceWorker", {
-    value: { ready: Promise.resolve({ showNotification }) },
+    value: {
+      getRegistration: async () => registration,
+      ready: Promise.resolve(registration),
+    },
     configurable: true,
   });
   return { showNotification };
+}
+
+/**
+ * A browser that supports the API but has no worker installed: registration was
+ * refused, blocked by the user, or — since the registration component skips it
+ * outside production — simply never attempted.
+ */
+function stubServiceWorkerWithoutRegistration(): void {
+  Object.defineProperty(navigator, "serviceWorker", {
+    value: {
+      getRegistration: async () => undefined,
+      // `ready` waits for an *active* worker. With none installed it never
+      // settles — neither resolving nor rejecting — which is the whole point.
+      ready: new Promise(() => {}),
+    },
+    configurable: true,
+  });
 }
 
 function fakeSource(tasksByDate: Readonly<Record<string, readonly ReminderTask[]>>): {
@@ -153,5 +174,26 @@ describe("createNotificationDelivery — sendTestNotification()", () => {
     const delivery = createNotificationDelivery(fakeSource({}).source);
 
     await expect(delivery.sendTestNotification()).resolves.toBeUndefined();
+  });
+});
+
+describe("createNotificationDelivery — no Service Worker installed", () => {
+  // Regression: showing went through `navigator.serviceWorker.ready`, which
+  // only settles once a worker is active. Registration failures are swallowed
+  // by design (offline support is an enhancement), so on any device where it
+  // did not take, the first show hung forever — and because runs are
+  // serialised per instance, that one pending promise stopped every later
+  // sync() for the lifetime of the page, silently.
+  it("gives up instead of hanging when no worker is installed", async () => {
+    stubNotification("granted");
+    stubServiceWorkerWithoutRegistration();
+    const { source } = fakeSource({
+      "2026-08-16": [{ id: "a", title: "ES提出", dueTime: "14:00", completed: false }],
+    });
+    const delivery = createNotificationDelivery(source);
+
+    await expect(delivery.sendTestNotification()).resolves.toBeUndefined();
+    // The queue still moves rather than waiting behind that first attempt.
+    await expect(delivery.sync()).resolves.toBeUndefined();
   });
 });

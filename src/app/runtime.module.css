@@ -1,6 +1,12 @@
+/* Deliberately no `z-index`: that would make this a stacking context, and every
+   sheet a screen opens lives inside it. Their `--layer-sheet` would then be
+   resolved against this element rather than the root, so the navigation at
+   `--layer-nav` — a sibling of this div — would paint and hit-test above them,
+   putting the floating capsule on top of a sheet's action row. `position:
+   relative` is kept for descendant positioning; the world sits behind content
+   inside each screen's own subtree, so nothing here needs a layer of its own. */
 .appSurface {
   position: relative;
-  z-index: var(--layer-content);
   min-height: 100dvh;
 }
 
@@ -77,12 +83,18 @@
 
 /* 決定事項ログ M-4 — the small notice. It sits above the nav, states what was
    collected in one line, and dismisses itself. There is no button on it: the
-   thing it announces is already saved, so there is nothing to confirm. */
+   thing it announces is already saved, so there is nothing to confirm.
+   It clears `--action-band` for the same reason the migration notice does: it
+   is raised by completing a task, which is exactly when Home's compose control
+   is on screen underneath it. */
 .miniNotice {
   position: fixed;
   z-index: var(--layer-toast);
   right: var(--space-4);
-  bottom: calc(var(--nav-height) + var(--space-4) + env(safe-area-inset-bottom));
+  bottom: calc(
+    var(--nav-height) + var(--action-band) + var(--space-4)
+      + env(safe-area-inset-bottom)
+  );
   left: var(--space-4);
   display: flex;
   gap: var(--space-3);
@@ -160,7 +172,10 @@
   position: fixed;
   z-index: var(--layer-toast);
   right: var(--space-4);
-  bottom: calc(var(--nav-height) + var(--space-4) + env(safe-area-inset-bottom));
+  bottom: calc(
+    var(--nav-height) + var(--action-band) + var(--space-4)
+      + env(safe-area-inset-bottom)
+  );
   left: var(--space-4);
   display: flex;
   flex-wrap: wrap;

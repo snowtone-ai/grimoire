@@ -145,7 +145,7 @@ export function SettingsExperience() {
   const today = todayLocalDate()
 
   return (
-    <main id="main-content" className={styles.screen}>
+    <main id="main-content" tabIndex={-1} className={styles.screen}>
       <header className={styles.header}>
         <h1 className={styles.title}>設定</h1>
       </header>

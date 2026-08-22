@@ -40,7 +40,7 @@ export function CatalogExperience() {
   const play = useSound()
 
   return (
-    <main id="main-content" className={styles.screen}>
+    <main id="main-content" tabIndex={-1} className={styles.screen}>
       <header className={styles.header}>
         <h1 className={styles.title}>図鑑</h1>
         <div className={styles.layerTabs} role="tablist" aria-label="図鑑の種類">

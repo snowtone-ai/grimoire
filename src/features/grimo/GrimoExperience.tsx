@@ -49,7 +49,7 @@ export function GrimoExperience() {
   }
 
   return (
-    <main id="main-content" className={styles.screen}>
+    <main id="main-content" tabIndex={-1} className={styles.screen}>
       <AreaAmbience
         areaId={area.id}
         enabled={preferences.bgmEnabled}
