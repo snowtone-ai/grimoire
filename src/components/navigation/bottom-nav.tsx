@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BookOpen, Calendar, Home, Sprout } from "lucide-react";
 import { getStoredEffectPref, isEffectEnabled } from "@/lib/fx";
 import { playPage } from "@/lib/sound";
+import { firePageEffect } from "@/lib/vfx";
 
 const NAV_ITEMS = [
   { href: "/", label: "ホーム", icon: Home, theme: "home" },
@@ -78,12 +79,14 @@ export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
               aria-current={isActive ? "page" : undefined}
               onClick={() => {
                 if (isActive) return;
-                // The per-page sound identity follows the user's own stored
-                // choice, not isEffectEnabled's reduced-motion override:
+                // The per-destination sound identity follows the user's own
+                // stored choice, not isEffectEnabled's reduced-motion override:
                 // reduced-motion is a visual signal (it does silence the CSS
-                // page-turn theme below), and sound already has its own
-                // separate, motion-independent toggle by design (see fx.ts).
-                playPage(getStoredEffectPref("pageTransitions") ? item.theme : undefined);
+                // page-turn theme and the sweep below), and sound already has
+                // its own separate, motion-independent toggle (see fx.ts).
+                // With the theme off, every turn is the plain home flip.
+                playPage(getStoredEffectPref("pageTransitions") ? item.href : "/");
+                firePageEffect(item.href);
                 markPageTurn(resolvedPath, item.href, item.theme);
               }}
               className="group flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5"

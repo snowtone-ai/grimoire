@@ -14,13 +14,23 @@ test("every effect key has a boolean default", () => {
   }
 });
 
-test("the two pre-existing lightweight effects default on, the new heavier ones default off", () => {
+test("every effect ships on by default (D-047, owner instruction)", () => {
+  // Pinned deliberately rather than looped: flipping a default is a product
+  // decision, and it should have to be made here as well as in the source.
   assert.equal(DEFAULT_EFFECT_PREFS.tapSpark, true);
   assert.equal(DEFAULT_EFFECT_PREFS.completion, true);
-  assert.equal(DEFAULT_EFFECT_PREFS.morningGreeting, false);
-  assert.equal(DEFAULT_EFFECT_PREFS.openFlourish, false);
-  assert.equal(DEFAULT_EFFECT_PREFS.ambientParticles, false);
-  assert.equal(DEFAULT_EFFECT_PREFS.pageTransitions, false);
+  assert.equal(DEFAULT_EFFECT_PREFS.morningGreeting, true);
+  assert.equal(DEFAULT_EFFECT_PREFS.openFlourish, true);
+  assert.equal(DEFAULT_EFFECT_PREFS.ambientParticles, true);
+  assert.equal(DEFAULT_EFFECT_PREFS.pageTransitions, true);
+});
+
+test("an explicit off still beats the new on-by-default", () => {
+  // The half of D-039 that D-047 did NOT change: turning something off has to
+  // stick, or the per-effect switches are decoration.
+  for (const key of EFFECT_KEYS) {
+    assert.equal(resolveEffect(key, false, false), false, `${key} ignored an explicit off`);
+  }
 });
 
 test("resolveEffect forces every key off when reducedMotion is true, even if stored true", () => {

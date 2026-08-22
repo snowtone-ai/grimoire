@@ -1,5 +1,5 @@
 // Bump this when SW logic changes. All clients discard old caches on activate.
-const CACHE_NAME = "task-manager-v6";
+const CACHE_NAME = "task-manager-v7";
 const NAV_TIMEOUT_MS = 3000;
 
 // Notifications are shown by the page through registration.showNotification(),

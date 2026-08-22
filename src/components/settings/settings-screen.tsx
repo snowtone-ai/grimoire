@@ -45,7 +45,7 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { getSurveyResetCount, resetSurveyNotes } from "@/lib/rewardDb";
-import { isFxEnabled, playSave, playTap, setFxEnabled } from "@/lib/sound";
+import { isFxEnabled, playCue, setFxEnabled } from "@/lib/sound";
 import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
 
 /* Settings (D-036).
@@ -151,7 +151,7 @@ function SoundToggleRow() {
     const next = !enabled;
     setFxEnabled(next);
     setEnabled(next);
-    if (next) playTap();
+    if (next) playCue("toggle");
   }
 
   return (
@@ -211,7 +211,7 @@ function EffectToggleRow({
     const next = !enabled;
     setEffectEnabled(effectKey, next);
     setEnabled(next);
-    if (next) playTap();
+    if (next) playCue("toggle");
   }
 
   return (
@@ -340,7 +340,7 @@ function NotificationSection() {
     const next = !enabled;
     setNotificationsEnabled(next);
     setEnabled(next);
-    playTap();
+    playCue("toggle");
   }
 
   async function handleTest() {
@@ -452,11 +452,12 @@ function BackupSection() {
   async function handleExport() {
     setMessage(null);
     try {
-      playTap();
+      playCue("tap");
       downloadBackup(await buildBackupJson());
       setMessage("バックアップファイルを保存しました");
     } catch (err) {
       console.error("[backup] export failed:", err);
+      playCue("error");
       setMessage("エクスポートに失敗しました");
     }
   }
@@ -468,6 +469,7 @@ function BackupSection() {
     try {
       setPending(parseBackup(await file.text()));
     } catch (err) {
+      playCue("error");
       setMessage(err instanceof Error ? err.message : "ファイルを読み込めませんでした");
     }
   }
@@ -477,11 +479,12 @@ function BackupSection() {
     setBusy(true);
     try {
       await importBackup(pending.payload);
-      playSave();
+      playCue("save");
       setMessage(`取り込み完了: クエスト${pending.counts.tasks}件 / ドロップ${pending.counts.drops}件`);
       setPending(null);
     } catch (err) {
       console.error("[backup] import failed:", err);
+      playCue("error");
       setMessage("取り込みに失敗しました");
     } finally {
       setBusy(false);
@@ -503,7 +506,7 @@ function BackupSection() {
         <button
           type="button"
           onClick={() => {
-            playTap();
+            playCue("tap");
             fileInputRef.current?.click();
           }}
           className="btn-squish flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
@@ -604,7 +607,7 @@ function ResetRow({
   const [message, setMessage] = useState<string | null>(null);
 
   async function startConfirm() {
-    playTap();
+    playCue("confirm");
     setMessage(null);
     setSummary(await loadSummary().catch(() => null));
     setConfirming(true);
@@ -619,6 +622,7 @@ function ResetRow({
       setMessage("削除しました");
     } catch (err) {
       console.error(`[reset] ${label} failed:`, err);
+      playCue("error");
       setMessage("削除に失敗しました");
     } finally {
       setBusy(false);

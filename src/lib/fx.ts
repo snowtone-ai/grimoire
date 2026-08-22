@@ -38,15 +38,17 @@ const OLD_INTENSITY_KEY = "fx-intensity";
 let migrated = false;
 
 /** One-shot migration from the retired quiet/normal/lively dial (D-036) to the
- * six independent toggles (D-039). Only the three effects that existed under
- * the old model are mapped explicitly; the three brand-new ones
- * (openFlourish/ambientParticles/pageTransitions) simply keep their
- * off-by-default state, which is what a "quiet" or "normal" user would have
- * gotten anyway. Without this, a user who had explicitly chosen "quiet" would
- * silently get tapSpark/completion turned back on after this deploy — the
- * wrong direction for the ADHD persona D-039 exists to protect. Guarded so it
- * only touches storage once per page load, and only if the new keys haven't
- * already been set (e.g. by a previous run of this same migration). */
+ * six independent toggles (D-039). Without this, a user who had explicitly
+ * chosen "quiet" would silently get effects turned back on after a deploy —
+ * the wrong direction for the ADHD persona D-039 exists to protect. Guarded so
+ * it only touches storage once per page load, and only if the new keys haven't
+ * already been set (e.g. by a previous run of this same migration).
+ *
+ * D-047 note: this now writes an explicit value for EVERY key rather than
+ * leaving the three newer ones unset. Under D-039 an unset key meant "off",
+ * so leaving them alone happened to give a "quiet" user the right answer; now
+ * that every default is on, an unset key means the opposite, and silence has
+ * to be recorded rather than assumed. */
 function migrateFromIntensity(): void {
   if (migrated) return;
   migrated = true;
@@ -55,10 +57,21 @@ function migrateFromIntensity(): void {
     if (old === null) return;
     const alreadyChosen = EFFECT_KEYS.some((key) => localStorage.getItem(STORAGE_KEY[key]) !== null);
     if (!alreadyChosen) {
-      const enabled = old !== "quiet"; // "normal" and "lively" both had tapSpark/completion on
-      localStorage.setItem(STORAGE_KEY.tapSpark, enabled ? "1" : "0");
-      localStorage.setItem(STORAGE_KEY.completion, enabled ? "1" : "0");
-      localStorage.setItem(STORAGE_KEY.morningGreeting, old === "lively" ? "1" : "0");
+      // "normal" and "lively" both had tapSpark/completion on; only "lively"
+      // had the morning greeting; the three effects that did not exist under
+      // the old dial follow whether the user wanted effects at all.
+      const enabled = old !== "quiet";
+      const value: Record<EffectKey, boolean> = {
+        tapSpark: enabled,
+        completion: enabled,
+        morningGreeting: old === "lively",
+        openFlourish: enabled,
+        ambientParticles: enabled,
+        pageTransitions: enabled,
+      };
+      for (const key of EFFECT_KEYS) {
+        localStorage.setItem(STORAGE_KEY[key], value[key] ? "1" : "0");
+      }
     }
     localStorage.removeItem(OLD_INTENSITY_KEY);
   } catch {

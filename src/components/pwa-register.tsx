@@ -2,12 +2,18 @@
 
 import { useEffect } from "react";
 import { initTapSparks } from "@/lib/spark";
+import { preloadVfx } from "@/lib/vfx";
 
 export function PwaRegister() {
   // Mounted once in the root layout, which makes it the app-wide place to
-  // install the delegated tap-spark listener (it must cover every screen).
+  // install the delegated tap-spark listener (it must cover every screen) and
+  // to warm the effect textures. The textures are warmed here rather than on
+  // first gesture — unlike audio, images need no user activation, and the very
+  // first thing an effect can react to IS a gesture, so waiting for one would
+  // guarantee the first tap spark of a session draws nothing.
   useEffect(() => {
     initTapSparks();
+    preloadVfx();
   }, []);
 
   useEffect(() => {

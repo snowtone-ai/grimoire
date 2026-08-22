@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { DropReveal } from "@/components/reward/drop-reveal";
 import {
@@ -20,8 +20,8 @@ import {
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
-import { fireReplayEffect } from "@/lib/confetti";
-import { playClear } from "@/lib/sound";
+import { cancelEffects, fireReplayEffect } from "@/lib/vfx";
+import { playCue } from "@/lib/sound";
 
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
@@ -29,7 +29,6 @@ export function BookScreen() {
   // The drop currently replaying its reveal card, or null when none is open.
   // Lives here (not per grid cell) so exactly one DropReveal ever mounts.
   const [replayDrop, setReplayDrop] = useState<DropDef | null>(null);
-  const cancelConfettiRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     getCollection()
@@ -43,21 +42,22 @@ export function BookScreen() {
       .catch((err) => console.error("[book] chronicle load failed:", err));
   }, []);
 
-  // Leaving /book mid-burst must not let a queued confetti wave fire over
+  // Leaving /book mid-effect must not let the replay sparkle keep drawing over
   // whatever screen the user navigates to next.
-  useEffect(() => {
-    return () => cancelConfettiRef.current();
-  }, []);
+  useEffect(() => cancelEffects, []);
 
   const handleReplay = useCallback((drop: DropDef) => {
-    cancelConfettiRef.current(); // supersede any wave still pending from the last tap
-    playClear(drop.rarity);
-    cancelConfettiRef.current = fireReplayEffect(drop.rarity);
+    cancelEffects(); // supersede whatever the previous tap is still drawing
+    // A look back at something already earned, not a fresh clear: the coin tick
+    // rather than the quest jingle, matching the replay scene's own break from
+    // the completion burst (D-036).
+    playCue("replay");
+    fireReplayEffect(drop.rarity);
     setReplayDrop(drop);
   }, []);
 
   const handleDismissReplay = useCallback(() => {
-    cancelConfettiRef.current();
+    cancelEffects();
     setReplayDrop(null);
   }, []);
 

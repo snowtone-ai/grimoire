@@ -1,0 +1,112 @@
+{
+  "$schema": "Kenney \"RPG Audio\" + \"Music Jingles\" (both CC0), hand-picked and re-encoded for this app. See LICENSE.txt and docs/decisions.md D-047.",
+  "packs": [
+    "kenney_rpg-audio",
+    "kenney_music-jingles"
+  ],
+  "license": "CC0 1.0 (public domain, no attribution required)",
+  "format": "PCM s16le, 44.1kHz, mono, peak-normalised to -1.0 dBFS — decodeAudioData-safe on Safari/iOS",
+  "status": "In use. src/lib/domain/sound-cues.ts maps every app action to a file here or in ../ui/; src/lib/sound.ts plays it.",
+  "note": "These are the cues that needed a musical or physical character the Interface Sounds pack does not contain (page turns, treasure, jingles). Plain UI feedback still comes from ../ui/.",
+  "count": 14,
+  "files": [
+    {
+      "file": "book-open.wav",
+      "category": "flourish",
+      "hint": "a soft cover opening — the page beneath the clasp",
+      "durationMs": 151,
+      "bytes": 13402
+    },
+    {
+      "file": "clasp.wav",
+      "category": "flourish",
+      "hint": "a metal clasp springing open — the grimoire being unlocked",
+      "durationMs": 261,
+      "bytes": 23128
+    },
+    {
+      "file": "clear-high.wav",
+      "category": "reward",
+      "hint": "ascending pizzicato, full run — RARE 7-8 quest clear",
+      "durationMs": 956,
+      "bytes": 84374
+    },
+    {
+      "file": "clear-low.wav",
+      "category": "reward",
+      "hint": "ascending pizzicato, 2 steps — RARE 1-3 quest clear",
+      "durationMs": 564,
+      "bytes": 49834
+    },
+    {
+      "file": "clear-mid.wav",
+      "category": "reward",
+      "hint": "ascending pizzicato, 3 steps — RARE 4-6 quest clear",
+      "durationMs": 797,
+      "bytes": 70392
+    },
+    {
+      "file": "fanfare.wav",
+      "category": "reward",
+      "hint": "ascending steel bells, the longest cue here — every quest cleared",
+      "durationMs": 1387,
+      "bytes": 122434
+    },
+    {
+      "file": "flourish.wav",
+      "category": "flourish",
+      "hint": "ascending steel bells rising an octave — the app-open flourish",
+      "durationMs": 909,
+      "bytes": 80242
+    },
+    {
+      "file": "morning.wav",
+      "category": "ambient",
+      "hint": "a slow low steel bell, no melodic rise — the morning greeting",
+      "durationMs": 1375,
+      "bytes": 121378
+    },
+    {
+      "file": "page-calendar.wav",
+      "category": "navigation",
+      "hint": "a medium page flip — arriving at the survey-record calendar",
+      "durationMs": 430,
+      "bytes": 38044
+    },
+    {
+      "file": "page-home.wav",
+      "category": "navigation",
+      "hint": "a quick light page flip — arriving at the daily quest page",
+      "durationMs": 231,
+      "bytes": 20418
+    },
+    {
+      "file": "page-lab.wav",
+      "category": "navigation",
+      "hint": "a heavy door swinging open — arriving at the research lab",
+      "durationMs": 919,
+      "bytes": 81132
+    },
+    {
+      "file": "page-record.wav",
+      "category": "navigation",
+      "hint": "a slow heavy parchment flip — arriving at the collection",
+      "durationMs": 769,
+      "bytes": 67874
+    },
+    {
+      "file": "treasure-light.wav",
+      "category": "reward",
+      "hint": "a short coin tick — looking back at something already earned",
+      "durationMs": 338,
+      "bytes": 29908
+    },
+    {
+      "file": "treasure.wav",
+      "category": "reward",
+      "hint": "a handful of coins being turned over — a bounty paid out",
+      "durationMs": 846,
+      "bytes": 74654
+    }
+  ]
+}
