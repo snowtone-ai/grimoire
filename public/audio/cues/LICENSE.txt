@@ -1,0 +1,56 @@
+Grimoire — vendored audio cues
+==============================
+
+Two Kenney CC0 packs, hand-picked and re-encoded. Nothing here is original to
+this project; the selection and the file names are.
+
+--------------------------------------------------------------------------
+
+	RPG Audio (1.0)
+	Created/distributed by Kenney (www.kenney.nl)
+	https://kenney.nl/assets/rpg-audio
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	Source files used:
+	  bookFlip3.ogg   -> page-home.wav
+	  bookFlip2.ogg   -> page-calendar.wav
+	  doorOpen_1.ogg  -> page-lab.wav
+	  bookFlip1.ogg   -> page-record.wav
+	  metalLatch.ogg  -> clasp.wav
+	  bookOpen.ogg    -> book-open.wav
+	  handleCoins.ogg -> treasure.wav
+	  handleCoins2.ogg-> treasure-light.wav
+
+--------------------------------------------------------------------------
+
+	Music Jingles (1.0)
+	Created/distributed by Kenney (www.kenney.nl)
+	https://kenney.nl/assets/music-jingles
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	Source files used:
+	  jingles_PIZZI04.ogg -> clear-low.wav
+	  jingles_PIZZI10.ogg -> clear-mid.wav
+	  jingles_PIZZI02.ogg -> clear-high.wav
+	  jingles_STEEL02.ogg -> fanfare.wav
+	  jingles_STEEL06.ogg -> morning.wav
+	  jingles_STEEL10.ogg -> flourish.wav
+
+--------------------------------------------------------------------------
+
+Re-encoding applied to every file (T044):
+
+	ffmpeg -i <source> -af volume=<g>dB -ac 1 -ar 44100 -c:a pcm_s16le <out>
+
+where <g> peak-normalises the file to -1.0 dBFS. The gain is per-file, measured
+with ffmpeg's volumedetect, so all three vendored Kenney packs (these two plus
+Interface Sounds in ../ui/) sit at one level and per-cue mixing can be done in
+code instead of by ear. PCM s16le / 44.1 kHz / mono is the same
+decodeAudioData-safe format ../ui/ already uses (Safari/iOS).
+
+CC0 means no attribution is required. Kenney is credited here anyway.
+Support Kenney: http://support.kenney.nl

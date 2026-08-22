@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { type Task, type Recurrence } from "@/lib/db";
 import { updateTask, deleteTask } from "@/lib/taskDb";
-import { playSave } from "@/lib/sound";
+import { playCue } from "@/lib/sound";
 
 interface TaskEditModalProps {
   task: Task;
@@ -28,6 +28,18 @@ export function TaskEditModal({
   onSaved,
   onDeleted,
 }: TaskEditModalProps) {
+  // Mounted only while open, so mount/unmount is the open/close moment.
+  // Dismissing gets its own cue; saving and deleting already have theirs, so
+  // neither ends up playing two sounds for one action.
+  useEffect(() => {
+    playCue("modalOpen");
+  }, []);
+
+  function dismiss() {
+    playCue("modalClose");
+    onClose();
+  }
+
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [dueDate, setDueDate] = useState(task.dueDate);
@@ -61,7 +73,7 @@ export function TaskEditModal({
           recurrence === "monthly" ? recurrenceDayOfMonth : undefined,
       };
       await updateTask(task.id, changes);
-      playSave();
+      playCue("save");
       onSaved();
       onClose();
     } finally {
@@ -73,6 +85,11 @@ export function TaskEditModal({
     setDeleting(true);
     try {
       await deleteTask(task.id);
+      // After the write, not before: the cue confirms the delete happened, and
+      // firing it first meant a store that threw still sounded like success.
+      // The soft downward cue, not an error buzz — deleting a quest the user no
+      // longer wants is a normal, non-punishing outcome.
+      playCue("undo");
       onDeleted();
       onClose();
     } finally {
@@ -84,7 +101,7 @@ export function TaskEditModal({
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade-in"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) dismiss();
       }}
     >
       <div
@@ -98,7 +115,7 @@ export function TaskEditModal({
           <button
             type="button"
             aria-label="閉じる"
-            onClick={onClose}
+            onClick={dismiss}
             className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
           >
             <X className="size-5" />

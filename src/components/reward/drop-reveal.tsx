@@ -5,7 +5,6 @@ import { useEffect, type CSSProperties } from "react";
 import { getRarityLabel } from "@/lib/domain/drops";
 import { rarityStyle } from "@/lib/domain/rarity-style";
 import { type GrantResult } from "@/lib/rewardDb";
-import { GraceParticles } from "@/components/fx/grace-particles";
 import { isEffectEnabled, isReducedMotionForced } from "@/lib/fx";
 
 // Dwell time is sized to READ the card, not to flash it (D-036). The card shows
@@ -48,7 +47,14 @@ export function DropReveal({
   const spring = juiceEnabled && grant.rarity >= 4;
   const shine = juiceEnabled && grant.rarity >= 6;
   const glow = juiceEnabled && grant.rarity >= 6;
-  const particles = juiceEnabled && grant.rarity === 8;
+  // D-047 replaced the hand-placed five-span "reveal" particle preset with a
+  // single halo of light behind the card, drawn from the vendored halo texture.
+  // It is CSS rather than a sprite-engine scene on purpose: this is the one
+  // effect in the app that has to sit *behind* something, and the engine's
+  // canvas is deliberately above every overlay. Lowered from rank 8 only to
+  // rank 6 and up — the old preset was faint enough that reserving it for the
+  // single rarest tier left the mid-high cards looking like a rank 1.
+  const halo = juiceEnabled && grant.rarity >= 6;
 
   useEffect(() => {
     if (replay) return;
@@ -63,8 +69,14 @@ export function DropReveal({
       aria-live="polite"
       onClick={onDismiss}
     >
-      {particles && <GraceParticles preset="reveal" />}
       <div className="relative w-full max-w-[280px]">
+        {halo && (
+          <div
+            aria-hidden
+            className="drop-reveal-halo pointer-events-none absolute left-1/2 top-1/2 -z-10"
+            style={{ "--halo-color": style.color } as CSSProperties}
+          />
+        )}
         {glow && (
           <div
             aria-hidden

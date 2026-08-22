@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  cancelPendingConfetti,
-  fireAllCompleteConfetti,
-  fireDropConfetti,
-} from "@/lib/confetti";
+  cancelScreenEffects,
+  fireAllClearEffect,
+  fireCompletionEffect,
+  fireMorningEffect,
+} from "@/lib/vfx";
 import { type Task } from "@/lib/db";
 import {
   getAllTasks,
@@ -32,14 +33,7 @@ import {
 import { todayDateString } from "@/lib/domain/task-date";
 import { withViewTransition } from "@/lib/view-transition";
 import { getTodayBountyClaims, grantDropForTask, type GrantResult } from "@/lib/rewardDb";
-import {
-  playClear,
-  playFanfare,
-  playMorning,
-  playTap,
-  playUndo,
-  primeAudioOnFirstGesture,
-} from "@/lib/sound";
+import { playClear, playCue } from "@/lib/sound";
 import { isEffectEnabled } from "@/lib/fx";
 
 /** Set once the user has been asked about notifications, so the home screen
@@ -132,8 +126,11 @@ export function useHomeScreen() {
           const grant = await grantDropForTask(claimId, today);
           if (grant) {
             claims.add(claimId);
-            playClear(grant.rarity);
-            fireDropConfetti(grant.rarity);
+            // A bounty pays out rather than being cleared: it gets the coin cue,
+            // not the quest-clear jingle, so the two are audibly different
+            // events even though they share the drop-reveal card.
+            playCue("bounty");
+            fireCompletionEffect(grant.rarity);
             setDropQueue((queue) => [...queue, grant]);
           }
         } catch (err) {
@@ -153,7 +150,6 @@ export function useHomeScreen() {
   }, [today]);
 
   useEffect(() => {
-    primeAudioOnFirstGesture();
     const fallback = setTimeout(() => setLoading(false), 1500);
     let morningTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -169,7 +165,8 @@ export function useHomeScreen() {
         }
         if (shouldGreetMorning(today)) {
           setShowMorningLight(true);
-          playMorning();
+          playCue("morning");
+          fireMorningEffect();
           morningTimer = setTimeout(() => setShowMorningLight(false), MORNING_LIGHT_MS);
         }
       })
@@ -207,9 +204,9 @@ export function useHomeScreen() {
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, [notifPermission]);
 
-  // Waves live on document.body outside React, so leaving the screen must take
-  // any queued burst with it.
-  useEffect(() => cancelPendingConfetti, []);
+  // The effect canvas lives on document.body outside React, so leaving the
+  // screen must take any burst still playing with it.
+  useEffect(() => cancelScreenEffects, []);
 
   /* F-7 Must NOT: never ask for notification permission on first launch — ask
    * once the user has felt the app's value. The first all-quests-cleared moment
@@ -259,7 +256,7 @@ export function useHomeScreen() {
         const grant = await grantDropForTask(taskId, today);
         if (grant) {
           playClear(grant.rarity);
-          fireDropConfetti(grant.rarity);
+          fireCompletionEffect(grant.rarity);
           setDropQueue((queue) => [...queue, grant]);
         } else {
           // Already rewarded today for this task — quiet completion chime.
@@ -269,7 +266,7 @@ export function useHomeScreen() {
         console.error("[reward] drop grant failed:", err);
       }
     } else {
-      playUndo();
+      playCue("undo");
       await plant.decrementCompleted();
     }
     await syncPlantStateFromTasks();
@@ -283,7 +280,7 @@ export function useHomeScreen() {
 
   function handleDepart(taskId: string) {
     if (departedIds.has(taskId)) return;
-    playTap();
+    playCue("depart");
     setDepartedIds(markDeparted(today, taskId));
     evaluateBounties().catch(console.error);
   }
@@ -347,8 +344,8 @@ async function updateCompletionEffects({
   if (isCompleting && allDone) {
     await recordStreak(today, true);
     await refreshStreak();
-    playFanfare();
-    fireAllCompleteConfetti();
+    playCue("fanfare");
+    fireAllClearEffect();
     setAllCompleteMessage(true);
     setTimeout(() => setAllCompleteMessage(false), 3000);
     onAllComplete();

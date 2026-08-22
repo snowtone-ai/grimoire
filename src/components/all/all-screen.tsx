@@ -13,7 +13,7 @@ import {
   taskForDisplayDate,
   todayDateString,
 } from "@/lib/domain/task-date";
-import { playTap } from "@/lib/sound";
+import { playCue } from "@/lib/sound";
 import { TaskEditModal } from "@/components/home/task-edit-modal";
 import { TaskAddModal } from "@/components/home/task-add-modal";
 import { CalendarImportModal } from "@/components/calendar/calendar-import-modal";
@@ -142,7 +142,7 @@ export function AllScreen() {
         type="button"
         aria-label="クエストを追加"
         onClick={() => {
-          playTap();
+          playCue("tap");
           setShowAddModal(true);
         }}
         className="btn-squish fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary bg-gradient-to-b from-white/25 to-transparent text-primary-foreground shadow-lg shadow-primary/35 inset-shadow-[0_1px_0_rgba(255,255,255,0.3)]"

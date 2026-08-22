@@ -1,30 +1,45 @@
 "use client";
 
-/* Open-app flourish (T036): a gold ornate-frame + particle arrival moment on
- * app open, gated by the "起動時の演出" toggle (default off — opt-in only, for
- * users on the settings "追加の演出" section who explicitly want it). Not
- * built around the app icon/logo — mid-session the owner corrected the initial
- * "splash screen" framing: this is "a gorgeous arrival effect," not a loading
- * screen tied to branding. It's a pure choreography moment: vignette fade-in
- * -> gold frame draws in with its corners popping first (anticipation, via
- * --ease-spring) -> grace particles rise from within the frame -> a short
- * one-line greeting -> auto fade-out, tap/Escape-to-skip at any point.
+/* Open-app flourish: the grimoire being opened, on app open.
  *
- * Overlay only: {children} in layout.tsx mounts and starts loading its own
- * data immediately underneath, so this never blocks or delays the app's own
- * content the way a real loading splash would (F-1 does not formally gate
- * this effect — the user opted into it via the toggle — but there is zero
- * cost to keeping the two concurrent anyway).
+ * Gated by the "起動時の演出" toggle. Not built around the app icon/logo —
+ * mid-session in T036 the owner corrected the initial "splash screen" framing:
+ * this is "a gorgeous arrival effect," not a loading screen tied to branding.
+ *
+ * D-047 rebuilt it from the vendored assets, and the choreography is now one
+ * physical action told in three beats rather than a frame that draws itself for
+ * no stated reason:
+ *
+ *   0ms    the clasp springs open              (cues/clasp.wav)
+ *   200ms  the cover lifts                     (cues/book-open.wav)
+ *   260ms  a summoning circle opens underneath (vfx/arcane-circle.png)
+ *   300ms  the gold frame draws itself in      (CSS, unchanged from T036)
+ *   400ms  light rises out of the page         (cues/flourish.wav + motes)
+ *
+ * The sound half lives in domain/sound-cues.ts ("flourish", a three-step cue)
+ * and the particle half in domain/vfx-scenes.ts (FLOURISH_SCENE); the delays
+ * above are set in those two files, not here. This component owns only the
+ * frame, the greeting, and the dismissal.
+ *
+ * Overlay only: {children} in layout.tsx mounts and starts loading its own data
+ * immediately underneath, so this never blocks or delays the app's own content
+ * the way a real loading splash would.
  *
  * sessionStorage-scoped (not localStorage): shows once per fresh session/tab,
  * not on every in-app navigation between routes. */
 
 import { useEffect, useState } from "react";
 import { isEffectEnabled } from "@/lib/fx";
-import { GraceParticles } from "./grace-particles";
+import { playCue } from "@/lib/sound";
+import { cancelEffects, fireFlourishEffect } from "@/lib/vfx";
 
 const SESSION_KEY = "grimoire-flourish-shown";
-const AUTO_DISMISS_MS = 2600;
+/* Long enough for the last of FLOURISH_SCENE's particles to clear. The
+ * longest-lived is the mote emitter: 460ms delay + up to 2400ms of life =
+ * 2860ms, so the margin here is 140ms, not much. Shorter, and the overlay
+ * would fade out from under its own particles — anyone retuning
+ * FLOURISH_SCENE needs to re-check this number against the mote emitter. */
+const AUTO_DISMISS_MS = 3000;
 const CLOSE_DURATION_MS = 400;
 
 type Phase = "hidden" | "shown" | "closing";
@@ -53,6 +68,10 @@ export function OpenFlourish() {
         // sessionStorage unavailable: fall through and show it anyway, once per mount.
       }
       setPhase("shown");
+      // Both halves start here, on the same tick; each carries its own internal
+      // timing so the sound and the light stay in step without a shared clock.
+      playCue("flourish");
+      fireFlourishEffect();
       timer = setTimeout(() => setPhase("closing"), AUTO_DISMISS_MS);
     });
     return () => {
@@ -70,6 +89,10 @@ export function OpenFlourish() {
   if (phase === "hidden") return null;
 
   function dismiss() {
+    // Skipping has to take the particles with it: the sprite canvas is above
+    // this overlay by design, so motes left running would keep drawing over the
+    // quest list the user just skipped ahead to see.
+    cancelEffects();
     setPhase("closing");
   }
 
@@ -83,7 +106,6 @@ export function OpenFlourish() {
       }`}
       onClick={dismiss}
     >
-      <GraceParticles preset="open" />
       <div className="relative flex h-[62vmin] w-[62vmin] max-h-[380px] max-w-[380px] items-center justify-center">
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full"

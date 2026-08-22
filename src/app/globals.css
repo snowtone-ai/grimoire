@@ -397,6 +397,71 @@ html[data-page-turn] .task-vt {
   view-transition-name: none !important;
 }
 
+/* ── Page-turn veil: light catching the edge of the turning page (D-047) ─ */
+/* The turn itself is a snapshot animation, so nothing can be layered onto
+   ::view-transition-old(root) — a real element has to do it. body::after is
+   that element: normally inert, and driven purely by the data-page-turn
+   attribute the nav already sets and clears, so it needs no component, no
+   state and no timer of its own.
+
+   This is the CSS half of the arrival effect. The other half is the sprite
+   sweep fired from bottom-nav.tsx, which is themed per destination; this veil
+   deliberately is not, because it reads as the page catching light rather than
+   as the destination announcing itself. Gated on data-page-theme so it only
+   appears when the "ページごとの遷移演出" toggle is on, matching the themed
+   animations above. */
+@keyframes page-veil {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-page-turn][data-page-theme] body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        70% 40% at 50% 50%,
+        color-mix(in oklab, var(--gold) 26%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        105deg,
+        transparent 42%,
+        color-mix(in oklab, var(--gold) 34%, transparent) 50%,
+        transparent 58%
+      );
+    animation: page-veil 0.42s var(--ease-fluid) both;
+  }
+
+  /* The lab is the one cold destination; its veil follows the door, not the
+     hearth. Kept in sync with PAGE_LAB_SCENE's frost tint in vfx-scenes.ts. */
+  html[data-page-turn][data-page-theme="plant"] body::after {
+    background:
+      radial-gradient(
+        70% 40% at 50% 50%,
+        color-mix(in oklab, var(--frost) 28%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        105deg,
+        transparent 42%,
+        color-mix(in oklab, var(--frost) 30%, transparent) 50%,
+        transparent 58%
+      );
+  }
+}
+
 /* ── Per-page transition themes (T036) ────────────────────────────── */
 /* Extends the page-turn system above rather than replacing it: the default
  * rules become the implicit "home" theme (data-page-theme absent or "home").
@@ -592,6 +657,39 @@ html[data-page-turn] .task-vt {
   animation: drop-glow-pulse 2.4s ease-in-out infinite;
 }
 
+/* Rank 6+: a body of light behind the card, masked through the vendored halo
+   texture (D-047). This is the one effect in the app that has to sit BEHIND
+   something, which is exactly why it is CSS and not a src/lib/vfx.ts scene —
+   that engine's canvas is deliberately above every overlay. Kept behind the
+   card via -z-10 inside the card's own positioned wrapper, so it can never
+   wash out the text the card exists to be read for (T031). */
+@keyframes drop-reveal-halo {
+  from {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.75;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+}
+
+.drop-reveal-halo {
+  width: 150%;
+  aspect-ratio: 1;
+  background: var(--halo-color, var(--gold));
+  -webkit-mask-image: url("/vfx/halo.png");
+  mask-image: url("/vfx/halo.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: drop-reveal-halo 0.9s var(--ease-out-expo) both;
+}
+
 /* ── Snowfall (botanical-lab vista only, hidden for reduced motion) ── */
 @keyframes snow-drift {
   from {
@@ -706,63 +804,12 @@ html[data-page-turn] .task-vt {
   }
 }
 
-/* ── Tap spark: one-frame glint under the finger (D-036, T036) ─────── */
-/* Spawned by src/lib/spark.ts on any .btn-squish press as a group (one core
-   flash + a couple of flung motes), then removed on animationend. The group
-   is positioned at the pointer; core/motes are absolutely positioned inside
-   it at (0,0) and use transforms to center/fling themselves, so nothing here
-   affects layout or intercepts the press it is reacting to. */
-.tap-spark-group {
-  position: fixed;
-  z-index: 70;
-  pointer-events: none;
-}
-
-@keyframes tap-spark {
-  from { transform: translate(-50%, -50%) scale(0.35); opacity: 0.85; }
-  to { transform: translate(-50%, -50%) scale(2.1); opacity: 0; }
-}
-
-.tap-spark {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 9999px;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--gold) 70%, transparent) 0%,
-    color-mix(in oklab, var(--frost) 45%, transparent) 45%,
-    transparent 70%
-  );
-  animation: tap-spark 0.42s var(--ease-out-expo) forwards;
-}
-
-/* Secondary motion: a couple of small motes fling outward from the same
-   center at a randomized angle/reach (--angle/--dist, set by spark.ts),
-   composed via rotate()+translateX() so no separate X/Y math is needed. */
-@keyframes tap-spark-mote {
-  from { transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateX(0) scale(1); opacity: 0.9; }
-  to { transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateX(var(--dist, 20px)) scale(0.3); opacity: 0; }
-}
-
-.tap-spark-mote {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: color-mix(in oklab, var(--gold) 80%, transparent);
-  animation: tap-spark-mote 0.4s var(--ease-out-expo) forwards;
-}
-
 /* ── Morning ambience: light across the top on an early open (D-036) ─ */
 /* The user asked for something to greet them when they open the app early. A
    modal would break F-1 (see today's quests instantly), so this is ambient
    only: it sits behind the content, never takes a pointer event, and fades
-   out on its own. Enabled by the "にぎやか" preset only. */
+   out on its own. Gated by the "朝のあいさつ演出" toggle; its motes are drawn
+   by the sprite engine, not by this rule. */
 @keyframes morning-light {
   0% { opacity: 0; transform: translateY(-18px); }
   22% { opacity: 1; transform: translateY(0); }
@@ -789,16 +836,15 @@ html[data-page-turn] .task-vt {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tap-spark-group,
   .morning-light {
     display: none;
   }
 }
 
-/* ── Grace particles: shared gold-mote primitive (T036) ─────────────── */
-/* Elden Ring "guidance of grace"-style motes: sparse, upward, warm-gold.
-   transform/opacity only, static (non-animated) blur — see grace-particles.tsx
-   for the preset table and why this stays one shared primitive. */
+/* ── Grace particles: the ambient background light layer (D-047) ────── */
+/* Elden Ring "guidance of grace"-style motes: upward, warm-gold, at three
+   depths. transform/opacity only — see grace-particles.tsx for the layer table
+   and for why this one effect stays in CSS while the rest moved to canvas. */
 @keyframes grace-drift {
   0% {
     transform: translate3d(0, 108vh, 0);
@@ -822,28 +868,23 @@ html[data-page-turn] .task-vt {
 .grace-mote {
   position: absolute;
   top: 0;
-  border-radius: 9999px;
   pointer-events: none;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--gold) 85%, transparent) 0%,
-    color-mix(in oklab, var(--gold) 30%, transparent) 55%,
-    transparent 75%
-  );
-  filter: blur(0.5px);
+  /* The vendored Kenney sparkle, masked rather than drawn: the texture is
+     white-with-alpha, so masking a gold fill through it keeps the four-point
+     shape AND lets the mote follow --gold across light/dark themes. A
+     background-image would paint it white in both. */
+  background: color-mix(in oklab, var(--gold) 92%, transparent);
+  -webkit-mask-image: url("/vfx/mote.png");
+  mask-image: url("/vfx/mote.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   animation-name: grace-drift;
   animation-duration: var(--dur, 20s);
   animation-delay: var(--delay, 0s);
-  animation-timing-function: var(--ease-fluid);
-}
-
-.grace-mote-loop {
+  animation-timing-function: linear;
   animation-iteration-count: infinite;
-}
-
-.grace-mote-once {
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -852,7 +893,7 @@ html[data-page-turn] .task-vt {
   }
 }
 
-/* ── Open-app flourish: gold frame + particles on app open (T036) ──── */
+/* ── Open-app flourish: the grimoire opening on app open (D-047) ───── */
 @keyframes open-flourish-fade {
   from {
     opacity: 0;
@@ -867,7 +908,7 @@ html[data-page-turn] .task-vt {
      above), but --gold itself swaps to a darker, lower-lightness value in
      light mode for contrast against a LIGHT background elsewhere in the app.
      Against this overlay's always-dark backdrop that swap goes the wrong
-     way, so pin the frame/title/grace-motes to the bright dark-mode value. */
+     way, so pin the frame and title to the bright dark-mode value. */
   --gold: oklch(0.8 0.12 85);
   animation: open-flourish-fade 0.5s var(--ease-fluid) both;
   cursor: pointer;

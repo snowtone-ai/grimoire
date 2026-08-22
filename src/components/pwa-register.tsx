@@ -2,12 +2,26 @@
 
 import { useEffect } from "react";
 import { initTapSparks } from "@/lib/spark";
+import { preloadVfx } from "@/lib/vfx";
+import { primeAudioOnFirstGesture } from "@/lib/sound";
 
 export function PwaRegister() {
   // Mounted once in the root layout, which makes it the app-wide place to
-  // install the delegated tap-spark listener (it must cover every screen).
+  // install the delegated tap-spark listener (it must cover every screen), to
+  // warm the effect textures, and to arm the audio unlock. The textures are
+  // warmed here rather than on first gesture — unlike audio, images need no
+  // user activation, and the very first thing an effect can react to IS a
+  // gesture, so waiting for one would guarantee the first tap spark of a
+  // session draws nothing.
+  //
+  // The audio unlock belongs here for a stricter reason: it is what flips the
+  // flag gating every cue and every haptic, so arming it from any single
+  // screen leaves the app silent for the whole page-load when opened directly
+  // at a different route.
   useEffect(() => {
     initTapSparks();
+    preloadVfx();
+    primeAudioOnFirstGesture();
   }, []);
 
   useEffect(() => {

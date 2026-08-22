@@ -6,10 +6,9 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import { todayDateString } from "@/lib/domain/task-date";
 import { getStageLabel, type GrowthStage, type PlantSpecies } from "@/lib/domain/plant";
-import { playTap } from "@/lib/sound";
+import { playCue } from "@/lib/sound";
 import { GmailImportModal } from "@/components/gmail/gmail-import-modal";
 import { DropReveal } from "@/components/reward/drop-reveal";
-import { GraceParticles } from "@/components/fx/grace-particles";
 import { BountyBoard } from "./bounty-board";
 import { TaskCard } from "./task-card";
 import { TaskAddModal } from "./task-add-modal";
@@ -28,11 +27,11 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {screen.showMorningLight && (
-        <div className="morning-light" aria-hidden>
-          <GraceParticles preset="morning" />
-        </div>
-      )}
+      {/* The light wash only. Its motes are drawn by the sprite engine, fired
+          from the same place that decides to greet at all (use-home-screen) —
+          D-047 removed the second, DOM-span particle system that used to sit
+          inside this div and duplicate them. */}
+      {screen.showMorningLight && <div className="morning-light" aria-hidden />}
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
           <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
@@ -361,7 +360,7 @@ function FloatingActions({
         type="button"
         aria-label="クエストを追加"
         onClick={() => {
-          playTap();
+          playCue("tap");
           onAdd();
         }}
         className="btn-squish flex size-14 items-center justify-center rounded-full bg-primary bg-gradient-to-b from-white/25 to-transparent text-primary-foreground shadow-lg shadow-primary/35 inset-shadow-[0_1px_0_rgba(255,255,255,0.3)]"

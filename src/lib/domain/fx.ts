@@ -56,13 +56,25 @@ export const EFFECT_SECTIONS: Record<EffectKey, SettingsSection> = {
   pageTransitions: "more",
 };
 
+/* D-047 flipped every default to on, at the owner's explicit instruction.
+ *
+ * T036/D-039 shipped the three heavier effects off-by-default, reasoning that
+ * someone who wants the tap spark but not a multi-second app-open flourish had
+ * no way to say so. That reasoning was sound and is not being discarded — every
+ * one of these is still an independent switch, and OS reduced-motion still
+ * forces the lot off. What changed is the starting position: the effects
+ * themselves were rebuilt on real assets in D-047, and an opt-in default meant
+ * the rebuild was invisible until the user went looking for it in /settings.
+ * The switch that matters most for the ADHD persona D-039 protects — being able
+ * to turn any of this off in one tap, and having that choice stick — is intact.
+ */
 export const DEFAULT_EFFECT_PREFS: Record<EffectKey, boolean> = {
   tapSpark: true,
   completion: true,
-  morningGreeting: false,
-  openFlourish: false,
-  ambientParticles: false,
-  pageTransitions: false,
+  morningGreeting: true,
+  openFlourish: true,
+  ambientParticles: true,
+  pageTransitions: true,
 };
 
 export interface EffectLabel {
@@ -77,7 +89,7 @@ export const EFFECT_LABELS: Record<EffectKey, EffectLabel> = {
   },
   completion: {
     label: "完了エフェクト",
-    description: "クエスト達成の紙吹雪と、全達成ファンファーレ。",
+    description: "クエスト達成の光のエフェクトと、全達成ファンファーレ。",
   },
   morningGreeting: {
     label: "朝のあいさつ演出",

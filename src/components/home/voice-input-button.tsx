@@ -6,7 +6,7 @@ import { createTask } from "@/lib/taskDb";
 import { parseTaskFromText } from "@/lib/gemini";
 import { RateLimitError, redactSecret } from "@/lib/errors";
 import { todayDateString } from "@/lib/domain/task-date";
-import { playSave, playTap } from "@/lib/sound";
+import { playCue } from "@/lib/sound";
 
 interface VoiceInputButtonProps {
   onTaskCreated: () => void;
@@ -72,13 +72,14 @@ export function VoiceInputButton({
             ? "今日"
             : dateObj.toLocaleDateString("ja-JP", { month: "long", day: "numeric" });
           setSuccessMsg(`「${parsed.title}」を${dateLabel}に受注しました`);
-          playSave();
+          playCue("save");
           setStatus("success");
           setTimeout(() => setStatus("idle"), 3000);
         })
         .catch((err: unknown) => {
           console.error("[VoiceInput] error:", redactSecret(err));
           if (err instanceof RateLimitError) {
+            playCue("error");
             setErrorMsg("AI解析が一時的に利用できません。手動で入力してください");
             setStatus("error");
             setTimeout(() => {
@@ -87,6 +88,7 @@ export function VoiceInputButton({
             }, 2000);
           } else {
             const msg = err instanceof Error ? err.message : String(err);
+            playCue("error");
             setErrorMsg(`エラー: ${msg}`);
             setStatus("error");
             setTimeout(() => setStatus("idle"), 5000);
@@ -103,6 +105,7 @@ export function VoiceInputButton({
         setStatus("idle");
         return;
       }
+      playCue("error");
       setErrorMsg("音声の認識に失敗しました");
       setStatus("error");
       setTimeout(() => setStatus("idle"), 2500);
@@ -124,7 +127,7 @@ export function VoiceInputButton({
     if (status === "listening") {
       stopListening();
     } else if (status === "idle") {
-      playTap();
+      playCue("tap");
       startListening();
     }
   };

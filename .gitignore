@@ -65,3 +65,8 @@ credentials.json
 .claude/skills/**
 .agents/
 skills-lock.json
+
+# impeccable (Stop-hook code checker). config.json IS tracked: it records
+# reviewed false-positive decisions with their reasons, which are worth
+# keeping. The hook cache is a disposable speed-up and never is.
+.impeccable/hook.cache.json

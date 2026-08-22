@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { type Recurrence } from "@/lib/db";
 import { createTask } from "@/lib/taskDb";
-import { playSave } from "@/lib/sound";
+import { playCue } from "@/lib/sound";
 
 interface TaskAddModalProps {
   onClose: () => void;
@@ -30,6 +30,18 @@ function todayDateString(): string {
 }
 
 export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: TaskAddModalProps) {
+  // The sheet is mounted only while it is open, so mount/unmount is exactly the
+  // open/close moment. Dismissing gets its own cue below; saving does not, so a
+  // successful save stays one sound (the save cue), not two.
+  useEffect(() => {
+    playCue("modalOpen");
+  }, []);
+
+  function dismiss() {
+    playCue("modalClose");
+    onClose();
+  }
+
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(todayDateString());
@@ -57,7 +69,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
         recurrenceDayOfWeek: recurrence === "weekly" ? recurrenceDayOfWeek : undefined,
         recurrenceDayOfMonth: recurrence === "monthly" ? recurrenceDayOfMonth : undefined,
       });
-      playSave();
+      playCue("save");
       onTaskCreated();
       onClose();
     } finally {
@@ -70,7 +82,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade-in"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) dismiss();
       }}
     >
       {/* Sheet */}
@@ -85,7 +97,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
           <button
             type="button"
             aria-label="閉じる"
-            onClick={onClose}
+            onClick={dismiss}
             className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
           >
             <X className="size-5" />

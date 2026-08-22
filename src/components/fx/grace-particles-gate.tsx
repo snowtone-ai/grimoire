@@ -2,11 +2,9 @@
 
 /* Ambient gold-particle background layer on every route except /plant (T036 /
  * D-038 — reopens D-024's "no full-screen particle display" rule, but scoped:
- * opt-in via the "背景の光の粒子" toggle (default off), excludes /plant (which
- * already has its own cold, downward-falling snow — the contrast in direction
- * and color temperature is intentional, not just clutter avoidance), and
- * matches the snow's sparse particle-count discipline rather than a dense
- * confetti-style field.
+ * governed by the "背景の光の粒子" toggle, and excludes /plant, which already
+ * has its own cold, downward-falling snow — the contrast in direction and
+ * colour temperature is intentional, not just clutter avoidance.
  *
  * Mounted once in layout.tsx alongside <PwaRegister />. Read once per pathname
  * change via an effect rather than during render, since layout.tsx is server-
@@ -37,7 +35,7 @@ export function GraceParticlesGate() {
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[-1]">
-      <GraceParticles preset="ambient" />
+      <GraceParticles />
     </div>
   );
 }

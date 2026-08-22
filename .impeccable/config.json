@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "var(--ease-spring)",
+        "createdAt": "2026-08-22T23:08:47.835Z",
+        "reason": "Claude (T044 triage): --ease-spring is linear() with a single 3.2% overshoot at 41.5% then a monotone settle to 1 -- one damped pass, no oscillation, which is spring physics rather than the bounce/elastic the rule targets. Pre-dates this branch (byte-identical on main since T036) and is the file's declared motion vocabulary at globals.css:48."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "drop-reveal-in-spring",
+        "createdAt": "2026-08-22T23:08:52.718Z",
+        "reason": "Claude (T044 triage): the keyframe is a damped settle, not a bounce -- rotateY 70deg to -7 to +2 to 0 and scale 0.85 to 1.03 to 0.985 to 1, amplitude decaying ~3.5x per pass over 0.55s, applied to RARE4+ reveals only. Pre-dates this branch (present on main since T036)."
+      }
+    ]
+  }
+}

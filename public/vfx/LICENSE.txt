@@ -1,0 +1,45 @@
+Grimoire — vendored particle textures
+=====================================
+
+	Particle Pack (1.1)
+	by Kenney Vleugels (www.kenney.nl)
+	https://kenney.nl/assets/particle-pack
+
+	Additional credit for creating filter templates:
+	Indigo Ray, Craig Nisbet, Zoltan Erdokovy, Heliagon, ThreeDee,
+	Killst4r and Tim2501
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+--------------------------------------------------------------------------
+
+Source files used, and the name each was vendored under (T044):
+
+	magic_02.png  -> arcane-circle.png
+	magic_05.png  -> mote.png
+	star_04.png   -> glint.png
+	star_06.png   -> star.png
+	star_09.png   -> burst.png
+	spark_05.png  -> bolt.png
+	light_01.png  -> ring-pulse.png
+	light_03.png  -> halo.png
+	flare_01.png  -> flare.png
+	twirl_02.png  -> swirl.png
+	trace_01.png  -> trail.png
+	circle_04.png -> ring.png
+	symbol_02.png -> sigil.png
+
+Re-encoding applied to every file:
+
+	ffmpeg -i <source> -vf scale=256:256:flags=lanczos -pix_fmt ya8 \
+	       -compression_level 100 <out>
+
+512 -> 256 px because no sprite in this app is ever drawn larger than about
+180 CSS px, and grey+alpha (PNG colour type 4) rather than RGBA because every
+texture in the pack is white and src/lib/vfx.ts tints at draw time — the three
+colour channels carry no information. Together that takes the 13 textures from
+~740 KB to ~280 KB.
+
+CC0 means no attribution is required. Kenney is credited here anyway.
+Support Kenney: http://support.kenney.nl
