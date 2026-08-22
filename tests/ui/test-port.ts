@@ -2,6 +2,7 @@ import type {
   AppReadModel,
   AppUiPort,
   BootstrapView,
+  CalendarEntryView,
   ExternalImportResultView,
   ImportPreviewView,
   NotificationView,
@@ -114,9 +115,13 @@ export class TestUiPort implements AppUiPort {
     taskId,
   }: {
     readonly completed: boolean
+    readonly localDate?: string
     readonly taskId: string
   }): Promise<void> {
     this.patch({
+      calendarEntries: this.model.calendarEntries.map((entry) =>
+        entry.taskId === taskId ? { ...entry, completed } : entry,
+      ),
       tasksToday: this.model.tasksToday.map((task) =>
         task.id === taskId ? { ...task, completed } : task,
       ),
@@ -141,6 +146,11 @@ export class TestUiPort implements AppUiPort {
 
   async loadCalendarRange(): Promise<void> {
     // Test snapshots are supplied directly by each scenario.
+  }
+
+  /** Seeds the month projection a scenario wants on screen. */
+  setCalendarEntries(calendarEntries: readonly CalendarEntryView[]): void {
+    this.patch({ calendarEntries })
   }
 
   // --- world / observations ---

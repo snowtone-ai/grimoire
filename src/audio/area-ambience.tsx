@@ -79,7 +79,12 @@ export function AreaAmbience({ areaId, enabled, track }: AreaAmbienceProps) {
       stopFade()
       audio.pause()
     }
-  }, [enabled, track])
+    // `areaId` belongs here even though the body never reads it: it keys the
+    // element below, so moving between two areas that happen to share a track
+    // object replaces the <audio> node without this effect noticing. The
+    // detached element would keep playing until GC while the new one was never
+    // started.
+  }, [areaId, enabled, track])
 
   if (track === null) return null
 

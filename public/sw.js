@@ -40,8 +40,30 @@ async function installShell() {
   )
 }
 
+/**
+ * `skipWaiting` because this app has one user family and one origin that main
+ * deploys to automatically. Without it a new worker sits in `waiting` until
+ * every tab for the origin is closed, so each deploy that touches `sw.js`
+ * arrives a session late and the very first launch after an upgrade still runs
+ * the worker it was meant to replace. Paired with `clients.claim()` below.
+ */
 self.addEventListener('install', (event) => {
-  event.waitUntil(installShell())
+  event.waitUntil(installShell().then(() => self.skipWaiting()))
+})
+
+/**
+ * Tapping a reminder has to reach the app — focus the window if one is open,
+ * otherwise open it. Without this the notification is inert: on Android Chrome
+ * it does not even dismiss, which makes the entire reminder feature look
+ * broken at exactly the moment it is supposed to pay off.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) => (clients.length > 0 ? clients[0].focus() : self.clients.openWindow('/'))),
+  )
 })
 
 /**
@@ -74,7 +96,6 @@ self.addEventListener('fetch', (event) => {
   // there is no network. Cache-first would pin the media manifest to whatever
   // footage existed when the worker installed.
   if (request.mode === 'navigate' || APP_DATA_URLS.includes(url.pathname)) {
-    const offlineFallback = request.mode === 'navigate' ? '/' : url.pathname
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -85,15 +106,25 @@ self.addEventListener('fetch', (event) => {
           return response
         })
         .catch(async () => {
-          const cached = await caches.match(request)
-          return cached ?? caches.match(offlineFallback)
+          const cached =
+            (await caches.match(request)) ??
+            (request.mode === 'navigate' ? await caches.match('/') : undefined)
+          // `respondWith(undefined)` throws and hands the browser its own error
+          // page. Install uses `allSettled`, so a shell entry can be missing
+          // without anyone noticing — answer with something either way.
+          return cached ?? new Response('Network error', { status: 503 })
         }),
     )
     return
   }
 
+  // `/audio/` covers the interface sounds (D-015) — a few hundred KB in total,
+  // and silence offline would read as the app being broken rather than quiet.
+  // World footage is deliberately absent: those files are large, and the world
+  // already degrades to its poster and ambience layers without them.
   const isStaticAsset =
     url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/audio/') ||
     url.pathname.startsWith('/brand/') ||
     url.pathname.startsWith('/icons/') ||
     url.pathname === '/manifest.webmanifest'

@@ -1,6 +1,30 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-22: T026完了。T023で受入基準に挙げながら未実施だったTier 1
+  fresh-context reviewer(Opus 5)を実施し、blocking 1件+有効な指摘12件を修正した。
+  blocking: カレンダーの`CalendarEntryView.id`は`taskId:date`のoccurrence idなのに
+  `setTaskCompleted`/`updateTask`へタスクIDとして渡しており、カレンダーからの完了と
+  編集が無言で失敗していた。`taskId`をviewへ明示的に持たせて解消。
+  この修正を実ブラウザで確認する過程で**2件目の欠陥を自力検出**した: 完了は
+  occurrence状態なのに`calendarProjection`へ焼き込まれ、タスク編集など別の理由で
+  投影がdirtyにならない限り再計算されない。ストアには書けているのに画面が変わらず、
+  ホーム画面(`tasksToday`)だけが正しく動いていた。両projectionをoccurrence keyと
+  view rowの組に統一し、完了集合はrefreshのたびに適用する形へ変更(再現テストは
+  `tests/integration/durable-ui-port.test.ts`、`projectionRebuilds`が1のままである
+  ことも同時に検証)。
+  他: `src/app/create-app-port.ts`を合成ルートとして新設(T020申し送り)、
+  `navigator.serviceWorker.ready`が解決せず通知キューが恒久停止する経路、
+  sw.jsの`skipWaiting`/`notificationclick`欠落、dev環境でのSW登録、
+  GISスクリプトの遅延注入、モーダル閉時のfocus復帰、`sync-world-media.mjs`の
+  削除判定を拡張子ベースから台帳ベースへ(手置きファイルを消さない)。
+  検証: `node scripts/verify.mjs` all checks passed / `pnpm test:e2e` 11 passed。
+  **運用上の発見**: `playwright.config.ts`の`reuseExistingServer`が起動中の
+  `pnpm dev`を再利用し、cold compileで11件全滅した(コードとは無関係)。逆に
+  devサーバ相手にgreenになる危険の方が重いため`false`へ固定した。
+  `scripts/verify.mjs`には`merge-base..HEAD`を対象とする`checkWhitespace()`を追加
+  (引数なしの`git diff --check`は未コミット分しか見ないため、T025の証跡が
+  実際には何も検証していなかった)。
 - 2026-08-22: T019-T025完了。今回のスコープ(スプラッシュ映像・背景世界映像・
   グリモ本体・アイテムアートを除く実装可能な全範囲)を実装し終えた。UI層5画面と
   共有コンポーネント(T023)、効果音12キュー(T024/D-015)、データ層の再構築(T022)、
@@ -10,7 +34,9 @@
   (`GoogleIntegrationPort`/`NotificationIntegrationPort`)へ実装を注入した。
   検証: `node scripts/verify.mjs` all checks passed / `pnpm test` 207 tests /
   `pnpm test:e2e` 11 passed (chromium-desktop + webkit-mobile) /
-  `pnpm audit --prod` 0 / `git diff --check` クリーン。
+  `pnpm audit --prod` 0。(当初ここに「`git diff --check` クリーン」と記載したが、
+  引数なしの同コマンドは未コミット変更しか見ないため検証になっていなかった。
+  T026で`scripts/verify.mjs`のブランチ全体チェックへ置き換え済み。)
   browser QA(320px/390px/200%拡大/デスクトップ、reduced motion、forced-colors、
   キーボード、skip link)で横スクロール0・AAコントラスト違反0・consoleエラー0・
   focus ring欠落0を確認。実機QAで検出し修正した欠陥は7件:
@@ -20,7 +46,7 @@
   (4) 全画面で「ホームを開きました」と読み上げる、(5) 起動オーバーレイのh1が
   画面のh1と重複、(6) SWが`serviceWorker.ready`待ちでリマインダー配信を恒久停止、
   (7) SWがv1の`task-manager-v6`キャッシュを永久に残す。いずれも回帰テスト付き。
-  未実施: Tier 1 fresh-context reviewer、CIのgreen確認(PR上)。
+  Tier 1 fresh-context reviewerはT026で実施(上記)。CIのgreen確認はPR上。
   未使用の`motion`を削除。`three`/`@types/three`はD-013/D-014によりグリモ用に残置。
 - 2026-08-22: T023/T024実装完了。UI層をDESIGN.md準拠で全面再構築した。共有
   コンポーネント(Sheet/Button/IconButton/Field/Switch/Chip/BottomNavigation/

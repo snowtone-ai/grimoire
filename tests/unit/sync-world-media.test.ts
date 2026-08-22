@@ -84,22 +84,40 @@ describe('sync-world-media', () => {
   })
 
   it('never deletes a file it did not put there', () => {
-    // Regression: pruning removed every name absent from `anime/`, which took
-    // out `public/audio/bgm/.gitkeep` on the first `pnpm build` — and would
-    // have taken out a licence file or a hand-placed asset just as happily.
+    // Regression, twice over. Pruning first removed every name absent from
+    // `anime/`, taking out `public/audio/bgm/.gitkeep` on the first
+    // `pnpm build`. Narrowing it to matching file types still deleted anything
+    // the owner placed by hand, because a hand-placed `hero.mp4` classifies
+    // exactly like a synced one. Only names this script actually wrote — as
+    // recorded in its own ledger — may be removed.
     const audio = join(workspace, 'public', 'audio', 'bgm')
+    const world = join(workspace, 'public', 'world')
     mkdirSync(audio, { recursive: true })
+    mkdirSync(world, { recursive: true })
     writeFileSync(join(audio, '.gitkeep'), '')
     writeFileSync(join(audio, 'LICENSE.txt'), 'CC0')
-    writeFileSync(join(audio, 'bgm-removed-area.ogg'), 'stale')
+    writeFileSync(join(world, 'hero.mp4'), 'placed by hand')
     drop('bgm-area-01-coral-plateau.ogg')
+    drop('area-01-coral-plateau.webm')
 
     sync()
 
     expect(existsSync(join(audio, '.gitkeep'))).toBe(true)
     expect(existsSync(join(audio, 'LICENSE.txt'))).toBe(true)
-    // Still prunes what it does own.
-    expect(existsSync(join(audio, 'bgm-removed-area.ogg'))).toBe(false)
+    expect(existsSync(join(world, 'hero.mp4'))).toBe(true)
+  })
+
+  it('removes a BGM track it wrote once the source is gone', () => {
+    drop('bgm-area-01-coral-plateau.ogg')
+    sync()
+    const track = join(workspace, 'public', 'audio', 'bgm', 'bgm-area-01-coral-plateau.ogg')
+    expect(existsSync(track)).toBe(true)
+
+    rmSync(join(workspace, 'anime', 'bgm-area-01-coral-plateau.ogg'))
+    sync()
+
+    expect(existsSync(track)).toBe(false)
+    expect(manifest().bgm).toEqual({})
   })
 
   it('writes an empty manifest when the drop folder does not exist', () => {

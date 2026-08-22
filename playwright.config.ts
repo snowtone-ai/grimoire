@@ -27,7 +27,14 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm build && pnpm start --hostname 127.0.0.1',
-    reuseExistingServer: !process.env.CI,
+    // Never reuse whatever happens to hold the port. `reuseExistingServer` took
+    // a running `pnpm dev` and ran the whole suite against it: a cold Turbopack
+    // compile put first paint past the 5s expect budget and all 11 tests failed
+    // for a reason that had nothing to do with the code. The reverse is worse —
+    // a dev server can make the suite pass on behaviour the production build
+    // does not have. Occupying the port now fails loudly instead ("port 3000 is
+    // used"), which is the correct answer to "stop your dev server first".
+    reuseExistingServer: false,
     timeout: 180_000,
     url: baseURL,
   },

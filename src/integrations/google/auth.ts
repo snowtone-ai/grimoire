@@ -66,10 +66,31 @@ function getOAuth2(): GoogleOAuth2 | undefined {
   return (window as unknown as GoogleWindow).google?.accounts?.oauth2;
 }
 
+const GIS_SRC = "https://accounts.google.com/gsi/client";
+
+/**
+ * Adds the Google Identity Services script the first time linking is attempted.
+ *
+ * v1 kept it in the document head, which loaded a third-party script on every
+ * launch for a feature most sessions never touch. Injecting it here keeps the
+ * poll below meaningful — without any loader at all it simply ran out its ten
+ * seconds and reported a timeout that no reload could fix.
+ */
+function ensureGISScript(): void {
+  if (typeof document === "undefined") return;
+  if (getOAuth2()) return;
+  if (document.querySelector(`script[src="${GIS_SRC}"]`)) return;
+  const script = document.createElement("script");
+  script.src = GIS_SRC;
+  script.async = true;
+  document.head.append(script);
+}
+
 /** Poll until GIS script is ready (F3: guaranteed cleanup on every exit path). */
 function waitForGIS(timeoutMs = 10_000, signal?: AbortSignal): Promise<GoogleOAuth2> {
   const immediate = getOAuth2();
   if (immediate) return Promise.resolve(immediate);
+  ensureGISScript();
 
   return new Promise<GoogleOAuth2>((resolve, reject) => {
     if (signal?.aborted) { reject(new DOMException("Aborted", "AbortError")); return; }

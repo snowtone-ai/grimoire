@@ -52,7 +52,8 @@
 | T022 | done | worker-data (Sonnet) | T012,T020 | src/domain/, src/application/, src/infrastructure/, src/app/durable-ui-port.ts, src/app/memory-ui-port.ts, src/app/catalog-projection.ts, tests/unit/, tests/integration/ | UI層が必要とする永続機能を追加する。(1) updateTask/deleteTask(tombstone)のatomic command、(2) タスクの説明・時刻・分類(v1 category)・繰り返しをcreate/updateで扱う、(3) 選択中エリアの永続化、(4) グリモ観察記録(M-11/M-12)の保存と初見判定、(5) 通知の有効/無効と配信済み台帳の永続化(T020のport実装)、(6) outbox pumpとmulti-tab反映。報酬の一度きり確定(H-2)を壊さないこと | 新規commandのunit/property test、multi-tab/crash/quotaのfault injection、既存60testsの非回帰、`pnpm verify`合格 | 完了(306c69d)。typecheck/lint/testを独立に再検証 |
 | T023 | done | Claude Code (Opus) | T012 | src/app/(*.tsx, */page.tsx, *.module.css, ui-port.ts, splash-state.ts), src/features/*/(UIコンポーネントと*.module.css), src/ui/**, src/styles/**, public/brand/**, tests/ui/** | UI層をDESIGN.md準拠で全面再構築する(T019の実装部)。5画面(Home F-8 / Calendar F-7,F-9 / Grimo F-6,F-14 / 図鑑 M-10,M-11 / 設定 F-3)、透明ボトムナビ(F-11,F-12)、報酬の段階表示(M-4)、起動紋章とsplash状態機械(architecture §7)。背景世界とスプラッシュは調達動画(D-013)のためのslotとして実装し、素材不在時はposter/fallbackで正常動作させる。グリモ本体とアイテム画像は後日 | `pnpm verify`全合格、320px/200%zoom/keyboard/screen reader/high contrast/reduced motionのbrowser QA、Playwright MCPで変更画面のconsole 0エラー、fresh-context reviewer(Tier 1、v12.1 §16.5) | 完了。browser QA実施(320px/390px/200%拡大/デスクトップ、reduced motion、forced-colors、キーボード、skip link): 横スクロール0・AAコントラスト違反0・consoleエラー0・focus ring欠落0。実機で5件の欠陥を検出し修正(2ed55a8, 2dd6ace): sheetがnavに覆われ主要ボタンが押せない/移行通知が主要導線を覆う/設定が通知非対応と誤表示/全画面で「ホームを開きました」と読み上げ/h1が2つ。Tier 1 reviewerは未実施 |
 | T024 | done | Claude Code (Opus) | T023 | src/audio/**(新規), public/audio/**(新規), src/features/*/(発火点のみ), docs/decisions.md(アセット出典の記録) | UI操作音・効果音を実装する。オーナー指示(D-013)により**自作(合成)は禁止**で、Web/GitHub等のライセンス明示された既存アセットを本リポジトリへ導入して使う。音響レイヤーはユーザー操作後に初期化し、BGM/効果音を独立ON/OFF(F-3)、画面ごとの音景(F-13)、連続操作での過剰再生を抑制する。BGMはオーナー調達のため空スロット | 出典とライセンスを`docs/decisions.md`へ記録、効果音OFFでも操作結果が完全に理解できること(F-13)、`pnpm verify`合格、実ブラウザで多重再生・初回gesture・OFF時無音を確認 | 完了。実ブラウザでconsoleエラー0、SFX OFFで無音、初回gesture後に発音を確認。効果音OFFでも操作結果が画面だけで判別できることを各画面で確認(F-13) |
-| T025 | done | Claude Code (Opus) | T020,T021,T022,T023,T024 | scripts/verify.mjs, tests/e2e/, docs/state.md, HANDOFF-JA.md | 全slice統合と最終検証。`scripts/verify.mjs`のlintへDESIGN.md §7のraw-value lint(UI chrome限定、`/* world: scene value, exempt from DESIGN.md */`で除外、blocking)を配線する。E2Eを新UIへ更新し、offline/quota/import/通知/動画不在fallbackを通す | `pnpm verify`全合格、`pnpm test:e2e`合格、`pnpm audit --prod`0、CI green、`git diff --check` | 完了。`node scripts/verify.mjs`→all checks passed、`pnpm test:e2e`→11 passed(chromium-desktop+webkit-mobile)、`pnpm audit --prod`→0、`git diff --check`クリーン。design-token lintは先行して配線済み。未使用の`motion`を削除(`three`/`@types/three`はD-013/D-014によりグリモ用に残置)。CIはPR上で確認 |
+| T025 | done | Claude Code (Opus) | T020,T021,T022,T023,T024 | scripts/verify.mjs, tests/e2e/, docs/state.md, HANDOFF-JA.md | 全slice統合と最終検証。`scripts/verify.mjs`のlintへDESIGN.md §7のraw-value lint(UI chrome限定、`/* world: scene value, exempt from DESIGN.md */`で除外、blocking)を配線する。E2Eを新UIへ更新し、offline/quota/import/通知/動画不在fallbackを通す | `pnpm verify`全合格、`pnpm test:e2e`合格、`pnpm audit --prod`0、CI green、`git diff --check` | 完了。`node scripts/verify.mjs`→all checks passed、`pnpm test:e2e`→11 passed(chromium-desktop+webkit-mobile)、`pnpm audit --prod`→0。design-token lintは先行して配線済み。未使用の`motion`を削除(`three`/`@types/three`はD-013/D-014によりグリモ用に残置)。CIはPR上で確認。**訂正**: 当初「`git diff --check`クリーン」と記載したが、引数なしの`git diff --check`は未コミット変更しか見ないため、ブランチ済コミットについては何も検証していなかった。T026で`scripts/verify.mjs`に`merge-base..HEAD`を対象とする`checkWhitespace()`を追加し、以後は機械が判定する。**未達**: 受入基準に挙げた通知はE2Eに無い(通知許可はブラウザ権限を要し、Playwrightの権限付与では実配信まで再現できないため)。通知はunit(`tests/unit/integrations/notifications/**`)と実ブラウザ手動確認のみ |
+| T026 | done | Claude Code (Opus) | T025 | src/app/(durable-ui-port.ts, create-app-port.ts, app-context.tsx, ui-port.ts, memory-ui-port.ts, runtime.tsx, runtime.module.css, service-worker-registration.tsx), src/features/(calendar, settings), src/integrations/(google/auth.ts, notifications/delivery.ts), src/ui/, src/styles/tokens.css, src/audio/area-ambience.tsx, public/sw.js, scripts/(verify.mjs, sync-world-media.mjs), tests/, .gitattributes, .gitignore | fresh-context reviewer(Opus 5, Tier 1)の指摘に対応する。T023の受入基準に挙げながら未実施だったreviewerを実施し、blocking 1件と有効な指摘12件を修正する。合わせてT020から申し送られた合成ルート(`createAppPort`)未配線を解消する | 指摘ごとに再現テストまたは実ブラウザ確認を伴うこと、`node scripts/verify.mjs`合格、`pnpm test:e2e`合格、対応しない指摘は理由付きで残すこと | 完了。blocking: カレンダーの`CalendarEntryView.id`(`taskId:date`)を`setTaskCompleted`へタスクIDとして渡していたため、カレンダーからの完了・編集が無言で失敗していた(再現テスト`tests/ui/calendar-experience.test.tsx`)。実ブラウザ確認中に**2件目の欠陥**を自力検出: 完了はoccurrence状態なのに`calendarProjection`へ焼き込まれており、タスク編集以外では再投影されないため、完了/未完了の切替がストアには書かれるのに画面に出なかった(再現テストを`tests/integration/durable-ui-port.test.ts`へ追加→修正→`projectionRebuilds`が1のままであることも同時に検証)。他: sheetがnavに覆われるstacking context、`navigator.serviceWorker.ready`が解決せず通知キューが停止、sw.jsの`skipWaiting`/`notificationclick`欠落、dev環境のSW登録、GISスクリプトの遅延注入、modal閉時のfocus復帰、`sync-world-media.mjs`の型ベース削除を台帳ベースへ。`node scripts/verify.mjs`→all checks passed、`pnpm test:e2e`→12 passed、実ブラウザで完了・未完了の双方向をストアと画面の一致まで確認。**未対応(意図的)**: 下記Review Notes参照 |
 
 ## Execution Pointer
 Current active task, executor, write lock, and latest verification live in docs/state.md.
@@ -69,6 +70,25 @@ Current active task, executor, write lock, and latest verification live in docs/
 |---|---|---|---|
 | T007 | requirement_audit subagent | CRITICAL 0 / HIGH 0。前回HIGH 8件の解消、仕様構造、source/dist整合を独立確認 | 物理2端末・最終asset試験は製品統合時 |
 | T008 | requirement_audit subagent | 品質budget、visible triangle、fallbackを含むprototype合格 | 実video asset経路は提供時に実再生確認 |
+| T023/T026 | reviewer subagent (Opus 5, fresh context) | blocking 1件、有効な指摘12件を修正(T026証跡)。実ブラウザ確認中にreviewerが挙げていない完了投影の欠陥を1件自力検出し、同じくT026で修正 | 意図的に未対応(下記) |
+
+### T026 未対応の指摘と理由
+指摘を黙って落とさないための記録。いずれも「今なおすと、直す理由より壊す理由の方が大きい」と判断したもの。
+
+- `sendTestNotification`が未使用 — 宣言・文書化・テスト済みの公開APIであり、
+  未完成の置き去りコードではない。設定画面へ導線を足すかは製品判断なのでオーナー待ち。
+- `--action-band`がホーム以外でもミニ通知を持ち上げる — ずれるのは数pxで、
+  画面ごとに条件分岐させる方がトークンの意味を壊す。
+- `Math.min(SPLASH_TIMED_MS, SPLASH_HARD_MAX_MS)`が常に900 — 上限は将来
+  `SPLASH_TIMED_MS`を伸ばしたときの安全弁として意図的に残す。
+- `use-media-query`が読み取りごとに`MediaQueryList`を確保 — 実測で問題になっておらず、
+  計測なしの最適化はしない。
+- `/api/gemini/generate`が未認証 — D-013の「v1をそのまま引き継ぐ」に従った結果で、
+  変更は方針変更に当たる。認証を足すならオーナー判断のうえ独立タスクとして起票する。
+- StrictModeの二重初期化で最初のport購読が孤児になる — dev限定。ただし起動レイヤーが
+  `checking`のまま止まる系統の不具合と同根の可能性があり、次に起動まわりを触るときに再評価する。
+- import前バックアップのスナップショットが到達不能な分岐を持つ / SWキャッシュが
+  無制限に増える — どちらも現行の使い方(1世帯、月数十件)では顕在化しない。
 
 ## T008 Evidence (2026-08-19)
 

@@ -19,13 +19,23 @@
  *
  * Anything unrecognised is reported and ignored — never silently dropped.
  */
-import { existsSync, mkdirSync, readdirSync, statSync, copyFileSync, writeFileSync, rmSync } from 'node:fs'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { basename, extname, join } from 'node:path'
 
 const SOURCE_DIR = 'anime'
 const OUTPUT_DIR = join('public', 'world')
 const AUDIO_OUTPUT_DIR = join('public', 'audio', 'bgm')
 const MANIFEST_PATH = join(OUTPUT_DIR, 'manifest.json')
+const LEDGER_PATH = join(OUTPUT_DIR, '.synced.json')
 const SPLASH_KEY = 'splash'
 const BGM_PREFIX = 'bgm-'
 
@@ -92,6 +102,8 @@ function main() {
   const entries = new Map()
   const bgmEntries = new Map()
   const ignored = []
+  const writtenWorld = new Set()
+  const writtenAudio = new Set()
   let copied = 0
 
   for (const fileName of readdirSync(SOURCE_DIR).sort()) {
@@ -106,6 +118,7 @@ function main() {
 
     if (kind === 'audio') {
       if (copyIfChanged(from, join(AUDIO_OUTPUT_DIR, fileName))) copied += 1
+      writtenAudio.add(fileName)
       const track = bgmEntries.get(key) ?? { sources: [] }
       track.sources.push({
         src: `/audio/bgm/${fileName}`,
@@ -117,6 +130,7 @@ function main() {
 
     const to = join(OUTPUT_DIR, fileName)
     if (copyIfChanged(from, to)) copied += 1
+    writtenWorld.add(fileName)
 
     const entry = entries.get(key) ?? { poster: null, sources: [] }
     if (kind === 'video') {
@@ -171,37 +185,52 @@ function main() {
   if (ignored.length > 0) {
     console.log(`[world-media] ignored: ${ignored.join(', ')}`)
   }
-  const sourceNames = new Set(readdirSync(SOURCE_DIR))
-  pruneStaleOutputs(OUTPUT_DIR, sourceNames, isWorldOutput)
-  pruneStaleOutputs(AUDIO_OUTPUT_DIR, sourceNames, isAudioOutput)
+  const previous = readLedger()
+  pruneStaleOutputs(OUTPUT_DIR, previous.world, writtenWorld)
+  pruneStaleOutputs(AUDIO_OUTPUT_DIR, previous.audio, writtenAudio)
+  writeLedger(writtenWorld, writtenAudio)
 }
 
 /**
- * Removes only what this script could have written. The rule is narrow on
- * purpose: these directories are shared with the repository (a `.gitkeep`, a
- * licence file, hand-placed assets), and a sync step that deletes a file it did
- * not create is a data-loss bug waiting for the first person who puts something
- * there by hand.
+ * Removes only what this script actually wrote, as recorded in the ledger it
+ * keeps beside its own output. Matching by file type is not enough: a hand
+ * placed `public/world/hero.mp4` classifies exactly like a synced one, so a
+ * type-based rule deletes it on the next `pnpm build`. Only names this script
+ * put there in an earlier run, and that no longer exist in `anime/`, go.
  */
-function pruneStaleOutputs(directory, sourceNames, isOwnOutput) {
+function pruneStaleOutputs(directory, previous, current) {
   if (!existsSync(directory)) return
-  for (const fileName of readdirSync(directory)) {
-    if (fileName === 'manifest.json') continue
-    if (fileName.startsWith('.')) continue
-    if (!isOwnOutput(fileName)) continue
-    if (sourceNames.has(fileName)) continue
-    rmSync(join(directory, fileName))
+  for (const fileName of previous) {
+    if (current.has(fileName)) continue
+    const path = join(directory, fileName)
+    if (!existsSync(path)) continue
+    rmSync(path)
     console.log(`[world-media] removed stale ${fileName}`)
   }
 }
 
-function isWorldOutput(fileName) {
-  const { kind } = classify(fileName)
-  return kind === 'video' || kind === 'poster'
+/** Names this script copied, per destination, from the previous run. */
+function readLedger() {
+  if (!existsSync(LEDGER_PATH)) return { audio: [], world: [] }
+  try {
+    const parsed = JSON.parse(readFileSync(LEDGER_PATH, 'utf8'))
+    return {
+      audio: Array.isArray(parsed.audio) ? parsed.audio : [],
+      world: Array.isArray(parsed.world) ? parsed.world : [],
+    }
+  } catch {
+    // A corrupt ledger must not authorise deleting anything.
+    return { audio: [], world: [] }
+  }
 }
 
-function isAudioOutput(fileName) {
-  return classify(fileName).kind === 'audio'
+function writeLedger(world, audio) {
+  writeFileSync(
+    LEDGER_PATH,
+    `${JSON.stringify({ audio: [...audio].sort(), world: [...world].sort() }, null, 2)}
+`,
+    'utf8',
+  )
 }
 
 function writeManifest({ areas, bgm = {}, splash }) {

@@ -58,12 +58,12 @@ describe('SettingsExperience', () => {
     renderSettings(port)
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('switch', { name: /時刻付きタスクの通知/ }))
+      fireEvent.click(screen.getByRole('switch', { name: /締切のリマインダー/ }))
     })
 
     expect(port.getSnapshot().notifications.enabled).toBe(false)
     expect(
-      (screen.getByRole('switch', { name: /時刻付きタスクの通知/ }) as HTMLButtonElement)
+      (screen.getByRole('switch', { name: /締切のリマインダー/ }) as HTMLButtonElement)
         .getAttribute('aria-checked'),
     ).toBe('false')
     expect(screen.getByRole('status').textContent).toMatch(/ブロックされています/)

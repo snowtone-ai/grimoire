@@ -37,7 +37,11 @@ export function createAppPort(): DurableUiPort {
   let port: DurableUiPort | null = null
 
   const delivery = createNotificationDelivery({
-    getTasksForDate: async (localDate) => tasksForDate(port, localDate),
+    getTasksForDate: async (localDate) => {
+      if (port === null) return []
+      const tasks = await port.tasksOccurringOn(localDate)
+      return tasks.map(toReminderTask)
+    },
   })
 
   const notifications: NotificationIntegrationPort = {
@@ -60,34 +64,18 @@ const GOOGLE_INTEGRATION: GoogleIntegrationPort = {
   fetchGmailItems: (): Promise<readonly ExternalScheduleItem[]> => fetchGmailItems(),
 }
 
-/**
- * Reminders are derived from the read model rather than from a second query.
- * Today comes from `tasksToday`, which always exists; any other date comes from
- * `calendarEntries`, which covers the current month before the calendar screen
- * has been opened and the whole visible grid afterwards.
- */
-function tasksForDate(port: DurableUiPort | null, localDate: string): readonly ReminderTask[] {
-  if (port === null) return []
-  const model = port.getSnapshot()
-  const today = currentLocalDate()
-
-  if (localDate === today) {
-    return model.tasksToday.map((row) => ({
-      id: row.id,
-      title: row.title,
-      dueTime: row.scheduledTime ?? null,
-      completed: row.completed,
-    }))
+function toReminderTask(task: {
+  readonly completed: boolean
+  readonly id: string
+  readonly scheduledTime: string | null
+  readonly title: string
+}): ReminderTask {
+  return {
+    completed: task.completed,
+    dueTime: task.scheduledTime,
+    id: task.id,
+    title: task.title,
   }
-
-  return model.calendarEntries
-    .filter((entry) => entry.localDate === localDate)
-    .map((entry) => ({
-      id: entry.id,
-      title: entry.title,
-      dueTime: entry.scheduledTime ?? null,
-      completed: entry.completed,
-    }))
 }
 
 /**
@@ -97,31 +85,55 @@ function tasksForDate(port: DurableUiPort | null, localDate: string): readonly R
  * changed for an unrelated reason — a discovery, a preference, a calendar month
  * being paged — from re-running it.
  */
-function watchForReminderChanges(port: DurableUiPort, delivery: { sync(): Promise<void> }): void {
+function watchForReminderChanges(
+  port: DurableUiPort,
+  delivery: { scheduledCount(): number; sync(): Promise<void> },
+): void {
   let lastSignature: string | null = null
+  let running = false
 
-  const run = () => {
-    const model = port.getSnapshot()
-    if (!model.notifications.enabled) {
+  const run = async (): Promise<void> => {
+    if (running) return
+    if (!port.getSnapshot().notifications.enabled) {
       lastSignature = null
       return
     }
-    const signature = reminderSignature(port)
-    if (signature === lastSignature) return
-    lastSignature = signature
-    void delivery.sync()
+    running = true
+    try {
+      const signature = await reminderSignature(port)
+      if (signature === lastSignature) return
+      lastSignature = signature
+      const before = delivery.scheduledCount()
+      await delivery.sync()
+      // `scheduledCount` is read while the model is rebuilt, and a sync answers
+      // to nobody, so the count would otherwise stay one step behind what is
+      // actually armed.
+      if (delivery.scheduledCount() !== before) await port.refreshNotificationState()
+    } finally {
+      running = false
+    }
   }
 
-  port.subscribe(run)
-  run()
+  port.subscribe(() => void run())
+  void run()
 }
 
-function reminderSignature(port: DurableUiPort): string {
+/**
+ * Covers everything a reminder's text or existence depends on: which tasks fall
+ * on the two days that matter, whether they are done, and the title and time
+ * that go into the body. Leaving the last two out meant renaming a task never
+ * re-synced, and the pending notification still carried the old wording.
+ */
+async function reminderSignature(port: DurableUiPort): Promise<string> {
   const today = currentLocalDate()
-  const tomorrow = nextLocalDate(today)
-  return [today, tomorrow]
-    .flatMap((date) => tasksForDate(port, date).map((task) => `${date}/${task.id}/${task.completed}`))
-    .join(',')
+  const days = [today, nextLocalDate(today)]
+  const parts: string[] = []
+  for (const day of days) {
+    for (const task of await port.tasksOccurringOn(day)) {
+      parts.push(`${day}/${task.id}/${task.completed}/${task.scheduledTime ?? ''}/${task.title}`)
+    }
+  }
+  return parts.join(',')
 }
 
 function currentLocalDate(): string {

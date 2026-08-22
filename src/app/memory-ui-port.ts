@@ -51,6 +51,9 @@ function calendarEntryFromDraft(id: string, draft: TaskDraft, completed: boolean
     id,
     localDate: draft.localDate,
     recurrence: draft.recurrence,
+    // This adapter keeps one entry per task, so the occurrence id and the task
+    // id coincide here. Commands still read `taskId`, matching the durable port.
+    taskId: id,
     title: draft.title,
     ...(draft.scheduledTime === undefined ? {} : { scheduledTime: draft.scheduledTime }),
   }
@@ -140,7 +143,7 @@ export class MemoryUiPort implements AppUiPort {
     this.model = {
       ...this.model,
       calendarEntries: this.model.calendarEntries.map((entry) =>
-        entry.id === taskId ? calendarEntryFromDraft(taskId, draft, entry.completed) : entry,
+        entry.taskId === taskId ? calendarEntryFromDraft(taskId, draft, entry.completed) : entry,
       ),
       tasksToday: this.model.tasksToday.map((task) =>
         task.id === taskId ? rowFromDraft(taskId, draft, task.completed) : task,
@@ -152,7 +155,7 @@ export class MemoryUiPort implements AppUiPort {
   async deleteTask({ taskId }: { readonly taskId: string }): Promise<void> {
     this.model = {
       ...this.model,
-      calendarEntries: this.model.calendarEntries.filter((entry) => entry.id !== taskId),
+      calendarEntries: this.model.calendarEntries.filter((entry) => entry.taskId !== taskId),
       tasksToday: this.model.tasksToday.filter((task) => task.id !== taskId),
     }
     this.emit()
@@ -163,12 +166,14 @@ export class MemoryUiPort implements AppUiPort {
     taskId,
   }: {
     readonly completed: boolean
+    /** Accepted for contract parity; this adapter has no repeating occurrences. */
+    readonly localDate?: string
     readonly taskId: string
   }): Promise<void> {
     this.model = {
       ...this.model,
       calendarEntries: this.model.calendarEntries.map((entry) =>
-        entry.id === taskId ? { ...entry, completed } : entry,
+        entry.taskId === taskId ? { ...entry, completed } : entry,
       ),
       tasksToday: this.model.tasksToday.map((task) =>
         task.id === taskId ? { ...task, completed } : task,

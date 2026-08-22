@@ -33,11 +33,16 @@ type EditorState =
   | { readonly mode: 'create' }
   | { readonly mode: 'edit'; readonly task: TaskRowView }
 
+/**
+ * `entry.id` identifies the occurrence, `entry.taskId` identifies the task. A
+ * row is a handle for commands, so it carries the latter — passing the
+ * composite made every write from this screen look up a row that never existed.
+ */
 function toTaskRow(entry: CalendarEntryView): TaskRowView {
   return {
     categoryId: entry.categoryId,
     completed: entry.completed,
-    id: entry.id,
+    id: entry.taskId,
     recurrence: entry.recurrence,
     title: entry.title,
     ...(entry.scheduledTime === undefined ? {} : { scheduledTime: entry.scheduledTime }),
@@ -136,7 +141,13 @@ export function CalendarExperience() {
               task={toTaskRow(entry)}
               onEdit={(target) => setEditor({ mode: 'edit', task: target })}
               onToggle={(target, completed) =>
-                port.setTaskCompleted({ completed, taskId: target.id })
+                // Named explicitly: for a repeating task the day being looked
+                // at and today are different occurrences.
+                port.setTaskCompleted({
+                  completed,
+                  localDate: entry.localDate,
+                  taskId: target.id,
+                })
               }
             />
           ))}

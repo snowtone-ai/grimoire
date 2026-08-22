@@ -26,7 +26,6 @@ import {
   localTime,
   seriesId,
   taskId,
-  type OccurrenceKey,
   type TaskId,
 } from '@/domain/primitives'
 import { isTaskOccurrence, makeOccurrenceKey, nextOccurrenceDate } from '@/domain/recurrence'
@@ -67,9 +66,29 @@ import { projectCatalogDiscoveries } from './catalog-projection'
 
 export const SPLASH_PREFERENCE_CACHE_KEY = 'grimoire:preference:splash-mode'
 
+/** The shape reminder building needs, and nothing more. */
+export interface ReminderTaskView {
+  readonly completed: boolean
+  readonly id: string
+  readonly scheduledTime: string | null
+  readonly title: string
+}
+
 interface TodayTaskProjection {
   readonly occurrenceKey: ReturnType<typeof makeOccurrenceKey>
   readonly row: TaskRowView
+}
+
+/**
+ * Both cached projections keep the occurrence key beside the view row and leave
+ * `completed` at its neutral `false`, because completion is occurrence state,
+ * not task state: it changes without the recurrence, date or title changing, so
+ * it must not be baked into a cache that only a *task* edit invalidates.
+ * `refresh()` applies the completed set to both on every pass.
+ */
+interface CalendarEntryProjection {
+  readonly entry: CalendarEntryView
+  readonly occurrenceKey: ReturnType<typeof makeOccurrenceKey>
 }
 
 export interface DurableUiPortDiagnostics {
@@ -93,7 +112,6 @@ const APP_VERSION = '0.1.0'
 const ALL_DAY_SENTINEL = '00:00'
 const MAX_IMPORT_BYTES = 50 * 1_024 * 1_024
 const UNAVAILABLE_GOOGLE_REASON = 'Google連携は未設定です。'
-const EMPTY_OCCURRENCE_KEYS: ReadonlySet<OccurrenceKey> = Object.freeze(new Set<OccurrenceKey>())
 
 const WORLD_AREA_SETTING_KEY = 'world:selected-area-id'
 const OBSERVATIONS_READ_AT_SETTING_KEY = 'world:observations-read-at'
@@ -190,7 +208,10 @@ function formatLocalDate(date: Date): string {
 
 function shiftLocalDate(value: string, days: number): string {
   const [year, month, day] = value.split('-').map(Number)
-  const date = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1 + days))
+  // `??` binds looser than `+`, so `day ?? 1 + days` parsed as `day ?? (1 + days)`
+  // and applied the shift twice for a malformed date. Parenthesised, and the
+  // shift stays where it belongs — on the line below.
+  const date = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1))
   date.setUTCDate(date.getUTCDate() + days)
   return formatUtcDate(date)
 }
@@ -303,7 +324,7 @@ export class DurableUiPort implements AppUiPort {
   private initialization: Promise<void> | null = null
   private calendarRange = initialCalendarRange()
   private activeTasks: readonly TaskRecord[] | null = null
-  private calendarProjection: readonly CalendarEntryView[] = Object.freeze([])
+  private calendarProjection: readonly CalendarEntryProjection[] = Object.freeze([])
   private todayProjection: readonly TodayTaskProjection[] = Object.freeze([])
   private projectionDate: string | null = null
   private projectionDirty = true
@@ -450,19 +471,27 @@ export class DurableUiPort implements AppUiPort {
 
   async setTaskCompleted({
     completed,
+    localDate: rawLocalDate,
     taskId: rawTaskId,
   }: {
     readonly completed: boolean
+    readonly localDate?: string
     readonly taskId: string
   }): Promise<void> {
     const database = this.requireDatabase()
     const commands = this.requireCommands()
     const task = await database.tasks.get(taskId(rawTaskId))
     if (!task) throw new Error('対象のタスクが見つかりません。')
-    const today = localDate(formatLocalDate(new Date()))
-    const occurrenceKey = makeOccurrenceKey(task.seriesId, task.schedule, today)
+    // The day the caller named, or today. A repeating task has one occurrence
+    // per matching date and they complete independently, so this is the whole
+    // difference between ticking off Thursday and ticking off today.
+    const day = localDate(rawLocalDate ?? formatLocalDate(new Date()))
+    if (!isTaskOccurrence(task, day)) {
+      throw new Error('その日にこのタスクの予定はありません。')
+    }
+    const occurrenceKey = makeOccurrenceKey(task.seriesId, task.schedule, day)
     const commandIdValue = commandId(randomId('command'))
-    const payload = { taskId: task.id, occurrenceKey, localDate: today }
+    const payload = { taskId: task.id, occurrenceKey, localDate: day }
     let rewardNotice: RewardNoticeView | null = null
     if (completed) {
       const commandWithoutHash = {
@@ -622,6 +651,58 @@ export class DurableUiPort implements AppUiPort {
     await this.refresh()
   }
 
+  /**
+   * Not part of `AppUiPort`: every task occurring on one local date, read from
+   * the store instead of from `calendarEntries`.
+   *
+   * Reminders need today and tomorrow. The calendar projection looks like it
+   * would answer that, but the Calendar screen owns its extent — paging to
+   * another month narrows it, the narrowed range outlives the visit, and
+   * tomorrow's reminders silently become an empty list. A reminder that does
+   * not fire leaves no trace, so this reads the source of truth directly.
+   */
+  async tasksOccurringOn(date: string): Promise<readonly ReminderTaskView[]> {
+    if (this.database === null) return Object.freeze([])
+    const database = this.database
+    const day = localDate(date)
+    const [tasks, occurrences] = await Promise.all([
+      this.activeTasks !== null
+        ? Promise.resolve(this.activeTasks)
+        : database.tasks.where('status').equals('active').toArray(),
+      database.taskOccurrences.where('localDate').equals(day).toArray(),
+    ])
+    const completed = new Set(
+      occurrences
+        .filter((occurrence) => occurrence.status === 'completed')
+        .map((occurrence) => occurrence.occurrenceKey),
+    )
+    return Object.freeze(
+      tasks
+        .filter((task) => isTaskOccurrence(task, day))
+        .map((task) =>
+          Object.freeze({
+            completed: completed.has(makeOccurrenceKey(task.seriesId, task.schedule, day)),
+            id: task.id,
+            scheduledTime:
+              task.schedule.localTime === ALL_DAY_SENTINEL ? null : task.schedule.localTime,
+            title: task.title,
+          }),
+        ),
+    )
+  }
+
+  /**
+   * Not part of `AppUiPort`: the composition root calls this after a reminder
+   * sync so `scheduledCount` catches up. The count is read off the integration
+   * while the model is rebuilt, and a sync is asynchronous and answers to
+   * nobody, so without this 「予約中の通知」 stayed at the value it had before
+   * the reminders were armed — until some unrelated write happened to refresh.
+   */
+  async refreshNotificationState(): Promise<void> {
+    if (this.database === null) return
+    await this.refresh()
+  }
+
   async connectGoogle(scope: 'calendar' | 'gmail'): Promise<{
     readonly connected: boolean
     readonly reason?: string
@@ -632,7 +713,10 @@ export class DurableUiPort implements AppUiPort {
         ...this.googleSession,
         ...(scope === 'calendar' ? { calendarConnected: true } : { gmailConnected: true }),
       })
-      this.emit()
+      // `refresh()`, not `emit()`: `googleLink` is derived while the model is
+      // rebuilt, so emitting alone hands `useSyncExternalStore` the same frozen
+      // object it already has and the row never leaves its disconnected state.
+      await this.refresh()
     }
     return result
   }
@@ -643,7 +727,7 @@ export class DurableUiPort implements AppUiPort {
       ...this.googleSession,
       ...(scope === 'calendar' ? { calendarConnected: false } : { gmailConnected: false }),
     })
-    this.emit()
+    await this.refresh()
   }
 
   async importFromGoogleCalendar({
@@ -899,7 +983,9 @@ export class DurableUiPort implements AppUiPort {
       this.activeTasks = null
       await this.refresh(false, true)
     } else {
-      this.emit()
+      // Still a refresh: `lastCalendarImportAt` lives in the derived model, so
+      // an all-duplicate import would otherwise never update 「最終取り込み」.
+      await this.refresh()
     }
     return { cancelled: false, imported, skipped }
   }
@@ -977,10 +1063,10 @@ export class DurableUiPort implements AppUiPort {
     )
     if (this.projectionDate !== today) this.projectionDirty = true
     if (this.projectionDirty) {
-      const calendarEntries: CalendarEntryView[] = []
+      const calendarEntries: CalendarEntryProjection[] = []
       const todayTasks: TodayTaskProjection[] = []
       for (const task of tasks) {
-        const projection = this.projectTask(task, today, completedInRange)
+        const projection = this.projectTask(task, today)
         calendarEntries.push(...projection.calendarEntries)
         if (projection.todayTask) todayTasks.push(projection.todayTask)
       }
@@ -992,6 +1078,13 @@ export class DurableUiPort implements AppUiPort {
     }
     const tasksToday = this.todayProjection.map(({ occurrenceKey: key, row }) =>
       Object.freeze({ ...row, completed: completedToday.has(key) }))
+    // Ticking a day off the calendar writes an occurrence, which leaves the
+    // cached projection valid but its `completed` flags out of date, so they are
+    // re-applied here rather than at build time. Baking them in meant a
+    // completion made from the Calendar screen wrote to the store and then sat
+    // invisible until something unrelated dirtied the projection.
+    const calendarEntries = this.calendarProjection.map(({ entry, occurrenceKey: key }) =>
+      completedInRange.has(key) ? Object.freeze({ ...entry, completed: true }) : entry)
     const preferences = preferencesFromRows(settings)
     const catalogDiscoveries = projectCatalogDiscoveries(inventory)
     const creatureObservations = projectCreatureObservations(observationRows)
@@ -1019,7 +1112,7 @@ export class DurableUiPort implements AppUiPort {
       bootstrap: markReady || this.model.bootstrap.status === 'ready'
         ? Object.freeze({ status: 'ready' as const })
         : this.model.bootstrap,
-      calendarEntries: this.calendarProjection,
+      calendarEntries: Object.freeze(calendarEntries),
       catalogDiscoveries: Object.freeze(catalogDiscoveries),
       creatureObservations,
       googleLink,
@@ -1060,7 +1153,7 @@ export class DurableUiPort implements AppUiPort {
       this.projectionDirty = true
       return
     }
-    const projection = this.projectTask(task, today, EMPTY_OCCURRENCE_KEYS)
+    const projection = this.projectTask(task, today)
     this.calendarProjection = Object.freeze([
       ...this.calendarProjection,
       ...projection.calendarEntries,
@@ -1101,13 +1194,12 @@ export class DurableUiPort implements AppUiPort {
   private projectTask(
     task: TaskRecord,
     today: string,
-    completedInRange: ReadonlySet<OccurrenceKey>,
   ): Readonly<{
-    calendarEntries: readonly CalendarEntryView[]
+    calendarEntries: readonly CalendarEntryProjection[]
     todayTask?: TodayTaskProjection
   }> {
     const calendarEntries = this.occurrencesInCalendarRange(task)
-      .map((occurrenceDate) => this.calendarEntry(task, occurrenceDate, completedInRange))
+      .map((occurrenceDate) => this.calendarEntry(task, occurrenceDate))
     const todayValue = localDate(today)
     if (!isTaskOccurrence(task, todayValue)) return Object.freeze({ calendarEntries })
     const key = makeOccurrenceKey(task.seriesId, task.schedule, todayValue)
@@ -1153,22 +1245,22 @@ export class DurableUiPort implements AppUiPort {
     return result
   }
 
-  private calendarEntry(
-    task: TaskRecord,
-    occurrenceDate: string,
-    completedInRange: ReadonlySet<OccurrenceKey>,
-  ): CalendarEntryView {
+  private calendarEntry(task: TaskRecord, occurrenceDate: string): CalendarEntryProjection {
     const key = makeOccurrenceKey(task.seriesId, task.schedule, localDate(occurrenceDate))
     return Object.freeze({
-      categoryId: task.categoryId,
-      completed: completedInRange.has(key),
-      id: `${task.id}:${occurrenceDate}`,
-      localDate: occurrenceDate,
-      recurrence: task.recurrence,
-      title: task.title,
-      ...(task.schedule.localTime === ALL_DAY_SENTINEL
-        ? {}
-        : { scheduledTime: task.schedule.localTime }),
+      entry: Object.freeze({
+        categoryId: task.categoryId,
+        completed: false,
+        id: `${task.id}:${occurrenceDate}`,
+        localDate: occurrenceDate,
+        taskId: task.id,
+        recurrence: task.recurrence,
+        title: task.title,
+        ...(task.schedule.localTime === ALL_DAY_SENTINEL
+          ? {}
+          : { scheduledTime: task.schedule.localTime }),
+      }),
+      occurrenceKey: key,
     })
   }
 

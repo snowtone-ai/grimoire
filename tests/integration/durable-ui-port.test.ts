@@ -273,6 +273,36 @@ describe('durable UI composition', () => {
     ])
   })
 
+  it('reflects a completion and a reopen in the calendar projection without rebuilding it', async () => {
+    let projectionRebuilds = 0
+    const instance = port(databaseName, {
+      onTaskProjectionRebuild: () => { projectionRebuilds += 1 },
+    })
+    await instance.initialize()
+    const today = todayLocalDate()
+    await instance.createTask({
+      categoryId: null,
+      localDate: today,
+      recurrence: null,
+      title: 'カレンダーから完了する',
+    })
+    const entry = instance.getSnapshot().calendarEntries[0]!
+    expect(entry).toMatchObject({ completed: false, localDate: today })
+
+    await instance.setTaskCompleted({ completed: true, localDate: today, taskId: entry.taskId })
+    expect(instance.getSnapshot().calendarEntries).toEqual([
+      expect.objectContaining({ completed: true, title: 'カレンダーから完了する' }),
+    ])
+
+    await instance.setTaskCompleted({ completed: false, localDate: today, taskId: entry.taskId })
+    expect(instance.getSnapshot().calendarEntries).toEqual([
+      expect.objectContaining({ completed: false, title: 'カレンダーから完了する' }),
+    ])
+    // Completion is occurrence state, not task state: it must reach the view
+    // through the cached projection rather than by re-deriving recurrence.
+    expect(projectionRebuilds).toBe(1)
+  })
+
   it('deletes a task, removing it from today and the calendar while leaving other tasks intact', async () => {
     const instance = port()
     await instance.initialize()

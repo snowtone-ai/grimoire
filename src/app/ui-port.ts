@@ -80,10 +80,17 @@ export interface TaskDraft {
 export interface CalendarEntryView {
   readonly categoryId: TaskCategoryId | null
   readonly completed: boolean
+  /**
+   * Unique per occurrence, so a repeating task can appear on many days. It is
+   * NOT a task id — pass `taskId` to any command. The two were conflated once
+   * and every write from the calendar failed against a row that never existed.
+   */
   readonly id: string
   readonly localDate: string
   readonly recurrence: RecurrenceView | null
   readonly scheduledTime?: string
+  /** The task this occurrence belongs to. */
+  readonly taskId: string
   readonly title: string
 }
 
@@ -208,6 +215,12 @@ export interface AppUiPort {
   deleteTask(input: { readonly taskId: string }): Promise<void>
   setTaskCompleted(input: {
     readonly completed: boolean
+    /**
+     * Which occurrence to mark. Omitted means today, which is what the Home
+     * screen wants; the calendar names the day the entry was opened on, or a
+     * repeating task would resolve to the wrong occurrence.
+     */
+    readonly localDate?: string
     readonly taskId: string
   }): Promise<void>
   updateTask(input: {

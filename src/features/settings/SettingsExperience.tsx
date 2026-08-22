@@ -220,7 +220,7 @@ export function SettingsExperience() {
             label={
               <span className={styles.switchLabel}>
                 <BellRing aria-hidden="true" size={18} strokeWidth={1.6} />
-                時刻付きタスクの通知
+                締切のリマインダー
               </span>
             }
             description={notificationDescription(notifications.permission)}
@@ -558,7 +558,10 @@ function notificationDescription(permission: NotificationView['permission']): st
   if (permission === 'denied')
     return 'ブラウザ側でブロックされています。サイトの設定から許可してください。'
   if (permission === 'default') return '有効にすると、ブラウザの許可を一度だけ求めます。'
-  return '時刻を決めたタスクだけ、その時刻に一度知らせます。'
+  // `buildReminders` ignores a task's own time for scheduling: every unfinished
+  // task for today and tomorrow is announced together at REMIND_HOUR. The copy
+  // said "その時刻に" and "時刻を決めたタスクだけ", neither of which happens.
+  return '朝9時に、その日と翌日の残っているタスクをまとめて知らせます。'
 }
 
 function formatBytes(bytes: number | null): string {

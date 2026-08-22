@@ -31,7 +31,8 @@ import {
 } from "./reminders";
 
 const DELIVERED_KEY = "notif-delivered";
-const ICON = "/icons/icon-192x192.png";
+/** v1's path; this repo ships `icon-192.png`, so the old one 404s on every notification. */
+const ICON = "/icons/icon-192.png";
 
 /**
  * Narrow read port this module needs from the data layer: today's and
