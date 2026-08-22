@@ -1,6 +1,19 @@
 # state.md (grimore-v2)
 
 ## Current
+- 2026-08-22: T023/T024実装完了。UI層をDESIGN.md準拠で全面再構築した。共有
+  コンポーネント(Sheet/Button/IconButton/Field/Switch/Chip/BottomNavigation/
+  WorldSurface)と3つのフック(useMediaQuery/useReducedMotion/useModalBehaviour)を
+  新設し、5画面(Home F-8 / Calendar F-7,F-9 / Grimo F-6,F-14 / 図鑑 M-10,M-11 /
+  設定 F-3)を書き直した。`src/app/ui-port.ts`をUIとデータ層の唯一の契約として
+  再定義(タスクのcategory/recurrence/description/時刻、観察記録、通知、Google連携、
+  エリア選択)。スプラッシュは調達動画スロット+紋章fallback、背景世界は
+  footage→poster→ambienceの3段階。音はKenney Interface Sounds(CC0)12件を導入し
+  12キューを配線、BGMは`anime/`へ`bgm-<エリアid>.<拡張子>`を置くと有効になる
+  空スロットとして実装(D-015)。DESIGN.md §7のraw-value lintを
+  `scripts/design-token-lint.mjs`として実装し`pnpm lint`へ配線(blocking)。
+  `pnpm lint`green、`pnpm test` 86 tests green。`pnpm typecheck`はデータ層が
+  旧契約のままのため赤(T022で解消)。E2Eは新UI向けに書き直したが未実行。
 - 2026-08-22: オーナーの大幅な方針転換を受領し、D-013/D-014として確定。
   スプラッシュ・背景世界は自作Three.jsから調達動画素材(`anime/`)へ、グリモは
   画像生成→3D→Rigify→GLB→R3Fの制作ワークフローへ変更。Google OAuth/Calendar/
