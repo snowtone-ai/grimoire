@@ -56,8 +56,11 @@ export function WorldSurface({ area, children, media }: WorldSurfaceProps) {
     // Autoplay is a promise that can reject (a policy block, a background tab).
     // A rejection is not an error state and needs no handling: playback is
     // already 'waiting', and the poster underneath is a valid world. The catch
-    // exists only so the rejection is not reported as unhandled.
-    void element.play().catch(() => {})
+    // exists only so the rejection is not reported as unhandled. `play()`
+    // predates promises and still returns undefined in some engines, so the
+    // result is checked rather than assumed.
+    const started: Promise<void> | undefined = element.play()
+    if (started !== undefined) void started.catch(() => {})
   }, [mediaKey])
 
   const showingFootage = footage !== null && playback === 'playing'

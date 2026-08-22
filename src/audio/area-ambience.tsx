@@ -6,6 +6,8 @@ import type { WorldAudioEntry } from '@/world/media-manifest'
 
 const FADE_MS = 900
 const FADE_STEP_MS = 60
+/** Quiet enough to sit under the interface, per 決定事項ログ F-13's "低密度". */
+const BED_VOLUME = 0.34
 
 export interface AreaAmbienceProps {
   /** Only used to key the element, so switching areas restarts cleanly. */
@@ -64,11 +66,11 @@ export function AreaAmbience({ areaId, enabled, track }: AreaAmbienceProps) {
       audio.volume = 0
       // Autoplay may be refused until the person has interacted with the page.
       // That is not an error: the world is silent, and the next visit will
-      // start it. Nothing else in the UI depends on this resolving.
-      void audio
-        .play()
-        .then(() => rampTo(0.34))
-        .catch(() => {})
+      // start it. Nothing else in the UI depends on this resolving. `play()`
+      // predates promises and still returns undefined in some engines.
+      const started: Promise<void> | undefined = audio.play()
+      if (started === undefined) rampTo(BED_VOLUME)
+      else void started.then(() => rampTo(BED_VOLUME)).catch(() => {})
     } else {
       rampTo(0, () => audio.pause())
     }
