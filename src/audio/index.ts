@@ -1,3 +1,4 @@
+export { AreaAmbience } from './area-ambience'
 export { AudioEngine } from './audio-engine'
 export { SoundProvider, useSound } from './sound-context'
 export { SOUND_CATALOG, SOUND_CUES } from './sound-catalog'

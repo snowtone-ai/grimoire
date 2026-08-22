@@ -78,14 +78,15 @@
   a visual-direction change), generate the design at claude.ai/design via `/design-sync`
   and show it to the owner instead of deciding unilaterally -- they can react to a
   rendered design even though they cannot review a diff.
-- `DESIGN.md` exists at repo root (authored 2026-08-22, D-012): the target design
-  language for a UI-layer rebuild that has not happened yet -- current `src/app/`,
-  `src/features/*`, `src/ui/` predate it. `ASSET_REGISTRY.md` is still not adopted
-  (no concrete need yet, per Section 3's rule for every optional file). Once the
-  rebuild (T019) lands, `scripts/verify.mjs`'s lint step must additionally reject
-  unregistered raw values in changed UI-layer files per `DESIGN.md` §7's scope and
-  exemption mechanism (v12.1 §16.2) -- not wired yet, since there is no rebuilt UI
-  to lint against.
+- `DESIGN.md` at repo root is the design system, and it is now implemented: the
+  UI layer (`src/ui/**`, `src/features/*` components, `src/app/runtime.tsx`) was
+  rebuilt against it in T023. §§9-10 register the tokens that rebuild added and
+  record how §6.4's navigation rule reconciles with 決定事項ログ F-10/F-11/F-12.
+  `ASSET_REGISTRY.md` is still not adopted (no concrete need yet, per Section 3's
+  rule for every optional file). `scripts/verify.mjs`'s lint step must
+  additionally reject unregistered raw values in changed UI-layer files per
+  `DESIGN.md` §7's scope and exemption mechanism (v12.1 §16.2) -- still to be
+  wired in T025.
 - The background world and splash use owner-sourced video assets (`anime/`)
   per D-013; `src/world/three-coral-runtime.ts` is retired from the
   production path, and `three` stays in the dependency tree for the Grimo

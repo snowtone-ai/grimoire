@@ -23,15 +23,23 @@ export interface WorldMediaEntry {
   readonly sources: readonly WorldMediaSource[];
 }
 
+/** A looping BGM track. No poster, otherwise the same source-list rules. */
+export interface WorldAudioEntry {
+  readonly sources: readonly WorldMediaSource[];
+}
+
 export interface WorldMediaManifest {
   readonly schema: typeof WORLD_MEDIA_SCHEMA;
   readonly areas: Readonly<Record<string, WorldMediaEntry>>;
+  /** Per-area ambience/BGM, keyed by area id (決定事項ログ F-13). */
+  readonly bgm: Readonly<Record<string, WorldAudioEntry>>;
   readonly splash: WorldMediaEntry | null;
 }
 
 export const EMPTY_WORLD_MEDIA: WorldMediaManifest = Object.freeze({
   schema: WORLD_MEDIA_SCHEMA,
   areas: Object.freeze({}),
+  bgm: Object.freeze({}),
   splash: null,
 });
 
@@ -62,6 +70,17 @@ function normalizeEntry(value: unknown): WorldMediaEntry | null {
   return Object.freeze({ poster, sources: Object.freeze(sources) });
 }
 
+function normalizeAudioEntry(value: unknown): WorldAudioEntry | null {
+  if (!isRecord(value)) return null;
+  const sources = Array.isArray(value.sources)
+    ? value.sources
+        .map(normalizeSource)
+        .filter((source): source is WorldMediaSource => source !== null)
+    : [];
+  if (sources.length === 0) return null;
+  return Object.freeze({ sources: Object.freeze(sources) });
+}
+
 /**
  * Accepts a parsed manifest of unknown provenance and keeps only the entries it
  * can vouch for. A malformed entry is dropped, not thrown on — one bad file
@@ -80,9 +99,18 @@ export function normalizeWorldMediaManifest(source: unknown): WorldMediaManifest
     }
   }
 
+  const bgm: Record<string, WorldAudioEntry> = {};
+  if (isRecord(source.bgm)) {
+    for (const [areaId, entry] of Object.entries(source.bgm)) {
+      const normalized = normalizeAudioEntry(entry);
+      if (normalized !== null) bgm[areaId] = normalized;
+    }
+  }
+
   return Object.freeze({
     schema: WORLD_MEDIA_SCHEMA,
     areas: Object.freeze(areas),
+    bgm: Object.freeze(bgm),
     splash: normalizeEntry(source.splash),
   });
 }

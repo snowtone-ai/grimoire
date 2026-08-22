@@ -12,6 +12,7 @@
  *   splash.jpg  | splash.png | splash.webp       its poster frame
  *   <area-id>.webm | <area-id>.mp4               that area's footage
  *   <area-id>.poster.jpg | .png | .webp | .avif  that area's poster frame
+ *   bgm-<area-id>.ogg | .mp3 | .m4a | .webm       that area's looping BGM
  *
  * `<area-id>` must match an id in `src/world/areas.ts`, e.g.
  *   area-01-coral-plateau.webm
@@ -23,8 +24,10 @@ import { basename, extname, join } from 'node:path'
 
 const SOURCE_DIR = 'anime'
 const OUTPUT_DIR = join('public', 'world')
+const AUDIO_OUTPUT_DIR = join('public', 'audio', 'bgm')
 const MANIFEST_PATH = join(OUTPUT_DIR, 'manifest.json')
 const SPLASH_KEY = 'splash'
+const BGM_PREFIX = 'bgm-'
 
 /** Ordered by preference: the browser takes the first source it can decode. */
 const VIDEO_TYPES = new Map([
@@ -35,10 +38,23 @@ const VIDEO_TYPES = new Map([
 const VIDEO_PRIORITY = ['.webm', '.mp4', '.m4v']
 const POSTER_EXTENSIONS = new Set(['.avif', '.webp', '.png', '.jpg', '.jpeg'])
 
+/** Ordered by preference, same rule as video: first decodable source wins. */
+const AUDIO_TYPES = new Map([
+  ['.ogg', 'audio/ogg'],
+  ['.m4a', 'audio/mp4'],
+  ['.mp3', 'audio/mpeg'],
+])
+const AUDIO_PRIORITY = ['.ogg', '.m4a', '.mp3']
+
 function classify(fileName) {
   const extension = extname(fileName).toLowerCase()
   const stem = basename(fileName, extname(fileName))
 
+  // Checked before video, because a `.webm` may legitimately be either one and
+  // the `bgm-` prefix is the only thing that can tell them apart.
+  if (stem.startsWith(BGM_PREFIX) && (AUDIO_TYPES.has(extension) || extension === '.webm')) {
+    return { extension, kind: 'audio', key: stem.slice(BGM_PREFIX.length) }
+  }
   if (VIDEO_TYPES.has(extension)) {
     return { extension, kind: 'video', key: stem }
   }
@@ -71,8 +87,10 @@ function main() {
   }
 
   mkdirSync(OUTPUT_DIR, { recursive: true })
+  mkdirSync(AUDIO_OUTPUT_DIR, { recursive: true })
 
   const entries = new Map()
+  const bgmEntries = new Map()
   const ignored = []
   let copied = 0
 
@@ -83,6 +101,17 @@ function main() {
     const { extension, kind, key } = classify(fileName)
     if (kind === 'unknown') {
       ignored.push(fileName)
+      continue
+    }
+
+    if (kind === 'audio') {
+      if (copyIfChanged(from, join(AUDIO_OUTPUT_DIR, fileName))) copied += 1
+      const track = bgmEntries.get(key) ?? { sources: [] }
+      track.sources.push({
+        src: `/audio/bgm/${fileName}`,
+        type: AUDIO_TYPES.get(extension) ?? 'audio/webm',
+      })
+      bgmEntries.set(key, track)
       continue
     }
 
@@ -106,6 +135,14 @@ function main() {
     )
   }
 
+  for (const track of bgmEntries.values()) {
+    track.sources.sort(
+      (a, b) =>
+        AUDIO_PRIORITY.indexOf(extname(a.src).toLowerCase())
+        - AUDIO_PRIORITY.indexOf(extname(b.src).toLowerCase()),
+    )
+  }
+
   const splash = entries.get(SPLASH_KEY) ?? null
   entries.delete(SPLASH_KEY)
 
@@ -123,33 +160,37 @@ function main() {
 
   writeManifest({
     areas,
+    bgm: Object.fromEntries(bgmEntries),
     splash: splash !== null && splash.sources.length > 0 ? splash : null,
   })
 
   const areaCount = Object.keys(areas).length
   console.log(
-    `[world-media] ${copied} file(s) copied, ${areaCount} area(s), splash ${splash === null ? 'absent' : 'present'}.`,
+    `[world-media] ${copied} file(s) copied, ${areaCount} area(s), ${bgmEntries.size} bgm track(s), splash ${splash === null ? 'absent' : 'present'}.`,
   )
   if (ignored.length > 0) {
     console.log(`[world-media] ignored: ${ignored.join(', ')}`)
   }
-  pruneStaleOutputs(new Set(readdirSync(SOURCE_DIR)))
+  const sourceNames = new Set(readdirSync(SOURCE_DIR))
+  pruneStaleOutputs(OUTPUT_DIR, sourceNames)
+  pruneStaleOutputs(AUDIO_OUTPUT_DIR, sourceNames)
 }
 
-function pruneStaleOutputs(sourceNames) {
-  for (const fileName of readdirSync(OUTPUT_DIR)) {
+function pruneStaleOutputs(directory, sourceNames) {
+  if (!existsSync(directory)) return
+  for (const fileName of readdirSync(directory)) {
     if (fileName === 'manifest.json') continue
     if (sourceNames.has(fileName)) continue
-    rmSync(join(OUTPUT_DIR, fileName))
+    rmSync(join(directory, fileName))
     console.log(`[world-media] removed stale ${fileName}`)
   }
 }
 
-function writeManifest({ areas, splash }) {
+function writeManifest({ areas, bgm = {}, splash }) {
   mkdirSync(OUTPUT_DIR, { recursive: true })
   writeFileSync(
     MANIFEST_PATH,
-    `${JSON.stringify({ schema: 1, areas, splash }, null, 2)}\n`,
+    `${JSON.stringify({ schema: 1, areas, bgm, splash }, null, 2)}\n`,
     'utf8',
   )
 }

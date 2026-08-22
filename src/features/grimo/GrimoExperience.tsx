@@ -4,7 +4,7 @@ import { Layers, NotebookPen } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { useAppPort, useAppReadModel } from '@/app/app-context'
-import { useSound } from '@/audio'
+import { AreaAmbience, useSound } from '@/audio'
 import { IconButton, IconLink } from '@/ui/components/icon-button'
 import { Sheet } from '@/ui/components/sheet'
 import { WorldSurface } from '@/ui/components/world-surface'
@@ -29,7 +29,7 @@ import styles from './grimo-experience.module.css'
  */
 export function GrimoExperience() {
   const port = useAppPort()
-  const { world } = useAppReadModel()
+  const { preferences, world } = useAppReadModel()
   const [media, setMedia] = useState<WorldMediaManifest>(EMPTY_WORLD_MEDIA)
   const [pickerOpen, setPickerOpen] = useState(false)
   const play = useSound()
@@ -50,6 +50,12 @@ export function GrimoExperience() {
 
   return (
     <main id="main-content" className={styles.screen}>
+      <AreaAmbience
+        areaId={area.id}
+        enabled={preferences.bgmEnabled}
+        track={media.bgm[area.id] ?? null}
+      />
+
       <WorldSurface area={area} media={media.areas[area.id] ?? null}>
         <div className={styles.topChrome}>
           <p className={styles.areaName}>{area.name}</p>

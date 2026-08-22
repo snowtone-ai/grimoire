@@ -1,11 +1,12 @@
 # DESIGN.md — Grimoire v2 Design System
 
-Status: **authored 2026-08-22, not yet implemented.** This is the target design
-language for the UI-layer rebuild (pm-zero v12.1 §16, D-011). The current
-`src/app/`, `src/features/*`, `src/ui/`, and their CSS are pre-existing and
-will be replaced against this spec in a future task (see tasks.md). The data
-layer (`src/domain/`, `src/application/`, `src/infrastructure/`) is untouched
-by this document and by the rebuild it describes.
+Status: **authored 2026-08-22, implemented for the UI chrome (T023).** This is
+the design language of the UI layer: `src/ui/**`, `src/features/*`'s
+components and their CSS, and `src/app/runtime.tsx` are built against it. The
+data layer (`src/domain/`, `src/application/`, `src/infrastructure/`) is
+untouched by this document and by the rebuild it describes. Sections 9 and 10
+below register the tokens the rebuild added; nothing in §§1–8 was revised by
+the implementation.
 
 **2026-08-22 addendum (D-013):** the background world and splash moved from a
 Three.js build to owner-sourced **video assets** (`anime/`). Component rule 5
@@ -278,3 +279,93 @@ decisions in `grimore-v2/Grimoire_決定事項ログ.md` — this file is UI chr
 only. `ASSET_REGISTRY.md` (illustration/3D asset provenance) is a separate
 optional file, added only when asset volume makes duplication a real risk
 (pm-zero v12.1 §16.6) — not needed yet.
+
+---
+
+## 9. Tokens the rebuild added (2026-08-22, T023)
+
+These are registered here because §7's lint reads this file. They are
+additions, not revisions: no value in §§1–5 changed.
+
+### 9.1 Fills that keep their own luminance
+
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `--color-on-iron` | `#edf4ef` | `#edf4ef` | Foreground on an Iron fill |
+| `--color-on-mist` | `#06110f` | `#06110f` | Foreground on a Mist fill |
+
+`--color-ink-inverse` flips with the color scheme, which makes it the wrong
+token for these two: Iron is near-black in *both* schemes and Mist is a light
+cyan in both, so on a dark page `--color-ink-inverse` would put dark text on
+a dark fill. Any component filling with Iron or Mist takes its foreground
+from this table instead.
+
+### 9.2 Chrome over the world
+
+| Token | Value | Role |
+|---|---|---|
+| `--color-chrome-ground` | `rgb(8 16 14 / 34%)` | Translucent ground for controls floating over footage |
+| `--color-chrome-line` | `rgb(255 255 255 / 14%)` | Their hairline |
+| `--color-chrome-line-strong` | `rgb(255 255 255 / 26%)` | Their emphasised hairline |
+| `--color-chrome-ink` | `rgb(238 248 244 / 88%)` | Their ink |
+| `--color-chrome-ink-strong` | `#fff` | Their ink at current/active |
+| `--blur-chrome` | `0.75rem` | Their backdrop blur |
+
+Deliberately outside §1.2's inversion: the world keeps its own imagery in
+either color scheme, so the controls above it are tuned once against that
+footage rather than flipped with the page (決定事項ログ F-15).
+
+### 9.3 Task categories
+
+| Token | Light | Dark |
+|---|---|---|
+| `--color-category-job` | `#8a6a2f` | `#d7b473` |
+| `--color-category-university` | `#4b5f8a` | `#9db2dd` |
+| `--color-category-life` | `#4d6b4f` | `#9dc0a0` |
+| `--color-category-none` | `var(--color-ink-muted)` | — |
+
+Carried over from v1 (決定事項ログ F-4) and desaturated on purpose: a
+category appears only as a small swatch, never as a fill, so Mist stays the
+one color that reads as alive (§1.1).
+
+### 9.4 Type scale and weight
+
+§2.1's table is now emitted as `--text-*` / `--leading-*` pairs plus
+`--weight-regular` (400) and `--weight-medium` (500). A component takes a
+size and its matching leading from the same row — never a size from one row
+and a leading from another. `src/ui/tokens/design-tokens.ts`'s
+`typeScaleTokens` mirrors the same table for code that needs the numbers,
+and `design-tokens.test.ts` asserts the ratio stays inside the minor third.
+
+### 9.5 Motion has three states, not two
+
+`prefers-reduced-motion` is the *initial* value; the in-app setting overrides
+it in both directions (決定事項ログ E-5). `data-motion` is absent while the
+preference is "system", `full` forces motion on against the OS preference,
+and `reduced` forces it off. Both CSS and the `useReducedMotion` hook read
+the same attribute, so JS-driven and CSS-driven motion cannot disagree.
+
+---
+
+## 10. Navigation: reconciling §6.4 with 決定事項ログ F-10/F-11/F-12
+
+§6.4 says "Iron on World, hairline top border". F-10/F-11/F-12 say the bottom
+navigation is a **transparent floating capsule**, never an opaque bar. Both
+are binding, and the implementation resolves them this way:
+
+- The capsule is translucent on every screen. What it is translucent
+  *against* differs by register, so the ground, line and ink come from
+  `--nav-ground` / `--nav-line` / `--nav-ink` / `--nav-ink-current`, which
+  `[data-theme]` re-points: `order` maps them to the page surface tokens,
+  `natural-history` to §9.2's chrome tokens.
+- §6.4's substantive rule is kept verbatim: **no active-tab color fill.** The
+  current destination is a soft glow plus a hairline mark — a weight and
+  position change, never a color one, because color is reserved for Mist.
+- The "hairline top border" is satisfied by the capsule's own hairline
+  (`--nav-line`) rather than a full-width rule, since a full-width border
+  under a floating capsule would draw the opaque bar the decision log
+  rejects.
+
+Press feedback is a ripple from the touched point, scoped per destination;
+long press (500ms) reveals the destination name, so a first-time user can
+identify a wordless target without labels living on screen permanently.
