@@ -35,9 +35,18 @@
     変更、テスト8件で固定)、(c)朝のあいさつ演出がD-036 F-1に反して
     コンテンツの前面に出ていた(エンジンを2レイヤー化)。詳細はD-047 §7と
     tasks.mdのReview Notes。テスト99→107件。
-  - ブランチ`feat/aaa-fx-sound-overhaul`、PR #38。CI green。
-    **マージはオーナー確認待ち** — mainへのマージは家族が日常利用している
-    本番環境へ自動デプロイされるため。
+  - オーナー承認を得てPR #38をsquash-merge(`018f454`)、ブランチ削除。
+    main側CI green、Vercel productionデプロイ完了(READY)。本番実測で
+    `/audio/cues/flourish.wav`(80242 B)・`/vfx/mote.png`(26559 B)が
+    リポジトリとバイト一致で配信され、`sw.js`は`task-manager-v8`
+    (=`/audio/`・`/vfx/`をcache-firstに切り替えた版)を返している。
+  - 併せて`.impeccable/config.json`を追跡対象に(`408e969`)。T044中に
+    Stop-hookのチェッカーがglobals.cssのbounce-easingを3件指摘したが、
+    3件ともT036以来mainとバイト一致の既存コードで、跳ね返りではなく
+    1回で収まる減衰だったため誤検知と判断し、理由付きのignore登録を
+    残してある。未追跡のままだとclone毎に同じ調査が再発するか、
+    最悪「指摘されたから」とRARE4+の見た目を変えてしまうため。
+    `hook.cache.json`は使い捨てなので`.gitignore`側へ。
 - 2026-08-23: T043 (D-046) — オーナー指示で`main`をpm-zero v12.1(Section 16
   Frontend/UI Operating Layer)へ追随させた。CLAUDE.mdのバージョン表記・
   Tier 1条件・新設節、`scripts/setup.mjs`のUIツールauto-provisioning
