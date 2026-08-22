@@ -35,12 +35,9 @@
   既存の破壊的コマンドguardは承認ではなく拒否として維持する。
 - T006: 非Store版PowerShellを導入してCodexの既定シェルを切り替えるか、WSL実行へ
   移行する。`sandbox="unelevated"`と`sandbox_private_desktop=false`の再設定は不要。
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
-- budget wall hit; session ended by rate limit
+- 2026-08-22: Proプランの週次上限にセッション中2回到達し、そのたびにworker
+  subagentが途中終了した(T020/T021/T022)。作業は消えておらず、上限リセット後に
+  `SendMessage`で同じagentをtranscriptから再開すれば続行できる。恒久的な
+  ブロッカーではなく、並列subagentを2体までに抑える運用上の制約として扱う。
+  グローバルの`StopFailure`フックは到達のたびに同一行を本ファイルへ追記するため、
+  重複行は定期的にこの1件へ畳む(このセッションで10行を削除)。
