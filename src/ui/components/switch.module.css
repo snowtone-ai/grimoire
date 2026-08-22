@@ -1,0 +1,88 @@
+.row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--tap-target);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+}
+
+.description {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.track {
+  position: relative;
+  flex: none;
+  width: 3.25rem;
+  height: 1.875rem;
+  /* The visible track is 30px tall; the 44px target comes from the padding box
+     so the control stays reachable without looking oversized (DESIGN.md §5). */
+  min-height: 0;
+  margin: calc((var(--tap-target) - 1.875rem) / -2) 0;
+  padding: calc((var(--tap-target) - 1.875rem) / 2) 0;
+  border: 0;
+  background: none;
+  box-sizing: content-box;
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  inset: calc((var(--tap-target) - 1.875rem) / 2) 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  background: var(--color-ground);
+  transition: background-color var(--duration-feedback) var(--ease-press),
+    border-color var(--duration-feedback) var(--ease-press);
+}
+
+.track[aria-checked='true']::before {
+  border-color: var(--color-iron);
+  background: var(--color-iron);
+}
+
+.track:disabled {
+  opacity: 0.45;
+}
+
+.knob {
+  position: absolute;
+  top: 50%;
+  left: 0.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: var(--radius-round);
+  background: var(--color-ink-muted);
+  transform: translate(0, -50%);
+  transition: background-color var(--duration-feedback) var(--ease-press),
+    transform var(--duration-feedback) var(--ease-settle);
+}
+
+.track[aria-checked='true'] .knob {
+  background: var(--color-on-iron);
+  transform: translate(1.375rem, -50%);
+}
+
+@media (prefers-contrast: more) {
+  .track::before {
+    border-color: currentcolor;
+  }
+
+  .knob {
+    background: currentcolor;
+  }
+}

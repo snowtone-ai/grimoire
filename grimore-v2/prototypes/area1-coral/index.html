@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- HEAD:START -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Grimoire v2 — Area 1 陸珊瑚の台地</title>
+<style>
+  :root{
+    --ink:#dbe7f2;
+    --ink-dim:rgba(219,231,242,.6);
+    --edge:rgba(120,170,215,.24);
+    --panel:rgba(9,16,28,.86);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#050a14;color:var(--ink);
+    font-family:ui-sans-serif,system-ui,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;
+    overscroll-behavior:none}
+  body{overflow:hidden}
+  #scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+  /* Text is DOM, never painted into the canvas: selectable, searchable, readable by AT. */
+  #titleblock{position:fixed;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));
+    z-index:10;pointer-events:none;max-width:min(52ch,64vw)}
+  #titleblock h1{margin:0 0 4px;font-size:clamp(15px,2.1vw,20px);font-weight:600;letter-spacing:.03em;
+    text-shadow:0 2px 18px rgba(0,0,0,.75)}
+  #titleblock p{margin:0;font-size:clamp(10.5px,1.35vw,12.5px);line-height:1.6;color:var(--ink-dim);
+    text-shadow:0 1px 12px rgba(0,0,0,.8)}
+  #caption{margin-top:6px;font-size:10.5px;opacity:.42;font-variant-numeric:tabular-nums}
+
+  #loading{position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;background:#050a14;
+    transition:opacity .35s ease}
+  #loading[hidden]{display:none}
+  #loading-label{font-size:12.5px;letter-spacing:.06em;color:var(--ink-dim)}
+  #loading-track{width:min(240px,60vw);height:2px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+  #loading-bar{height:100%;width:0%;background:linear-gradient(90deg,#3c8fc4,#8fd0f5);
+    transition:width .25s ease}
+
+  #fallback{position:fixed;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;
+    padding:32px;background:linear-gradient(160deg,#071323,#17364b 55%,#d17a64);text-align:center;
+    overflow:hidden;isolation:isolate;pointer-events:none}
+  #fallback[hidden]{display:none}
+  #fallback canvas,#fallback video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    z-index:-2}
+  #fallback::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(180deg,rgba(4,10,18,.05),rgba(4,10,18,.7))}
+  #fallback .fallback-copy{max-width:44ch;padding:22px 26px;border:1px solid rgba(219,231,242,.16);
+    border-radius:12px;background:rgba(5,10,20,.62);backdrop-filter:blur(8px)}
+  #fallback h2{margin:0 0 10px;font-size:16px;font-weight:600}
+  #fallback p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-dim)}
+
+  #legal{position:fixed;left:max(18px,env(safe-area-inset-left));
+    bottom:max(12px,env(safe-area-inset-bottom));z-index:10;
+    font-size:9.5px;line-height:1.6;color:rgba(219,231,242,.32);max-width:min(60ch,70vw);
+    pointer-events:none}
+
+  @media (prefers-reduced-motion: reduce){
+    #loading,#loading-bar{transition:none}
+  }
+  @media (max-width:720px){
+    #titleblock{max-width:70vw}
+    #legal{max-width:80vw}
+  }
+</style>
+<!-- HEAD:END -->
+</head>
+<body>
+<!-- BODY:START -->
+<canvas id="scene" aria-label="陸珊瑚の台地の背景世界" role="img"></canvas>
+
+<div id="titleblock">
+  <h1>Area 1 — 陸珊瑚の台地</h1>
+  <p>Grimoire v2 背景世界プロトタイプ。固定カメラのループ空間で、光・霧・色・構図のみで説得力を作る。</p>
+  <p id="caption"></p>
+</div>
+
+<div id="loading">
+  <div id="loading-label">読み込み中</div>
+  <div id="loading-track"><div id="loading-bar"></div></div>
+</div>
+
+<div id="fallback" hidden>
+  <canvas data-fallback-poster aria-hidden="true"></canvas>
+  <video data-fallback-video muted loop playsinline hidden aria-hidden="true"></video>
+  <div class="fallback-copy">
+    <h2>この環境では描画できません</h2>
+    <p data-detail>WebGL2 が利用できません。</p>
+    <p style="margin-top:10px">描画負荷またはGPU状態に応じて、動画または静止画へ安全に切り替えています。</p>
+  </div>
+</div>
+
+<p id="legal">
+  参照した Monster Hunter World: Iceborne のスクリーンショットは ©CAPCOM CO., LTD. の著作物です。
+  本シーンのジオメトリ・テクスチャ・シェーダはすべて手続き的に生成しており、原画像のピクセルは含みません。
+</p>
+<!-- BODY:END -->
+<script src="./dist/area1-coral.js"></script>
+</body>
+</html>

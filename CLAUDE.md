@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12.1 (Claude Code only, Windows PowerShell, Pro plan)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -62,11 +62,44 @@
   Nothing merges past a red check; a self-reported local pass is not sufficient on its
   own.
 - Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
-  changes behaviour, or is hard to undo. Ask for every issue with severity/confidence --
-  do not restrict it to serious issues only, or recall drops.
+  changes behaviour, is hard to undo, or touches shared UI components or design tokens
+  (v12.1 §16.5). Ask for every issue with severity/confidence -- do not restrict it to
+  serious issues only, or recall drops.
 - Tier 2 is retired: it fired on auth/billing/DB-schema/deploy/production-data classes
   that essentially do not occur in this project. If one of those classes ever appears,
   re-derive the tier rather than re-enabling it from memory.
+
+## Frontend/UI Operating Layer (pm-zero v12.1 §16)
+- Browser self-verification before "done" is already covered by the global judgment
+  instruction (start the dev server, check the changed screen with Playwright MCP at
+  the breakpoints touched, confirm no console/runtime error) -- code-reading is not a
+  substitute.
+- For a change big enough to need sign-off before or mid-implementation (a new screen,
+  a visual-direction change), generate the design at claude.ai/design via `/design-sync`
+  and show it to the owner instead of deciding unilaterally -- they can react to a
+  rendered design even though they cannot review a diff.
+- `DESIGN.md` at repo root is the design system, and it is now implemented: the
+  UI layer (`src/ui/**`, `src/features/*` components, `src/app/runtime.tsx`) was
+  rebuilt against it in T023. §§9-10 register the tokens that rebuild added and
+  record how §6.4's navigation rule reconciles with 決定事項ログ F-10/F-11/F-12.
+  `ASSET_REGISTRY.md` is still not adopted (no concrete need yet, per Section 3's
+  rule for every optional file). `scripts/verify.mjs`'s lint step must
+  additionally reject unregistered raw values in changed UI-layer files per
+  `DESIGN.md` §7's scope and exemption mechanism (v12.1 §16.2) -- still to be
+  wired in T025.
+- The background world and splash use owner-sourced video assets (`anime/`)
+  per D-013; `src/world/three-coral-runtime.ts` is retired from the
+  production path, and `three` stays in the dependency tree for the Grimo
+  (3D character) use case. The environment contract is supplied from a
+  static per-area JSON descriptor rather than a live scene at runtime. The
+  Grimo production workflow (image generation -> 3D -> rig -> GLB -> R3F) is
+  fixed in D-014.
+- Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
+  is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
+  (v12.1 §16.7). No chrome-devtools MCP: this repo already has Playwright MCP registered
+  and in active use for browser verification, and impeccable itself prefers the harness's
+  existing browser tool over a dedicated MCP -- adding a second one would be redundant
+  tool-schema cost with no functional gain.
 
 ## Self-Evolution
 - On the first surprising failure, ask one question: can a machine detect this?
@@ -89,22 +122,6 @@
 - install: pnpm install | lint: pnpm lint | typecheck: pnpm typecheck
 - test: pnpm test | build: pnpm build | verify: pnpm verify | setup: node scripts/setup.mjs
 - Use only commands that exist in this repository.
-
-## Research Tools (Exa + Firecrawl)
-- Web search: Exa (`claude.ai Exa` connector on Claude; local `exa` MCP on Codex).
-  Use to find candidate sources -- especially before UI/UX decisions, per
-  grimore-v2 R-1's research requirement (survey existing high-quality products
-  + official guidance before proposing a design direction).
-- Page/content analysis: Firecrawl (`claude.ai Firecrawl` connector on Claude;
-  local `firecrawl` MCP on Codex). Use to fetch and extract structured content
-  from a specific URL Exa surfaced, rather than re-searching or guessing at
-  page content from a snippet.
-- Pattern: Exa to find candidates -> Firecrawl to read the best 2-3 in full ->
-  synthesize with sources cited. Don't use one where the other fits better --
-  Exa is for discovery, Firecrawl is for depth on a known URL.
-- Codex's local `exa`/`firecrawl` MCP servers are registered but need
-  `EXA_API_KEY`/`FIRECRAWL_API_KEY` added to `~/.codex/config.toml` before they
-  work -- currently blocked, see docs/issues.md.
 
 ## Shell
 - PowerShell for all operations. Windows backslash paths. node scripts/name.mjs.

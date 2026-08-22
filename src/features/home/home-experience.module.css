@@ -1,0 +1,150 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--reading-max);
+  min-height: 100dvh;
+  margin-inline: auto;
+  /* Room at the bottom for the floating nav capsule plus the add bar. */
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-16) + env(safe-area-inset-bottom));
+}
+
+.header {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.22em;
+}
+
+.date {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  min-height: 0;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The empty state speaks in the lore register: it is the one moment on Home
+   that is about the journal rather than the work. */
+.empty {
+  margin: 0;
+  padding: var(--space-10) 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 1.8;
+  text-wrap: pretty;
+}
+
+.completed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.completedToggle {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.08em;
+}
+
+.completedToggle:hover {
+  color: var(--color-ink);
+}
+
+.completedRule {
+  flex: 1;
+  height: 1px;
+  background: var(--color-line);
+}
+
+.completedLabel {
+  flex: none;
+  order: -1;
+}
+
+.completedChevron {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform var(--duration-feedback) var(--ease-settle);
+}
+
+.completedChevron[data-open] {
+  transform: rotate(180deg);
+}
+
+/* 決定事項ログ F-8: task creation stays a small permanent control, not a
+   floating action button competing with the world. */
+.addBar {
+  position: fixed;
+  inset: auto 0 calc(var(--nav-height) + env(safe-area-inset-bottom));
+  z-index: var(--layer-content);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-page) var(--space-2);
+  pointer-events: none;
+}
+
+.add {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-strong);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  box-shadow: var(--shadow-control);
+  transition: border-color var(--duration-instant) var(--ease-press),
+    transform var(--duration-instant) var(--ease-press);
+  pointer-events: auto;
+}
+
+.add:hover {
+  border-color: var(--color-iron);
+}
+
+.add:active {
+  transform: scale(0.975);
+}
+
+@media (min-width: 800px) {
+  .screen {
+    padding-top: var(--space-12);
+  }
+}

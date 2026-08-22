@@ -1,0 +1,263 @@
+:root,
+[data-color-scheme='light'] {
+  color-scheme: light;
+
+  --font-operation: 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --font-lore: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+
+  /* DESIGN.md §2.1 — minor-third scale. Sizes and their line-heights travel
+     together; a component picks one pair, never a size from one row and a
+     leading from another. */
+  --text-caption: 0.75rem;
+  --leading-caption: 1.4;
+  --text-body: 0.9375rem;
+  --leading-body: 1.5;
+  --text-body-lg: 1.0625rem;
+  --leading-body-lg: 1.5;
+  --text-title: 1.375rem;
+  --leading-title: 1.3;
+  --text-lore: 1.625rem;
+  --leading-lore: 1.35;
+  --text-display: 2.5rem;
+  --leading-display: 1.15;
+
+  /* Operation text stays 400/500 (DESIGN.md §2.1): emphasis is spacing and
+     Iron/Stone contrast, not weight. */
+  --weight-regular: 400;
+  --weight-medium: 500;
+
+  --color-world: #e9ede8;
+  --color-ground: #dce4de;
+  --color-surface: rgb(247 249 245 / 82%);
+  --color-surface-strong: #f7f9f5;
+  --color-surface-inverse: #0d1311;
+  --color-ink: #111816;
+  --color-ink-muted: #53615c;
+  --color-ink-inverse: #edf4ef;
+  --color-iron: #0d1311;
+  --color-iron-soft: #26302c;
+  --color-line: rgb(17 31 27 / 17%);
+  --color-line-strong: rgb(17 31 27 / 31%);
+  --color-mist: #58cbd2;
+  --color-mist-soft: rgb(88 203 210 / 18%);
+  --color-focus: #087f86;
+
+  /* Foreground for the two fills that keep their own luminance in both colour
+     schemes: Iron is near-black either way, Mist is a light cyan either way.
+     `--color-ink-inverse` flips with the scheme and is therefore the wrong
+     token for them — on a dark page it would put dark text on a dark fill. */
+  --color-on-iron: #edf4ef;
+  --color-on-mist: #06110f;
+
+  /* Chrome that floats over the world video. It is deliberately NOT part of the
+     light/dark inversion: the world keeps its own imagery in either scheme, so
+     the controls above it are tuned once against that footage rather than
+     flipped with the page (決定事項ログ F-15). */
+  --color-chrome-ground: rgb(8 16 14 / 34%);
+  --color-chrome-line: rgb(255 255 255 / 14%);
+  --color-chrome-line-strong: rgb(255 255 255 / 26%);
+  --color-chrome-ink: rgb(238 248 244 / 88%);
+  --color-chrome-ink-strong: #fff;
+  --blur-chrome: 0.75rem;
+  --color-success: #146f56;
+  --color-warning: #805914;
+  --color-danger: #a23b45;
+  --color-scrim: rgb(5 10 9 / 62%);
+
+  /* Task categories carried over from v1 (決定事項ログ F-7). Deliberately
+     desaturated: they only ever appear as a small dot, never as a fill, so Mist
+     stays the one colour that reads as alive (DESIGN.md §1.1). */
+  --color-category-job: #8a6a2f;
+  --color-category-university: #4b5f8a;
+  --color-category-life: #4d6b4f;
+  --color-category-none: var(--color-ink-muted);
+
+  --shadow-control: 0 10px 32px rgb(6 17 14 / 13%);
+  --shadow-float: 0 24px 80px rgb(5 16 13 / 18%);
+  --shadow-mineral: inset 0 1px rgb(255 255 255 / 34%),
+    0 0 0 1px rgb(56 94 84 / 10%);
+
+  /* The press afterglow (決定事項ログ F-2): a wordless control brightens once
+     and fades, rather than staying lit while the finger is down. Three named
+     stops instead of an elevation tier, because this is the system's press
+     feedback, not a resting height — and naming it is what lets the creature's
+     touch-breath use the same curve later. */
+  --glow-press-rest: 0 0 0 0 var(--color-mist-soft);
+  --glow-press-peak: 0 0 1.25rem 0.125rem var(--color-mist-soft);
+  --glow-press-gone: 0 0 2.5rem 0.25rem transparent;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-page: clamp(1rem, 4vw, 4rem);
+
+  --radius-control: 0.625rem;
+  --radius-panel: 1.25rem;
+  --radius-sheet: 1.75rem;
+  --radius-round: 999px;
+
+  --duration-instant: 90ms;
+  --duration-feedback: 180ms;
+  --duration-reveal: 360ms;
+  --duration-ambient: 12000ms;
+  --duration-splash: 900ms;
+  --duration-splash-max: 1200ms;
+  --ease-press: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-ambient: cubic-bezier(0.45, 0, 0.55, 1);
+
+  --tap-target: 2.75rem;
+  --content-max: 78rem;
+  --reading-max: 42rem;
+  --nav-height: 4.25rem;
+
+  /* The band a screen's fixed bottom control occupies above the navigation —
+     one tap target plus the bar's own bottom padding. Notices and toasts add
+     it to their offset so they never settle on top of a primary action. */
+  --action-band: calc(var(--tap-target) + var(--space-2));
+
+  /* DESIGN.md §5. Custom properties cannot be read inside a media query, so
+     these three values also appear as literals in `@media (min-width: …)`.
+     Registering them here is what makes those literals legal. */
+  --breakpoint-compact: 480px;
+  --breakpoint-split: 800px;
+  --breakpoint-wide: 1200px;
+
+  --layer-world: 0;
+  --layer-content: 10;
+  --layer-nav: 30;
+  --layer-sheet: 50;
+  --layer-toast: 70;
+  --layer-splash: 90;
+}
+
+[data-color-scheme='dark'] {
+  color-scheme: dark;
+
+  --color-world: #07100f;
+  --color-ground: #0b1614;
+  --color-surface: rgb(16 27 24 / 82%);
+  --color-surface-strong: #14201d;
+  --color-surface-inverse: #edf4ef;
+  --color-ink: #edf4ef;
+  --color-ink-muted: #a0b2ab;
+  --color-ink-inverse: #101614;
+  --color-iron: #050a09;
+  --color-iron-soft: #1b2925;
+  --color-line: rgb(209 237 227 / 16%);
+  --color-line-strong: rgb(209 237 227 / 30%);
+  --color-mist: #68dbe1;
+  --color-mist-soft: rgb(104 219 225 / 17%);
+  --color-focus: #77e1e5;
+  --color-success: #69caa5;
+  --color-warning: #dfb86a;
+  --color-danger: #f08a92;
+  --color-scrim: rgb(2 6 5 / 74%);
+
+  --color-category-job: #d7b473;
+  --color-category-university: #9db2dd;
+  --color-category-life: #9dc0a0;
+
+  --shadow-control: 0 12px 38px rgb(0 0 0 / 35%);
+  --shadow-float: 0 30px 90px rgb(0 0 0 / 46%);
+  --shadow-mineral: inset 0 1px rgb(215 255 242 / 10%),
+    0 0 0 1px rgb(190 241 225 / 8%);
+}
+
+:root,
+[data-theme='order'] {
+  --font-heading: var(--font-operation);
+  --expression-edge: var(--color-iron);
+  --expression-accent: var(--color-focus);
+  --expression-opacity: 0.92;
+
+  /* The bottom navigation is transparent on every screen (決定事項ログ F-10),
+     but what it is transparent *against* differs by register: a page surface
+     here, world footage in natural-history. */
+  --nav-ground: var(--color-surface);
+  --nav-line: var(--color-line);
+  --nav-ink: var(--color-ink-muted);
+  --nav-ink-current: var(--color-ink);
+}
+
+[data-theme='natural-history'] {
+  --font-heading: var(--font-lore);
+  --expression-edge: var(--color-line-strong);
+  --expression-accent: var(--color-mist);
+  --expression-opacity: 0.78;
+
+  --nav-ground: var(--color-chrome-ground);
+  --nav-line: var(--color-chrome-line);
+  --nav-ink: var(--color-chrome-ink);
+  --nav-ink-current: var(--color-chrome-ink-strong);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme]) {
+    color-scheme: dark;
+
+    --color-world: #07100f;
+    --color-ground: #0b1614;
+    --color-surface: rgb(16 27 24 / 82%);
+    --color-surface-strong: #14201d;
+    --color-surface-inverse: #edf4ef;
+    --color-ink: #edf4ef;
+    --color-ink-muted: #a0b2ab;
+    --color-ink-inverse: #101614;
+    --color-iron: #050a09;
+    --color-iron-soft: #1b2925;
+    --color-line: rgb(209 237 227 / 16%);
+    --color-line-strong: rgb(209 237 227 / 30%);
+    --color-mist: #68dbe1;
+    --color-mist-soft: rgb(104 219 225 / 17%);
+    --color-focus: #77e1e5;
+    --color-success: #69caa5;
+    --color-warning: #dfb86a;
+    --color-danger: #f08a92;
+    --color-scrim: rgb(2 6 5 / 74%);
+    --color-category-job: #d7b473;
+    --color-category-university: #9db2dd;
+    --color-category-life: #9dc0a0;
+    --shadow-control: 0 12px 38px rgb(0 0 0 / 35%);
+    --shadow-float: 0 30px 90px rgb(0 0 0 / 46%);
+    --shadow-mineral: inset 0 1px rgb(215 255 242 / 10%),
+      0 0 0 1px rgb(190 241 225 / 8%);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root,
+  [data-color-scheme] {
+    --color-line: currentcolor;
+    --color-line-strong: currentcolor;
+    --color-surface: var(--color-surface-strong);
+  }
+}
+
+/* Motion has three states, not two: the OS preference is the *initial* value
+   and the in-app setting overrides it in both directions (決定事項ログ E-5).
+   `data-motion` is absent while the preference is 'system'. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) {
+    --duration-instant: 1ms;
+    --duration-feedback: 150ms;
+    --duration-reveal: 150ms;
+    --duration-ambient: 1ms;
+  }
+}
+
+:root[data-motion='reduced'] {
+  --duration-instant: 1ms;
+  --duration-feedback: 150ms;
+  --duration-reveal: 150ms;
+  --duration-ambient: 1ms;
+}

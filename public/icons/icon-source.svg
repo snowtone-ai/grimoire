@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <filter id="mist" x="166" y="110" width="180" height="228" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="88" fill="#0D1715"/>
+  <path d="M256 156c-38 48-66 83-66 120 0 39 29 68 66 68s66-29 66-68c0-37-28-72-66-120Z" fill="#53D0D8" fill-opacity="0.16" filter="url(#mist)"/>
+
+  <g stroke="#EDF4EF" stroke-width="15" stroke-linecap="round">
+    <path d="M150 206a133 133 0 0 1 78-65"/>
+    <path d="M264 137a133 133 0 0 1 105 76"/>
+    <path d="M384 252a133 133 0 0 1-34 104"/>
+    <path d="M308 385a133 133 0 0 1-98 0"/>
+    <path d="M165 363a133 133 0 0 1-35-109"/>
+  </g>
+
+  <path d="M249 341c-29-23-63-33-101-24v-78c39-8 74 3 101 28v74Z" fill="#EDF4EF"/>
+  <path d="M263 341c29-23 63-33 101-24v-78c-39-8-74 3-101 28v74Z" fill="#EDF4EF"/>
+  <path d="M237 318c-20-13-43-17-67-14v-42c24-2 47 5 67 19v37Z" fill="#111816"/>
+  <path d="M275 318c20-13 43-17 67-14v-42c-24-2-47 5-67 19v37Z" fill="#111816"/>
+
+  <path d="M256 182c-22 29-39 49-39 72 0 24 17 42 39 42s39-18 39-42c0-23-17-43-39-72Z" fill="#68DBE1" stroke="#EDF4EF" stroke-width="13" stroke-linejoin="round"/>
+  <path d="M240 253c0 11 6 18 16 21" stroke="#F2FFFF" stroke-width="8" stroke-linecap="round"/>
+
+  <g fill="#68DBE1">
+    <circle cx="136" cy="234" r="8"/>
+    <circle cx="246" cy="137" r="8"/>
+    <circle cx="376" cy="229" r="8"/>
+    <circle cx="333" cy="373" r="8"/>
+  </g>
+</svg>

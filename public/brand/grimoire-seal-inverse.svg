@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <title>魔導書の紋章</title>
+  <g stroke="#EDF4EF" stroke-width="9" stroke-linecap="round">
+    <path d="M56 81a86 86 0 0 1 52-37"/>
+    <path d="M130 41a86 86 0 0 1 72 48"/>
+    <path d="M212 116a86 86 0 0 1-22 70"/>
+    <path d="M163 207a86 86 0 0 1-64 0"/>
+    <path d="M68 190a86 86 0 0 1-22-73"/>
+  </g>
+
+  <path d="M124 177c-17-14-38-20-62-15v-49c25-5 47 2 62 17v47Z" fill="#EDF4EF"/>
+  <path d="M132 177c17-14 38-20 62-15v-49c-25-5-47 2-62 17v47Z" fill="#EDF4EF"/>
+  <path d="M117 162c-13-8-27-11-42-9v-27c15-1 29 3 42 12v24Z" fill="#111816"/>
+  <path d="M139 162c13-8 27-11 42-9v-27c-15-1-29 3-42 12v24Z" fill="#111816"/>
+
+  <path d="M128 69c-14 18-25 31-25 45 0 15 11 26 25 26s25-11 25-26c0-14-11-27-25-45Z" fill="#68DBE1" stroke="#EDF4EF" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M118 113c0 7 4 11 10 13" stroke="#F1FFFF" stroke-width="5" stroke-linecap="round"/>
+
+  <g fill="#68DBE1">
+    <circle cx="48" cy="99" r="5"/>
+    <circle cx="119" cy="41" r="5"/>
+    <circle cx="208" cy="101" r="5"/>
+    <circle cx="179" cy="198" r="5"/>
+  </g>
+</svg>

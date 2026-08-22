@@ -1,7 +1,7 @@
-# AGENTS.md -- Grimoire / pm-zero v12 (Codex CLI adaptation)
+# AGENTS.md -- Grimoire / pm-zero v12.1 (Codex CLI adaptation)
 
 This is the Codex CLI counterpart of this repo's `CLAUDE.md`. Same project, same
-pm-zero v12 ledger, same git workflow -- **read `CLAUDE.md` first**, it is the
+pm-zero v12.1 ledger, same git workflow -- **read `CLAUDE.md` first**, it is the
 canonical ruleset and governs regardless of which CLI executes the work. This
 file exists only to document where Codex's mechanics differ from Claude Code's.
 Do not duplicate `CLAUDE.md` here; if a rule changes, change it there.
@@ -22,13 +22,15 @@ Do not duplicate `CLAUDE.md` here; if a rule changes, change it there.
 ## Where Codex differs from Claude Code
 
 **Autonomy.** Claude Code uses `bypassPermissions` (project `.claude/settings.json`)
-plus a global `permissions.deny` layer. Codex has no project-scoped equivalent --
-`approval_policy` and `sandbox_mode` are security-sensitive keys the Codex CLI
-silently ignores in a project-local `.codex/config.toml`; they must live in
-`~/.codex/config.toml`. This machine's global config already sets
-`approval_policy = "never"` and trusts this project's path under
-`[projects.'c:\users\chidj\project\プロダクト\task-plant']`, so autonomy already
-matches Claude Code's `bypassPermissions` -- no project-level action needed here.
+plus a global `permissions.deny` layer. Current Codex versions load trusted
+project-scoped `.codex/config.toml` overrides, but machine-wide defaults belong in
+`~/.codex/config.toml`. Fully non-interactive local/MCP/app operation requires the
+three independent defaults documented by Codex: `approval_policy = "never"`,
+`default_permissions = ":danger-full-access"`, and `default_tools_approval_mode =
+"approve"` under `[apps._default]` and each `[mcp_servers.<id>]`. The global file
+currently has `approval_policy = "never"`, while the remaining defaults are tracked
+as B002 because this managed session cannot write outside the workspace. The
+project trust entry remains `[projects.'c:\users\chidj\project\プロダクト\task-plant']`.
 
 **Guard hook.** Claude Code's destructive-command guard lives at
 `~/.claude/hooks/guard.mjs`. Its Codex port lives at `~/.codex/hooks/guard.mjs`,
@@ -51,26 +53,19 @@ only as a dead record of the old convention; it is no longer imported.
 mid-session" cache-economics rule is Claude-specific (Anthropic prompt caching);
 it does not apply to Codex sessions and can be ignored here.
 
-**Verify script reality check.** `scripts/verify.mjs` (kept from `CLAUDE.md`'s
-Commands section) still shells out to `pnpm lint/typecheck/test/build`. Per
-T001/D-001, `package.json` and the rest of the old app were removed from this
-branch as part of the near-from-scratch v2 rebuild -- `pnpm verify` will fail
-until a new scaffold exists. That is a known, already-recorded gap, not a
-regression to silently "fix" by restoring old files or inventing a stopgap.
+**Subagents.** Codex may use up to four concurrent worker subagents when useful.
+This overrides `CLAUDE.md`'s default cap of two for Codex only; Claude's cap and
+behavior remain unchanged. The Codex runtime counterpart is the user-level
+`[agents] max_concurrent_threads_per_session = 4` setting (the limit excludes
+the primary agent).
 
-**Research tools.** Same Exa (search) + Firecrawl (page/content analysis)
-workflow as `CLAUDE.md`'s "Research Tools" section -- but Codex has no
-claude.ai connector equivalent, so both `exa` and `firecrawl` are local MCP
-servers registered in `~/.codex/config.toml`. They need `EXA_API_KEY` /
-`FIRECRAWL_API_KEY` added there before they work -- currently blocked, see
-docs/issues.md.
-
-**CI trigger gap.** `.github/workflows/ci.yml` currently only triggers on
-`push`/`pull_request` to `main`, not on `grimore-v2` -- so on this branch,
-"merge gate: CI green" from `CLAUDE.md`'s Git section is not actually
-enforced yet. Known gap from the branch split (T041/D-044 on `main`); treat
-config/tooling changes on `grimore-v2` with the same care as if CI were
-enforced, since it currently isn't.
+**Frontend/UI tooling (pm-zero v12.1 §16).** `/design-sync` and the
+`frontend-design` plugin are Claude Code-only mechanics (claude.ai/design
+integration) -- Codex has no equivalent and does not attempt one. The
+executable pieces apply identically to both CLIs: browser self-verification
+before reporting a UI change done, the `scripts/verify.mjs` raw-value lint
+once `DESIGN.md` is adopted (not yet, in this repo), and per-project tool
+auto-provisioning from `scripts/setup.mjs` on framework detection.
 
 Everything else -- Task Ledger, Parallelism, Self-Review tiers, Self-Evolution,
 Engineering Role, Coding Priorities, git branch/PR/docs-only-exception rules,

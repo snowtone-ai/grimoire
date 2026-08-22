@@ -1,0 +1,302 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--content-max);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-lore);
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
+}
+
+/* Two journals, switched by an underline that moves — not by a coloured pill
+   (DESIGN.md §6.4 keeps active state to weight and position). */
+.layerTabs {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.layerTab {
+  min-height: var(--tap-target);
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  transition: border-color var(--duration-feedback) var(--ease-press),
+    color var(--duration-feedback) var(--ease-press);
+}
+
+.layerTab:hover {
+  color: var(--color-ink);
+}
+
+.layerTab[aria-selected='true'] {
+  border-bottom-color: var(--color-iron);
+  color: var(--color-ink);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.orderRow,
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  list-style: none;
+}
+
+.specimen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: center;
+}
+
+/* The plate is the object; the grid around it stays quiet. One radius tier, no
+   shadow at rest (DESIGN.md §6.2). */
+.plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: var(--color-ground);
+  transition: border-color var(--duration-feedback) var(--ease-press);
+}
+
+.specimen:hover .plate {
+  border-color: var(--color-line-strong);
+}
+
+.plate img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.quantity {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.specimenName {
+  color: var(--color-ink);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-12) 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 1.9;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.detail {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-sheet);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--color-world);
+  animation: detail-in var(--duration-reveal) var(--ease-settle) both;
+}
+
+.detail:focus {
+  outline: none;
+}
+
+.detailBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--space-4) 0;
+}
+
+.detailFigure {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: center;
+  margin: 0;
+  padding: var(--space-4) var(--space-page)
+    calc(var(--space-12) + env(safe-area-inset-bottom));
+}
+
+.detailPlate {
+  width: min(100%, 22rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.detailCopy {
+  width: 100%;
+  max-width: var(--reading-max);
+  text-align: center;
+}
+
+.detailCategory {
+  margin: 0 0 var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.22em;
+}
+
+.detailName {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-lore);
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
+}
+
+.detailDescription {
+  margin: 0;
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 2;
+  text-wrap: pretty;
+}
+
+.detailMeta {
+  margin: var(--space-6) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* 決定事項ログ M-11: an unobserved record stays as a silhouette. It never shows a
+   total or a percentage, so it reads as "there is more animal", not "you are
+   62% done". */
+.records {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.record:last-child {
+  border-bottom: 0;
+}
+
+.recordSilhouette {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-control);
+  background: var(--color-ground);
+}
+
+.record[data-unseen] .recordSilhouette {
+  background: var(--color-line-strong);
+  opacity: 0.55;
+}
+
+.recordText {
+  min-width: 0;
+}
+
+.recordName {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+}
+
+.record[data-unseen] .recordName {
+  color: var(--color-ink-muted);
+}
+
+.recordNote {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: 1.9;
+  text-wrap: pretty;
+}
+
+.recordMeta {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+@keyframes detail-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+}

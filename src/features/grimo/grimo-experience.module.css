@@ -1,0 +1,118 @@
+/* The world fills the field; there is no page padding to break it (DESIGN.md
+   §0: the environmental subject can cross the page field). */
+.screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.topChrome {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--space-4) 0;
+}
+
+/* The screen's title, and the only heading it has: the world is the content, so
+   the area's name is what a reader arriving here needs told. DESIGN.md §2.1
+   lets a place name in the lore register take Medium. */
+.areaName {
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-round);
+  background: var(--color-chrome-ground);
+  color: var(--color-chrome-ink);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  backdrop-filter: blur(var(--blur-chrome));
+}
+
+.markWrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+/* 決定事項ログ F-14: a new record announces itself with one unobtrusive mark —
+   no card, no modal, no interruption of the view. */
+.mark {
+  position: absolute;
+  top: -0.125rem;
+  right: -0.125rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: var(--radius-round);
+  background: var(--color-mist);
+}
+
+.bottomChrome {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  /* Sits directly above the floating nav capsule (決定事項ログ F-6). */
+  padding: 0 var(--space-4)
+    calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--space-2));
+}
+
+.areaList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) 0 0;
+  list-style: none;
+}
+
+.areaOption {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
+  background: none;
+  text-align: start;
+  transition: background-color var(--duration-instant) var(--ease-press),
+    border-color var(--duration-instant) var(--ease-press);
+}
+
+.areaOption:hover {
+  background: var(--color-ground);
+}
+
+.areaOption[aria-current] {
+  border-color: var(--color-iron);
+}
+
+.areaSwatch {
+  flex: none;
+  width: 4.5rem;
+  height: 3rem;
+  border-radius: var(--radius-control);
+}
+
+.areaText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.areaOptionName {
+  color: var(--color-ink);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+}
+
+.areaSummary {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-wrap: pretty;
+}

@@ -1,0 +1,270 @@
+/* Deliberately no `z-index`: that would make this a stacking context, and every
+   sheet a screen opens lives inside it. Their `--layer-sheet` would then be
+   resolved against this element rather than the root, so the navigation at
+   `--layer-nav` — a sibling of this div — would paint and hit-test above them,
+   putting the floating capsule on top of a sheet's action row. `position:
+   relative` is kept for descendant positioning; the world sits behind content
+   inside each screen's own subtree, so nothing here needs a layer of its own. */
+.appSurface {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.splash,
+.loading {
+  position: fixed;
+  z-index: var(--layer-splash);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+}
+
+/* Full-bleed and cropped rather than letterboxed: the opening should read as a
+   window into the world, and a black bar around it reads as a video player. */
+.splashFootage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sealStage {
+  position: relative;
+  display: grid;
+  width: clamp(8.5rem, 34vw, 12rem);
+  aspect-ratio: 1;
+  place-items: center;
+  animation: sealSettle var(--duration-reveal) var(--ease-settle) both;
+}
+
+.seal {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 0 1.1rem var(--color-mist-soft));
+}
+
+.orbit {
+  position: absolute;
+  inset: 3%;
+  border: 1px solid var(--color-mist);
+  border-right-color: transparent;
+  border-radius: var(--radius-round);
+  opacity: 0.4;
+  transform: rotate(-24deg);
+}
+
+.loading {
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-4);
+  padding: var(--space-page);
+}
+
+.loadingTitle {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-lore);
+  font-size: var(--text-lore);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-lore);
+}
+
+.loadingCopy {
+  max-width: var(--reading-max);
+  margin: 0;
+  color: var(--color-on-iron);
+  font-size: var(--text-body);
+  line-height: 1.8;
+  opacity: 0.72;
+  text-wrap: pretty;
+}
+
+/* 決定事項ログ M-4 — the small notice. It sits above the nav, states what was
+   collected in one line, and dismisses itself. There is no button on it: the
+   thing it announces is already saved, so there is nothing to confirm.
+   It clears `--action-band` for the same reason the migration notice does: it
+   is raised by completing a task, which is exactly when Home's compose control
+   is on screen underneath it. */
+.miniNotice {
+  position: fixed;
+  z-index: var(--layer-toast);
+  right: var(--space-4);
+  bottom: calc(
+    var(--nav-height) + var(--action-band) + var(--space-4)
+      + env(safe-area-inset-bottom)
+  );
+  left: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  max-width: 24rem;
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  animation: noticeIn var(--duration-feedback) var(--ease-settle) both;
+}
+
+.miniArt {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+}
+
+.miniText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.miniName {
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniLine {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.rewardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: center;
+  text-align: center;
+}
+
+.rewardPlate {
+  width: min(100%, 14rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.rewardDescription {
+  max-width: var(--reading-max);
+  margin: 0;
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  line-height: 2;
+  text-wrap: pretty;
+}
+
+.rewardMeta {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.migrationNotice {
+  position: fixed;
+  z-index: var(--layer-toast);
+  right: var(--space-4);
+  bottom: calc(
+    var(--nav-height) + var(--action-band) + var(--space-4)
+      + env(safe-area-inset-bottom)
+  );
+  left: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-float);
+  animation: noticeIn var(--duration-reveal) var(--ease-settle) both;
+}
+
+.migrationTitle {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-lore);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+.migrationCopy {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.migrationActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+/* Matches the Button control's geometry so the pair reads as one row; a link
+   cannot be a <button> here because it navigates. */
+.migrationLink {
+  display: inline-grid;
+  min-height: var(--tap-target);
+  padding-inline: var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  place-items: center;
+  text-decoration: none;
+}
+
+@keyframes sealSettle {
+  from {
+    opacity: 0;
+    transform: translateY(0.45rem) scale(0.972);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes noticeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:global(html[data-motion='reduced']) .sealStage,
+:global(html[data-motion='reduced']) .miniNotice,
+:global(html[data-motion='reduced']) .migrationNotice {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html:not([data-motion='full'])) .sealStage,
+  :global(html:not([data-motion='full'])) .miniNotice,
+  :global(html:not([data-motion='full'])) .migrationNotice {
+    animation: none;
+  }
+}

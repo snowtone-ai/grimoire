@@ -13,6 +13,9 @@
 # testing
 /coverage
 /.playwright-mcp/
+/test-results/
+/implementation-status-desktop.png
+/report-desktop.png
 
 # next.js
 /.next/
@@ -59,3 +62,15 @@ credentials.json
 .claude/transcripts/
 .claude/cache/
 .codegraph/
+
+# pm-zero v12.1 Section 16.7 -- reproducible via `node scripts/setup.mjs`, not vendored
+.claude/skills/impeccable/
+
+# scripts/sync-world-media.mjs output (D-013): the owner's footage copied out of
+# anime/, and the ledger recording which files that copy wrote. Gigabytes of
+# video, machine-local, and re-derivable from anime/ at any time. manifest.json
+# is the contract src/world/media-manifest.ts reads, so it stays tracked.
+/public/world/*
+!/public/world/manifest.json
+/public/audio/bgm/*
+!/public/audio/bgm/.gitkeep

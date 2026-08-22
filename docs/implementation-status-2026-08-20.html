@@ -1,0 +1,1448 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../public/brand/grimoire-seal.svg" type="image/svg+xml">
+  <title>Grimoire v2 実装現在地 — 2026-08-20</title>
+  <style>
+    :root {
+      --ink: #15211f;
+      --ink-soft: #465a56;
+      --night: #0a1716;
+      --night-2: #132321;
+      --paper: #edf1ed;
+      --paper-2: #f7f7f2;
+      --line: #becbc6;
+      --cyan: #49c9c4;
+      --cyan-dark: #166f70;
+      --amber: #d8ae67;
+      --coral: #d27363;
+      --moss: #6f917a;
+      --quiet: #8ca09b;
+      --white: #ffffff;
+      --radius: 20px;
+      --shadow: 0 18px 50px rgba(10, 23, 22, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--paper);
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      line-height: 1.8;
+      font-feature-settings: "palt" 1;
+    }
+
+    a { color: var(--cyan-dark); }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 4px;
+    }
+
+    img { max-width: 100%; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 640px;
+      display: grid;
+      align-items: end;
+      color: #eaf6f2;
+      background: var(--night);
+      border-bottom: 8px solid var(--cyan);
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(73, 201, 196, 0.32);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      width: 520px;
+      height: 520px;
+      right: -120px;
+      top: -110px;
+      box-shadow: 0 0 0 54px rgba(73, 201, 196, 0.04), 0 0 0 108px rgba(73, 201, 196, 0.025);
+    }
+
+    .hero::after {
+      width: 220px;
+      height: 220px;
+      right: 85px;
+      top: 40px;
+      border-style: dashed;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 72px 0 64px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+      gap: 72px;
+      align-items: end;
+    }
+
+    .eyebrow,
+    .chapter,
+    .utility {
+      margin: 0;
+      font: 700 0.76rem/1.4 Consolas, "SFMono-Regular", monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow { color: var(--cyan); }
+
+    h1,
+    h2,
+    h3,
+    .mincho {
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", "Shippori Mincho", serif;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 18px 0 24px;
+      font-size: clamp(3rem, 8vw, 6.6rem);
+      line-height: 1.02;
+    }
+
+    .hero-lead {
+      max-width: 720px;
+      margin: 0;
+      color: #bcd0ca;
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+    }
+
+    .verdict {
+      position: relative;
+      min-height: 310px;
+      display: grid;
+      place-items: center;
+      padding: 34px;
+      text-align: center;
+      border: 1px solid rgba(216, 174, 103, 0.65);
+      border-radius: 50%;
+      background: var(--night-2);
+      transform: rotate(-3deg);
+    }
+
+    .verdict::before {
+      content: "";
+      position: absolute;
+      inset: 13px;
+      border: 1px dashed rgba(216, 174, 103, 0.45);
+      border-radius: inherit;
+    }
+
+    .verdict strong {
+      display: block;
+      color: var(--amber);
+      font: 500 clamp(2rem, 4vw, 3.6rem)/1.1 "Yu Mincho", serif;
+    }
+
+    .verdict small {
+      display: block;
+      max-width: 210px;
+      margin: 16px auto 0;
+      color: #d7e3df;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    .snapshot {
+      position: relative;
+      z-index: 2;
+      width: min(1180px, calc(100% - 40px));
+      margin: -34px auto 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+      box-shadow: var(--shadow);
+    }
+
+    .snapshot article {
+      min-height: 150px;
+      padding: 28px 30px;
+      border-right: 1px solid var(--line);
+    }
+
+    .snapshot article:last-child { border-right: 0; }
+
+    .snapshot b {
+      display: block;
+      margin-bottom: 7px;
+      font: 500 clamp(2.1rem, 4vw, 3.2rem)/1 "Yu Mincho", serif;
+    }
+
+    .snapshot span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .page-shell {
+      width: min(1240px, calc(100% - 40px));
+      margin: 76px auto 120px;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      gap: 64px;
+      align-items: start;
+    }
+
+    .index {
+      position: sticky;
+      top: 24px;
+      padding: 22px 0 22px 20px;
+      border-left: 2px solid var(--line);
+    }
+
+    .index p { color: var(--quiet); }
+
+    .index ol {
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: index;
+    }
+
+    .index li {
+      counter-increment: index;
+      margin: 0 0 12px;
+    }
+
+    .index a {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .index a::before {
+      content: counter(index, decimal-leading-zero);
+      color: var(--cyan-dark);
+      font: 700 0.72rem/1.7 Consolas, monospace;
+    }
+
+    .index a:hover { color: var(--ink); }
+
+    main { min-width: 0; }
+
+    section {
+      scroll-margin-top: 28px;
+      margin-bottom: 110px;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 34px;
+    }
+
+    .section-no {
+      color: var(--cyan-dark);
+      font: 700 0.8rem/1.5 Consolas, monospace;
+      letter-spacing: 0.18em;
+      border-top: 3px solid var(--cyan);
+      padding-top: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 1.38rem;
+      line-height: 1.35;
+    }
+
+    .section-intro {
+      max-width: 760px;
+      margin: 14px 0 0;
+      color: var(--ink-soft);
+    }
+
+    .callout {
+      padding: 28px 30px;
+      border-left: 5px solid var(--cyan);
+      background: var(--paper-2);
+      box-shadow: 0 8px 28px rgba(10, 23, 22, 0.07);
+    }
+
+    .callout strong { color: var(--cyan-dark); }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(247, 247, 242, 0.72);
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    .good { border-top: 5px solid var(--moss); }
+    .warn { border-top: 5px solid var(--amber); }
+    .stop { border-top: 5px solid var(--coral); }
+
+    .plain-list {
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .plain-list li {
+      position: relative;
+      margin: 10px 0;
+      padding-left: 24px;
+    }
+
+    .plain-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 8px;
+      height: 8px;
+      border: 2px solid var(--cyan-dark);
+      transform: rotate(45deg);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      margin-bottom: 24px;
+      color: var(--ink-soft);
+      font-size: 0.85rem;
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      margin-right: 7px;
+      border-radius: 3px;
+      vertical-align: -1px;
+      background: var(--legend-color);
+    }
+
+    .maturity-chart {
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--night);
+      color: #e6f2ef;
+      box-shadow: var(--shadow);
+    }
+
+    .maturity-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 1.2fr) minmax(220px, 3fr) minmax(150px, 1.3fr);
+      gap: 18px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(190, 203, 198, 0.14);
+    }
+
+    .maturity-row:last-child { border-bottom: 0; }
+
+    .meter {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .meter i {
+      height: 13px;
+      border: 1px solid rgba(188, 208, 202, 0.25);
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .meter i.on { background: var(--cyan); border-color: var(--cyan); }
+    .meter.low i.on { background: var(--amber); border-color: var(--amber); }
+    .meter.none i.on { background: var(--coral); border-color: var(--coral); }
+
+    .maturity-note {
+      color: #9fb6af;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .rubric {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin-top: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--line);
+    }
+
+    .rubric div {
+      min-height: 110px;
+      padding: 18px;
+      background: var(--paper-2);
+    }
+
+    .rubric b {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--cyan-dark);
+      font-family: Consolas, monospace;
+    }
+
+    .rubric span {
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+    }
+
+    table {
+      width: 100%;
+      min-width: 790px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th,
+    td {
+      padding: 18px 16px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      color: var(--ink-soft);
+      background: #e2e9e4;
+      font: 700 0.72rem/1.4 Consolas, monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-width: 92px;
+      justify-content: center;
+      padding: 5px 10px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .status.verified { color: #326c4d; background: #e4efe6; }
+    .status.partial { color: #866221; background: #f4ead5; }
+    .status.missing { color: #9a493d; background: #f6e1dd; }
+    .status.pending { color: #516b72; background: #e1eaeb; }
+
+    .screens {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+
+    figure {
+      margin: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #dfe7e2;
+      box-shadow: var(--shadow);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      border-radius: 14px;
+      background: #dce5df;
+    }
+
+    figcaption {
+      padding: 14px 8px 6px;
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 56px 1.3fr 56px 1fr;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .flow-node {
+      min-height: 180px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+    }
+
+    .flow-node.core {
+      color: #e6f2ef;
+      border-color: var(--cyan-dark);
+      background: var(--night-2);
+    }
+
+    .flow-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--cyan-dark);
+      font: 400 2.2rem/1 "Yu Mincho", serif;
+    }
+
+    .transaction-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .transaction-grid span {
+      padding: 8px 10px;
+      border: 1px solid rgba(73, 201, 196, 0.35);
+      border-radius: 8px;
+      color: #bed5cf;
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .architecture {
+      width: 100%;
+      height: auto;
+      margin: 8px 0 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+    }
+
+    .architecture text {
+      font-family: "Yu Gothic", sans-serif;
+      fill: var(--ink);
+    }
+
+    .architecture .small {
+      fill: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .performance-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .line-chart {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--night);
+    }
+
+    .line-chart text {
+      fill: #9fb6af;
+      font: 12px Consolas, monospace;
+    }
+
+    .line-chart .axis { stroke: rgba(190, 203, 198, 0.35); }
+    .line-chart .bad { fill: none; stroke: var(--coral); stroke-width: 5; }
+    .line-chart .good-line { fill: none; stroke: var(--cyan); stroke-width: 5; }
+    .line-chart .gridline { stroke: rgba(190, 203, 198, 0.11); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .result {
+      min-height: 150px;
+      padding: 24px;
+      border-top: 4px solid var(--moss);
+      border-radius: 0 0 14px 14px;
+      background: var(--paper-2);
+      box-shadow: 0 7px 24px rgba(10, 23, 22, 0.07);
+    }
+
+    .result b {
+      display: block;
+      margin-bottom: 8px;
+      font: 500 2.3rem/1 "Yu Mincho", serif;
+    }
+
+    .result span {
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .risk-stack { display: grid; gap: 14px; }
+
+    .risk {
+      display: grid;
+      grid-template-columns: 72px 1.1fr 1.6fr;
+      gap: 20px;
+      align-items: start;
+      padding: 24px;
+      border: 1px solid var(--line);
+      background: var(--paper-2);
+    }
+
+    .risk:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .risk:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+
+    .risk-level {
+      color: var(--coral);
+      font: 700 0.82rem/1.4 Consolas, monospace;
+      letter-spacing: 0.1em;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .phase {
+      position: relative;
+      min-height: 340px;
+      padding: 30px;
+      background: var(--paper-2);
+    }
+
+    .phase::before {
+      content: attr(data-phase);
+      display: block;
+      margin-bottom: 26px;
+      color: var(--cyan-dark);
+      font: 700 0.75rem/1.4 Consolas, monospace;
+      letter-spacing: 0.15em;
+    }
+
+    .phase + .phase::after {
+      content: "→";
+      position: absolute;
+      left: -17px;
+      top: 45px;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--cyan-dark);
+      background: var(--paper);
+      z-index: 2;
+    }
+
+    .glossary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .glossary div {
+      min-height: 150px;
+      padding: 24px;
+      background: var(--paper-2);
+    }
+
+    .glossary dt {
+      margin-bottom: 8px;
+      color: var(--cyan-dark);
+      font-weight: 700;
+    }
+
+    .glossary dd {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .evidence {
+      padding: 34px;
+      color: #dcebe7;
+      border-radius: var(--radius);
+      background: var(--night);
+    }
+
+    .evidence a { color: var(--cyan); }
+
+    footer {
+      padding: 60px 20px 80px;
+      color: #abc0ba;
+      text-align: center;
+      background: var(--night);
+    }
+
+    footer img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 18px;
+      filter: invert(81%) sepia(20%) saturate(686%) hue-rotate(128deg) brightness(92%);
+    }
+
+    .screen-only { display: inline; }
+
+    @media (max-width: 980px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 36px; }
+      .verdict { width: 300px; min-height: 300px; justify-self: end; }
+      .snapshot { grid-template-columns: repeat(2, 1fr); }
+      .snapshot article:nth-child(2) { border-right: 0; }
+      .snapshot article:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
+      .page-shell { grid-template-columns: 1fr; }
+      .index { position: static; columns: 2; border-left: 0; border-top: 2px solid var(--line); }
+      .index .utility, .index p { column-span: all; }
+      .maturity-row { grid-template-columns: 1fr 2fr; }
+      .maturity-note { grid-column: 1 / -1; }
+      .screens { grid-template-columns: repeat(2, 1fr); }
+      .screens figure:last-child { grid-column: 1 / -1; max-width: 430px; justify-self: center; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); min-height: 38px; }
+      .performance-layout { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: repeat(2, 1fr); }
+      .risk { grid-template-columns: 62px 1fr; }
+      .risk > :last-child { grid-column: 2; }
+      .roadmap { grid-template-columns: 1fr; }
+      .phase { min-height: 0; }
+      .phase + .phase::after { content: "↓"; top: -17px; left: 45px; }
+    }
+
+    @media (max-width: 650px) {
+      .hero { min-height: auto; }
+      .hero-inner { width: min(100% - 28px, 1180px); padding: 54px 0 72px; }
+      h1 { font-size: clamp(2.8rem, 16vw, 4.8rem); }
+      .verdict { width: 235px; min-height: 235px; padding: 24px; }
+      .snapshot { width: calc(100% - 28px); grid-template-columns: 1fr; }
+      .snapshot article { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .snapshot article:nth-child(3) { border-bottom: 1px solid var(--line); }
+      .page-shell { width: calc(100% - 28px); margin-top: 62px; gap: 42px; }
+      .index { columns: 1; }
+      section { margin-bottom: 82px; }
+      .section-head { grid-template-columns: 1fr; gap: 8px; }
+      .section-no { width: 74px; }
+      .two-column, .screens, .result-grid, .glossary { grid-template-columns: 1fr; }
+      .screens figure:last-child { grid-column: auto; max-width: none; }
+      .maturity-chart { padding: 22px 18px; }
+      .maturity-row { grid-template-columns: 1fr; gap: 8px; }
+      .rubric { grid-template-columns: 1fr; }
+      .risk { grid-template-columns: 1fr; gap: 8px; }
+      .risk > :last-child { grid-column: auto; }
+      .transaction-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      :root { color-scheme: light; }
+      body { background: white; font-size: 10pt; }
+      .hero { min-height: 0; color: var(--ink); background: white; border: 2px solid var(--ink); }
+      .hero-inner { padding: 35px 0; }
+      .hero-lead { color: var(--ink-soft); }
+      .verdict { color: var(--ink); background: white; }
+      .snapshot { margin-top: 20px; box-shadow: none; }
+      .page-shell { display: block; width: 100%; margin: 40px 0; }
+      .index { display: none; }
+      section { break-inside: avoid; margin-bottom: 48px; }
+      .maturity-chart, .evidence, footer { color: var(--ink); background: white; }
+      .screen-only { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">Implementation Field Report / 2026-08-20 JST</p>
+        <h1>Grimoire v2<br>実装現在地</h1>
+        <p class="hero-lead">
+          毎日のタスクが魔導書の世界を育てるアプリは、主要画面と「データを壊さず保存する心臓部」まで動いています。
+          ただし、図鑑の内容量・編集機能・音・長期負荷試験などが未完成で、現時点では一般公開できる完成版ではありません。
+        </p>
+      </div>
+      <div class="verdict" aria-label="リリース判定は保留">
+        <div>
+          <p class="utility">Release gate</p>
+          <strong>保留</strong>
+          <small>動く統合試作。日常利用の核はあるが、製品完成条件には未到達。</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="snapshot" aria-label="重要な実装数値">
+    <article>
+      <b>5</b>
+      <span>利用できる主要画面<br>ホーム／カレンダー／魔導書／図鑑／設定</span>
+    </article>
+    <article>
+      <b>60</b>
+      <span>自動テスト合格<br>保存・繰り返し・移行・画面ロジックを含む</span>
+    </article>
+    <article>
+      <b>5 / 6</b>
+      <span>本番相当ブラウザ試験<br>1件はWindows版WebKitの試験環境都合で保留</span>
+    </article>
+    <article>
+      <b>12 / 720</b>
+      <span>図鑑の実コンテンツ<br>枠組みは720件対応、実物は12件のみ</span>
+    </article>
+  </div>
+
+  <div class="page-shell">
+    <nav class="index" aria-label="ページ内目次">
+      <p class="utility">Reading map</p>
+      <ol>
+        <li><a href="#summary">30秒で分かる結論</a></li>
+        <li><a href="#maturity">領域別の成熟度</a></li>
+        <li><a href="#features">機能別の実装表</a></li>
+        <li><a href="#screens">現在の実画面</a></li>
+        <li><a href="#journey">利用時の流れ</a></li>
+        <li><a href="#data">データ保護の仕組み</a></li>
+        <li><a href="#performance">N+1・性能対策</a></li>
+        <li><a href="#verification">検証結果</a></li>
+        <li><a href="#risks">未完成・リスク</a></li>
+        <li><a href="#roadmap">次に進める順序</a></li>
+        <li><a href="#glossary">用語集</a></li>
+        <li><a href="#evidence">根拠と読み方</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <section id="summary">
+        <div class="section-head">
+          <div class="section-no">01</div>
+          <div>
+            <h2>30秒で分かる結論</h2>
+            <p class="section-intro">「見た目だけの試作品」ではありません。しかし「すぐ販売・公開できる完成品」でもありません。</p>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <article class="card good">
+            <p class="chapter">What already works</p>
+            <h3>毎日使う核は、端から端までつながった</h3>
+            <ul class="plain-list">
+              <li>今日のタスクを作り、完了し、完了を取り消せる</li>
+              <li>繰り返し予定を月カレンダーで確認できる</li>
+              <li>タスク作成・初回完了に応じて報酬と成長が保存される</li>
+              <li>魔導書の3D世界と発見済み図鑑を見られる</li>
+              <li>起動紋章を「OFF／一定時間／毎回」から選べる</li>
+              <li>端末内保存、書き出し、読み込み、旧版移行がある</li>
+              <li>一度読み込んだPWAはChromiumでオフライン再表示できる</li>
+            </ul>
+          </article>
+
+          <article class="card stop">
+            <p class="chapter">Why it cannot ship yet</p>
+            <h3>長期製品として埋めるべき穴が残る</h3>
+            <ul class="plain-list">
+              <li>図鑑720枠に対して、品質確定した内容は12件</li>
+              <li>作成済みタスクの編集・削除がない</li>
+              <li>音の設定はあるが、実際の音源・再生エンジンがない</li>
+              <li>将来同期用の送信箱は記録するが、配送役がまだいない</li>
+              <li>10,000件の実時間性能試験と、複数タブ故障試験が未実施</li>
+              <li>物理端末、200%拡大、iOS系オフラインの最終確認が未実施</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+          <strong>一番大切な見方：</strong>
+          基盤の品質はかなり進んでいますが、コンテンツ量と製品仕上げはまだ途中です。
+          したがって「コードが60テスト通った」ことと「利用者に完成品として渡せる」ことは分けて判断します。
+        </div>
+      </section>
+
+      <section id="maturity">
+        <div class="section-head">
+          <div class="section-no">02</div>
+          <div>
+            <h2>領域別の成熟度</h2>
+            <p class="section-intro">曖昧な完成率ではなく、同じ4段階の物差しで比較しています。4は「画面がある」ではなく「製品として最終確認まで完了」です。</p>
+          </div>
+        </div>
+
+        <div class="legend" aria-label="成熟度の凡例">
+          <span style="--legend-color: var(--cyan)">現在到達した段階</span>
+          <span style="--legend-color: rgba(21,33,31,.12)">今後必要な段階</span>
+        </div>
+
+        <div class="maturity-chart" role="img" aria-label="基盤、データ、日常画面は4段階中3。世界は2。図鑑と音・連携は1。リリース検証は2。">
+          <div class="maturity-row">
+            <strong>基盤・PWA</strong>
+            <div class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+            <span class="maturity-note">3 / 自動検証済み<br>物理端末確認が残る</span>
+          </div>
+          <div class="maturity-row">
+            <strong>データ保護</strong>
+            <div class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+            <span class="maturity-note">3 / 自動検証済み<br>実ブラウザ故障注入が残る</span>
+          </div>
+          <div class="maturity-row">
+            <strong>日常の画面</strong>
+            <div class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+            <span class="maturity-note">3 / 自動検証済み<br>編集・削除は別途未実装</span>
+          </div>
+          <div class="maturity-row">
+            <strong>魔導書の世界</strong>
+            <div class="meter low" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+            <span class="maturity-note">2 / 基本動作<br>Area 1のみ、最終素材前</span>
+          </div>
+          <div class="maturity-row">
+            <strong>観察図鑑</strong>
+            <div class="meter low" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+            <span class="maturity-note">1 / 骨組み<br>12 / 720定義</span>
+          </div>
+          <div class="maturity-row">
+            <strong>音・外部連携</strong>
+            <div class="meter none" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+            <span class="maturity-note">1 / 設定・接続口のみ<br>実エンジンなし</span>
+          </div>
+          <div class="maturity-row">
+            <strong>リリース検証</strong>
+            <div class="meter low" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+            <span class="maturity-note">2 / PC自動試験<br>長期・物理端末はこれから</span>
+          </div>
+        </div>
+
+        <div class="rubric" aria-label="成熟度の評価基準">
+          <div><b>1 / 骨組み</b><span>契約、画面枠、保存口などがあり、次の実装を安全に載せられる。</span></div>
+          <div><b>2 / 基本動作</b><span>代表的な操作は動く。内容不足や例外処理の未確認がある。</span></div>
+          <div><b>3 / 自動検証済み</b><span>通常・異常のテストが再実行でき、主要な退行を自動検知できる。</span></div>
+          <div><b>4 / 製品完成</b><span>実端末・長期負荷・アクセシビリティを含む最終条件を満たす。</span></div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="section-head">
+          <div class="section-no">03</div>
+          <div>
+            <h2>機能別の実装表</h2>
+            <p class="section-intro">利用者が触る機能と、その裏側の状態を1行ずつ対応させています。</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>領域</th><th>現状</th><th>今できること</th><th>不足・注意点</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>ホーム</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>今日のタスクを1件追加、完了、完了取り消し。保存後にだけ結果を画面へ反映。</td>
+                <td>既存タスクの本文編集と削除は未実装。</td>
+              </tr>
+              <tr>
+                <td><strong>カレンダー</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>月表示、日別一覧、毎日・毎週・毎月・毎年の繰り返し。月末はclamp/skip規則を保持。</td>
+                <td>Google Calendarへの実接続は未実装。大量予定の実時間計測は未実施。</td>
+              </tr>
+              <tr>
+                <td><strong>起動紋章</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>完全OFF／一定時間／毎回。既定は900ms、最大待機1.2秒。失敗時は再試行表示。</td>
+                <td>最終的な全物理端末での体感確認は未実施。</td>
+              </tr>
+              <tr>
+                <td><strong>設定</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>テーマ、動き、音、通知、起動設定、保存状態、書き出し・読み込み、旧版移行の入口。</td>
+                <td>音・通知・Calendarの一部はスイッチの先にある実機能が未接続。</td>
+              </tr>
+              <tr>
+                <td><strong>端末内保存</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>タスク・報酬・成長・履歴を一括保存。再試行しても同じ報酬を二重付与しない。</td>
+                <td>複数タブ同時利用＋強制終了、容量超過の実ブラウザ試験は未完。</td>
+              </tr>
+              <tr>
+                <td><strong>バックアップ</strong></td>
+                <td><span class="status verified">自動検証済み</span></td>
+                <td>版付き書き出し、内容ハッシュ検証、いったん隔離してから有効化する読み込み、旧DB移行。</td>
+                <td>操作中断・巨大ファイル・端末容量不足の実機試験を追加する必要がある。</td>
+              </tr>
+              <tr>
+                <td><strong>PWA・オフライン</strong></td>
+                <td><span class="status partial">一部検証済み</span></td>
+                <td>ホーム画面追加用manifest、各アイコン、画面と必要部品のキャッシュ。Chromiumのオフライン再読込は成功。</td>
+                <td>Windows WebKitの試験環境で1件保留。実iPhone/iPadで未確認。</td>
+              </tr>
+              <tr>
+                <td><strong>魔導書／世界</strong></td>
+                <td><span class="status partial">基本動作</span></td>
+                <td>Area 1「霧光の珊瑚台地」、水の卵、低性能・WebGL障害時の静止画フォールバック契約。</td>
+                <td>Area 1以外、最終生物素材、長時間GPU負荷、実際のcontext loss試験が未完。</td>
+              </tr>
+              <tr>
+                <td><strong>観察図鑑</strong></td>
+                <td><span class="status partial">骨組み</span></td>
+                <td>発見済みだけ表示、分類・検索・並べ替え、詳細表示。12分類×60枠の厳密な契約。</td>
+                <td><strong>実定義は12件。</strong>残り708件をダミーで埋めず、個別制作する必要がある。</td>
+              </tr>
+              <tr>
+                <td><strong>音</strong></td>
+                <td><span class="status missing">未実装</span></td>
+                <td>設定値と将来接続する設計は存在。</td>
+                <td>BGM、効果音、ブラウザの再生許可処理、音量制御、音源assetがない。</td>
+              </tr>
+              <tr>
+                <td><strong>将来同期</strong></td>
+                <td><span class="status pending">接続口のみ</span></td>
+                <td>変更を送信箱（outbox）へ確実に記録し、後から同期機能を追加できる。</td>
+                <td>送信箱を実際に配送するlease pumpと外部サーバーは未実装。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="screens">
+        <div class="section-head">
+          <div class="section-no">04</div>
+          <div>
+            <h2>現在の実画面</h2>
+            <p class="section-intro">2026-08-19の統合確認時に撮影したモバイル表示です。絵としての完成度ではなく、現時点でブラウザに描画できている範囲の証拠です。</p>
+          </div>
+        </div>
+
+        <div class="screens">
+          <figure>
+            <img src="../grimoire-mobile-home.png" alt="今日の日付、タスク追加欄、下部ナビゲーションがあるホーム画面" loading="lazy">
+            <figcaption><strong>Home</strong><br>今日のことだけを絞って扱う静かな入口。タスク未登録時の空状態。</figcaption>
+          </figure>
+          <figure>
+            <img src="../grimoire-mobile-catalog.png" alt="観察図鑑の検索、分類、並べ替え、標本カードがある画面" loading="lazy">
+            <figcaption><strong>Catalog</strong><br>検索・分類・並べ替えは動作。ただし表示内容の母数は12件。</figcaption>
+          </figure>
+          <figure>
+            <img src="../grimoire-mobile-grimo.png" alt="霧光の珊瑚台地と中央の青い卵が描画された魔導書画面" loading="lazy">
+            <figcaption><strong>Grimo</strong><br>Area 1と水の卵をThree.jsで描画。世界の最終アートではなく統合slice。</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="journey">
+        <div class="section-head">
+          <div class="section-no">05</div>
+          <div>
+            <h2>利用時に何が起きるか</h2>
+            <p class="section-intro">利用者の1回の操作から、保存・報酬・画面反映までを一続きにしています。</p>
+          </div>
+        </div>
+
+        <div class="flow" aria-label="タスク操作の処理の流れ">
+          <article class="flow-node">
+            <p class="chapter">01 / action</p>
+            <h3>利用者が操作</h3>
+            <p>ホームでタスクを作る、完了する、または完了を取り消します。</p>
+          </article>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <article class="flow-node core">
+            <p class="chapter">02 / one commit</p>
+            <h3>全部を一括で保存</h3>
+            <p>途中まで成功する状態を避けるため、関連データを1つの取引として確定します。</p>
+            <div class="transaction-grid" aria-label="一括保存されるデータ">
+              <span>タスク本体</span><span>操作の受領票</span><span>報酬</span><span>成長</span><span>発見品</span><span>送信箱・履歴</span>
+            </div>
+          </article>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <article class="flow-node">
+            <p class="chapter">03 / visible truth</p>
+            <h3>成功後にだけ表示</h3>
+            <p>保存できた事実を受け取ってから、タスク、報酬、図鑑、魔導書の状態を更新します。</p>
+          </article>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+          <strong>なぜ重要か：</strong>
+          先に「報酬獲得！」と表示してから保存に失敗すると、利用者には嘘をつくことになります。
+          現実装は保存成功を画面の成功演出より先に置いています。同じ操作が通信・端末都合で再試行されても、操作内容の指紋を照合し二重付与を防ぎます。
+        </div>
+      </section>
+
+      <section id="data">
+        <div class="section-head">
+          <div class="section-no">06</div>
+          <div>
+            <h2>データ保護の仕組み</h2>
+            <p class="section-intro">「ブラウザに保存したから永遠に安全」とは考えず、確認・退避・復旧の経路を最初から分けています。</p>
+          </div>
+        </div>
+
+        <svg class="architecture" viewBox="0 0 940 500" role="img" aria-labelledby="arch-title arch-desc">
+          <title id="arch-title">Grimoire v2のデータ保護構成</title>
+          <desc id="arch-desc">画面からDurable UI Portを通じて端末内正本へ保存し、書き出しと検証済み読み込み、旧版移行、将来同期へ分岐する。</desc>
+          <rect x="45" y="55" width="190" height="92" rx="18" fill="#e2e9e4" stroke="#8ca09b"/>
+          <text x="140" y="91" text-anchor="middle" font-size="18" font-weight="700">5つの画面</text>
+          <text x="140" y="119" text-anchor="middle" class="small">Home / Calendar / Grimo</text>
+          <path d="M235 101 H326" stroke="#166f70" stroke-width="3"/>
+          <path d="M314 91 L326 101 L314 111" fill="none" stroke="#166f70" stroke-width="3"/>
+          <rect x="326" y="45" width="220" height="112" rx="18" fill="#132321" stroke="#49c9c4" stroke-width="2"/>
+          <text x="436" y="87" text-anchor="middle" font-size="18" font-weight="700" fill="#e6f2ef">Durable UI Port</text>
+          <text x="436" y="116" text-anchor="middle" font-size="13" fill="#9fb6af">画面と保存の唯一の通路</text>
+          <path d="M546 101 H638" stroke="#166f70" stroke-width="3"/>
+          <path d="M626 91 L638 101 L626 111" fill="none" stroke="#166f70" stroke-width="3"/>
+          <rect x="638" y="45" width="255" height="112" rx="18" fill="#dff0ed" stroke="#166f70" stroke-width="2"/>
+          <text x="765" y="85" text-anchor="middle" font-size="19" font-weight="700">端末内の正本</text>
+          <text x="765" y="113" text-anchor="middle" class="small">IndexedDB / DB version 2</text>
+
+          <path d="M765 157 V226" stroke="#166f70" stroke-width="3"/>
+          <path d="M755 214 L765 226 L775 214" fill="none" stroke="#166f70" stroke-width="3"/>
+          <rect x="635" y="226" width="260" height="100" rx="18" fill="#f3ead9" stroke="#d8ae67"/>
+          <text x="765" y="263" text-anchor="middle" font-size="17" font-weight="700">版付きバックアップ</text>
+          <text x="765" y="290" text-anchor="middle" class="small">hash・件数を検査して書き出す</text>
+
+          <path d="M638 126 C550 188 520 247 520 305" fill="none" stroke="#166f70" stroke-width="3"/>
+          <path d="M510 293 L520 305 L530 293" fill="none" stroke="#166f70" stroke-width="3"/>
+          <rect x="390" y="305" width="260" height="112" rx="18" fill="#e2e9e4" stroke="#8ca09b"/>
+          <text x="520" y="344" text-anchor="middle" font-size="17" font-weight="700">隔離して読み込み</text>
+          <text x="520" y="372" text-anchor="middle" class="small">検査 → preview → 一括有効化</text>
+          <text x="520" y="395" text-anchor="middle" class="small">不正データで正本を直接汚さない</text>
+
+          <path d="M326 126 C260 180 230 246 230 305" fill="none" stroke="#166f70" stroke-width="3"/>
+          <path d="M220 293 L230 305 L240 293" fill="none" stroke="#166f70" stroke-width="3"/>
+          <rect x="95" y="305" width="270" height="112" rx="18" fill="#e2e9e4" stroke="#8ca09b"/>
+          <text x="230" y="344" text-anchor="middle" font-size="17" font-weight="700">旧版からの移行</text>
+          <text x="230" y="372" text-anchor="middle" class="small">元データを隔離して変換</text>
+          <text x="230" y="395" text-anchor="middle" class="small">再実行しても重複しない</text>
+
+          <path d="M765 326 V401" stroke="#d27363" stroke-width="3" stroke-dasharray="8 7"/>
+          <path d="M755 389 L765 401 L775 389" fill="none" stroke="#d27363" stroke-width="3"/>
+          <rect x="635" y="401" width="260" height="64" rx="18" fill="#f6e1dd" stroke="#d27363"/>
+          <text x="765" y="428" text-anchor="middle" font-size="16" font-weight="700">将来の同期先</text>
+          <text x="765" y="450" text-anchor="middle" class="small">接続口のみ。配送処理は未実装</text>
+        </svg>
+
+        <div class="two-column">
+          <article class="card good">
+            <h3>現在守れていること</h3>
+            <ul class="plain-list">
+              <li>一部だけ保存される「半端な成功」をtransactionで防ぐ</li>
+              <li>同じ命令と異なる内容をhashで区別する</li>
+              <li>繰り返しタスクは日付ごとの発生単位で記録する</li>
+              <li>不正なバックアップは正本へ入れる前に拒否する</li>
+              <li>旧DBの発見日時を一括で新構造へ移す</li>
+            </ul>
+          </article>
+          <article class="card warn">
+            <h3>まだ実地で壊して試す部分</h3>
+            <ul class="plain-list">
+              <li>保存中にブラウザを強制終了</li>
+              <li>2つ以上のタブから同時操作</li>
+              <li>端末容量が尽きる瞬間</li>
+              <li>10,000件以上を5年以上使う想定の速度</li>
+              <li>Safari/iOS固有の保存・オフライン挙動</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="performance">
+        <div class="section-head">
+          <div class="section-no">07</div>
+          <div>
+            <h2>N+1問題と性能対策</h2>
+            <p class="section-intro">ご質問のN+1問題は、今回の独立レビューで実際に2種類見つけ、構造を変更して回帰テストを追加済みです。</p>
+          </div>
+        </div>
+
+        <div class="performance-layout">
+          <svg class="line-chart" viewBox="0 0 560 390" role="img" aria-labelledby="perf-title perf-desc">
+            <title id="perf-title">データ量と処理量の増え方の比較</title>
+            <desc id="perf-desc">N+1や二重ループではデータ量に対して処理が急増するが、現在の通常更新は固定本数の問い合わせと差分更新で緩やかに増える。</desc>
+            <line class="gridline" x1="72" y1="80" x2="520" y2="80"/>
+            <line class="gridline" x1="72" y1="150" x2="520" y2="150"/>
+            <line class="gridline" x1="72" y1="220" x2="520" y2="220"/>
+            <line class="axis" x1="72" y1="310" x2="520" y2="310"/>
+            <line class="axis" x1="72" y1="310" x2="72" y2="45"/>
+            <path class="bad" d="M80 300 C170 294 260 270 330 210 C400 150 445 84 505 48"/>
+            <path class="good-line" d="M80 291 C200 283 340 270 505 248"/>
+            <text x="350" y="75" fill="#d27363">修正前：履歴×項目 / task×展開</text>
+            <text x="328" y="238" fill="#49c9c4">現在：bulk取得＋cache＋差分</text>
+            <text x="180" y="360">保存データが増える →</text>
+            <text x="18" y="220" transform="rotate(-90 18 220)">処理量・待ち時間 →</text>
+          </svg>
+
+          <div>
+            <p class="chapter">Plain-language explanation</p>
+            <h3>N+1とは「1回見ればよいものを、項目ごとに何度も見に行く」問題</h3>
+            <p>たとえば100個の発見品それぞれについて、毎回10,000件の履歴を最初から探すと、利用年数に比例して急に重くなります。サーバーDBだけの問題ではなく、端末内DBでも同じです。</p>
+            <p><strong>現在は、発見日時を発見品そのものへ保存し、まとめて一度に読む方式へ変更。</strong>日常の画面更新も、全タスクを毎回再計算せず、起動時のcacheに新しい1件だけを足します。</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 28px;">
+          <table>
+            <thead><tr><th>見つかった問題</th><th>修正前</th><th>現在</th><th>証明方法</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>図鑑の発見日時</strong></td>
+                <td>発見品ごとに報酬履歴全体を探す。履歴と品数の両方が増えると急増。</td>
+                <td>最初・最後の発見日時をinventoryへ保存。図鑑はinventoryを1回の線形処理で投影。</td>
+                <td>DB v1→v2移行テストと図鑑投影テスト。</td>
+              </tr>
+              <tr>
+                <td><strong>日常の再表示</strong></td>
+                <td>設定変更や保存確認でも、全active taskを読み、各タスクを最大100回展開。</td>
+                <td>起動時cache＋新規作成1件だけ差分追加。完了・設定・保存確認で再queryしない。</td>
+                <td>初期化→作成→完了→設定→永続化の間、task query 1回・再構築1回を診断テストで固定。</td>
+              </tr>
+              <tr>
+                <td><strong>残る境界</strong></td>
+                <td colspan="2">初回起動、日付・表示範囲変更、import・migrationでは正しい全体再構築が必要。ここはN+1ではなく、データ件数に比例する意図的な処理。</td>
+                <td>10,000件の実時間benchmarkは未実施。次の性能ゲート。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+          <strong>現時点の回答：</strong>
+          確認できたN+1／二重ループ経路は対策済みで、同じ問題を再発させない自動テストもあります。
+          ただし「10,000件でも必ず快適」とまではまだ実測していないため、性能完成とは判定していません。
+        </div>
+      </section>
+
+      <section id="verification">
+        <div class="section-head">
+          <div class="section-no">08</div>
+          <div>
+            <h2>現在通っている検証</h2>
+            <p class="section-intro">最終セッション終了前に同じ検証を再実行し、下記の状態から退行していないことを確認します。</p>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <article class="result"><b>0</b><span>lint警告・エラー<br>コード規約と危険な書き方の静的検査</span></article>
+          <article class="result"><b>0</b><span>型エラー<br>画面・保存・契約の型不一致を検査</span></article>
+          <article class="result"><b>60</b><span>Vitest合格<br>15ファイル、失敗0</span></article>
+          <article class="result"><b>PASS</b><span>Next本番build<br>5画面を含む7 route生成</span></article>
+          <article class="result"><b>5 / 6</b><span>Playwright E2E<br>失敗0、環境skip 1</span></article>
+          <article class="result"><b>0</b><span>本番依存の既知脆弱性<br><code>pnpm audit --prod</code></span></article>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 28px;">
+          <table>
+            <thead><tr><th>検証層</th><th>何を確かめたか</th><th>現状の限界</th></tr></thead>
+            <tbody>
+              <tr><td><strong>単体</strong></td><td>繰り返し日付、報酬配分、図鑑契約、保存状態、月表示。</td><td>部品単独の正しさ。実ブラウザ固有の挙動までは含まない。</td></tr>
+              <tr><td><strong>統合</strong></td><td>一括保存、二重実行防止、移行、import staging、N+1診断。</td><td>fake IndexedDB中心。端末故障・容量不足は別途必要。</td></tr>
+              <tr><td><strong>画面</strong></td><td>起動状態機械、図鑑操作、月モデル、runtime startup。</td><td>スクリーンリーダーと200% zoomの完全な実地確認は未完。</td></tr>
+              <tr><td><strong>本番E2E</strong></td><td>タスク永続化、設定、世界画面、モバイル通常フロー、Chromiumオフライン。</td><td>Windows WebKitのoffline reloadはrunner内部エラーでskip。</td></tr>
+              <tr><td><strong>セキュリティ</strong></td><td>本番依存パッケージの既知脆弱性0。</td><td>これは侵入試験や完全な安全証明ではない。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="risks">
+        <div class="section-head">
+          <div class="section-no">09</div>
+          <div>
+            <h2>未完成・リスク</h2>
+            <p class="section-intro">重要度は「利用者へ渡す前に止めるもの」から順に並べています。</p>
+          </div>
+        </div>
+
+        <div class="risk-stack">
+          <article class="risk">
+            <div class="risk-level">BLOCK</div>
+            <h3>図鑑コンテンツが12 / 720</h3>
+            <div>720枠を受け止める仕組みはありますが、利用者が実際に集める標本は12件だけです。自動生成の水増しをせず、名前・分類・説明・絵を個別品質で制作する必要があります。</div>
+          </article>
+          <article class="risk">
+            <div class="risk-level">BLOCK</div>
+            <h3>タスクの編集・削除がない</h3>
+            <div>作成・完了・取り消しはできますが、入力ミスを後から直す日常操作が欠けています。長期利用では回避できないため、公開前にdurable commandとして追加が必要です。</div>
+          </article>
+          <article class="risk">
+            <div class="risk-level">HIGH</div>
+            <h3>音と同期配送は接続口のみ</h3>
+            <div>音設定とoutbox記録はありますが、BGM/効果音engine、ユーザー操作後の再生許可処理、outbox lease pumpはありません。設定が「効いているように見えて効かない」状態を解消する必要があります。</div>
+          </article>
+          <article class="risk">
+            <div class="risk-level">HIGH</div>
+            <h3>長期・故障・物理端末の証拠不足</h3>
+            <div>10k taskの実時間、複数タブ＋crash、QuotaExceeded、Pixel 7a/Xiaomi 14T Pro、iOS Safari、200% zoom、長時間GPU負荷が未検証です。設計上の備えと実証は分けて扱います。</div>
+          </article>
+          <article class="risk">
+            <div class="risk-level">MEDIUM</div>
+            <h3>世界・アクセシビリティの仕上げ</h3>
+            <div>Area 1以外、最終生物asset、WebGL context-loss製品E2Eが未完です。報酬dialogのfocus管理、操作領域48px基準、実スクリーンリーダーも仕上げ段階で再監査します。</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="section-head">
+          <div class="section-no">10</div>
+          <div>
+            <h2>次に進める順序</h2>
+            <p class="section-intro">新機能を無制限に足すのではなく、「日常利用に必要」「壊れない証明」「世界を完成」の依存順で進めます。</p>
+          </div>
+        </div>
+
+        <div class="roadmap">
+          <article class="phase" data-phase="Phase A / Core closure">
+            <h3>日常利用の穴を閉じる</h3>
+            <ol>
+              <li>タスク編集・削除</li>
+              <li>音engineと実asset</li>
+              <li>outbox lease pump</li>
+              <li>報酬dialog・48px操作領域</li>
+            </ol>
+            <p><span class="status missing">公開阻害</span></p>
+          </article>
+          <article class="phase" data-phase="Phase B / Proof">
+            <h3>長く使えることを壊して証明</h3>
+            <ol>
+              <li>10k task benchmark</li>
+              <li>multi-tab / crash / quota</li>
+              <li>物理Pixel・Xiaomi・iOS</li>
+              <li>200% zoom・screen reader</li>
+            </ol>
+            <p><span class="status pending">信頼の証拠</span></p>
+          </article>
+          <article class="phase" data-phase="Phase C / Content">
+            <h3>魔導書の中身を完成へ</h3>
+            <ol>
+              <li>図鑑708件の個別制作</li>
+              <li>最終生物asset</li>
+              <li>Area 2以降と遷移演出</li>
+              <li>Google Calendar adapter</li>
+            </ol>
+            <p><span class="status partial">価値の拡張</span></p>
+          </article>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+          <strong>評価方法は継続：</strong>
+          各段階で「実装 → 独立評価 → 目標との差分 → 必要な技術・事例を再調査 → 再実装」を回します。
+          小さな修正は実装者自身、大きな機能・保存契約・リリース判定はコンテキストを分離した評価者が確認します。
+        </div>
+      </section>
+
+      <section id="glossary">
+        <div class="section-head">
+          <div class="section-no">11</div>
+          <div>
+            <h2>非エンジニア向け用語集</h2>
+            <p class="section-intro">この報告で使った言葉を、製品上の意味に置き換えます。</p>
+          </div>
+        </div>
+
+        <dl class="glossary">
+          <div><dt>PWA</dt><dd>Webサイトの技術で作りつつ、ホーム画面追加やオフライン表示など、アプリに近い使い方ができる仕組み。</dd></div>
+          <div><dt>IndexedDB / Dexie</dt><dd>ブラウザ内の本格的な保存庫と、それを安全に扱いやすくする道具。Grimoire v2では端末内の正本。</dd></div>
+          <div><dt>transaction</dt><dd>複数の保存を「全部成功」または「全部取り消し」にまとめる取引。報酬だけ付いてタスクが消える、といった半端を防ぐ。</dd></div>
+          <div><dt>exactly-once</dt><dd>同じ操作を再試行しても、報酬・成長などを1回だけ反映する性質。</dd></div>
+          <div><dt>N+1問題</dt><dd>一覧1回に加え、各項目ごとに追加の読込を繰り返し、件数が増えるほど急に遅くなる問題。</dd></div>
+          <div><dt>cache / 差分更新</dt><dd>一度計算した結果を保持し、毎回全部やり直さず、追加・変更された分だけ更新する方式。</dd></div>
+          <div><dt>outbox</dt><dd>外部同期がなくても、後で送るべき変更を取りこぼさず記録する「送信待ち箱」。現状は箱まで、配送役は未実装。</dd></div>
+          <div><dt>E2Eテスト</dt><dd>内部部品だけでなく、実ブラウザを操作して「利用者が最後まで使えるか」を確認する試験。</dd></div>
+        </dl>
+      </section>
+
+      <section id="evidence">
+        <div class="section-head">
+          <div class="section-no">12</div>
+          <div>
+            <h2>根拠と読み方</h2>
+            <p class="section-intro">この報告はリリース済み製品ではなく、2026-08-20時点の作業ツリーを対象にしています。</p>
+          </div>
+        </div>
+
+        <div class="evidence">
+          <h3>一次となるリポジトリ内記録</h3>
+          <ul>
+            <li><a href="vision.md">製品の約束：docs/vision.md</a></li>
+            <li><a href="state.md">最新状態：docs/state.md</a></li>
+            <li><a href="architecture.md">長期利用を前提にした設計：docs/architecture.md</a></li>
+            <li><a href="quality-loop.md">評価と差分の台帳：docs/quality-loop.md</a></li>
+            <li><a href="../tasks.md">タスクと検証証跡：tasks.md</a></li>
+            <li><a href="../HANDOFF-JA.md">次セッション向け引き継ぎ：HANDOFF-JA.md</a></li>
+          </ul>
+          <p>成熟度はコード行数や主観的な百分率ではなく、「骨組み → 基本動作 → 自動検証 → 製品完成」の共通基準で判定。未検証は未検証のまま明記し、設計上の対応を実機証明と混同していません。</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <img src="../public/brand/grimoire-seal.svg" alt="" aria-hidden="true">
+    <p class="utility">Grimoire v2 / implementation field report</p>
+    <p>作成基準日：2026-08-20（Asia/Tokyo）<br>対象：未コミット変更を含む現在のローカル作業ツリー</p>
+  </footer>
+</body>
+</html>

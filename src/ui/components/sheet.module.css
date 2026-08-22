@@ -1,0 +1,149 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-sheet);
+  display: flex;
+  background: var(--color-scrim);
+  animation: scrim-in var(--duration-feedback) var(--ease-settle) both;
+}
+
+.scrim[data-placement='bottom'] {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.scrim[data-placement='center'] {
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: min(88dvh, 46rem);
+  background: var(--color-surface-strong);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-mineral);
+}
+
+.surface:focus {
+  outline: none;
+}
+
+.surface[data-placement='bottom'] {
+  max-width: 34rem;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  animation: sheet-rise var(--duration-reveal) var(--ease-settle) both;
+}
+
+.surface[data-placement='center'] {
+  max-width: 26rem;
+  border-radius: var(--radius-sheet);
+  animation: sheet-settle var(--duration-reveal) var(--ease-settle) both;
+}
+
+/* The grab affordance: a hairline bar, not a decorative pill. */
+.surface[data-placement='bottom']::before {
+  content: '';
+  display: block;
+  width: 2.25rem;
+  height: 0.1875rem;
+  margin: var(--space-3) auto 0;
+  border-radius: var(--radius-round);
+  background: var(--color-line-strong);
+}
+
+.header {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+
+.headings {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
+}
+
+.description {
+  margin: var(--space-1) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-muted);
+  transition: color var(--duration-instant) var(--ease-press),
+    border-color var(--duration-instant) var(--ease-press);
+}
+
+.close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.close:hover {
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+.close:active {
+  transform: scale(0.94);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--space-5) var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.footer {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-top: 1px solid var(--color-line);
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-rise {
+  from {
+    transform: translateY(2rem);
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-settle {
+  from {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+}

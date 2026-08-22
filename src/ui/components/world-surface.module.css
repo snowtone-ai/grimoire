@@ -1,0 +1,69 @@
+.surface {
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-world);
+  overflow: hidden;
+  background: var(--color-world);
+  isolation: isolate;
+}
+
+/* Always present, always underneath: the layer that guarantees the world exists
+   even with no asset, no autoplay, and no network. */
+.ambience {
+  position: absolute;
+  inset: 0;
+}
+
+.poster,
+.footage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* ~0.6s cross-fade on area change (決定事項ログ F-6). */
+  transition: opacity 600ms var(--ease-ambient);
+}
+
+.poster {
+  background-position: center;
+  background-size: cover;
+  opacity: 1;
+}
+
+.poster[data-hidden] {
+  opacity: 0;
+}
+
+.footage {
+  opacity: 0;
+}
+
+.footage[data-visible] {
+  opacity: 1;
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-content);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.chrome > * {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .footage {
+    transition-duration: 1ms;
+  }
+}
+
+:global(html[data-motion='reduced']) .poster,
+:global(html[data-motion='reduced']) .footage {
+  transition-duration: 1ms;
+}

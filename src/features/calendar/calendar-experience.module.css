@@ -1,0 +1,196 @@
+.screen {
+  display: grid;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: var(--content-max);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  grid-template-columns: 1fr;
+}
+
+.screen[data-split] {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 1fr);
+}
+
+.month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.monthHeader {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.monthTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekdays {
+  display: grid;
+  gap: var(--space-1);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: var(--color-line);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: stretch;
+  min-height: 4.5rem;
+  padding: var(--space-1);
+  border: 0;
+  background: var(--color-surface-strong);
+  text-align: start;
+  transition: background-color var(--duration-instant) var(--ease-press);
+}
+
+.cell:hover {
+  background: var(--color-ground);
+}
+
+.cell[data-outside] {
+  background: var(--color-ground);
+  color: var(--color-ink-muted);
+}
+
+.cell[data-selected] {
+  outline: 2px solid var(--color-iron);
+  outline-offset: -2px;
+}
+
+.cellDate {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Today is marked by weight and a hairline underline, not a filled disc —
+   colour stays reserved for Mist (DESIGN.md §1.1). */
+.cell[data-today] .cellDate {
+  color: var(--color-ink);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.22em;
+}
+
+.cellEntries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.cellEntry {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.cellSwatch {
+  flex: none;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: var(--radius-round);
+}
+
+.cellEntryTitle {
+  overflow: hidden;
+  color: var(--color-ink);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cellMore {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* The day panel is intentionally a different shape from the month grid: no
+   shared radius/shadow pairing, so the screen never reads as two equal cards
+   (DESIGN.md §6.2). */
+.panel {
+  position: sticky;
+  top: var(--space-8);
+  min-width: 0;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--color-line);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dayHeader {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dayTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+/* Inside the mobile sheet the sheet already shows the date, so the panel's own
+   heading would repeat it. */
+.dayRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dayEmpty {
+  margin: 0;
+  padding: var(--space-6) 0;
+  color: var(--color-ink-muted);
+  font-family: var(--font-lore);
+  font-size: var(--text-body);
+  line-height: 1.8;
+}
+
+@media (min-width: 480px) {
+  .cell {
+    min-height: 5.75rem;
+    padding: var(--space-2);
+  }
+}

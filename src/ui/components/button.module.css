@@ -1,0 +1,109 @@
+.control {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  text-align: center;
+  /* §6.1: shadow belongs to the raised state, never to rest. */
+  transition: background-color var(--duration-instant) var(--ease-press),
+    border-color var(--duration-instant) var(--ease-press),
+    box-shadow var(--duration-feedback) var(--ease-press),
+    color var(--duration-instant) var(--ease-press),
+    transform var(--duration-instant) var(--ease-press);
+}
+
+.control[data-block] {
+  display: flex;
+  width: 100%;
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+
+.icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.control:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.control:disabled {
+  opacity: 0.45;
+}
+
+/* --- solid: Iron fill --- */
+.control[data-tone='solid'] {
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+}
+
+.control[data-tone='solid']:hover:not(:disabled) {
+  background: var(--color-iron-soft);
+  box-shadow: var(--shadow-control);
+}
+
+/* --- outline: Iron hairline --- */
+.control[data-tone='outline'] {
+  border-color: var(--color-line-strong);
+  color: var(--color-ink);
+}
+
+.control[data-tone='outline']:hover:not(:disabled) {
+  border-color: var(--color-iron);
+  box-shadow: var(--shadow-control);
+}
+
+/* --- quiet: no edge until touched --- */
+.control[data-tone='quiet'] {
+  padding-inline: var(--space-3);
+  color: var(--color-ink-muted);
+}
+
+.control[data-tone='quiet']:hover:not(:disabled) {
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+/* --- committed: the one Mist fill the system allows (§1.1) --- */
+.control[data-tone='committed'] {
+  background: var(--color-mist);
+  color: var(--color-on-mist);
+}
+
+.control[data-tone='committed']:hover:not(:disabled) {
+  box-shadow: var(--shadow-control);
+}
+
+/* --- danger: colour carries meaning, so it stays ink and edge, never a fill --- */
+.control[data-tone='danger'] {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.control[data-tone='danger']:hover:not(:disabled) {
+  box-shadow: var(--shadow-control);
+}
+
+@media (prefers-contrast: more) {
+  .control {
+    border-color: currentcolor;
+  }
+}

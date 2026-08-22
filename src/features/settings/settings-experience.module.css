@@ -1,0 +1,301 @@
+/* Order register (決定事項ログ F-15): metal, stone, restrained ornament, clear
+   hierarchy. Sections are separated by a hairline and a numeral, never by a
+   card — a page of cards would read as six competing panels. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--reading-max);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-page)
+    calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+}
+
+.header {
+  padding-bottom: var(--space-6);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-title);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title);
+}
+
+.section {
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.sectionHead {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  margin-bottom: var(--space-5);
+}
+
+.sectionIndex {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: 0.18em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body-lg);
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.choice {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choiceLegend {
+  padding: 0 0 var(--space-2);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+/* One control, split into segments by hairlines — not three separate buttons.
+   The group reads as a single object, which is what a preference is. */
+.choiceOptions {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+}
+
+.choiceOption {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  border-inline-start: 1px solid var(--color-line);
+}
+
+.choiceOption:first-child {
+  border-inline-start: 0;
+}
+
+.choiceOption input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choiceOption span {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink-muted);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--duration-feedback) var(--ease-press),
+    color var(--duration-feedback) var(--ease-press);
+}
+
+.choiceOption span:hover {
+  background: var(--color-ground);
+}
+
+.choiceOption input:checked + span {
+  background: var(--color-iron);
+  color: var(--color-on-iron);
+}
+
+.choiceOption input:focus-visible + span {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.choiceHint {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-wrap: pretty;
+}
+
+.switches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.switchLabel {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.link:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.linkText {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.linkTitle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.linkIcon {
+  display: inline-flex;
+  color: var(--color-ink-muted);
+}
+
+.linkDetail {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.linkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.health {
+  display: grid;
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.health div {
+  min-width: 0;
+}
+
+.health dt {
+  color: var(--color-ink-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.health dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Opened by the visible "読み込む" control; keeping the native input out of the
+   tab order avoids exposing two controls for one action. */
+.filePicker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-ground);
+}
+
+.previewCopy {
+  flex: 1 1 14rem;
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.legacy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.legacy .note {
+  flex: 1 1 14rem;
+}
+
+.about {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-body);
+  line-height: 1.9;
+  text-wrap: pretty;
+}
+
+/* Reserved height, so a message appearing does not push the page (DESIGN.md
+   §4: feedback must not reflow what is under the finger). */
+.status {
+  min-height: 1.7em;
+  margin: var(--space-6) 0 0;
+  color: var(--color-ink);
+  font-size: var(--text-caption);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
