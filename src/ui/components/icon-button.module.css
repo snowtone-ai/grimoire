@@ -73,17 +73,17 @@
 
 @keyframes afterglow {
   0% {
-    box-shadow: 0 0 0 0 var(--color-mist-soft);
+    box-shadow: var(--glow-press-rest);
     opacity: 0;
   }
 
   22% {
-    box-shadow: 0 0 1.25rem 0.125rem var(--color-mist-soft);
+    box-shadow: var(--glow-press-peak);
     opacity: 1;
   }
 
   100% {
-    box-shadow: 0 0 2.5rem 0.25rem transparent;
+    box-shadow: var(--glow-press-gone);
     opacity: 0;
   }
 }

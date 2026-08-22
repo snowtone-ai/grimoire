@@ -250,24 +250,37 @@ something a reviewer has to notice by eye each time.
 
 ## 7. Raw-value lint scope (pm-zero v12.1 §16.2)
 
-Once the UI rebuild lands, `scripts/verify.mjs`'s lint step rejects
-unregistered raw hex/px/radius/shadow values in changed files under:
+Implemented as `scripts/design-token-lint.mjs`, run by `pnpm lint` — so it
+is part of `pnpm verify`'s lint step and of CI, and it is **blocking**, per
+the D-011 addendum: the scope is narrow (chrome only) and the exemption path
+below keeps false positives out of legitimately bespoke scene code.
 
-    src/app/**  src/features/*/[A-Z]*.tsx  src/features/*/*.module.css (chrome parts only)
+It rejects raw colour, `border-radius`, `box-shadow`, `font-size` and
+`z-index` values under:
+
+    src/app/**  src/features/*/[A-Z]*.tsx  src/features/*/*.module.css
     src/ui/**  src/styles/**
+
+Two refinements the implementation makes, recorded here because this file is
+the spec the script answers to:
+
+- It reads the **whole scope**, not only changed files. The rebuild landed
+  the scope clean, so a full pass is simpler than deriving a diff base and
+  strictly stronger — a violation cannot survive by never being touched
+  again.
+- `src/styles/tokens.css` is skipped: it is the registry, and defining raw
+  values is its entire job. `@media` / `@container` / `@supports` lines are
+  skipped too, since a custom property cannot be read inside a query (§5).
+- In `.tsx` it inspects only lines that could carry an inline style; a hex in
+  an SVG path or in a string of copy is not a design-system violation.
 
 **Explicitly exempt** (component rule 5): scene-internal atmosphere values
 inside a feature's world-rendering surface — glow colors, blur radii,
 gradient stops used for mood lighting inside Grimo/Catalog's canvas/CSS
 backdrop. These are marked by a `/* world: scene value, exempt from DESIGN.md */`
-comment on the same line or rule block, which the lint treats as the
-registration mechanism for that exemption — not a loophole, an explicit,
-grep-able opt-out.
-
-Enforcement is decided per D-011 addendum: land as **blocking** from the
-rebuild's first commit, not warn-only — because scope is narrow (chrome
-only) and the exemption path above keeps false positives out of the
-legitimately bespoke scene code.
+comment on the value's line or one of the three lines above it, which the
+lint treats as the registration mechanism for that exemption — not a
+loophole, an explicit, grep-able opt-out.
 
 ---
 

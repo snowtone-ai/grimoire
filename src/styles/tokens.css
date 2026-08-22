@@ -78,6 +78,15 @@
   --shadow-mineral: inset 0 1px rgb(255 255 255 / 34%),
     0 0 0 1px rgb(56 94 84 / 10%);
 
+  /* The press afterglow (決定事項ログ F-2): a wordless control brightens once
+     and fades, rather than staying lit while the finger is down. Three named
+     stops instead of an elevation tier, because this is the system's press
+     feedback, not a resting height — and naming it is what lets the creature's
+     touch-breath use the same curve later. */
+  --glow-press-rest: 0 0 0 0 var(--color-mist-soft);
+  --glow-press-peak: 0 0 1.25rem 0.125rem var(--color-mist-soft);
+  --glow-press-gone: 0 0 2.5rem 0.25rem transparent;
+
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
