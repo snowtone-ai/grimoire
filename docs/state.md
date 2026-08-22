@@ -1,6 +1,14 @@
 # state.md
 
 ## Current
+- 2026-08-22: T042 (D-045) — オーナー指示で、grimore-v2ブランチ側でD-015/
+  D-016として導入済みのKenney "Interface Sounds"(CC0、100件)を`main`側
+  にも`public/audio/ui/`へ配置した。category/用途hint/再生時間を記録した
+  `manifest.json`を同梱し、「UIコンポーネントアセットのようにAIが選定を
+  完全に任される」運用の下地とする。**配置のみ**であり、`src/lib/
+  sound.ts`のWeb Audio合成エンジン(D-022)は無変更・どのファイルもコード
+  から未参照(オーナー指示で安全側を明示選択)。PRを`main`へ作成、
+  マージはオーナー確認待ち。
 - 2026-08-19: T041 (D-044) — Gitワークフロー見直し。(1)ドキュメントのみの
   変更はブランチ/PR/CIをスキップしmain直接コミット可という例外を
   CLAUDE.mdと大元のpm-zero(pm-zero-knowledge-v12.md Section 12)の両方に

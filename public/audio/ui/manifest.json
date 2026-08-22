@@ -1,0 +1,712 @@
+{
+  "$schema": "Kenney \"Interface Sounds\" (CC0 1.0) — full 100-file pack, vendored for future AI-driven cue selection. See LICENSE.txt and docs/decisions.md D-045.",
+  "pack": "kenney_interface-sounds",
+  "source": "https://kenney.nl/assets/interface-sounds",
+  "license": "CC0 1.0 (public domain, no attribution required)",
+  "format": "PCM s16le, 44.1kHz, mono — decodeAudioData-safe on Safari/iOS",
+  "status": "Vendored only. This app currently generates UI sound via Web Audio synthesis (src/lib/sound.ts, D-022) and does not read these files yet. Wiring any of these in — or replacing the synthesis engine — is a separate product decision, not made by this commit.",
+  "usage": "If a future task decides to use file-based sound: pick a file by category/hint below, no further licensing research needed — the whole pack is already CC0 and already in the repo.",
+  "count": 100,
+  "files": [
+    {
+      "file": "back_001.wav",
+      "category": "back",
+      "hint": "a soft downward \"undo/back\" tap — negative-direction navigation",
+      "durationMs": 68,
+      "bytes": 6094
+    },
+    {
+      "file": "back_002.wav",
+      "category": "back",
+      "hint": "a soft downward \"undo/back\" tap — negative-direction navigation",
+      "durationMs": 91,
+      "bytes": 8142
+    },
+    {
+      "file": "back_003.wav",
+      "category": "back",
+      "hint": "a soft downward \"undo/back\" tap — negative-direction navigation",
+      "durationMs": 90,
+      "bytes": 8014
+    },
+    {
+      "file": "back_004.wav",
+      "category": "back",
+      "hint": "a soft downward \"undo/back\" tap — negative-direction navigation",
+      "durationMs": 94,
+      "bytes": 8398
+    },
+    {
+      "file": "bong_001.wav",
+      "category": "bong",
+      "hint": "a low resonant bell — rare/heavy confirmation, use sparingly",
+      "durationMs": 120,
+      "bytes": 10656
+    },
+    {
+      "file": "click_001.wav",
+      "category": "click",
+      "hint": "a short neutral tap — generic press/navigate",
+      "durationMs": 97,
+      "bytes": 8644
+    },
+    {
+      "file": "click_002.wav",
+      "category": "click",
+      "hint": "a short neutral tap — generic press/navigate",
+      "durationMs": 12,
+      "bytes": 1102
+    },
+    {
+      "file": "click_003.wav",
+      "category": "click",
+      "hint": "a short neutral tap — generic press/navigate",
+      "durationMs": 7,
+      "bytes": 706
+    },
+    {
+      "file": "click_004.wav",
+      "category": "click",
+      "hint": "a short neutral tap — generic press/navigate",
+      "durationMs": 22,
+      "bytes": 1998
+    },
+    {
+      "file": "click_005.wav",
+      "category": "click",
+      "hint": "a short neutral tap — generic press/navigate",
+      "durationMs": 7,
+      "bytes": 706
+    },
+    {
+      "file": "close_001.wav",
+      "category": "close",
+      "hint": "a receding whoosh — sheet/modal/panel closing",
+      "durationMs": 148,
+      "bytes": 13134
+    },
+    {
+      "file": "close_002.wav",
+      "category": "close",
+      "hint": "a receding whoosh — sheet/modal/panel closing",
+      "durationMs": 314,
+      "bytes": 27754
+    },
+    {
+      "file": "close_003.wav",
+      "category": "close",
+      "hint": "a receding whoosh — sheet/modal/panel closing",
+      "durationMs": 314,
+      "bytes": 27754
+    },
+    {
+      "file": "close_004.wav",
+      "category": "close",
+      "hint": "a receding whoosh — sheet/modal/panel closing",
+      "durationMs": 323,
+      "bytes": 28556
+    },
+    {
+      "file": "confirmation_001.wav",
+      "category": "confirmation",
+      "hint": "a bright short chime — success, save, task complete",
+      "durationMs": 295,
+      "bytes": 26062
+    },
+    {
+      "file": "confirmation_002.wav",
+      "category": "confirmation",
+      "hint": "a bright short chime — success, save, task complete",
+      "durationMs": 539,
+      "bytes": 47618
+    },
+    {
+      "file": "confirmation_003.wav",
+      "category": "confirmation",
+      "hint": "a bright short chime — success, save, task complete",
+      "durationMs": 322,
+      "bytes": 28480
+    },
+    {
+      "file": "confirmation_004.wav",
+      "category": "confirmation",
+      "hint": "a bright short chime — success, save, task complete",
+      "durationMs": 490,
+      "bytes": 43332
+    },
+    {
+      "file": "drop_001.wav",
+      "category": "drop",
+      "hint": "a soft thud/pop — item placed, drag released",
+      "durationMs": 132,
+      "bytes": 11726
+    },
+    {
+      "file": "drop_002.wav",
+      "category": "drop",
+      "hint": "a soft thud/pop — item placed, drag released",
+      "durationMs": 188,
+      "bytes": 16676
+    },
+    {
+      "file": "drop_003.wav",
+      "category": "drop",
+      "hint": "a soft thud/pop — item placed, drag released",
+      "durationMs": 188,
+      "bytes": 16676
+    },
+    {
+      "file": "drop_004.wav",
+      "category": "drop",
+      "hint": "a soft thud/pop — item placed, drag released",
+      "durationMs": 284,
+      "bytes": 25108
+    },
+    {
+      "file": "error_001.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 162,
+      "bytes": 14336
+    },
+    {
+      "file": "error_002.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 165,
+      "bytes": 14670
+    },
+    {
+      "file": "error_003.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 533,
+      "bytes": 47130
+    },
+    {
+      "file": "error_004.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 104,
+      "bytes": 18510
+    },
+    {
+      "file": "error_005.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 497,
+      "bytes": 43926
+    },
+    {
+      "file": "error_006.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 500,
+      "bytes": 44182
+    },
+    {
+      "file": "error_007.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 192,
+      "bytes": 17012
+    },
+    {
+      "file": "error_008.wav",
+      "category": "error",
+      "hint": "a dissonant buzz — invalid action, rejected input",
+      "durationMs": 139,
+      "bytes": 12366
+    },
+    {
+      "file": "glass_001.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 276,
+      "bytes": 24380
+    },
+    {
+      "file": "glass_002.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 129,
+      "bytes": 11470
+    },
+    {
+      "file": "glass_003.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 121,
+      "bytes": 10730
+    },
+    {
+      "file": "glass_004.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 692,
+      "bytes": 61136
+    },
+    {
+      "file": "glass_005.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 132,
+      "bytes": 11726
+    },
+    {
+      "file": "glass_006.wav",
+      "category": "glass",
+      "hint": "a light glassy ring — discovery, unlock, reveal",
+      "durationMs": 132,
+      "bytes": 11726
+    },
+    {
+      "file": "glitch_001.wav",
+      "category": "glitch",
+      "hint": "a digital stutter — data/sync anomaly, playful malfunction",
+      "durationMs": 17,
+      "bytes": 1588
+    },
+    {
+      "file": "glitch_002.wav",
+      "category": "glitch",
+      "hint": "a digital stutter — data/sync anomaly, playful malfunction",
+      "durationMs": 27,
+      "bytes": 2470
+    },
+    {
+      "file": "glitch_003.wav",
+      "category": "glitch",
+      "hint": "a digital stutter — data/sync anomaly, playful malfunction",
+      "durationMs": 12,
+      "bytes": 1102
+    },
+    {
+      "file": "glitch_004.wav",
+      "category": "glitch",
+      "hint": "a digital stutter — data/sync anomaly, playful malfunction",
+      "durationMs": 20,
+      "bytes": 1842
+    },
+    {
+      "file": "maximize_001.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 258,
+      "bytes": 22868
+    },
+    {
+      "file": "maximize_002.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 258,
+      "bytes": 22858
+    },
+    {
+      "file": "maximize_003.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 212,
+      "bytes": 18764
+    },
+    {
+      "file": "maximize_004.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 418,
+      "bytes": 36942
+    },
+    {
+      "file": "maximize_005.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 526,
+      "bytes": 46504
+    },
+    {
+      "file": "maximize_006.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 380,
+      "bytes": 33590
+    },
+    {
+      "file": "maximize_007.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 183,
+      "bytes": 16206
+    },
+    {
+      "file": "maximize_008.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 225,
+      "bytes": 19954
+    },
+    {
+      "file": "maximize_009.wav",
+      "category": "maximize",
+      "hint": "an ascending sweep — expand, open full-screen",
+      "durationMs": 222,
+      "bytes": 19648
+    },
+    {
+      "file": "minimize_001.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 258,
+      "bytes": 22868
+    },
+    {
+      "file": "minimize_002.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 258,
+      "bytes": 22858
+    },
+    {
+      "file": "minimize_003.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 212,
+      "bytes": 18764
+    },
+    {
+      "file": "minimize_004.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 418,
+      "bytes": 36942
+    },
+    {
+      "file": "minimize_005.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 526,
+      "bytes": 46504
+    },
+    {
+      "file": "minimize_006.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 380,
+      "bytes": 33590
+    },
+    {
+      "file": "minimize_007.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 183,
+      "bytes": 16206
+    },
+    {
+      "file": "minimize_008.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 225,
+      "bytes": 19954
+    },
+    {
+      "file": "minimize_009.wav",
+      "category": "minimize",
+      "hint": "a descending sweep — collapse, close full-screen",
+      "durationMs": 222,
+      "bytes": 19648
+    },
+    {
+      "file": "open_001.wav",
+      "category": "open",
+      "hint": "an arriving whoosh — sheet/modal/panel opening",
+      "durationMs": 148,
+      "bytes": 13134
+    },
+    {
+      "file": "open_002.wav",
+      "category": "open",
+      "hint": "an arriving whoosh — sheet/modal/panel opening",
+      "durationMs": 314,
+      "bytes": 27754
+    },
+    {
+      "file": "open_003.wav",
+      "category": "open",
+      "hint": "an arriving whoosh — sheet/modal/panel opening",
+      "durationMs": 314,
+      "bytes": 27754
+    },
+    {
+      "file": "open_004.wav",
+      "category": "open",
+      "hint": "an arriving whoosh — sheet/modal/panel opening",
+      "durationMs": 323,
+      "bytes": 28556
+    },
+    {
+      "file": "pluck_001.wav",
+      "category": "pluck",
+      "hint": "a single plucked string note — page turn, light selection",
+      "durationMs": 112,
+      "bytes": 19790
+    },
+    {
+      "file": "pluck_002.wav",
+      "category": "pluck",
+      "hint": "a single plucked string note — page turn, light selection",
+      "durationMs": 162,
+      "bytes": 14336
+    },
+    {
+      "file": "question_001.wav",
+      "category": "question",
+      "hint": "an upward inquisitive blip — prompt, are-you-sure, hint",
+      "durationMs": 491,
+      "bytes": 43356
+    },
+    {
+      "file": "question_002.wav",
+      "category": "question",
+      "hint": "an upward inquisitive blip — prompt, are-you-sure, hint",
+      "durationMs": 333,
+      "bytes": 29406
+    },
+    {
+      "file": "question_003.wav",
+      "category": "question",
+      "hint": "an upward inquisitive blip — prompt, are-you-sure, hint",
+      "durationMs": 330,
+      "bytes": 29148
+    },
+    {
+      "file": "question_004.wav",
+      "category": "question",
+      "hint": "an upward inquisitive blip — prompt, are-you-sure, hint",
+      "durationMs": 332,
+      "bytes": 29402
+    },
+    {
+      "file": "scratch_001.wav",
+      "category": "scratch",
+      "hint": "a dry paper/vinyl scratch — page/tab change, catalog browsing",
+      "durationMs": 139,
+      "bytes": 12366
+    },
+    {
+      "file": "scratch_002.wav",
+      "category": "scratch",
+      "hint": "a dry paper/vinyl scratch — page/tab change, catalog browsing",
+      "durationMs": 139,
+      "bytes": 12366
+    },
+    {
+      "file": "scratch_003.wav",
+      "category": "scratch",
+      "hint": "a dry paper/vinyl scratch — page/tab change, catalog browsing",
+      "durationMs": 125,
+      "bytes": 11086
+    },
+    {
+      "file": "scratch_004.wav",
+      "category": "scratch",
+      "hint": "a dry paper/vinyl scratch — page/tab change, catalog browsing",
+      "durationMs": 325,
+      "bytes": 28750
+    },
+    {
+      "file": "scratch_005.wav",
+      "category": "scratch",
+      "hint": "a dry paper/vinyl scratch — page/tab change, catalog browsing",
+      "durationMs": 325,
+      "bytes": 28750
+    },
+    {
+      "file": "scroll_001.wav",
+      "category": "scroll",
+      "hint": "a longer mechanical whirr — list scroll, long transition",
+      "durationMs": 1000,
+      "bytes": 88280
+    },
+    {
+      "file": "scroll_002.wav",
+      "category": "scroll",
+      "hint": "a longer mechanical whirr — list scroll, long transition",
+      "durationMs": 1000,
+      "bytes": 88280
+    },
+    {
+      "file": "scroll_003.wav",
+      "category": "scroll",
+      "hint": "a longer mechanical whirr — list scroll, long transition",
+      "durationMs": 1000,
+      "bytes": 88280
+    },
+    {
+      "file": "scroll_004.wav",
+      "category": "scroll",
+      "hint": "a longer mechanical whirr — list scroll, long transition",
+      "durationMs": 1000,
+      "bytes": 88280
+    },
+    {
+      "file": "scroll_005.wav",
+      "category": "scroll",
+      "hint": "a longer mechanical whirr — list scroll, long transition",
+      "durationMs": 1000,
+      "bytes": 88280
+    },
+    {
+      "file": "select_001.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 40,
+      "bytes": 3640
+    },
+    {
+      "file": "select_002.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 40,
+      "bytes": 3640
+    },
+    {
+      "file": "select_003.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 380,
+      "bytes": 33582
+    },
+    {
+      "file": "select_004.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 380,
+      "bytes": 33582
+    },
+    {
+      "file": "select_005.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 380,
+      "bytes": 33582
+    },
+    {
+      "file": "select_006.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 1941,
+      "bytes": 171276
+    },
+    {
+      "file": "select_007.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 60,
+      "bytes": 5326
+    },
+    {
+      "file": "select_008.wav",
+      "category": "select",
+      "hint": "a short soft tick — item highlighted/selected",
+      "durationMs": 60,
+      "bytes": 5326
+    },
+    {
+      "file": "switch_001.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 615,
+      "bytes": 54300
+    },
+    {
+      "file": "switch_002.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 608,
+      "bytes": 53708
+    },
+    {
+      "file": "switch_003.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 500,
+      "bytes": 44178
+    },
+    {
+      "file": "switch_004.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 497,
+      "bytes": 43922
+    },
+    {
+      "file": "switch_005.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 609,
+      "bytes": 53794
+    },
+    {
+      "file": "switch_006.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 608,
+      "bytes": 53672
+    },
+    {
+      "file": "switch_007.wav",
+      "category": "switch",
+      "hint": "a mechanical flip — toggle, checkbox, binary state change",
+      "durationMs": 611,
+      "bytes": 54008
+    },
+    {
+      "file": "tick_001.wav",
+      "category": "tick",
+      "hint": "a very short neutral click — the quietest option, rapid presses",
+      "durationMs": 45,
+      "bytes": 4046
+    },
+    {
+      "file": "tick_002.wav",
+      "category": "tick",
+      "hint": "a very short neutral click — the quietest option, rapid presses",
+      "durationMs": 23,
+      "bytes": 2126
+    },
+    {
+      "file": "tick_004.wav",
+      "category": "tick",
+      "hint": "a very short neutral click — the quietest option, rapid presses",
+      "durationMs": 55,
+      "bytes": 4942
+    },
+    {
+      "file": "toggle_001.wav",
+      "category": "toggle",
+      "hint": "a two-stage click — on/off state change",
+      "durationMs": 158,
+      "bytes": 14030
+    },
+    {
+      "file": "toggle_002.wav",
+      "category": "toggle",
+      "hint": "a two-stage click — on/off state change",
+      "durationMs": 141,
+      "bytes": 12494
+    },
+    {
+      "file": "toggle_003.wav",
+      "category": "toggle",
+      "hint": "a two-stage click — on/off state change",
+      "durationMs": 139,
+      "bytes": 12366
+    },
+    {
+      "file": "toggle_004.wav",
+      "category": "toggle",
+      "hint": "a two-stage click — on/off state change",
+      "durationMs": 63,
+      "bytes": 5658
+    }
+  ]
+}
