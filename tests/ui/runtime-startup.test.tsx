@@ -79,13 +79,15 @@ describe('StartupLayer', () => {
     const { onContentReady } = renderStartup(port)
 
     await act(async () => vi.advanceTimersByTime(0))
-    expect(screen.getByRole('heading', { name: 'ホームを準備しています' })).toBeTruthy()
+    // The layer speaks as a status, not as the document heading: the screen
+    // underneath owns the only <h1>.
+    expect(screen.getByRole('status').textContent).toContain('ホームを準備しています')
     expect(screen.queryByRole('button', { name: '再試行' })).toBeNull()
     expect(onContentReady).not.toHaveBeenCalled()
 
     await act(async () => port.setBootstrap({ status: 'ready' }))
     await act(async () => vi.advanceTimersByTime(0))
-    expect(screen.queryByRole('heading', { name: 'ホームを準備しています' })).toBeNull()
+    expect(screen.queryByRole('status')).toBeNull()
     expect(onContentReady).toHaveBeenCalledTimes(1)
   })
 
@@ -100,7 +102,7 @@ describe('StartupLayer', () => {
     const { onContentReady } = renderStartup(port)
 
     await act(async () => vi.advanceTimersByTime(0))
-    expect(screen.getByRole('heading', { name: 'ホームを開けませんでした' })).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('ホームを開けませんでした')
     expect(screen.getByRole('button', { name: '再試行' })).toBeTruthy()
     expect(onContentReady).not.toHaveBeenCalled()
   })

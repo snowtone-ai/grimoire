@@ -1,6 +1,9 @@
 const CACHE_PREFIX = 'grimoire-shell-'
-const CACHE_VERSION = 'v2'
+const CACHE_VERSION = 'v3'
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`
+/** App data the runtime asks for on every launch. Fresh when online, still
+ *  answerable when not — the media manifest is the only one so far. */
+const APP_DATA_URLS = ['/world/manifest.json']
 const SHELL_URLS = [
   '/',
   '/calendar',
@@ -11,6 +14,7 @@ const SHELL_URLS = [
   '/brand/grimoire-seal.svg',
   '/brand/grimoire-seal-inverse.svg',
   '/icons/icon-192.png',
+  ...APP_DATA_URLS,
 ]
 
 async function installShell() {
@@ -65,7 +69,12 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
 
-  if (request.mode === 'navigate') {
+  // Navigations and app data share a strategy: always prefer the network so a
+  // deploy is picked up immediately, and fall back to the last good copy when
+  // there is no network. Cache-first would pin the media manifest to whatever
+  // footage existed when the worker installed.
+  if (request.mode === 'navigate' || APP_DATA_URLS.includes(url.pathname)) {
+    const offlineFallback = request.mode === 'navigate' ? '/' : url.pathname
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -77,7 +86,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cached = await caches.match(request)
-          return cached ?? caches.match('/')
+          return cached ?? caches.match(offlineFallback)
         }),
     )
     return

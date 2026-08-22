@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useState } from 'react'
 
 import { SoundProvider, useSound } from '@/audio'
-import { BottomNavigation } from '@/ui/components/bottom-navigation'
+import { BottomNavigation, screenNameFor } from '@/ui/components/bottom-navigation'
 import { Button } from '@/ui/components/button'
 import { Sheet } from '@/ui/components/sheet'
 import { useReducedMotion } from '@/ui/hooks/use-reduced-motion'
@@ -67,6 +67,7 @@ function SplashBody({ footage }: { readonly footage: WorldMediaEntry | null }) {
 
 export function StartupLayer({ onContentReady }: { readonly onContentReady: () => void }) {
   const port = useAppPort()
+  const screen = screenNameFor(usePathname())
   const { bootstrap, preferences } = useAppReadModel()
   const [state, setState] = useState<StartupState>('checking')
   const [footage, setFootage] = useState<WorldMediaEntry | null>(null)
@@ -136,9 +137,14 @@ export function StartupLayer({ onContentReady }: { readonly onContentReady: () =
     const failed = bootstrap.status === 'failed'
     return (
       <section className={styles.loading} role="status" aria-live="polite">
-        <h1 className={styles.loadingTitle}>
-          {failed ? 'ホームを開けませんでした' : 'ホームを準備しています'}
-        </h1>
+        {/* Not a heading: this layer sits over a screen that has its own <h1>,
+            and two of them in one document is a document with no main heading.
+            `role="status"` is what carries the text to a screen reader; the
+            visual weight comes from the class either way. It also names the
+            screen being prepared rather than always claiming to be Home. */}
+        <p className={styles.loadingTitle}>
+          {failed ? `${screen}を開けませんでした` : `${screen}を準備しています`}
+        </p>
         <p className={styles.loadingCopy}>
           {failed
             ? bootstrap.message
@@ -262,8 +268,11 @@ function RuntimeContent({ children }: { readonly children: ReactNode }) {
       {contentReady && pathname === '/' && migrationNoticeVisible ? (
         <MigrationNotice onDismiss={() => void port.acknowledgeMigrationNotice()} />
       ) : null}
+      {/* Names the screen that actually opened. A fixed string here announced
+          "ホームを開きました" on the settings screen — the one message a screen
+          reader user has no way to check against what is on the display. */}
       <span className="sr-only" aria-live="polite">
-        {contentReady ? 'ホームを開きました' : ''}
+        {contentReady ? `${screenNameFor(pathname)}を開きました` : ''}
       </span>
     </SoundProvider>
   )

@@ -37,6 +37,18 @@ function isCurrent(pathname: string, href: string): boolean {
   return href === '/' ? pathname === href : pathname.startsWith(href)
 }
 
+/**
+ * The name of the screen a path leads to, read from the same table the
+ * navigation labels come from so an announcement can never drift from the
+ * destination it describes. Accepts a null path because `usePathname()` returns
+ * one wherever there is no router — the startup layer is rendered in exactly
+ * that position, and a missing route is not a reason to fail to render.
+ */
+export function screenNameFor(pathname: string | null | undefined): string {
+  const path = pathname ?? '/'
+  return destinations.find((destination) => isCurrent(path, destination.href))?.label ?? 'ホーム'
+}
+
 interface Ripple {
   readonly href: string
   readonly id: number
