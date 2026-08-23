@@ -1,10 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { useRef, useState } from "react";
+import { CalendarDays, ChevronDown, Clock3, Plus, Sparkles, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { type Recurrence } from "@/lib/db";
-import { createTask } from "@/lib/taskDb";
 import { playCue } from "@/lib/sound";
+import { createTask } from "@/lib/taskDb";
 
 interface TaskAddModalProps {
   onClose: () => void;
@@ -21,41 +40,42 @@ const RECURRENCES: { value: Recurrence; label: string }[] = [
 
 const DAYS_OF_WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 
-function todayDateString(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+function dateString(offset = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: TaskAddModalProps) {
-  // The sheet is mounted only while it is open, so mount/unmount is exactly the
-  // open/close moment. Dismissing gets its own cue below; saving does not, so a
-  // successful save stays one sound (the save cue), not two.
-  useEffect(() => {
-    playCue("modalOpen");
-  }, []);
+  const today = dateString();
+  const tomorrow = dateString(1);
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState(today);
+  const [dueTime, setDueTime] = useState("");
+  const [recurrence, setRecurrence] = useState<Recurrence>("none");
+  const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState(1);
+  const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState(1);
+  const [showDetails, setShowDetails] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   function dismiss() {
+    if (saving) return;
     playCue("modalClose");
     onClose();
   }
 
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState(todayDateString());
-  const [dueTime, setDueTime] = useState("");
-  const [recurrence, setRecurrence] = useState<Recurrence>("none");
-  const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState<number>(1);
-  const [recurrenceDayOfMonth, setRecurrenceDayOfMonth] = useState<number>(1);
-  const [saving, setSaving] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim() || !dueDate) return;
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!title.trim() || !dueDate || saving) return;
 
     setSaving(true);
+    setSaveError("");
     try {
       await createTask({
         title: title.trim(),
@@ -72,191 +92,235 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
       playCue("save");
       onTaskCreated();
       onClose();
+    } catch (error) {
+      console.error("[task-add] save failed:", error);
+      setSaveError("保存できませんでした。もう一度お試しください。");
     } finally {
       setSaving(false);
     }
   }
 
+  const datePreset = dueDate === today ? "today" : dueDate === tomorrow ? "tomorrow" : "";
+  const recurrenceLabel = RECURRENCES.find((item) => item.value === recurrence)?.label;
+  const detailSummary = [description.trim() ? "メモあり" : "", recurrence !== "none" ? recurrenceLabel : ""]
+    .filter(Boolean)
+    .join("・");
+
   return (
-    /* Backdrop */
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) dismiss();
-      }}
-    >
-      {/* Sheet */}
-      <div
-        className="w-full max-w-lg rounded-t-3xl bg-card p-6 pt-3 shadow-xl animate-slide-up"
-        style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
+    <Dialog open onOpenChange={(open) => !open && dismiss()}>
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="bg-black/45 supports-backdrop-filter:backdrop-blur-sm"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          requestAnimationFrame(() => titleInputRef.current?.focus());
+        }}
+        className="quest-entry-dialog top-auto bottom-0 left-1/2 max-h-[min(94dvh,760px)] max-w-lg -translate-x-1/2 translate-y-0 gap-0 overflow-hidden rounded-t-[2rem] rounded-b-none p-0 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-[2rem]"
       >
-        <div aria-hidden className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-muted" />
-        {/* Header */}
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">クエストを追加</h2>
-          <button
+        <DialogHeader className="quest-entry-header flex-row items-start gap-3 px-5 pt-5 pb-4 text-left">
+          <div className="quest-entry-sigil" aria-hidden>
+            <Sparkles />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-[9px] font-bold tracking-[0.28em] text-frost">NEW QUEST</p>
+            <DialogTitle className="mt-1 text-xl font-bold tracking-tight">調査票に記す</DialogTitle>
+            <DialogDescription className="mt-1 text-xs">名前と期限だけで受注できます</DialogDescription>
+          </div>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             aria-label="閉じる"
+            disabled={saving}
             onClick={dismiss}
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+            className="size-11 shrink-0 rounded-full"
           >
-            <X className="size-5" />
-          </button>
-        </div>
+            <X />
+          </Button>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* タスク名 */}
-          <div>
-            <label
-              htmlFor="task-title"
-              className="mb-1 block text-sm font-medium text-foreground"
-            >
-              クエスト名<span className="ml-0.5 text-brand">*</span>
-            </label>
-            <input
-              id="task-title"
-              type="text"
-              required
-              autoFocus
-              placeholder="例: A社 ES提出"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="task-description"
-              className="mb-1 block text-sm font-medium text-foreground"
-            >
-              詳細
-              <span className="ml-1 text-xs text-muted-foreground">(任意)</span>
-            </label>
-            <textarea
-              id="task-description"
-              rows={3}
-              placeholder="例: パン、牛乳、テープ、洗剤"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-            />
-          </div>
-
-          {/* 期限日 + 期限時刻 */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label
-                htmlFor="task-due-date"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
-                期限日<span className="ml-0.5 text-brand">*</span>
-              </label>
-              <input
-                id="task-due-date"
-                type="date"
-                required
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-              />
-            </div>
-            <div className="w-32">
-              <label
-                htmlFor="task-due-time"
-                className="mb-1 block text-sm font-medium text-foreground"
-              >
-                時刻
-                <span className="ml-1 text-xs text-muted-foreground">
-                  (任意)
-                </span>
-              </label>
-              <input
-                id="task-due-time"
-                type="time"
-                value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-              />
-            </div>
-          </div>
-
-          {/* 繰り返し */}
-          <div>
-            <p className="mb-2 text-sm font-medium text-foreground">繰り返し</p>
-            <div className="flex gap-2">
-              {RECURRENCES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRecurrence(value)}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition-colors ${
-                    recurrence === value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-foreground bg-transparent"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {recurrence === "weekly" && (
-              <div className="mt-3 flex gap-1.5">
-                {DAYS_OF_WEEK.map((day, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setRecurrenceDayOfWeek(i)}
-                    className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-                      recurrenceDayOfWeek === i
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {recurrence === "monthly" && (
-              <div className="mt-3">
-                <label
-                  htmlFor="add-recurrence-day"
-                  className="mb-1 block text-xs text-muted-foreground"
-                >
-                  毎月 何日
-                </label>
-                <input
-                  id="add-recurrence-day"
-                  type="number"
-                  min={1}
-                  max={31}
-                  value={recurrenceDayOfMonth}
-                  onChange={(e) => setRecurrenceDayOfMonth(Number(e.target.value))}
-                  className="w-24 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+        <form onSubmit={handleSubmit} className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto]">
+          <div className="quest-entry-scroll overflow-y-auto px-5 py-4">
+            <FieldGroup className="gap-4">
+              <Field>
+                <FieldLabel htmlFor="task-title">クエスト名</FieldLabel>
+                <Input
+                  ref={titleInputRef}
+                  id="task-title"
+                  type="text"
+                  required
+                  autoComplete="off"
+                  enterKeyHint="done"
+                  placeholder="例：A社へ応募書類を送る"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className="quest-entry-input h-12 rounded-xl px-4 font-medium"
                 />
-                <span className="ml-2 text-sm text-muted-foreground">日</span>
-                {recurrenceDayOfMonth > 28 && (
-                  <p className="mt-1.5 text-xs text-brand">
-                    2月など短い月はこの日にタスクが表示されません
-                  </p>
-                )}
-              </div>
-            )}
+              </Field>
+
+              <Field>
+                <FieldTitle id="task-date-preset-label">いつ挑む？</FieldTitle>
+                <ToggleGroup
+                  type="single"
+                  value={datePreset}
+                  onValueChange={(value) => {
+                    if (value === "today") setDueDate(today);
+                    if (value === "tomorrow") setDueDate(tomorrow);
+                  }}
+                  aria-labelledby="task-date-preset-label"
+                  variant="outline"
+                  className="quest-entry-quick grid w-full grid-cols-2"
+                >
+                  <ToggleGroupItem value="today" className="h-11 min-w-0 rounded-xl">今日</ToggleGroupItem>
+                  <ToggleGroupItem value="tomorrow" className="h-11 min-w-0 rounded-xl">明日</ToggleGroupItem>
+                </ToggleGroup>
+              </Field>
+
+              <FieldGroup className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-3">
+                <Field>
+                  <FieldLabel htmlFor="task-due-date">
+                    <CalendarDays aria-hidden />
+                    期限日
+                  </FieldLabel>
+                  <Input
+                    id="task-due-date"
+                    type="date"
+                    required
+                    value={dueDate}
+                    onChange={(event) => setDueDate(event.target.value)}
+                    className="quest-entry-input h-11 rounded-xl px-3"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="task-due-time">
+                    <Clock3 aria-hidden />
+                    時刻
+                  </FieldLabel>
+                  <Input
+                    id="task-due-time"
+                    type="time"
+                    value={dueTime}
+                    onChange={(event) => setDueTime(event.target.value)}
+                    className="quest-entry-input h-11 rounded-xl px-3"
+                  />
+                </Field>
+              </FieldGroup>
+
+              <Button
+                type="button"
+                variant="ghost"
+                aria-expanded={showDetails}
+                aria-controls="quest-extra-fields"
+                onClick={() => setShowDetails((visible) => !visible)}
+                className="quest-entry-detail-button h-auto w-full justify-between rounded-xl px-3 py-3 text-left"
+              >
+                <span className="flex min-w-0 flex-col items-start gap-0.5">
+                  <span className="font-semibold">メモ・繰り返し</span>
+                  <span className="truncate text-xs font-normal text-muted-foreground">
+                    {detailSummary || "必要なときだけ設定"}
+                  </span>
+                </span>
+                <ChevronDown data-icon="inline-end" className={showDetails ? "rotate-180" : undefined} />
+              </Button>
+
+              {showDetails && (
+                <FieldGroup id="quest-extra-fields" className="quest-entry-extras gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="task-description">メモ</FieldLabel>
+                    <Textarea
+                      id="task-description"
+                      rows={2}
+                      placeholder="持ち物や、小さな手順を書いておく"
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      className="quest-entry-input min-h-20 resize-none rounded-xl px-4 py-3"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldTitle id="task-recurrence-label">繰り返し</FieldTitle>
+                    <ToggleGroup
+                      type="single"
+                      value={recurrence}
+                      onValueChange={(value) => value && setRecurrence(value as Recurrence)}
+                      aria-labelledby="task-recurrence-label"
+                      variant="outline"
+                      className="quest-entry-repeat grid w-full grid-cols-4"
+                    >
+                      {RECURRENCES.map(({ value, label }) => (
+                        <ToggleGroupItem key={value} value={value} className="h-11 min-w-0 rounded-lg px-1">
+                          {label}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </Field>
+
+                  {recurrence === "weekly" && (
+                    <Field>
+                      <FieldTitle id="task-weekday-label">曜日</FieldTitle>
+                      <ToggleGroup
+                        type="single"
+                        value={String(recurrenceDayOfWeek)}
+                        onValueChange={(value) => value && setRecurrenceDayOfWeek(Number(value))}
+                        aria-labelledby="task-weekday-label"
+                        variant="outline"
+                        className="quest-entry-weekdays grid w-full grid-cols-7"
+                      >
+                        {DAYS_OF_WEEK.map((day, index) => (
+                          <ToggleGroupItem key={day} value={String(index)} className="h-11 min-w-0 rounded-lg px-0">
+                            {day}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </Field>
+                  )}
+
+                  {recurrence === "monthly" && (
+                    <Field>
+                      <FieldLabel htmlFor="add-recurrence-day">毎月 何日</FieldLabel>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="add-recurrence-day"
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={31}
+                          value={recurrenceDayOfMonth}
+                          onChange={(event) => setRecurrenceDayOfMonth(Number(event.target.value))}
+                          className="quest-entry-input h-10 w-24 rounded-xl px-3"
+                        />
+                        <span className="text-sm text-muted-foreground">日</span>
+                      </div>
+                      {recurrenceDayOfMonth > 28 && (
+                        <FieldDescription className="text-brand">
+                          短い月には表示されない日があります
+                        </FieldDescription>
+                      )}
+                    </Field>
+                  )}
+                </FieldGroup>
+              )}
+
+              {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
+            </FieldGroup>
           </div>
 
-          {/* 保存ボタン */}
-          <button
-            type="submit"
-            disabled={saving || !title.trim() || !dueDate}
-            className="btn-squish w-full rounded-xl bg-primary bg-gradient-to-b from-white/20 to-transparent py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 inset-shadow-[0_1px_0_rgba(255,255,255,0.25)] disabled:opacity-50"
-          >
-            {saving ? "保存中..." : "受注する"}
-          </button>
+          <div className="quest-entry-footer px-5 pt-3">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={saving || !title.trim() || !dueDate}
+              className="quest-accept-button btn-squish h-12 w-full rounded-xl font-bold"
+            >
+              {saving ? <Spinner data-icon="inline-start" /> : <Plus data-icon="inline-start" />}
+              {saving ? "調査票に記録中…" : "このクエストを受注"}
+            </Button>
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              メモと繰り返しは後からでも変更できます
+            </p>
+          </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

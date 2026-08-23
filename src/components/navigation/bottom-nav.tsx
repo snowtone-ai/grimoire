@@ -23,9 +23,14 @@ type PageTheme = (typeof NAV_ITEMS)[number]["theme"];
  * T036: also stamps data-page-theme from the DESTINATION only — arriving
  * somewhere always plays that place's motif regardless of which tab you came
  * from, rather than needing a directional cross-product of every from/to
- * pair. Gated by the "ページごとの遷移演出" toggle (default off); when off,
- * data-page-theme is simply never set, so only the existing generic page-turn
- * CSS applies — current behavior, unchanged. */
+ * pair.
+ *
+ * D-049: with the toggle off, the marker is data-page-plain instead of a
+ * theme. The old branch only withheld data-page-theme, which left the 3D
+ * notebook flip — the heaviest motion in the app — running for someone who had
+ * just switched the transition effects off. data-page-plain selects a plain
+ * fade-through in globals.css and is still a page-turn, so the FLIP-suppression
+ * rule on task cards keeps applying either way. */
 let pageTurnTimer = 0;
 
 function markPageTurn(fromPath: string | null, toPath: string, theme: PageTheme) {
@@ -36,12 +41,15 @@ function markPageTurn(fromPath: string | null, toPath: string, theme: PageTheme)
   root.dataset.pageTurn = toIndex < fromIndex ? "back" : "fwd";
   if (isEffectEnabled("pageTransitions")) {
     root.dataset.pageTheme = theme;
+    delete root.dataset.pagePlain;
   } else {
     delete root.dataset.pageTheme;
+    root.dataset.pagePlain = "";
   }
   pageTurnTimer = window.setTimeout(() => {
     delete root.dataset.pageTurn;
     delete root.dataset.pageTheme;
+    delete root.dataset.pagePlain;
   }, 700);
 }
 

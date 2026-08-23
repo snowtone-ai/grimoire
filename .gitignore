@@ -70,3 +70,19 @@ skills-lock.json
 # reviewed false-positive decisions with their reasons, which are worth
 # keeping. The hook cache is a disposable speed-up and never is.
 .impeccable/hook.cache.json
+
+# Art-generation sources. Only scripts/process-item-assets.mjs and
+# scripts/process-area-assets.mjs read these; every file the app actually
+# serves is derived from them and IS tracked (thumb/, inspect/, explore/,
+# preview/, manifest.json). The masters alone are ~1GB of full-resolution PNG,
+# which git can never forget once committed, so they stay out of history and
+# live in the owner's own archive. data/item-asset-index.json records each
+# derived file's sha256, so a lost master is detectable rather than silent.
+/public/item-rewards/master/
+/public/item-rewards/pilot/
+/public/area-heroes/master/
+/public/area-heroes/pilot/
+
+# Contact sheets for reviewing generated item art by rarity — regenerate with
+# `node scripts/build-item-contact-sheets.mjs`, never worth versioning.
+/tmp-item-audit/

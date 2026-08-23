@@ -14,7 +14,7 @@
  * open-app flourish had no way to say so under the old model. Each new, heavier
  * effect defaults to off; the two effects already proven at D-036's "normal"
  * default stay on. Sound/haptics are deliberately NOT one of these keys: they
- * keep their own pre-existing independent toggle in sound.ts (fx-enabled), which
+ * keep their own independent toggles in sound.ts, which
  * — per D-036 — must NOT be forced off by OS reduced-motion, since that media
  * query is a motion signal, not an audio one. Every key below IS a visual/motion
  * effect, so reduced-motion always overrides them regardless of stored preference.

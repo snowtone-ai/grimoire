@@ -5,7 +5,7 @@
  * logic. This module only wires that model to the two runtime inputs that decide
  * it: one localStorage flag per effect, and the OS-level prefers-reduced-motion
  * setting, which always overrides every key here. Sound/haptics are NOT one of
- * these keys — they keep their own independent toggle in sound.ts (fx-enabled),
+ * these keys — they keep independent sound and haptic toggles in sound.ts,
  * deliberately not reduced-motion-gated (D-036: that media query is a motion
  * signal, not an audio one). All storage access is best-effort and swallows
  * errors, matching src/lib/sound.ts.

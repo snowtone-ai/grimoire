@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { AreaExplorer } from "@/components/book/area-explorer";
+import { ItemExplorer } from "@/components/book/item-explorer";
 import { BottomNav } from "@/components/navigation/bottom-nav";
-import { DropReveal } from "@/components/reward/drop-reveal";
+import { RewardArt } from "@/components/reward/reward-art";
 import {
   COMMON_DROPS,
   DROP_CATALOG,
@@ -26,8 +28,8 @@ import { playCue } from "@/lib/sound";
 export function BookScreen() {
   const [counts, setCounts] = useState<Map<string, number> | null>(null);
   const [chronicle, setChronicle] = useState<ChronicleMonth[]>([]);
-  // The drop currently replaying its reveal card, or null when none is open.
-  // Lives here (not per grid cell) so exactly one DropReveal ever mounts.
+  // The collected item currently open in the full-screen inspector. This
+  // lives here so exactly one image surface is decoded at inspection size.
   const [replayDrop, setReplayDrop] = useState<DropDef | null>(null);
 
   useEffect(() => {
@@ -62,6 +64,10 @@ export function BookScreen() {
   }, []);
 
   const discovered = counts?.size ?? 0;
+  const discoveredItems = useMemo(
+    () => DROP_CATALOG.filter((drop) => (counts?.get(drop.id) ?? 0) > 0),
+    [counts]
+  );
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -105,17 +111,21 @@ export function BookScreen() {
             drops={section.pool}
             counts={counts}
             columns={section.columns}
-            renderIcon={section.rarity === 8 ? photoIcon : emojiIcon}
+            renderIcon={section.rarity === 8 ? photoIcon : itemArtIcon}
             onReplay={handleReplay}
           />
         ))}
       </main>
 
       {replayDrop && (
-        <DropReveal
-          replay
-          grant={{ drop: replayDrop, rarity: replayDrop.rarity, isNew: false }}
-          onDismiss={handleDismissReplay}
+        <ItemExplorer
+          key={replayDrop.id}
+          items={discoveredItems}
+          initialId={replayDrop.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) handleDismissReplay();
+          }}
         />
       )}
 
@@ -125,6 +135,7 @@ export function BookScreen() {
 }
 
 function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) {
+  const [activeRegion, setActiveRegion] = useState<(typeof EXPEDITION_REGIONS)[number] | null>(null);
   const regionStats = useMemo(() => {
     const totals = new Map<string, number>();
     const found = new Map<string, number>();
@@ -142,42 +153,80 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
   }, [counts]);
 
   return (
-    <section aria-label="遠征記録">
-      <div className="mb-1.5 flex items-center gap-2">
-        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">EXPEDITIONS</p>
-        <h2 className="text-sm font-bold text-foreground">遠征記録</h2>
-      </div>
-      <div
-        aria-hidden
-        className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
-      />
-      <ul
-        tabIndex={0}
-        className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {regionStats.map(({ region, found, total }) => (
-          <li
-            key={region.id}
-            title={region.blurb}
-            className="w-40 flex-shrink-0 rounded-2xl border border-border bg-card p-3"
-            style={{
-              boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${region.accent} 20%, transparent)`,
-            }}
-          >
-            <div className="flex items-center gap-1.5">
-              <span aria-hidden className="size-2 flex-shrink-0 rounded-full" style={{ backgroundColor: region.accent }} />
-              <p className="truncate text-xs font-bold text-foreground">{region.name}</p>
-            </div>
-            <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
-              {region.subtitle}
-            </p>
-            <p className="mt-2 text-right text-[11px] font-bold tabular-nums text-foreground">
-              {found}/{total}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <section aria-label="遠征記録">
+        <div className="mb-1.5 flex items-center gap-2">
+          <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">EXPEDITIONS</p>
+          <h2 className="text-sm font-bold text-foreground">遠征記録</h2>
+          <span className="ml-auto text-[10px] font-semibold tracking-wide text-muted-foreground">
+            タップして探索
+          </span>
+        </div>
+        <div
+          aria-hidden
+          className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
+        />
+        <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {regionStats.map(({ region, found, total }, index) => (
+            <li key={region.id} className="w-[11.75rem] flex-shrink-0 snap-center">
+              <button
+                type="button"
+                title={region.blurb}
+                onClick={() => setActiveRegion(region)}
+                aria-label={`${region.name}を探索する。記録 ${found}/${total}`}
+                className="group relative block aspect-[4/5] w-full overflow-hidden rounded-[1.35rem] bg-black text-left shadow-[0_14px_32px_-20px_rgba(0,0,0,0.9)] outline-none ring-1 ring-border transition-transform duration-300 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-frost active:scale-[0.985]"
+              >
+                <picture>
+                  <source srcSet={`/area-heroes/preview/${region.id}.avif`} type="image/avif" />
+                  <img
+                    src={`/area-heroes/preview/${region.id}.webp`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-fluid group-hover:scale-[1.025]"
+                  />
+                </picture>
+                <span
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(to bottom, color-mix(in oklab, ${region.accent} 22%, rgba(0,0,0,.35)) 0%, transparent 34%, rgba(0,0,0,.08) 50%, rgba(0,0,0,.9) 100%)`,
+                  }}
+                />
+                <span aria-hidden className="absolute inset-3 border-x border-white/20" />
+                <span className="absolute inset-x-3 top-3 flex items-center justify-between text-white drop-shadow-md">
+                  <span className="font-display text-[8px] font-bold tracking-[0.28em] text-white/75">
+                    AREA {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-[9px] font-bold tabular-nums text-white/90">
+                    {found}/{total}
+                  </span>
+                </span>
+                <span className="absolute inset-x-4 bottom-4 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                  <span className="block text-[15px] font-bold leading-tight">{region.name}</span>
+                  <span className="mt-1 line-clamp-2 block text-[9px] leading-relaxed text-white/75">
+                    {region.subtitle}
+                  </span>
+                  <span className="mt-2 block font-display text-[8px] font-bold tracking-[0.22em] text-white/70">
+                    OPEN SURVEY ↗
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {activeRegion && (
+        <AreaExplorer
+          region={activeRegion}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setActiveRegion(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -196,11 +245,16 @@ function materialCardStyle(drop: DropDef): CSSProperties {
   };
 }
 
-const emojiIcon = (drop: DropDef, isFound: boolean) => (
-  <span className={`text-3xl select-none ${isFound ? "" : "grayscale opacity-30"}`} aria-hidden>
-    {isFound ? drop.emoji : "❔"}
-  </span>
-);
+const itemArtIcon = (drop: DropDef, isFound: boolean) =>
+  isFound ? (
+    <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
+      <RewardArt drop={drop} variant="thumb" className="object-cover" />
+    </div>
+  ) : (
+    <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-muted text-xl text-muted-foreground/60">
+      ?
+    </div>
+  );
 
 const photoIcon = (drop: DropDef, isFound: boolean) =>
   isFound && drop.photo ? (

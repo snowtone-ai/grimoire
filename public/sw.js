@@ -1,5 +1,11 @@
 // Bump this when SW logic changes. All clients discard old caches on activate.
-const CACHE_NAME = "task-manager-v8";
+const CACHE_NAME = "task-manager-v10";
+const AREA_CACHE_NAME = "task-manager-area-v1";
+const AREA_CACHE_MAX_ENTRIES = 6;
+const ITEM_THUMB_CACHE_NAME = "task-manager-item-thumb-v1";
+const ITEM_INSPECT_CACHE_NAME = "task-manager-item-inspect-v1";
+const ITEM_THUMB_CACHE_MAX_ENTRIES = 160;
+const ITEM_INSPECT_CACHE_MAX_ENTRIES = 12;
 const NAV_TIMEOUT_MS = 3000;
 
 // Notifications are shown by the page through registration.showNotification(),
@@ -41,7 +47,15 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter(
+            (key) =>
+              key !== CACHE_NAME &&
+              key !== AREA_CACHE_NAME &&
+              key !== ITEM_THUMB_CACHE_NAME &&
+              key !== ITEM_INSPECT_CACHE_NAME
+          )
+          .map((key) => caches.delete(key))
       );
       await self.clients.claim();
     })()
@@ -74,6 +88,27 @@ self.addEventListener("fetch", (event) => {
   // These files only ever change by being replaced under a new name.
   if (url.pathname.startsWith("/audio/") || url.pathname.startsWith("/vfx/")) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Exploration masters are loaded only when an Area is opened. Keep the
+  // most recently fetched six rather than precaching all regions or allowing
+  // full-resolution art to grow storage without a bound.
+  if (url.pathname.startsWith("/area-heroes/explore/")) {
+    event.respondWith(boundedCacheFirst(request, AREA_CACHE_NAME, AREA_CACHE_MAX_ENTRIES));
+    return;
+  }
+
+  // Collection art is never precached. Thumbnails get a larger view-driven
+  // cache; full inspection images stay tightly bounded to protect phone
+  // storage and decoded-memory pressure across a long collection session.
+  if (url.pathname.startsWith("/item-rewards/thumb/")) {
+    event.respondWith(boundedCacheFirst(request, ITEM_THUMB_CACHE_NAME, ITEM_THUMB_CACHE_MAX_ENTRIES));
+    return;
+  }
+
+  if (url.pathname.startsWith("/item-rewards/inspect/")) {
+    event.respondWith(boundedCacheFirst(request, ITEM_INSPECT_CACHE_NAME, ITEM_INSPECT_CACHE_MAX_ENTRIES));
     return;
   }
 
@@ -125,6 +160,24 @@ async function cacheFirst(request) {
     if (response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone()).catch(() => {});
+    }
+    return response;
+  } catch {
+    return new Response("Network error", { status: 503 });
+  }
+}
+
+async function boundedCacheFirst(request, cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+      const keys = await cache.keys();
+      await Promise.all(keys.slice(0, Math.max(0, keys.length - maxEntries)).map((key) => cache.delete(key)));
     }
     return response;
   } catch {

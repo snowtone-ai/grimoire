@@ -115,6 +115,56 @@ export const TAP_SCENE: VfxScene = {
   ],
 };
 
+/** Add is a direct physical response: two low-alpha water-tension rings leave
+ * the exact touch point, followed by a restrained magical bloom. */
+export const ADD_RIPPLE_SCENE: VfxScene = {
+  origin: "point",
+  emitters: [
+    {
+      texture: "ring-pulse.png",
+      count: 1,
+      motion: "expand",
+      size: [18, 150],
+      speed: [0, 0],
+      life: [520, 520],
+      spread: 0,
+      gravity: 0,
+      spin: [0, 0],
+      delayMs: 0,
+      color: FROST,
+      opacity: 0.76,
+    },
+    {
+      texture: "ring.png",
+      count: 1,
+      motion: "expand",
+      size: [12, 112],
+      speed: [0, 0],
+      life: [460, 460],
+      spread: 0,
+      gravity: 0,
+      spin: [0, 0],
+      delayMs: 75,
+      color: PALE,
+      opacity: 0.5,
+    },
+    {
+      texture: "mote.png",
+      count: 6,
+      motion: "burst",
+      size: [5, 9],
+      speed: [45, 105],
+      life: [330, 520],
+      spread: 180,
+      gravity: 70,
+      spin: [-0.3, 0.3],
+      delayMs: 65,
+      color: WARM,
+      opacity: 0.68,
+    },
+  ],
+};
+
 /* --------------------------------------------------------- completion ---- */
 
 const CLEAR_LOW: VfxScene = {
@@ -715,6 +765,7 @@ export const ALL_VFX_TEXTURES: readonly string[] = Array.from(
   new Set(
     [
       TAP_SCENE,
+      ADD_RIPPLE_SCENE,
       CLEAR_LOW,
       CLEAR_MID,
       CLEAR_HIGH,

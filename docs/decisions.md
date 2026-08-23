@@ -1349,3 +1349,128 @@ fresh-context Opus 5レビューがBLOCKER 1件+MAJOR 5件を返し、すべて�
 
 - 将来見直し条件: 実機(中位Android)で44粒+700スプライトが重いと分かった
   時点で、粒子数とMAX_PARTICLESを下げる。動画素材はgrimore-v2側で再検討。
+
+## D-048: アイテム/エリアのビジュアル資産を全面生成し、図鑑を実物の絵で見せる
+
+- 日付: 2026-08-23
+- 対象: public/item-rewards/(thumb・inspect・manifest.json), public/area-heroes/
+  (preview・explore), data/item-asset-index.json, docs/asset-art-bible.md,
+  docs/asset-production-ledger.md, scripts/{process-item,process-area,
+  validate-item,build-item-contact-sheets,build-item-production-index}*.mjs,
+  src/components/book/{area-explorer,item-explorer}.tsx,
+  src/components/reward/reward-art.tsx, src/components/home/quest-add-button.tsx,
+  src/components/home/task-add-modal.tsx, src/lib/use-dialog-back-close.ts,
+  src/components/ui/*(shadcn追加分), public/sw.js, src/app/globals.css
+- 決定: RARE 1-7 の424アイテムと8エリアの絵を実際に生成して同梱し、絵文字
+  プレースホルダを廃する。制作規約は docs/asset-art-bible.md、制作の全経緯・
+  再生成回数・品質判定は docs/asset-production-ledger.md が持つ。
+
+### 1. なぜ「マスターをGitに入れない」のか
+
+生成マスター(`public/item-rewards/master/` 417枚 + `pilot/`、約1GB)は
+`.gitignore` に入れ、**アプリが実際に配信する派生物だけ**を追跡する
+(`thumb/` 7.6MB、`inspect/` 107MB、`explore/` 4.1MB、`preview/` 824KB)。
+理由は一方向性: Gitは一度入った1GBを履歴から忘れられず、忘れさせるには
+履歴の書き換え(このプロジェクトではguardが禁止するforce push)が要る。
+逆に「あとから入れる」はいつでもできる。トレードオフとして、cloneした別環境
+では `scripts/process-*-assets.mjs` を再実行できない。これは
+`data/item-asset-index.json` が派生物のsha256を持つことで「マスターが失われた
+ことに気付ける」状態にして受け入れる。マスター実体はオーナーのローカルにある。
+
+### 2. 全画面エクスプローラと戻るジェスチャ
+
+エリアは1枚を約2×2ビューポート分の探索キャンバスとして描き、中央から開始して
+二軸パン+ズーム。アイテムは1:1から開始し横スワイプで隣へ。どちらもCSS
+transformのみ(コンポジタ完結)で、reduced-motionでは整定アニメーションを外す。
+
+Androidの戻るジェスチャで閉じられない問題は `src/lib/use-dialog-back-close.ts`
+で解決した。空URLの `pushState` はApp Router自身のhistory同期に吸収されて
+区別できず、`router.push` のハッシュのみ変更はこのNext.jsでは無音のno-op
+だったため、`history.pushState` を直接、実URL(pathname + `#explore`)で呼ぶ。
+React 19 StrictMode の mount→cleanup→mount で二重pushや `history.back()` の
+非同期unwindと競合しないよう microtask に遅延させる(open-flourish.tsx と同型)。
+
+### 3. 受け入れた既知の不完全さ
+
+Opus 5サブエージェント2体による全424点の視覚レビューで、23点が must-fix
+(RARE 6-7 にシルエット衝突が集中、原因はテンプレート再利用)。この環境の
+Claudeには画像生成ツールがないため**オーナー判断で現状のまま出荷**する。
+再生成が可能になった時点で docs/asset-production-ledger.md の該当表から着手する。
+
+- 将来見直し条件: 派生物120MBがVercelのビルド時間を実測で悪化させたら、
+  `inspect/` をリポジトリ外(CDN/Blob)へ移す。must-fix 23点は画像生成手段が
+  得られ次第。
+
+## D-049: クエスト追加ボタンをWebGLの魔力オーブにし、遷移演出OFF時に素の遷移を与える
+
+- 日付: 2026-08-23
+- 対象: src/lib/domain/mana-orb.ts(新規), src/lib/mana-orb.ts(新規),
+  tests/lib/domain/mana-orb.test.mjs(新規),
+  src/components/home/quest-add-button.tsx,
+  src/components/navigation/bottom-nav.tsx, src/app/globals.css
+
+### 1. オーブ: 自作シェーダを選び、外部3Dライブラリを選ばなかった
+
+オーナーが4案のプロトタイプから「露 / Dew」を選び、10個のパラメータを自分で
+調整した最終値を指定した。この値は `MANA_ORB_PARAMS` に**そのまま**入っており、
+`tests/lib/domain/mana-orb.test.mjs` が1件のテストで固定している——これは
+「あとで詰める既定値」ではなく承認済みのデザインなので、変更は新しい決定を
+要する。
+
+実装はWebGL1のレイマーチング(SDF球)で、Three.js/Spline/Lottieを足していない。
+理由は2つ。(a)この見た目の核は**入射と射出の2回の屈折**にある。入射側だけ
+屈折させると光線が収束して平たい円盤になり、ガラスに見えない。2回目の屈折は
+球体の裏面まで進んでから曲げ直す必要があり、これはメッシュベースの汎用3D
+ライブラリを入れても結局自前シェーダになる。(b)依存を1つも増やさずに済む
+(バンドル増分はシェーダ文字列のみ)。
+
+物理(潰れバネと内部のスロッシュ)はブラウザを必要としないので
+`src/lib/domain/mana-orb.ts` に純関数として分離し、描画側と分けてテストする。
+明示的オイラー積分は条件付き安定なので、`dt` を50msでクランプし、潰れ量を
+シェーダのSDFが表現できる範囲へクランプしたうえで、最大ステップでの
+発散しないことをテストで固定した(バックグラウンドから復帰した最初のフレームが
+まさにこの条件になる)。
+
+### 2. 電池: 常時rAFを避ける
+
+D-038で「常設レイヤーをcanvas化するとrAFが開きっぱなしになり電池を食う」と
+決めて背景の光の粒子をCSSのまま残した。ボタンの裏で走り続けるフラグメント
+シェーダは同じ問題なので、同じ規律を適用する: タブが隠れたら停止、
+IntersectionObserverで画面外なら停止、`prefers-reduced-motion` では
+**1フレームだけ描いてループを開始しない**(オーブは見えるが動かない)。
+Playwrightで実測して確認済み(表示中は500ms中25回変化、隠すと1回=静止、
+復帰で再開)。
+
+WebGLが無い/シェーダのリンクに失敗した環境では `createManaOrb` が null を
+返し、既存のCSS「泉の封印」ボタンがそのまま出る。だから旧デザインのCSSは
+削除せず、`.is-orb` による上書きとして書いてある。`destroy()` で
+`WEBGL_lose_context` を**呼ばない**のは意図的で、呼ぶとそのcanvasが永久に
+死に、React 19の二重呼び出しeffectで2個目のオーブが無言で出なくなる(実際に
+この不具合を踏んで直した)。
+
+`+` の色はトークンではなくリテラル(`oklch(0.3 0.07 300)`)。オーブは自分で
+発光して明暗どちらのテーマでも明るい真珠色になるため、`--foreground` に
+紐づけるとダークテーマで消える。
+
+### 3. 遷移演出OFF時に、いちばん重いモーションが残っていた
+
+「ページごとの遷移演出」トグルをOFFにしても、3Dのノートめくり
+(`rotateY(-72deg)`)は再生され続けていた。トグルは `data-page-theme` を
+出さないだけで、めくり自体はアプリの基本挙動だったため。結果として、
+モーションを減らすための唯一のスイッチを切った人に、画面上で最も重い
+モーションだけが残るという壊れた挙動になっていた。
+
+OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う素の
+フェードスルー(旧画面が90msで消え、新画面が60ms遅れて0.985倍から200msで
+立ち上がる)にする。奥行きも方向も行き先ごとの個性もない。完全な無演出には
+しない——切り替わった感覚が失われるうえ、reduced-motionの人はメディアクエリ
+経由で既に無演出を得ているため。
+
+`data-page-plain` は「テーマ無し」ではなく独立した属性にしてある。素の遷移も
+`data-page-turn` を伴うので、タスクカードのFLIP抑止ルールが両方の経路で効く。
+既存のめくりルールの除外は `:where(:not([data-page-plain]))` で書き、詳細度を
+0,1,1のまま保った——行き先別テーマのルールが属性1つ分の差でこれを上回る、
+という既存の前提をソース順に依存させずに保つため。
+
+- 将来見直し条件: 実機(中位Android)でオーブが電池/発熱に響くなら、
+  DPR上限1.5をさらに下げるか、非操作時のフレームレートを落とす。

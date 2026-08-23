@@ -11,10 +11,9 @@
  * This module is the browser half: decode, cache, mix, schedule. It owns no
  * opinions about which sound belongs to which action.
  *
- * Deliberately unchanged from D-022/D-036:
- *   - one localStorage toggle ("fx-enabled") gates sound AND haptics together,
- *     and is NOT forced off by prefers-reduced-motion (that media query is a
- *     motion signal, not an audio one — see domain/fx.ts).
+ * Feedback preferences are independent: audio and device vibration can each
+ * be disabled without weakening the other. Existing `fx-enabled` installs are
+ * migrated lazily the first time either preference is read.
  *   - the AudioContext is created inside the first user gesture, so a cue that
  *     fires after async work is not swallowed by the autoplay policy.
  *   - at most one cue and one haptic per action.
@@ -30,22 +29,56 @@ import {
 
 export type { SoundAction };
 
-const PREF_KEY = "fx-enabled";
+const LEGACY_PREF_KEY = "fx-enabled";
+const SOUND_PREF_KEY = "sound-enabled";
+const HAPTIC_PREF_KEY = "haptic-enabled";
 
-export function isFxEnabled(): boolean {
+function readPreference(key: string): boolean {
   try {
-    return localStorage.getItem(PREF_KEY) !== "0";
+    const stored = localStorage.getItem(key);
+    if (stored !== null) return stored !== "0";
+    const legacy = localStorage.getItem(LEGACY_PREF_KEY);
+    if (legacy !== null) {
+      localStorage.setItem(key, legacy);
+      return legacy !== "0";
+    }
+    return true;
   } catch {
     return true;
   }
 }
 
-export function setFxEnabled(enabled: boolean): void {
+function writePreference(key: string, enabled: boolean): void {
   try {
-    localStorage.setItem(PREF_KEY, enabled ? "1" : "0");
+    localStorage.setItem(key, enabled ? "1" : "0");
   } catch {
     // Preference storage is best-effort.
   }
+}
+
+export function isSoundEnabled(): boolean {
+  return readPreference(SOUND_PREF_KEY);
+}
+
+export function setSoundEnabled(enabled: boolean): void {
+  writePreference(SOUND_PREF_KEY, enabled);
+}
+
+export function isHapticEnabled(): boolean {
+  return readPreference(HAPTIC_PREF_KEY);
+}
+
+export function setHapticEnabled(enabled: boolean): void {
+  writePreference(HAPTIC_PREF_KEY, enabled);
+}
+
+/** Backward-compatible aliases for older call sites and stored installs. */
+export function isFxEnabled(): boolean {
+  return isSoundEnabled();
+}
+
+export function setFxEnabled(enabled: boolean): void {
+  setSoundEnabled(enabled);
 }
 
 let ctx: AudioContext | null = null;
@@ -69,7 +102,7 @@ let ctx: AudioContext | null = null;
 let unlocked = false;
 
 function ac(): AudioContext | null {
-  if (typeof window === "undefined" || !isFxEnabled()) return null;
+  if (typeof window === "undefined" || !isSoundEnabled()) return null;
   try {
     ctx ??= new AudioContext();
     if (ctx.state === "suspended") void ctx.resume();
@@ -174,7 +207,7 @@ function emit(audio: AudioContext, buffer: AudioBuffer, gain: number, startAt: n
 }
 
 export function haptic(pattern: number | readonly number[]): void {
-  if (!isFxEnabled() || !unlocked) return;
+  if (!isHapticEnabled() || !unlocked) return;
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
       navigator.vibrate(pattern as number | number[]);

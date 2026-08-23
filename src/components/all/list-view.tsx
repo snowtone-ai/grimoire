@@ -32,7 +32,7 @@ export function ListView({
         <div className="flex flex-col items-center justify-center py-24 text-center px-4">
           <div className="mb-4 text-5xl select-none">📋</div>
           <p className="text-base font-semibold text-foreground">タスクがありません</p>
-          <p className="mt-1 text-sm text-muted-foreground">右下の「+」ボタンからタスクを追加しましょう</p>
+          <p className="mt-1 text-sm text-muted-foreground">右下の泉の紋章からクエストを追加しましょう</p>
         </div>
       ) : (
         <ul className="space-y-2 px-4">

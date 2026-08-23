@@ -22,6 +22,7 @@
 import { isEffectEnabled, prefersReducedMotion } from "./fx.ts";
 import { rarityStyle } from "./domain/rarity-style.ts";
 import {
+  ADD_RIPPLE_SCENE,
   ALL_CLEAR_SCENE,
   ALL_VFX_TEXTURES,
   clearScene,
@@ -479,6 +480,12 @@ if (typeof document !== "undefined") {
 export function fireTapSpark(x: number, y: number): void {
   if (!isEffectEnabled("tapSpark")) return;
   play(TAP_SCENE, "#ffffff", { point: { x, y } });
+}
+
+/** Touch-origin water ripple for the primary Add action. */
+export function fireAddRipple(x: number, y: number): void {
+  if (!isEffectEnabled("tapSpark")) return;
+  play(ADD_RIPPLE_SCENE, "#7dd3fc", { point: { x, y } });
 }
 
 /** Quest cleared / bounty claimed, scaled by the RARE 1-8 ladder. */

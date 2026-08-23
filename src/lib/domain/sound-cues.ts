@@ -40,6 +40,7 @@ import { rarityBand, type RarityBand } from "./rarity-style.ts";
 export type SoundAction =
   // TOUCH
   | "tap"
+  | "add"
   | "save"
   | "undo"
   | "toggle"
@@ -87,10 +88,19 @@ const one = (src: string, gain: number, haptic: SoundCue["haptic"] = null): Soun
 export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   /* TOUCH — quiet on purpose. These fire dozens of times a session, and the
    * ADHD persona D-039 protects is the one who notices an over-eager UI first. */
-  tap: one("ui/click_002.wav", 0.45, 8),
+  tap: one("ui/click_002.wav", 0.45),
+  /* A droplet landing, then a small glassy bloom. This is intentionally
+   * distinct from a button click and is synchronized with the Add ripple. */
+  add: {
+    steps: [
+      { src: "ui/drop_004.wav", gain: 0.44, delayMs: 0 },
+      { src: "ui/glass_002.wav", gain: 0.2, delayMs: 75 },
+    ],
+    haptic: 10,
+  },
   save: one("ui/confirmation_002.wav", 0.5, 10),
   undo: one("ui/back_002.wav", 0.45),
-  toggle: one("ui/switch_003.wav", 0.4, 6),
+  toggle: one("ui/switch_003.wav", 0.4),
   modalOpen: one("ui/open_002.wav", 0.4),
   modalClose: one("ui/close_002.wav", 0.4),
   /* The upward inquisitive blip, used only where the app has just asked a
@@ -112,7 +122,7 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   /* REWARD */
   /* Looking back at something already earned: a short coin tick, deliberately
    * not the clear jingle. Same rule the replay VFX follows (D-036). */
-  replay: one("cues/treasure-light.wav", 0.45, 8),
+  replay: one("cues/treasure-light.wav", 0.45),
   bounty: one("cues/treasure.wav", 0.5, [12, 40, 18]),
   clearLow: one("cues/clear-low.wav", 0.45, 12),
   clearMid: one("cues/clear-mid.wav", 0.5, [12, 40, 18]),
