@@ -118,6 +118,11 @@
   as pnpm verify; branch protection requires it). A local pass alone does not merge.
   Low/medium risk: squash-merge + delete branch.
   High-risk classes: stop before irreversible real-world side effects; Japanese summary.
+- After a merge to main, once the Vercel Production deploy reports READY, run
+  `pnpm check:production`. A READY deploy is not proof the build is correct: Vercel
+  restores a build cache, and a Turbopack cache miss once shipped a CSS chunk with none
+  of the branch's hand-written classes while logging no error (T046, docs/issues.md).
+  If it exits 1, push any commit to main to force a fresh build and run it again.
 - Docs-only exception: a change touching only Markdown/doc files (no source, config, or CI
   files) may commit straight to the active base branch (main, or grimore-v2 per
   grimore-v2/CLAUDE.md), skipping branch/PR/CI. git diff --check still required.
