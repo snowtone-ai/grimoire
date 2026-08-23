@@ -47,10 +47,10 @@ function tomorrowDateString(): string {
 }
 
 export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: TaskAddModalProps) {
-  // Android's Back gesture closes this sheet rather than leaving the screen
+  // Android's Back gesture closes this dialog rather than leaving the screen
   // under it. The two full-screen explorers got this in the same rebuild;
   // without it here, a half-typed quest is the thing Back throws away.
-  useDialogBackClose(true, (open) => !open && onClose());
+  const requestClose = useDialogBackClose(true, (open) => !open && onClose());
   const today = todayDateString();
   const tomorrow = tomorrowDateString();
   const [title, setTitle] = useState(initialTitle);
@@ -68,7 +68,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
   function dismiss() {
     if (saving) return;
     playCue("modalClose");
-    onClose();
+    requestClose();
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -92,7 +92,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
       });
       playCue("save");
       onTaskCreated();
-      onClose();
+      requestClose();
     } catch (error) {
       console.error("[task-add] save failed:", error);
       setSaveError("保存できませんでした。もう一度お試しください。");
@@ -116,9 +116,9 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
           event.preventDefault();
           requestAnimationFrame(() => titleInputRef.current?.focus());
         }}
-        className="quest-entry-dialog top-auto bottom-0 left-1/2 max-h-[min(94dvh,760px)] max-w-lg -translate-x-1/2 translate-y-0 gap-0 overflow-hidden rounded-t-[2rem] rounded-b-none p-0 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-[2rem]"
+        className="quest-entry-dialog inset-0 top-0 left-0 h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none data-open:zoom-in-100 data-closed:zoom-out-100"
       >
-        <DialogHeader className="quest-entry-header flex-row items-start gap-3 px-5 pt-5 pb-4 text-left">
+        <DialogHeader className="quest-entry-header flex-row items-start gap-3 px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-4 text-left">
           <div className="quest-entry-sigil" aria-hidden>
             <Sparkles />
           </div>

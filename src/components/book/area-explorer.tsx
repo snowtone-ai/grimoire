@@ -13,7 +13,6 @@ import { LocateFixed, Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -81,7 +80,7 @@ export function AreaExplorer({
   const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 });
   const [showHint, setShowHint] = useState(true);
 
-  useDialogBackClose(open, onOpenChange);
+  const requestClose = useDialogBackClose(open, onOpenChange);
 
   const boundsFor = useCallback((scale: number) => {
     const viewport = viewportRef.current;
@@ -317,7 +316,12 @@ export function AreaExplorer({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) requestClose();
+      }}
+    >
       <DialogContent
         showCloseButton={false}
         className="inset-0 top-0 left-0 h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 bg-black p-0 text-white ring-0 data-open:zoom-in-100 data-closed:zoom-out-100"
@@ -365,17 +369,17 @@ export function AreaExplorer({
             <p className="mt-1 truncate text-sm font-bold text-white">{region.name}</p>
           </div>
 
-          <DialogClose asChild>
-            <Button
-              variant="secondary"
-              size="icon-lg"
-              className="absolute left-4 top-[calc(env(safe-area-inset-top)+0.8rem)] z-20 size-11 rounded-full border border-white/25 bg-black/55 text-white shadow-lg backdrop-blur-md hover:bg-black/75 hover:text-white"
-              aria-label="探索を閉じる"
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <X />
-            </Button>
-          </DialogClose>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon-lg"
+            className="absolute left-4 top-[calc(env(safe-area-inset-top)+0.8rem)] z-20 size-11 rounded-full border border-white/25 bg-black/55 text-white shadow-lg backdrop-blur-md hover:bg-black/75 hover:text-white"
+            aria-label="探索を閉じる"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={requestClose}
+          >
+            <X />
+          </Button>
 
           <div
             aria-hidden

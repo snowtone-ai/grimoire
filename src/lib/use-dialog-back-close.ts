@@ -1,15 +1,58 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const GUARD_HASH = "#explore";
 
+type DialogGuard = {
+  pathname: string;
+  onPopState: () => void;
+};
+
+let activeDialogGuard: DialogGuard | null = null;
+
+function registerDialogGuard(guard: DialogGuard) {
+  activeDialogGuard = guard;
+  return () => {
+    if (activeDialogGuard === guard) activeDialogGuard = null;
+  };
+}
+
+/**
+ * Installs before next-view-transitions' passive popstate listener. The
+ * bridge only consumes a Back traversal away from the active dialog's
+ * synthetic hash entry; ordinary history events continue to the app router.
+ */
+export function DialogBackHistoryBridge() {
+  useLayoutEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const guard = activeDialogGuard;
+      if (
+        !guard ||
+        window.location.pathname !== guard.pathname ||
+        window.location.hash === GUARD_HASH ||
+        (event.state && event.state.dialogBackGuard)
+      ) {
+        return;
+      }
+
+      activeDialogGuard = null;
+      event.stopImmediatePropagation();
+      guard.onPopState();
+    };
+
+    window.addEventListener("popstate", handlePopState, true);
+    return () => window.removeEventListener("popstate", handlePopState, true);
+  }, []);
+
+  return null;
+}
+
 /**
  * Lets the platform Back gesture close a full-screen dialog instead of
- * leaving the page underneath it. Radix's Escape/overlay handling already
- * calls onOpenChange directly, so this only has to bridge the browser/Android
- * history-back path.
+ * leaving the page underneath it. The returned requestClose function uses
+ * the same guard entry for Radix's Escape/overlay and explicit close paths.
  *
  * Two other approaches were tried and rejected (verified live, not just in
  * theory):
@@ -28,15 +71,14 @@ const GUARD_HASH = "#explore";
  *
  * The push itself is deferred to a microtask, matching open-flourish.tsx's
  * pattern for the same reason: React 19 dev/StrictMode mounts, cleans up,
- * and mounts again, and history.back() (used to unwind an abandoned push in
- * cleanup) is itself asynchronous, so an immediate push-in-effect races the
- * second mount and can leave the guard entry missing or doubled. Deferring
- * lets the first, doomed mount's cleanup flip `cancelled` before its push
- * would have run, so only the second mount's push actually happens.
+ * and mounts again. Deferring lets the first, doomed mount's cleanup flip
+ * `cancelled` before its push would have run, so only the second mount's
+ * push actually happens.
  */
 export function useDialogBackClose(open: boolean, onOpenChange: (open: boolean) => void) {
   const pathname = usePathname();
   const guardActiveRef = useRef(false);
+  const closePendingRef = useRef(false);
   const onOpenChangeRef = useRef(onOpenChange);
 
   useEffect(() => {
@@ -46,26 +88,37 @@ export function useDialogBackClose(open: boolean, onOpenChange: (open: boolean) 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let unregisterGuard: (() => void) | null = null;
+    guardActiveRef.current = false;
+    closePendingRef.current = false;
 
     Promise.resolve().then(() => {
       if (cancelled) return;
       history.pushState({ dialogBackGuard: true }, "", `${pathname}${GUARD_HASH}`);
       guardActiveRef.current = true;
+      unregisterGuard = registerDialogGuard({
+        pathname,
+        onPopState: () => {
+          guardActiveRef.current = false;
+          closePendingRef.current = false;
+          onOpenChangeRef.current(false);
+        },
+      });
     });
 
-    const handlePopState = () => {
-      if (!guardActiveRef.current) return;
-      guardActiveRef.current = false;
-      onOpenChangeRef.current(false);
-    };
-    window.addEventListener("popstate", handlePopState);
     return () => {
       cancelled = true;
-      window.removeEventListener("popstate", handlePopState);
-      if (guardActiveRef.current) {
-        guardActiveRef.current = false;
-        history.back();
-      }
+      unregisterGuard?.();
     };
   }, [open, pathname]);
+
+  return useCallback(() => {
+    if (closePendingRef.current) return;
+    if (!guardActiveRef.current) {
+      onOpenChangeRef.current(false);
+      return;
+    }
+    closePendingRef.current = true;
+    history.back();
+  }, []);
 }
