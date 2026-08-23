@@ -1,6 +1,22 @@
 # state.md
 
 ## Current
+- 2026-08-23: T047 — オーナー報告の3件のUI回帰を修正した。
+  - クエスト追加を全ブレークポイントで`dvh`全画面にし、ノッチとホームバーの
+    safe area、固定フッター、低い画面での入力欄スクロールを維持した。
+  - クエスト追加・取得アイテム鑑賞・遠征エリア探索を閉じた直後の停止は、
+    T045で追加した履歴ガードのcleanupが`history.back()`を呼び、同一ページの
+    hash解除まで`next-view-transitions`が画面遷移として180ms処理していたのが
+    共通原因だった。全close経路をguard entryのBackへ統一し、rootで先に登録する
+    `DialogBackHistoryBridge`が合成entryだけを消費する。Android/ブラウザBackは
+    引き続きダイアログを閉じ、通常ページのBackはNext.jsへ渡る。
+  - 提供スクリーンショットでカレンダー左下にはみ出していた魔力オーブは、
+    `/all`の`QuestAddButton`そのものを関連state/modalごと削除した。
+  - `pnpm verify`全合格(lint/typecheck/test 117件/build)。Playwright + Chromeの
+    393×873 / 900×700で全画面寸法、X・Escape・履歴Back、3画面終了後のURLを
+    実測。guard終了時の`startViewTransition`は0回、通常ページBackは1回、
+    console/page errorは0件だった。Tier 1 fresh-context reviewer(Luna、高)の
+    指摘は0件。
 - 2026-08-23: 本番デプロイの検証を`pnpm check:production`として追加した。
   T045+T046のマージ後、VercelのProductionは`READY`で、`public/`の新アセットも
   JSも新しいのに、CSSチャンクだけが本ブランチで足した手書きクラスを1つも

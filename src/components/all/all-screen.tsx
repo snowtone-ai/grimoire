@@ -14,8 +14,6 @@ import {
   todayDateString,
 } from "@/lib/domain/task-date";
 import { TaskEditModal } from "@/components/home/task-edit-modal";
-import { TaskAddModal } from "@/components/home/task-add-modal";
-import { QuestAddButton } from "@/components/home/quest-add-button";
 import { CalendarImportModal } from "@/components/calendar/calendar-import-modal";
 import { CalendarView } from "./calendar-view";
 import { ListView } from "./list-view";
@@ -31,7 +29,6 @@ export function AllScreen() {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showFutureOnly, setShowFutureOnly] = useState(true);
 
@@ -138,24 +135,12 @@ export function AllScreen() {
       </main>
 
       <BottomNav />
-      <QuestAddButton
-        onAdd={() => setShowAddModal(true)}
-        className="fixed right-4 z-40"
-        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
-      />
-
       {selectedDate && (
         <SelectedDateSheet
           selectedDate={selectedDate}
           tasks={selectedDateTasks}
           onClose={() => setSelectedDate(null)}
           onEditTask={setEditingTask}
-        />
-      )}
-      {showAddModal && (
-        <TaskAddModal
-          onClose={() => setShowAddModal(false)}
-          onTaskCreated={() => reloadTasksAndPlantState().catch(console.error)}
         />
       )}
       <CalendarImportModal

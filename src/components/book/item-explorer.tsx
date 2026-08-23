@@ -71,7 +71,7 @@ export function ItemExplorer({
   const [settlePass, setSettlePass] = useState(0);
   const settling = settlePass > 0;
 
-  useDialogBackClose(open, onOpenChange);
+  const requestClose = useDialogBackClose(open, onOpenChange);
   const stageRef = useRef<HTMLDivElement>(null);
   // Bound from a callback ref rather than read out of stageRef in an effect:
   // this subtree lives in a Radix portal whose container is created in a layout
@@ -305,7 +305,12 @@ export function ItemExplorer({
   if (!item || !region || !rarity) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) requestClose();
+      }}
+    >
       <DialogContent
         showCloseButton={false}
         onOpenAutoFocus={(event) => {
@@ -326,7 +331,7 @@ export function ItemExplorer({
           </div>
           <button
             type="button"
-            onClick={() => onOpenChange(false)}
+            onClick={requestClose}
             aria-label="鑑賞を閉じる"
             className="btn-squish flex size-12 items-center justify-center rounded-full border border-white/18 bg-black/48 text-white shadow-lg backdrop-blur-md"
           >
