@@ -18,6 +18,7 @@
 
 import {
   MANA_ORB_PARAMS,
+  MAX_ORB_STEP,
   createOrbMotion,
   pressDirection,
   pressImpulse,
@@ -360,9 +361,11 @@ export function createManaOrb(
   const uniforms = {} as Record<UniformName, WebGLUniformLocation | null>;
   for (const name of UNIFORM_NAMES) uniforms[name] = ctx.getUniformLocation(prog, name);
 
-  const reduceMotion =
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceQuery =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+  let reduceMotion = reduceQuery?.matches ?? false;
 
   let motion: OrbMotion = createOrbMotion();
   let pressing = false;
@@ -374,6 +377,9 @@ export function createManaOrb(
   let raf = 0;
   let destroyed = false;
 
+  /** Called on init and whenever the element or the window changes — never per
+   * frame. getBoundingClientRect forces a layout read, and paying for one on
+   * every frame of an animation that exists to be cheap is exactly backwards. */
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rect = canvas.getBoundingClientRect();
@@ -411,9 +417,8 @@ export function createManaOrb(
     raf = 0;
     const dt = (now - last) / 1000;
     last = now;
-    simTime += Math.min(0.05, Math.max(0, dt));
+    simTime += Math.min(MAX_ORB_STEP, Math.max(0, dt));
     motion = stepOrbMotion(motion, { pressing, pointerX, pointerY }, dt, params);
-    resize();
     draw();
     raf = window.requestAnimationFrame(frame);
   }
@@ -460,14 +465,31 @@ export function createManaOrb(
     observer.observe(canvas);
   }
 
+  function remeasure() {
+    resize();
+    if (!running()) draw();
+  }
+
   let resizeObserver: ResizeObserver | null = null;
   if (typeof ResizeObserver === "function") {
-    resizeObserver = new ResizeObserver(() => {
-      resize();
-      if (!running()) draw();
-    });
+    resizeObserver = new ResizeObserver(remeasure);
     resizeObserver.observe(canvas);
   }
+  // ResizeObserver watches the element's box, which does not change when the
+  // window merely moves to a display with a different pixel ratio — so the
+  // window listener is not a duplicate of it.
+  window.addEventListener("resize", remeasure);
+
+  // Reduced motion can be switched on while the app is open. Without this the
+  // orb would keep animating until the next reload, which is the opposite of
+  // what the user just asked their OS for.
+  const onReduceChange = (event: MediaQueryListEvent) => {
+    reduceMotion = event.matches;
+    if (reduceMotion) stop();
+    else sync();
+    draw();
+  };
+  reduceQuery?.addEventListener("change", onReduceChange);
 
   resize();
   draw();
@@ -482,21 +504,28 @@ export function createManaOrb(
   }
 
   return {
+    // Under reduced motion the orb is a still image and stays one: the impulse
+    // is recorded so the spring is correct if the setting is switched back off
+    // mid-press, but nothing is redrawn. A single step would only dent the
+    // shell and leave it dented, since no loop exists to bring it back — worse
+    // than not reacting at all. The button's own CSS :active still answers the
+    // touch, which is the feedback that survives the accessibility setting.
     press(clientX, clientY) {
       if (destroyed) return;
       toLocal(clientX, clientY);
       pressing = true;
       motion = pressImpulse(motion, params);
-      if (reduceMotion) draw();
     },
     move(clientX, clientY) {
       if (destroyed) return;
       toLocal(clientX, clientY);
     },
     release() {
+      if (destroyed) return;
       pressing = false;
       pointerX = 0;
       pointerY = 0;
+      pressDir = pressDirection(0, 0);
     },
     destroy() {
       if (destroyed) return;
@@ -504,6 +533,8 @@ export function createManaOrb(
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);
+      window.removeEventListener("resize", remeasure);
+      reduceQuery?.removeEventListener("change", onReduceChange);
       observer?.disconnect();
       resizeObserver?.disconnect();
       // Resources go back individually; the context itself is deliberately left

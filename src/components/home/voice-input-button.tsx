@@ -84,6 +84,12 @@ export function VoiceInputButton({
             setStatus("error");
             setTimeout(() => {
               setStatus("idle");
+              // The capture sheet's own cue lives on QuestAddButton, and this
+              // is the one route that reaches the sheet without going through
+              // it — without this the sheet slides up in silence after the
+              // error tone, which reads as a second failure rather than as the
+              // handover to manual entry it is.
+              playCue("add");
               onFallbackToManual(transcript);
             }, 2000);
           } else {

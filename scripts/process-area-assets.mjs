@@ -1,9 +1,12 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-const ROOT = process.cwd();
+// Anchored to this file, not to cwd, so the script works from any directory —
+// matching the four sibling asset scripts.
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MASTER_DIR = path.join(ROOT, "public", "area-heroes", "master");
 const EXPLORE_DIR = path.join(ROOT, "public", "area-heroes", "explore");
 const PREVIEW_DIR = path.join(ROOT, "public", "area-heroes", "preview");
@@ -42,17 +45,24 @@ for (const id of AREA_IDS) {
     height: cropHeight,
   };
 
+  // 384×480 is 4:5 because the Record grid card is `aspect-[4/5] object-cover`.
+  // The previous 384×768 shipped a 1:2 image the browser then cropped back to
+  // 4:5 — 37% of every preview's bytes decoded and thrown away. `fit: "cover"`
+  // takes the centre of the extracted region, so the composition the crop was
+  // chosen for is what survives.
+  const preview = { width: 384, height: 480, fit: "cover" };
+
   await Promise.all([
     sharp(source).webp({ quality: 82, effort: 5 }).toFile(path.join(EXPLORE_DIR, `${id}.webp`)),
     sharp(source).avif({ quality: 58, effort: 5 }).toFile(path.join(EXPLORE_DIR, `${id}.avif`)),
     sharp(source)
       .extract(crop)
-      .resize({ width: 384, height: 768, fit: "cover" })
+      .resize(preview)
       .webp({ quality: 76, effort: 5 })
       .toFile(path.join(PREVIEW_DIR, `${id}.webp`)),
     sharp(source)
       .extract(crop)
-      .resize({ width: 384, height: 768, fit: "cover" })
+      .resize(preview)
       .avif({ quality: 52, effort: 5 })
       .toFile(path.join(PREVIEW_DIR, `${id}.avif`)),
   ]);

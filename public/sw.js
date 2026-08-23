@@ -91,9 +91,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Exploration masters are loaded only when an Area is opened. Keep the
-  // most recently fetched six rather than precaching all regions or allowing
-  // full-resolution art to grow storage without a bound.
+  // Exploration masters are loaded only when an Area is opened. Bounded to six
+  // rather than precaching all regions or letting full-resolution art grow
+  // storage without a limit. Eviction is oldest-inserted-first, not
+  // least-recently-used: a cache hit returns before any write, so re-viewing an
+  // entry does not move it to the back of the queue. Fine at this scale — the
+  // cost of a wrong eviction is one re-fetch.
   if (url.pathname.startsWith("/area-heroes/explore/")) {
     event.respondWith(boundedCacheFirst(request, AREA_CACHE_NAME, AREA_CACHE_MAX_ENTRIES));
     return;
@@ -175,9 +178,22 @@ async function boundedCacheFirst(request, cacheName, maxEntries) {
   try {
     const response = await fetch(request);
     if (response && response.ok) {
-      await cache.put(request, response.clone());
-      const keys = await cache.keys();
-      await Promise.all(keys.slice(0, Math.max(0, keys.length - maxEntries)).map((key) => cache.delete(key)));
+      // Storing and trimming must never block the response, and must never
+      // fail it. Awaiting cache.put inside this try meant that a device with
+      // no storage quota left rejected the write and fell into the catch —
+      // discarding a perfectly good 200 and answering 503, which turns every
+      // item thumbnail and area image on the page into its placeholder. Same
+      // discipline as cacheFirst/networkFirst above. Trimming rides along
+      // behind the put so the eviction scan is off the response path too.
+      cache
+        .put(request, response.clone())
+        .then(() => cache.keys())
+        .then((keys) =>
+          Promise.all(
+            keys.slice(0, Math.max(0, keys.length - maxEntries)).map((key) => cache.delete(key))
+          )
+        )
+        .catch(() => {});
     }
     return response;
   } catch {

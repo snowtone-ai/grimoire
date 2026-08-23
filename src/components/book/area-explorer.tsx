@@ -8,7 +8,6 @@ import {
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { LocateFixed, Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,18 @@ export function AreaExplorer({
   onOpenChange: (open: boolean) => void;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  // The wheel listener has to be bound from a callback ref, not from an effect
+  // reading viewportRef: this whole subtree lives inside a Radix portal, whose
+  // container is created in a layout effect, so on the first commit the content
+  // is not in the DOM yet and viewportRef.current is still null. An effect keyed
+  // on [open, zoomAt] would see that null once and never run again — `open` is
+  // hard-coded true by the caller and zoomAt is stable — leaving wheel zoom
+  // silently dead. The callback ref fires exactly when the node appears.
+  const [viewportNode, setViewportNode] = useState<HTMLDivElement | null>(null);
+  const attachViewport = useCallback((node: HTMLDivElement | null) => {
+    viewportRef.current = node;
+    setViewportNode(node);
+  }, []);
   const planeRef = useRef<HTMLDivElement>(null);
   const pointersRef = useRef(new Map<number, Point>());
   const viewRef = useRef<View>(INITIAL_VIEW);
@@ -254,14 +265,25 @@ export function AreaExplorer({
     }
   };
 
-  const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const rect = event.currentTarget.getBoundingClientRect();
-    zoomAt(viewRef.current.scale * Math.exp(-event.deltaY * 0.0014), {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  };
+  // Wheel is bound natively rather than through onWheel because React 19
+  // registers wheel on the root as a passive listener, so a preventDefault()
+  // inside a React handler is silently dropped and logs "Unable to
+  // preventDefault inside passive event listener invocation" on every notch.
+  // Zooming still worked; the console did not stay clean, and the browser's
+  // own scroll was never actually suppressed.
+  useEffect(() => {
+    if (!viewportNode || !open) return;
+    const onWheel = (event: globalThis.WheelEvent) => {
+      event.preventDefault();
+      const rect = viewportNode.getBoundingClientRect();
+      zoomAt(viewRef.current.scale * Math.exp(-event.deltaY * 0.0014), {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      });
+    };
+    viewportNode.addEventListener("wheel", onWheel, { passive: false });
+    return () => viewportNode.removeEventListener("wheel", onWheel);
+  }, [viewportNode, open, zoomAt]);
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     const step = event.shiftKey ? 96 : 48;
@@ -312,7 +334,7 @@ export function AreaExplorer({
         </DialogDescription>
 
         <div
-          ref={viewportRef}
+          ref={attachViewport}
           role="application"
           aria-roledescription="探索画像"
           aria-label={`${region.name}。矢印キーで移動、プラスとマイナスで拡大縮小、0で中央に戻ります。`}
@@ -322,7 +344,6 @@ export function AreaExplorer({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
           onPointerCancel={handlePointerEnd}
-          onWheel={handleWheel}
           onKeyDown={handleKeyDown}
         >
           <div ref={planeRef} className="area-explorer-plane" style={planeStyle} aria-hidden>

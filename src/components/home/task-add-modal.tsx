@@ -22,7 +22,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { type Recurrence } from "@/lib/db";
+import { toDateStr, todayDateString, WEEKDAY_LABELS } from "@/lib/domain/task-date";
 import { playCue } from "@/lib/sound";
+import { useDialogBackClose } from "@/lib/use-dialog-back-close";
 import { createTask } from "@/lib/taskDb";
 
 interface TaskAddModalProps {
@@ -38,20 +40,19 @@ const RECURRENCES: { value: Recurrence; label: string }[] = [
   { value: "monthly", label: "毎月" },
 ];
 
-const DAYS_OF_WEEK = ["日", "月", "火", "水", "木", "金", "土"];
-
-function dateString(offset = 0): string {
+function tomorrowDateString(): string {
   const date = new Date();
-  date.setDate(date.getDate() + offset);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  date.setDate(date.getDate() + 1);
+  return toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: TaskAddModalProps) {
-  const today = dateString();
-  const tomorrow = dateString(1);
+  // Android's Back gesture closes this sheet rather than leaving the screen
+  // under it. The two full-screen explorers got this in the same rebuild;
+  // without it here, a half-typed quest is the thing Back throws away.
+  useDialogBackClose(true, (open) => !open && onClose());
+  const today = todayDateString();
+  const tomorrow = tomorrowDateString();
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(today);
@@ -266,7 +267,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
                         variant="outline"
                         className="quest-entry-weekdays grid w-full grid-cols-7"
                       >
-                        {DAYS_OF_WEEK.map((day, index) => (
+                        {WEEKDAY_LABELS.map((day, index) => (
                           <ToggleGroupItem key={day} value={String(index)} className="h-11 min-w-0 rounded-lg px-0">
                             {day}
                           </ToggleGroupItem>

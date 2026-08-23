@@ -768,8 +768,9 @@ body::before {
  * plain fade-through of the kind Material and iOS ship — the outgoing view
  * dissolves, the incoming one fades up from a hair under full size, no depth,
  * no direction and no per-destination identity. Not zero motion: an instant
- * cut loses the sense that one screen replaced another, and reduced-motion
- * users already get the cut for free from the media query. */
+ * cut loses the sense that one screen replaced another. Under reduced motion
+ * every rule here drops out and the UA's own root cross-fade is what remains —
+ * quieter than this, but not nothing. */
 @keyframes page-plain-out {
   to {
     opacity: 0;

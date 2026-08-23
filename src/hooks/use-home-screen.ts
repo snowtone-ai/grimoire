@@ -274,9 +274,13 @@ export function useHomeScreen() {
     syncTaskNotifications().catch(console.error);
   }
 
-  function dismissDrop() {
+  // Stable identity on purpose: DropReveal parks its auto-dismiss timer in an
+  // effect keyed on this callback, so a plain function would restart the
+  // countdown on every home re-render — and the home screen re-renders on the
+  // clock. The reveal would then hang until the render traffic stopped.
+  const dismissDrop = useCallback(() => {
     setDropQueue((queue) => queue.slice(1));
-  }
+  }, []);
 
   function handleDepart(taskId: string) {
     if (departedIds.has(taskId)) return;

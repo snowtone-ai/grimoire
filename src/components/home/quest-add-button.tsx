@@ -32,7 +32,15 @@ export function QuestAddButton({ onAdd, className, style }: QuestAddButtonProps)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const orb = createManaOrb(canvas, { onLost: () => setOrbReady(false) });
+    const orb = createManaOrb(canvas, {
+      // A lost context cannot be recovered on this canvas, so go all the way
+      // back to the CSS button rather than leaving a dead handle taking presses.
+      onLost: () => {
+        setOrbReady(false);
+        orbRef.current?.destroy();
+        orbRef.current = null;
+      },
+    });
     orbRef.current = orb;
     setOrbReady(orb !== null);
     return () => {

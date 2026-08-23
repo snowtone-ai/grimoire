@@ -20,8 +20,22 @@ const pilotSources = new Map([
 const targets = DROP_CATALOG.filter((drop) => drop.rarity >= 1 && drop.rarity <= 7);
 if (targets.length !== 424) throw new Error(`expected 424 RARE 1-7 catalog entries, got ${targets.length}`);
 const expectedIds = new Set(targets.map((drop) => drop.id));
-const masterFiles = (await readdir(path.join(rewardRoot, "master"))).filter((name) => name.endsWith(".png"));
-for (const name of masterFiles) {
+
+/* The ~1GB of working masters is deliberately outside git (D-048), so this
+ * script has to be useful without them — otherwise the one integrity check the
+ * decision leans on could only ever run on the machine that generated the art,
+ * and never in CI. Everything the app actually serves is validated either way;
+ * the master pass adds duplicate detection, source dimensions, and the sha256
+ * comparison against the manifest that tells the owner their local archive
+ * still matches what shipped. */
+let masterFiles = null;
+try {
+  masterFiles = (await readdir(path.join(rewardRoot, "master"))).filter((name) => name.endsWith(".png"));
+} catch (err) {
+  if (err.code !== "ENOENT") throw err;
+}
+const hasMasters = masterFiles !== null;
+for (const name of masterFiles ?? []) {
   const id = path.basename(name, ".png");
   if (!expectedIds.has(id)) throw new Error(`unexpected working master: ${name}`);
 }
@@ -50,20 +64,33 @@ for (const variant of ["thumb", "inspect"]) {
   }
 }
 
+const manifest = JSON.parse(await readFile(path.join(rewardRoot, "manifest.json"), "utf8"));
+const manifestById = new Map(manifest.assets.map((asset) => [asset.id, asset]));
+
 for (const drop of targets) {
-  const source = pilotSources.has(drop.id)
-    ? path.join(rewardRoot, "pilot", pilotSources.get(drop.id))
-    : path.join(rewardRoot, "master", `${drop.id}.png`);
-  const bytes = await readFile(source);
-  const hash = createHash("sha256").update(bytes).digest("hex");
-  if (hashes.has(hash)) throw new Error(`byte-identical masters: ${hashes.get(hash)} and ${drop.id}`);
-  hashes.set(hash, drop.id);
-  const master = await sharp(bytes).metadata();
-  if (!master.width || !master.height || master.width < 1000 || master.height < 1000) {
-    throw new Error(`${drop.id}: invalid working master ${master.width}x${master.height}`);
-  }
-  if (Math.abs(master.width / master.height - 1) > 0.02) {
-    throw new Error(`${drop.id}: working master is not square (${master.width}x${master.height})`);
+  if (hasMasters) {
+    const source = pilotSources.has(drop.id)
+      ? path.join(rewardRoot, "pilot", pilotSources.get(drop.id))
+      : path.join(rewardRoot, "master", `${drop.id}.png`);
+    const bytes = await readFile(source);
+    const hash = createHash("sha256").update(bytes).digest("hex");
+    if (hashes.has(hash)) throw new Error(`byte-identical masters: ${hashes.get(hash)} and ${drop.id}`);
+    hashes.set(hash, drop.id);
+    // The mitigation D-048 relies on: the manifest carries the sha256 of the
+    // master each shipped derivative was made from, so a master that has been
+    // lost, truncated or swapped out from under the archive is caught here
+    // rather than discovered the next time someone tries to regenerate.
+    const recorded = manifestById.get(drop.id)?.sha256;
+    if (recorded && recorded !== hash) {
+      throw new Error(`${drop.id}: local master no longer matches the manifest sha256`);
+    }
+    const master = await sharp(bytes).metadata();
+    if (!master.width || !master.height || master.width < 1000 || master.height < 1000) {
+      throw new Error(`${drop.id}: invalid working master ${master.width}x${master.height}`);
+    }
+    if (Math.abs(master.width / master.height - 1) > 0.02) {
+      throw new Error(`${drop.id}: working master is not square (${master.width}x${master.height})`);
+    }
   }
 
   for (const [variant, size] of [["thumb", 224], ["inspect", 960]]) {
@@ -84,9 +111,8 @@ for (const drop of targets) {
   rarityCounts.set(drop.rarity, (rarityCounts.get(drop.rarity) ?? 0) + 1);
 }
 
-const manifest = JSON.parse(await readFile(path.join(rewardRoot, "manifest.json"), "utf8"));
 if (manifest.count !== targets.length) throw new Error(`manifest count ${manifest.count} !== 424`);
-const manifestIds = new Set(manifest.assets.map((asset) => asset.id));
+const manifestIds = new Set(manifestById.keys());
 if (manifestIds.size !== targets.length) {
   throw new Error("manifest IDs are missing or duplicated");
 }
@@ -100,7 +126,16 @@ for (const id of manifestIds) {
 console.log(JSON.stringify({
   accepted: targets.length,
   byRarity: Object.fromEntries([...rarityCounts].sort(([a], [b]) => a - b)),
-  uniqueMasterHashes: hashes.size,
+  mastersPresent: hasMasters,
+  uniqueMasterHashes: hasMasters ? hashes.size : null,
   derivativeCounts,
   shippingBytes: { thumb: thumbBytes, inspect: inspectBytes },
 }, null, 2));
+
+if (!hasMasters) {
+  console.log(
+    "note: public/item-rewards/master/ is absent (D-048 keeps it out of git), so " +
+      "duplicate, dimension and manifest-sha256 checks on the sources were skipped. " +
+      "Everything the app serves was validated."
+  );
+}

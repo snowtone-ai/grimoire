@@ -22,7 +22,6 @@ import {
 import { getCollection, getChronicle } from "@/lib/rewardDb";
 import { type ChronicleMonth } from "@/lib/domain/chronicle";
 import { EXPEDITION_REGIONS, getRegionById } from "@/lib/domain/regions";
-import { cancelEffects, cancelScreenEffects, fireReplayEffect } from "@/lib/vfx";
 import { playCue } from "@/lib/sound";
 
 export function BookScreen() {
@@ -44,22 +43,21 @@ export function BookScreen() {
       .catch((err) => console.error("[book] chronicle load failed:", err));
   }, []);
 
-  // Leaving /book mid-effect must not let the replay sparkle keep drawing over
-  // whatever screen the user navigates to next.
-  useEffect(() => cancelScreenEffects, []);
-
   const handleReplay = useCallback((drop: DropDef) => {
-    cancelEffects(); // supersede whatever the previous tap is still drawing
     // A look back at something already earned, not a fresh clear: the coin tick
-    // rather than the quest jingle, matching the replay scene's own break from
-    // the completion burst (D-036).
+    // rather than the quest jingle (D-036).
+    //
+    // The sparkle that used to accompany it is deliberately gone. Tapping an
+    // entry now opens ItemExplorer, a full-screen opaque dialog at z-100, and
+    // the sprite layer draws at z-95 — so the whole rarity scene ran to
+    // completion, rAF loop and all, with nobody able to see a frame of it.
+    // D-038's rule is that no loop stays open where it cannot be seen; the
+    // sound survives because sound has no z-index.
     playCue("replay");
-    fireReplayEffect(drop.rarity);
     setReplayDrop(drop);
   }, []);
 
   const handleDismissReplay = useCallback(() => {
-    cancelEffects();
     setReplayDrop(null);
   }, []);
 

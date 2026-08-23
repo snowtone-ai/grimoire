@@ -8,7 +8,6 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
-  type WheelEvent,
 } from "react";
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -57,13 +56,32 @@ export function ItemExplorer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const initialIndex = Math.max(0, items.findIndex((item) => item.id === initialId));
+  // findIndex can only miss if a caller passes an id outside `items`; showing
+  // item 0 instead would silently open the wrong record, so fall back to the
+  // requested id being absent and let the empty guard below handle it.
+  const requestedIndex = items.findIndex((item) => item.id === initialId);
+  const initialIndex = requestedIndex >= 0 ? requestedIndex : 0;
   const [index, setIndex] = useState(initialIndex);
   const [view, setView] = useState<ViewState>({ x: 0, y: 0, scale: 1 });
-  const [settling, setSettling] = useState(false);
+  // A counter rather than a boolean: settling twice in quick succession (pinch
+  // release, then an immediate double-tap) has to restart the 230ms transition
+  // window. With a boolean the second settle is a no-op state write, the timer
+  // effect never re-runs, and the new animation is cut off by the first one's
+  // expiry.
+  const [settlePass, setSettlePass] = useState(0);
+  const settling = settlePass > 0;
 
   useDialogBackClose(open, onOpenChange);
   const stageRef = useRef<HTMLDivElement>(null);
+  // Bound from a callback ref rather than read out of stageRef in an effect:
+  // this subtree lives in a Radix portal whose container is created in a layout
+  // effect, so on the first commit stageRef.current is still null. The node's
+  // arrival is what has to trigger the binding.
+  const [stageNode, setStageNode] = useState<HTMLDivElement | null>(null);
+  const attachStage = useCallback((node: HTMLDivElement | null) => {
+    stageRef.current = node;
+    setStageNode(node);
+  }, []);
   const artRef = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, PointerPoint>());
   const gesture = useRef({
@@ -95,7 +113,7 @@ export function ItemExplorer({
     (candidate = view) => {
       const scale = clamp(candidate.scale, MIN_SCALE, MAX_SCALE);
       const limit = bounds(scale);
-      setSettling(true);
+      setSettlePass((pass) => pass + 1);
       setView({
         scale,
         x: clamp(candidate.x, -limit.x, limit.x),
@@ -106,10 +124,10 @@ export function ItemExplorer({
   );
 
   useEffect(() => {
-    if (!settling) return;
-    const timer = window.setTimeout(() => setSettling(false), 230);
+    if (!settlePass) return;
+    const timer = window.setTimeout(() => setSettlePass(0), 230);
     return () => window.clearTimeout(timer);
-  }, [settling]);
+  }, [settlePass]);
 
   const moveTo = useCallback(
     (nextIndex: number) => {
@@ -118,7 +136,7 @@ export function ItemExplorer({
         return;
       }
       setIndex(nextIndex);
-      setSettling(true);
+      setSettlePass((pass) => pass + 1);
       setView({ x: 0, y: 0, scale: 1 });
       playCue("tap");
     },
@@ -128,7 +146,7 @@ export function ItemExplorer({
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    setSettling(false);
+    setSettlePass(0);
     const points = [...pointers.current.values()];
     if (points.length === 1) {
       gesture.current.dragStart = points[0];
@@ -229,7 +247,7 @@ export function ItemExplorer({
     settle(scale === 1 ? { x: 0, y: 0, scale } : { ...view, scale });
   };
 
-  function zoomAt(targetScale: number, point: PointerPoint) {
+  const zoomAt = useCallback((targetScale: number, point: PointerPoint) => {
     const art = artRef.current;
     if (!art) return;
     const scale = clamp(targetScale, MIN_SCALE, MAX_SCALE);
@@ -255,7 +273,24 @@ export function ItemExplorer({
       y: point.y - baseCenter.y - local.y * scale,
       scale,
     });
-  }
+  }, [settle, view.scale, view.x, view.y]);
+
+  // Wheel is bound natively, not through onWheel: React 19 registers wheel on
+  // the root as a passive listener, so preventDefault() inside a React handler
+  // is silently dropped and logs "Unable to preventDefault inside passive event
+  // listener invocation" on every notch.
+  useEffect(() => {
+    if (!stageNode || !open) return;
+    const onWheel = (event: globalThis.WheelEvent) => {
+      event.preventDefault();
+      zoomAt(view.scale + (event.deltaY > 0 ? -0.2 : 0.2), {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+    stageNode.addEventListener("wheel", onWheel, { passive: false });
+    return () => stageNode.removeEventListener("wheel", onWheel);
+  }, [stageNode, open, view.scale, zoomAt]);
 
   const transformStyle = useMemo(
     () =>
@@ -300,7 +335,7 @@ export function ItemExplorer({
         </div>
 
         <div
-          ref={stageRef}
+          ref={attachStage}
           role="application"
           aria-label={`${item.name}。左右スワイプで記録を移動、ピンチで拡大`}
           tabIndex={0}
@@ -308,13 +343,6 @@ export function ItemExplorer({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
           onPointerCancel={handlePointerEnd}
-          onWheel={(event: WheelEvent<HTMLDivElement>) => {
-            event.preventDefault();
-            zoomAt(view.scale + (event.deltaY > 0 ? -0.2 : 0.2), {
-              x: event.clientX,
-              y: event.clientY,
-            });
-          }}
           onKeyDown={(event) => {
             if (event.key === "ArrowLeft" && view.scale === 1) moveTo(index - 1);
             else if (event.key === "ArrowRight" && view.scale === 1) moveTo(index + 1);
