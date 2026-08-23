@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, statSync } from "node:fs";
 import {
+  ADD_RIPPLE_SCENE,
   ALL_CLEAR_SCENE,
   ALL_VFX_TEXTURES,
   clearScene,
@@ -15,6 +16,7 @@ import {
 
 const SCENES = {
   TAP_SCENE,
+  ADD_RIPPLE_SCENE,
   ALL_CLEAR_SCENE,
   FLOURISH_SCENE,
   MORNING_SCENE,
@@ -132,6 +134,14 @@ test("the tap spark stays cheap enough to fire on every single press", () => {
   assert.ok(count <= 10, `tap spawns ${count} sprites; it fires on every press`);
   assert.ok(longest <= 600, `tap lasts ${longest}ms; it should be gone before the next press`);
   assert.equal(TAP_SCENE.origin, "point", "the tap spark must follow the finger");
+});
+
+test("the Add ripple follows the finger and stays a restrained water response", () => {
+  const count = ADD_RIPPLE_SCENE.emitters.reduce((sum, emitter) => sum + emitter.count, 0);
+  const rings = ADD_RIPPLE_SCENE.emitters.filter((emitter) => emitter.motion === "expand");
+  assert.equal(ADD_RIPPLE_SCENE.origin, "point");
+  assert.equal(rings.length, 2, "Add should leave two readable water-tension rings");
+  assert.ok(count <= 10, `Add ripple spawns ${count} sprites; it should remain responsive`);
 });
 
 test("only scenes with a rarity to reflect use the rarity tint", () => {

@@ -14,6 +14,18 @@
         "value": "drop-reveal-in-spring",
         "createdAt": "2026-08-22T23:08:52.718Z",
         "reason": "Claude (T044 triage): the keyframe is a damped settle, not a bounce -- rotateY 70deg to -7 to +2 to 0 and scale 0.85 to 1.03 to 0.985 to 1, amplitude decaying ~3.5x per pass over 0.55s, applied to RARE4+ reveals only. Pre-dates this branch (present on main since T036)."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "springwell-orbit",
+        "createdAt": "2026-08-23T11:35:40.883Z",
+        "reason": "Claude triage T046: the declaration is 'springwell-orbit 12s linear infinite' and the keyframes are a single constant 360deg rotation — the timing function is literally linear, so there is no bounce or elastic curve to object to."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "springwell-tide",
+        "createdAt": "2026-08-23T11:35:52.208Z",
+        "reason": "Claude triage T046: uses var(--ease-fluid) = cubic-bezier(0.3,0,0,1), a monotonic ease-out with no overshoot. The keyframes are an expanding ripple (scale 0.9 to 1.08) whose opacity is already 0 at both ends, so nothing rebounds on screen. Same class as the three T044 false positives already registered here."
       }
     ]
   }

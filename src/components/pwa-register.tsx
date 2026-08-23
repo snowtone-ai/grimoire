@@ -28,6 +28,33 @@ export function PwaRegister() {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
 
+    // Development never keeps a service worker. sw.js serves /_next/static/
+    // cache-first, which is right in production — those filenames are
+    // content-addressed — and wrong in dev, where they are stable paths, so
+    // the browser replays a bundle from before the last edit while the dev
+    // server cheerfully reports a rebuild. The symptom is a stack trace or a
+    // computed style pointing at source that no longer exists, and it has
+    // cost real debugging time three times (T036, T045, T046). Declining to
+    // register is not enough on its own: a worker installed by an earlier
+    // visit to production keeps controlling the page, so tear that one down
+    // too. Placed before the controllerchange listener below so the teardown
+    // cannot trigger the update-reload.
+    if (process.env.NODE_ENV !== "production") {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+        .catch(() => {
+          // Nothing to clean up, or storage is blocked — dev only, ignore.
+        });
+      if (typeof caches !== "undefined") {
+        void caches
+          .keys()
+          .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+          .catch(() => {});
+      }
+      return;
+    }
+
     let cancelled = false;
 
     function reloadOnce() {

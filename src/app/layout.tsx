@@ -48,6 +48,11 @@ export default function RootLayout({
       <html
         lang="ja"
         className={`h-full antialiased ${cinzel.variable}`}
+        // globals.css sets `scroll-behavior: smooth` for in-page anchors. Without
+        // this attribute Next.js cannot tell that apart from a route change, so
+        // it animates the scroll-to-top of every navigation — on top of the view
+        // transition — and warns about it in dev.
+        data-scroll-behavior="smooth"
         suppressHydrationWarning
       >
         <head>

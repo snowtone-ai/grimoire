@@ -49,7 +49,7 @@ function canNotify(): boolean {
  * Browsers give a site no way to revoke a "granted" permission itself (only
  * the user can, from site settings), so once permission is granted the app's
  * own preference is the only ON/OFF switch that can ever exist for it —
- * mirrors sound.ts's fx-enabled flag. Defaults to on so already-granted users
+ * mirrors the other small local preference flags. Defaults to on so already-granted users
  * are not silently opted out by this flag's introduction. */
 export function getNotificationsEnabled(): boolean {
   try {
@@ -65,7 +65,7 @@ export function setNotificationsEnabled(enabled: boolean): void {
   try {
     localStorage.setItem(ENABLED_KEY, enabled ? "1" : "0");
   } catch {
-    // Preference storage is best-effort, matching sound.ts's fx-enabled flag.
+    // Preference storage is best-effort, matching the other local preference flags.
   }
   if (enabled) {
     void syncTaskNotifications();

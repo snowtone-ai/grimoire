@@ -6,25 +6,31 @@ paths:
 
 # Stale service worker masks fresh dev-server builds
 
-This app registers a PWA service worker (`public/sw.js`, cache name like
-`task-manager-v6`) that a Playwright browser context reuses across sessions.
-After editing client code, a browser tab that already has the SW installed
-can keep serving an old cached JS bundle even after `.next` is deleted and
-the dev server is restarted — the error overlay will show a stack trace
-pointing at a component or line that no longer exists in source (e.g. a
-comment block "crashing"), which is the tell that it's a stale-cache
-artifact, not a real bug.
+**Fixed in code as of T046 (2026-08-23) — this file is now history, not a
+procedure.** `src/components/pwa-register.tsx` refuses to register the service
+worker outside `NODE_ENV === "production"` and actively unregisters any worker
+plus its caches on load, so a dev session self-heals on the first page view.
 
-Fix: before trusting a browser console error during smoke testing, unregister
-the SW and clear caches from that page context:
+What used to happen: `public/sw.js` serves `/_next/static/` cache-first, which
+is correct in production (those filenames are content-addressed) and wrong in
+development (they are stable paths). A browser context that reused its profile
+across sessions kept replaying a bundle from before the last edit while the dev
+server reported a successful rebuild. The tell was a stack trace or a computed
+style pointing at source that grep shows no longer exists.
+
+If it ever recurs — an old profile, a build that ran with `NODE_ENV` unset —
+the manual recovery is still:
 ```js
 const regs = await navigator.serviceWorker.getRegistrations();
 for (const r of regs) await r.unregister();
 for (const n of await caches.keys()) await caches.delete(n);
 ```
-Then reload. Re-check the error before spending time investigating source
-code that grep already shows doesn't contain the reported symbol.
+then reload.
 
 由来: T036 (2026-08-17) — a genuinely deleted `EffectsSection` function kept
 "crashing" across two full dev-server restarts and a `.next` cache wipe; the
-actual cause was the SW cache, not the server-side build cache.
+actual cause was the SW cache, not the server-side build cache. Recurred in
+T045 (see the QA section of docs/asset-production-ledger.md) and again in T046,
+where a CSS edit stayed invisible in the browser while `getComputedStyle` kept
+reporting the previous revision's values. Three occurrences of one lesson is
+what promoted it from a written procedure to a build-time guarantee.

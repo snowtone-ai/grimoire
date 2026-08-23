@@ -2,6 +2,63 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Area survey: a single image is deliberately larger than the phone in both
+ * axes. CSS variables keep pointer updates on the compositor while the
+ * centered origin guarantees that opening and reset show the middle frame. */
+.area-explorer-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vw;
+  height: 200dvh;
+  transform: translate3d(
+      calc(-50% + var(--area-x, 0px)),
+      calc(-50% + var(--area-y, 0px)),
+      0
+    )
+    scale(var(--area-scale, 1));
+  transform-origin: center;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.area-explorer-plane picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.area-explorer-plane[data-settling="true"] {
+  transition: transform 240ms var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .area-explorer-plane[data-settling="true"] {
+    transition: none;
+  }
+}
+
+/* Item inspection uses the same compositor-only direct-manipulation model as
+ * Area exploration, but starts at 1:1 so a horizontal drag can remain a
+ * collection swipe until the user deliberately zooms in. */
+.item-explorer-art {
+  transform: translate3d(var(--item-x, 0px), var(--item-y, 0px), 0)
+    scale(var(--item-scale, 1));
+  transform-origin: center;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.item-explorer-art.is-settling {
+  transition: transform 230ms var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item-explorer-art.is-settling {
+    transition: none;
+  }
+}
+
 /* Dark mode is media-driven (prefers-color-scheme): the app follows the OS
  * setting with zero JS and no flash of wrong theme. `dark:` utilities use
  * Tailwind v4's default media variant. */
@@ -284,6 +341,315 @@ body::before {
   }
 }
 
+/* ── Springwell quest capture ─────────────────────────────────────── */
+/* The add control is a pocket-sized magic spring: the canvas VFX owns the
+ * touch-origin ripple, while these quiet rings make the resting affordance
+ * recognizable without turning the whole screen into an animation. */
+@keyframes springwell-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes springwell-tide {
+  0%, 100% { transform: scale(0.9); opacity: 0; }
+  28% { opacity: 0.42; }
+  72% { transform: scale(1.08); opacity: 0; }
+}
+
+@keyframes quest-extra-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.quest-add-button {
+  position: relative;
+  isolation: isolate;
+  width: 4rem;
+  height: 4rem;
+  overflow: visible;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--frost) 78%, var(--background));
+  color: var(--background);
+  background:
+    radial-gradient(circle at 34% 22%, color-mix(in oklab, white 82%, transparent), transparent 24%),
+    radial-gradient(circle at 50% 72%, color-mix(in oklab, var(--frost) 72%, var(--primary)), var(--frost));
+  box-shadow:
+    0 12px 30px color-mix(in oklab, var(--frost) 32%, transparent),
+    0 3px 8px color-mix(in oklab, var(--foreground) 18%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 72%, transparent),
+    inset 0 -8px 16px color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+
+.quest-add-button::before,
+.quest-add-button::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.quest-add-button::before {
+  z-index: -1;
+  inset: -0.34rem;
+  border: 1px solid color-mix(in oklab, var(--frost) 54%, transparent);
+  border-top-color: color-mix(in oklab, var(--gold) 84%, transparent);
+  border-right-color: transparent;
+  animation: springwell-orbit 12s linear infinite;
+}
+
+.quest-add-button::after {
+  z-index: -2;
+  inset: -0.7rem;
+  border: 1px solid color-mix(in oklab, var(--frost) 38%, transparent);
+  animation: springwell-tide 4.2s var(--ease-fluid) infinite;
+}
+
+.quest-add-button__well {
+  position: absolute;
+  top: 0.48rem;
+  left: 50%;
+  display: grid;
+  width: 2.55rem;
+  height: 2.55rem;
+  transform: translateX(-50%);
+  place-items: center;
+  border-radius: 50% 50% 48% 52% / 42% 42% 58% 58%;
+  border: 1px solid color-mix(in oklab, var(--background) 46%, transparent);
+  background: color-mix(in oklab, var(--background) 12%, transparent);
+  box-shadow: inset 0 0 12px color-mix(in oklab, var(--background) 16%, transparent);
+  transition: transform 220ms var(--ease-spring);
+}
+
+.quest-add-button__well > svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke-width: 2.25;
+}
+
+.quest-add-button__spark,
+.quest-add-button__spark::before {
+  position: absolute;
+  display: block;
+  width: 0.22rem;
+  height: 0.22rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--gold) 86%, white);
+  box-shadow: 0 0 7px color-mix(in oklab, var(--gold) 72%, transparent);
+}
+
+.quest-add-button__spark {
+  top: 0.34rem;
+  right: 0.38rem;
+}
+
+.quest-add-button__spark::before {
+  content: "";
+  top: 0.42rem;
+  right: 0.54rem;
+  opacity: 0.7;
+}
+
+.quest-add-button__label {
+  position: absolute;
+  right: 0;
+  bottom: 0.38rem;
+  left: 0;
+  font-family: var(--font-display);
+  font-size: 0.43rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  opacity: 0.9;
+}
+
+.quest-add-button:active .quest-add-button__well {
+  transform: translateX(-50%) scale(0.9);
+}
+
+/* ── Mana orb body (D-049) ────────────────────────────────────────── */
+/* The canvas is deliberately larger than the control: the shader's halo and
+   its caustic pool live outside the sphere's silhouette, and cutting them at
+   the button edge reintroduces exactly the hard-edged rectangle the shader's
+   vignette exists to prevent. Sized so the sphere itself lands at roughly
+   3.3rem inside the 4rem control. Offset and size are stated explicitly — a
+   canvas carries intrinsic dimensions, so `inset` alone would leave the used
+   size over-constrained.
+   Hidden with `visibility`, not `display`: the renderer measures the canvas
+   while it is still hidden — the class that reveals it is only added once a GL
+   program exists — and a `display: none` canvas measures zero, so the first
+   frame would be drawn one pixel wide. */
+.quest-add-button__orb {
+  position: absolute;
+  top: -0.75rem;
+  left: -0.75rem;
+  z-index: 0;
+  width: calc(100% + 1.5rem);
+  height: calc(100% + 1.5rem);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.quest-add-button.is-orb .quest-add-button__orb {
+  visibility: visible;
+}
+
+/* The orb only becomes the button once WebGL has actually produced a program,
+   so every rule here is an override of the CSS springwell above rather than a
+   replacement for it — the fallback stays intact on devices without WebGL. */
+.quest-add-button.is-orb {
+  border-color: transparent;
+  background: none;
+  /* The plus is dark on purpose, and by a literal rather than a token: the orb
+     renders its own light and comes out a luminous near-white pearl in both
+     themes, so a glyph tied to --foreground would vanish the moment the page
+     went dark. The hue sits with the shell's own magenta rather than fighting
+     it. */
+  color: oklch(0.3 0.07 300);
+  box-shadow: 0 14px 30px color-mix(in oklab, var(--frost) 30%, transparent);
+}
+
+.quest-add-button.is-orb::before {
+  opacity: 0.5;
+}
+
+.quest-add-button.is-orb::after {
+  opacity: 0.34;
+}
+
+/* The orb is the vessel now, so the drawn well and its sparks retire and the
+   plus centres on the sphere. The QUEST label goes with them: at 0.43rem over
+   a refracting surface it reads as grime rather than as type, and the button's
+   accessible name already carries that meaning. */
+.quest-add-button.is-orb .quest-add-button__well {
+  top: 50%;
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+
+.quest-add-button.is-orb:active .quest-add-button__well {
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.quest-add-button.is-orb .quest-add-button__well > svg {
+  stroke-width: 2.6;
+}
+
+.quest-add-button.is-orb .quest-add-button__spark,
+.quest-add-button.is-orb .quest-add-button__label {
+  display: none;
+}
+
+.quest-entry-dialog {
+  border: 1px solid color-mix(in oklab, var(--frost) 28%, var(--border));
+  background:
+    radial-gradient(100% 42% at 50% -4%, color-mix(in oklab, var(--frost) 12%, transparent), transparent 72%),
+    var(--popover);
+  box-shadow:
+    0 -24px 70px color-mix(in oklab, var(--foreground) 24%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 24%, transparent);
+}
+
+.quest-entry-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--frost) 18%, var(--border));
+  background:
+    radial-gradient(70% 140% at 8% 0%, color-mix(in oklab, var(--frost) 15%, transparent), transparent 70%),
+    color-mix(in oklab, var(--card) 94%, transparent);
+}
+
+.quest-entry-sigil {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in oklab, var(--frost) 40%, var(--border));
+  border-radius: 50% 50% 48% 52% / 42% 42% 58% 58%;
+  color: var(--frost);
+  background: var(--frost-soft);
+  box-shadow: inset 0 0 14px color-mix(in oklab, var(--frost) 9%, transparent);
+}
+
+.quest-entry-sigil svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.quest-entry-scroll {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.quest-entry-dialog [data-slot="field-label"] svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--frost);
+}
+
+.quest-entry-input {
+  border-color: color-mix(in oklab, var(--frost) 16%, var(--input));
+  background: color-mix(in oklab, var(--muted) 68%, transparent);
+  box-shadow: inset 0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent);
+}
+
+.quest-entry-input:focus-visible {
+  background: color-mix(in oklab, var(--card) 92%, var(--frost-soft));
+}
+
+.quest-entry-quick [data-slot="toggle-group-item"],
+.quest-entry-repeat [data-slot="toggle-group-item"],
+.quest-entry-weekdays [data-slot="toggle-group-item"] {
+  background: color-mix(in oklab, var(--card) 84%, var(--muted));
+}
+
+.quest-entry-dialog [data-slot="toggle-group-item"][data-state="on"] {
+  border-color: color-mix(in oklab, var(--frost) 62%, var(--border));
+  color: var(--frost);
+  background: var(--frost-soft);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 28%, transparent),
+    0 4px 12px color-mix(in oklab, var(--frost) 12%, transparent);
+}
+
+.quest-entry-detail-button {
+  border: 1px dashed color-mix(in oklab, var(--frost) 28%, var(--border));
+  background: color-mix(in oklab, var(--frost-soft) 44%, transparent);
+}
+
+.quest-entry-detail-button svg {
+  transition: transform 220ms var(--ease-fluid);
+}
+
+.quest-entry-extras {
+  animation: quest-extra-in 220ms var(--ease-out-expo) both;
+}
+
+.quest-entry-footer {
+  padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
+  border-top: 1px solid color-mix(in oklab, var(--frost) 14%, var(--border));
+  background: color-mix(in oklab, var(--card) 96%, transparent);
+  box-shadow: 0 -10px 28px color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+.quest-accept-button {
+  color: var(--primary-foreground);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, white 20%, transparent), transparent 52%),
+    var(--primary);
+  box-shadow:
+    0 9px 20px color-mix(in oklab, var(--primary) 26%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 34%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-add-button::before,
+  .quest-add-button::after,
+  .quest-entry-extras {
+    animation: none;
+  }
+}
+
 /* Aurora wash over the frozen base — one ambient touch, used sparingly
  * (home hero + survey-notes header only). */
 .aurora {
@@ -372,22 +738,63 @@ body::before {
   }
 }
 
+/* `:where()` keeps the exclusion at zero specificity, so these stay the 0,1,1
+ * baseline the themed rules further down outrank by an extra attribute
+ * selector regardless of source order. */
 @media (prefers-reduced-motion: no-preference) {
-  html[data-page-turn]::view-transition-image-pair(root) {
+  html[data-page-turn]:where(:not([data-page-plain]))::view-transition-image-pair(root) {
     perspective: 1400px;
   }
-  html[data-page-turn]::view-transition-old(root) {
+  html[data-page-turn]:where(:not([data-page-plain]))::view-transition-old(root) {
     animation: page-turn-out 0.4s var(--ease-fluid) both;
     transform-origin: left center;
     backface-visibility: hidden;
     z-index: 2;
   }
-  html[data-page-turn]::view-transition-new(root) {
+  html[data-page-turn]:where(:not([data-page-plain]))::view-transition-new(root) {
     animation: page-turn-in 0.4s var(--ease-fluid) both;
   }
-  html[data-page-turn="back"]::view-transition-old(root) {
+  html[data-page-turn="back"]:where(:not([data-page-plain]))::view-transition-old(root) {
     animation-name: page-turn-out-back;
     transform-origin: right center;
+  }
+}
+
+/* ── Plain page change (transition effects off) — D-049 ───────────── */
+/* Turning "ページごとの遷移演出" off used to leave the notebook page-turn
+ * running, because the 3D flip was the app's baseline rather than part of the
+ * effect. That made the switch read as broken: the heaviest motion on the
+ * screen survived the one control that promised to remove it. Off now means a
+ * plain fade-through of the kind Material and iOS ship — the outgoing view
+ * dissolves, the incoming one fades up from a hair under full size, no depth,
+ * no direction and no per-destination identity. Not zero motion: an instant
+ * cut loses the sense that one screen replaced another. Under reduced motion
+ * every rule here drops out and the UA's own root cross-fade is what remains —
+ * quieter than this, but not nothing. */
+@keyframes page-plain-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-plain-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-page-turn][data-page-plain]::view-transition-old(root) {
+    animation: page-plain-out 0.09s linear both;
+    transform-origin: center center;
+  }
+  html[data-page-turn][data-page-plain]::view-transition-new(root) {
+    animation: page-plain-in 0.2s var(--ease-out-expo) 0.06s both;
+    transform-origin: center center;
   }
 }
 

@@ -34,6 +34,7 @@
 | public/vfx/ | The 13 CC0 particle textures | low | Kenney Particle Pack, 256x256 white-alpha (pix_fmt ya8) so they can be tinted at runtime with theme tokens. Referenced only through src/lib/domain/vfx-scenes.ts. |
 | public/plant-rewards/ | Plant reward photo assets | low | Final monthly photos live under `final/`; keep source URLs and selections in docs/plant-reward-image-sources.md and docs/plant-reward-image-selections.md. |
 | docs/ | pm-zero project memory | medium | Vision, state, decisions, issues, repo map. |
+| data/ | Generated data artifacts | low | item-asset-index.json (scripts/build-item-production-index.mjs output), kept out of docs/ since it's not human-authored. |
 | scripts/ | Project tooling | medium | setup, verify, icon generation. |
 
 ## Entry Points

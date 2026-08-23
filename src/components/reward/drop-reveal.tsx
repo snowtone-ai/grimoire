@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, type CSSProperties } from "react";
+import { RewardArt } from "@/components/reward/reward-art";
 import { getRarityLabel } from "@/lib/domain/drops";
 import { rarityStyle } from "@/lib/domain/rarity-style";
 import { type GrantResult } from "@/lib/rewardDb";
@@ -60,7 +61,7 @@ export function DropReveal({
     if (replay) return;
     const timer = setTimeout(onDismiss, style.duration);
     return () => clearTimeout(timer);
-  }, [replay, onDismiss, style.duration]);
+  }, [grant, replay, onDismiss, style.duration]);
 
   return (
     <div
@@ -110,7 +111,7 @@ export function DropReveal({
         </p>
 
         <div className="mt-4 flex items-center justify-center">
-          {grant.drop.photo ? (
+          {grant.rarity === 8 && grant.drop.photo ? (
             <div className="relative h-36 w-full overflow-hidden rounded-2xl">
               <Image
                 src={grant.drop.photo}
@@ -121,9 +122,9 @@ export function DropReveal({
               />
             </div>
           ) : (
-            <span className="text-6xl select-none" aria-hidden>
-              {grant.drop.emoji}
-            </span>
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
+              <RewardArt key={grant.drop.id} drop={grant.drop} variant="inspect" className="object-cover" />
+            </div>
           )}
         </div>
 

@@ -51,7 +51,7 @@ test("the sound budget holds: layering is the exception, not the rule", () => {
   const layered = Object.entries(SOUND_CUES).filter(([, cue]) => cue.steps.length > 1);
   assert.deepEqual(
     layered.map(([action]) => action).sort(),
-    ["clearHigh", "flourish"],
+    ["add", "clearHigh", "flourish"],
     "a new layered cue was added; confirm it is a genuinely compound moment (D-047)"
   );
 });

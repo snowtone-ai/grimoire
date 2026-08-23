@@ -14,6 +14,8 @@ import {
   Stars,
   Sunrise,
   Upload,
+  Vibrate,
+  VibrateOff,
   Volume2,
   VolumeX,
   Wand2,
@@ -45,7 +47,14 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { getSurveyResetCount, resetSurveyNotes } from "@/lib/rewardDb";
-import { isFxEnabled, playCue, setFxEnabled } from "@/lib/sound";
+import {
+  haptic,
+  isHapticEnabled,
+  isSoundEnabled,
+  playCue,
+  setHapticEnabled,
+  setSoundEnabled,
+} from "@/lib/sound";
 import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
 
 /* Settings (D-036).
@@ -139,17 +148,16 @@ function SettingsSection({
  * costs nothing and the "want more" section is opt-in framed, not another wall
  * of switches to evaluate. */
 
-/* Reused by both sections below: sound keeps its own independent toggle in
- * sound.ts (fx-enabled) — deliberately not reduced-motion-gated, since that
- * media query is a motion signal, not an audio one (D-036). */
+/* Sound and device vibration are deliberately separate. Neither follows
+ * reduced-motion: that preference describes visual movement, not feedback. */
 function SoundToggleRow() {
   // Lazy initializer rather than an effect: this screen is mounted client-only
   // (dynamic ssr:false), so localStorage is available on first render.
-  const [enabled, setEnabled] = useState(isFxEnabled);
+  const [enabled, setEnabled] = useState(isSoundEnabled);
 
   function toggle() {
     const next = !enabled;
-    setFxEnabled(next);
+    setSoundEnabled(next);
     setEnabled(next);
     if (next) playCue("toggle");
   }
@@ -170,10 +178,57 @@ function SoundToggleRow() {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-foreground">
-          効果音とバイブレーション
+          効果音
         </span>
         <span className="block text-xs text-muted-foreground">
-          クエスト達成音・操作音と、端末の振動をまとめて切り替えます
+          クエスト達成・追加・キャンセルなどの音を切り替えます
+        </span>
+      </span>
+      <span
+        aria-hidden
+        className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
+          enabled ? "bg-primary" : "bg-muted"
+        }`}
+      >
+        <span
+          className={`block size-5 rounded-full bg-background transition-transform ${
+            enabled ? "translate-x-5" : ""
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+function HapticToggleRow() {
+  const [enabled, setEnabled] = useState(isHapticEnabled);
+
+  function toggle() {
+    const next = !enabled;
+    setHapticEnabled(next);
+    setEnabled(next);
+    playCue("toggle");
+    if (next) haptic(10);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={enabled}
+      className="btn-squish flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
+    >
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+          enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {enabled ? <Vibrate className="size-5" /> : <VibrateOff className="size-5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-foreground">触覚フィードバック</span>
+        <span className="block text-xs text-muted-foreground">
+          対応端末で、追加や達成など重要な操作だけ短く振動します
         </span>
       </span>
       <span
@@ -277,6 +332,7 @@ function BasicFeedbackSection() {
     <SettingsSection overline="FEEDBACK" title="基本のフィードバック">
       <div className="space-y-2">
         <SoundToggleRow />
+        <HapticToggleRow />
         {BASIC_KEYS.map((key) => (
           <EffectToggleRow key={key} effectKey={key} icon={EFFECT_ICONS[key]} />
         ))}

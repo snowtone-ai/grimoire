@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, CalendarPlus, List, Plus } from "lucide-react";
+import { Calendar, CalendarPlus, List } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { type Task } from "@/lib/db";
 import { getAllTasks, syncPlantStateFromTasks } from "@/lib/taskDb";
@@ -13,9 +13,9 @@ import {
   taskForDisplayDate,
   todayDateString,
 } from "@/lib/domain/task-date";
-import { playCue } from "@/lib/sound";
 import { TaskEditModal } from "@/components/home/task-edit-modal";
 import { TaskAddModal } from "@/components/home/task-add-modal";
+import { QuestAddButton } from "@/components/home/quest-add-button";
 import { CalendarImportModal } from "@/components/calendar/calendar-import-modal";
 import { CalendarView } from "./calendar-view";
 import { ListView } from "./list-view";
@@ -138,18 +138,11 @@ export function AllScreen() {
       </main>
 
       <BottomNav />
-      <button
-        type="button"
-        aria-label="クエストを追加"
-        onClick={() => {
-          playCue("tap");
-          setShowAddModal(true);
-        }}
-        className="btn-squish fixed right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary bg-gradient-to-b from-white/25 to-transparent text-primary-foreground shadow-lg shadow-primary/35 inset-shadow-[0_1px_0_rgba(255,255,255,0.3)]"
+      <QuestAddButton
+        onAdd={() => setShowAddModal(true)}
+        className="fixed right-4 z-40"
         style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
-      >
-        <Plus className="size-6" />
-      </button>
+      />
 
       {selectedDate && (
         <SelectedDateSheet
