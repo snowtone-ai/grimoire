@@ -14,6 +14,7 @@ import {
   todayDateString,
 } from "@/lib/domain/task-date";
 import { TaskEditModal } from "@/components/home/task-edit-modal";
+import { TaskAddModal } from "@/components/home/task-add-modal";
 import { CalendarImportModal } from "@/components/calendar/calendar-import-modal";
 import { CalendarView } from "./calendar-view";
 import { ListView } from "./list-view";
@@ -29,6 +30,7 @@ export function AllScreen() {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [addingTaskDate, setAddingTaskDate] = useState<string | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showFutureOnly, setShowFutureOnly] = useState(true);
 
@@ -87,6 +89,24 @@ export function AllScreen() {
     setSelectedDate(null);
   }
 
+  function openTaskAddForSelectedDate() {
+    if (!selectedDate) return;
+    // Keep the date in its own state while the full-screen entry dialog is
+    // open. The sheet closes first, so the two overlays never compete for
+    // focus or Android Back handling.
+    setAddingTaskDate(selectedDate);
+    setSelectedDate(null);
+  }
+
+  function closeTaskAdd() {
+    const dateToRestore = addingTaskDate;
+    setAddingTaskDate(null);
+    // Returning to the selected day keeps the user's calendar context intact
+    // after cancelling or saving, and the refreshed task list is immediately
+    // visible there after a save.
+    if (dateToRestore) setSelectedDate(dateToRestore);
+  }
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="px-4 pt-8 pb-3 flex items-center justify-between gap-2">
@@ -140,6 +160,7 @@ export function AllScreen() {
           selectedDate={selectedDate}
           tasks={selectedDateTasks}
           onClose={() => setSelectedDate(null)}
+          onAddTask={openTaskAddForSelectedDate}
           onEditTask={setEditingTask}
         />
       )}
@@ -148,6 +169,13 @@ export function AllScreen() {
         onClose={() => setShowCalendarModal(false)}
         onTasksCreated={() => reloadTasksAndPlantState().catch(console.error)}
       />
+      {addingTaskDate && (
+        <TaskAddModal
+          initialDueDate={addingTaskDate}
+          onClose={closeTaskAdd}
+          onTaskCreated={() => reloadTasksAndPlantState().catch(console.error)}
+        />
+      )}
       {editingTask && (
         <TaskEditModal
           task={editingTask}

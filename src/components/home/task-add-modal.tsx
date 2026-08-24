@@ -31,6 +31,7 @@ interface TaskAddModalProps {
   onClose: () => void;
   onTaskCreated: () => void;
   initialTitle?: string;
+  initialDueDate?: string;
 }
 
 const RECURRENCES: { value: Recurrence; label: string }[] = [
@@ -46,7 +47,12 @@ function tomorrowDateString(): string {
   return toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: TaskAddModalProps) {
+export function TaskAddModal({
+  onClose,
+  onTaskCreated,
+  initialTitle = "",
+  initialDueDate,
+}: TaskAddModalProps) {
   // Android's Back gesture closes this dialog rather than leaving the screen
   // under it. The two full-screen explorers got this in the same rebuild;
   // without it here, a half-typed quest is the thing Back throws away.
@@ -55,7 +61,7 @@ export function TaskAddModal({ onClose, onTaskCreated, initialTitle = "" }: Task
   const tomorrow = tomorrowDateString();
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState(today);
+  const [dueDate, setDueDate] = useState(initialDueDate || today);
   const [dueTime, setDueTime] = useState("");
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
   const [recurrenceDayOfWeek, setRecurrenceDayOfWeek] = useState(1);
