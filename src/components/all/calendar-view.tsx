@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   WEEKDAY_LABELS,
@@ -47,6 +47,24 @@ export function CalendarView({
   const offsetRef = useRef(0);
   const animatingRef = useRef(false);
   const suppressClickRef = useRef(false);
+  const pendingMonthChangeRef = useRef(false);
+  const renderedMonthRef = useRef(currentMonth.getTime());
+
+  useLayoutEffect(() => {
+    const monthKey = currentMonth.getTime();
+    if (renderedMonthRef.current === monthKey) return;
+    renderedMonthRef.current = monthKey;
+    if (!pendingMonthChangeRef.current) return;
+
+    const track = trackRef.current;
+    if (track) {
+      track.style.transition = "none";
+      track.style.transform = "translate3d(-33.333333%, 0, 0)";
+    }
+    offsetRef.current = 0;
+    pendingMonthChangeRef.current = false;
+    animatingRef.current = false;
+  }, [currentMonth]);
 
   const previousMonth = new Date(
     currentMonth.getFullYear(),
@@ -74,15 +92,14 @@ export function CalendarView({
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const changeMonth = direction === 1 ? onNextMonth : onPrevMonth;
+    const changeMonth = direction === 1 ? onPrevMonth : onNextMonth;
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
     if (prefersReducedMotion) {
+      pendingMonthChangeRef.current = true;
       changeMonth();
-      setTrackOffset(0, false);
-      animatingRef.current = false;
       return;
     }
 
@@ -92,9 +109,8 @@ export function CalendarView({
       if (finished) return;
       finished = true;
       clearTimeout(fallback);
+      pendingMonthChangeRef.current = true;
       changeMonth();
-      setTrackOffset(0, false);
-      animatingRef.current = false;
     };
 
     track.addEventListener("transitionend", finish, { once: true });
@@ -184,10 +200,10 @@ export function CalendarView({
         style={{ transform: "translate3d(-33.333333%, 0, 0)" }}
       >
         <MonthPanel
-          monthDate={nextMonth}
+          monthDate={previousMonth}
           selectedDate={selectedDate}
           today={today}
-          summary={summaries.next}
+          summary={summaries.previous}
           lifetimeCompleted={lifetimeCompleted}
           onSelectDate={onSelectDate}
           onPrevMonth={onPrevMonth}
@@ -205,10 +221,10 @@ export function CalendarView({
           onNextMonth={onNextMonth}
         />
         <MonthPanel
-          monthDate={previousMonth}
+          monthDate={nextMonth}
           selectedDate={selectedDate}
           today={today}
-          summary={summaries.previous}
+          summary={summaries.next}
           lifetimeCompleted={lifetimeCompleted}
           onSelectDate={onSelectDate}
           onPrevMonth={onPrevMonth}
