@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, CalendarPlus, List } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { type Task } from "@/lib/db";
@@ -60,11 +60,16 @@ export function AllScreen() {
   }, []);
 
   const today = todayDateString();
-  const calendarSummary = buildCalendarSummary(
-    allTasks,
-    currentMonth.getFullYear(),
-    currentMonth.getMonth()
-  );
+  const calendarSummaries = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+
+    return {
+      previous: buildCalendarSummary(allTasks, year, month - 1),
+      current: buildCalendarSummary(allTasks, year, month),
+      next: buildCalendarSummary(allTasks, year, month + 1),
+    };
+  }, [allTasks, currentMonth]);
   const lifetimeCompleted = allTasks.filter((task) => task.completedAt).length;
   const selectedDateTasks = selectedDate
     ? sortTasksByTime(
@@ -137,7 +142,7 @@ export function AllScreen() {
             currentMonth={currentMonth}
             selectedDate={selectedDate}
             today={today}
-            summary={calendarSummary}
+            summaries={calendarSummaries}
             lifetimeCompleted={lifetimeCompleted}
             onSelectDate={setSelectedDate}
             onPrevMonth={prevMonth}

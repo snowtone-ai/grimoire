@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   WEEKDAY_LABELS,
@@ -11,7 +14,11 @@ interface CalendarViewProps {
   currentMonth: Date;
   selectedDate: string | null;
   today: string;
-  summary: Record<string, CalendarDaySummary>;
+  summaries: {
+    previous: Record<string, CalendarDaySummary>;
+    current: Record<string, CalendarDaySummary>;
+    next: Record<string, CalendarDaySummary>;
+  };
   lifetimeCompleted: number;
   onSelectDate: (date: string | null) => void;
   onPrevMonth: () => void;
@@ -26,14 +33,209 @@ export function CalendarView({
   currentMonth,
   selectedDate,
   today,
-  summary,
+  summaries,
   lifetimeCompleted,
   onSelectDate,
   onPrevMonth,
   onNextMonth,
 }: CalendarViewProps) {
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const pointerIdRef = useRef<number | null>(null);
+  const startRef = useRef({ x: 0, y: 0, time: 0 });
+  const axisRef = useRef<"x" | "y" | null>(null);
+  const offsetRef = useRef(0);
+  const animatingRef = useRef(false);
+  const suppressClickRef = useRef(false);
+
+  const previousMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() - 1,
+    1
+  );
+  const nextMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    1
+  );
+
+  function setTrackOffset(offset: number, animate: boolean) {
+    const track = trackRef.current;
+    if (!track) return;
+    offsetRef.current = offset;
+    track.style.transition = animate
+      ? "transform 240ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "none";
+    track.style.transform = `translate3d(calc(-33.333333% + ${offset}px), 0, 0)`;
+  }
+
+  function finishSwipe(direction: -1 | 1) {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+
+    const changeMonth = direction === 1 ? onNextMonth : onPrevMonth;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      changeMonth();
+      setTrackOffset(0, false);
+      animatingRef.current = false;
+      return;
+    }
+
+    animatingRef.current = true;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(fallback);
+      changeMonth();
+      setTrackOffset(0, false);
+      animatingRef.current = false;
+    };
+
+    track.addEventListener("transitionend", finish, { once: true });
+    const fallback = setTimeout(finish, 320);
+    setTrackOffset(direction * viewport.clientWidth, true);
+  }
+
+  function settleSwipe() {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const elapsed = Math.max(performance.now() - startRef.current.time, 1);
+    const velocity = offsetRef.current / elapsed;
+    const shouldChange =
+      Math.abs(offsetRef.current) >= viewport.clientWidth * 0.18 ||
+      (Math.abs(offsetRef.current) >= 28 && Math.abs(velocity) >= 0.45);
+
+    if (shouldChange) {
+      finishSwipe(offsetRef.current > 0 ? 1 : -1);
+    } else {
+      setTrackOffset(0, true);
+    }
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary || event.button !== 0 || animatingRef.current) return;
+    pointerIdRef.current = event.pointerId;
+    startRef.current = { x: event.clientX, y: event.clientY, time: performance.now() };
+    axisRef.current = null;
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (pointerIdRef.current !== event.pointerId || animatingRef.current) return;
+
+    const dx = event.clientX - startRef.current.x;
+    const dy = event.clientY - startRef.current.y;
+    if (!axisRef.current) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+      axisRef.current = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (axisRef.current === "x") {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }
+    if (axisRef.current !== "x") return;
+
+    const width = event.currentTarget.clientWidth;
+    setTrackOffset(Math.max(-width, Math.min(width, dx)), false);
+  }
+
+  function handlePointerEnd(event: React.PointerEvent<HTMLDivElement>) {
+    if (pointerIdRef.current !== event.pointerId) return;
+    pointerIdRef.current = null;
+    if (axisRef.current === "x") {
+      suppressClickRef.current = true;
+      settleSwipe();
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+    axisRef.current = null;
+  }
+
+  function handlePointerCancel(event: React.PointerEvent<HTMLDivElement>) {
+    if (pointerIdRef.current !== event.pointerId) return;
+    pointerIdRef.current = null;
+    axisRef.current = null;
+    setTrackOffset(0, true);
+  }
+
+  return (
+    <div
+      ref={viewportRef}
+      className="touch-pan-y overflow-hidden"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerCancel}
+      onClickCapture={(event) => {
+        if (!suppressClickRef.current) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <div
+        ref={trackRef}
+        className="flex w-[300%] will-change-transform"
+        style={{ transform: "translate3d(-33.333333%, 0, 0)" }}
+      >
+        <MonthPanel
+          monthDate={nextMonth}
+          selectedDate={selectedDate}
+          today={today}
+          summary={summaries.next}
+          lifetimeCompleted={lifetimeCompleted}
+          onSelectDate={onSelectDate}
+          onPrevMonth={onPrevMonth}
+          onNextMonth={onNextMonth}
+        />
+        <MonthPanel
+          active
+          monthDate={currentMonth}
+          selectedDate={selectedDate}
+          today={today}
+          summary={summaries.current}
+          lifetimeCompleted={lifetimeCompleted}
+          onSelectDate={onSelectDate}
+          onPrevMonth={onPrevMonth}
+          onNextMonth={onNextMonth}
+        />
+        <MonthPanel
+          monthDate={previousMonth}
+          selectedDate={selectedDate}
+          today={today}
+          summary={summaries.previous}
+          lifetimeCompleted={lifetimeCompleted}
+          onSelectDate={onSelectDate}
+          onPrevMonth={onPrevMonth}
+          onNextMonth={onNextMonth}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MonthPanel({
+  active = false,
+  monthDate,
+  selectedDate,
+  today,
+  summary,
+  lifetimeCompleted,
+  onSelectDate,
+  onPrevMonth,
+  onNextMonth,
+}: Omit<CalendarViewProps, "currentMonth" | "summaries"> & {
+  active?: boolean;
+  monthDate: Date;
+  summary: Record<string, CalendarDaySummary>;
+}) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const cells: (string | null)[] = [
@@ -45,7 +247,11 @@ export function CalendarView({
   const monthStats = summarizeCalendarMonth(summary);
 
   return (
-    <div>
+    <div
+      className="w-1/3 shrink-0"
+      aria-hidden={!active}
+      inert={!active}
+    >
       <div className="flex items-center justify-between px-4 pb-3">
         <button type="button" onClick={onPrevMonth} aria-label="前月" className="flex size-8 items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-transform">
           <ChevronLeft className="size-5 text-foreground" />
