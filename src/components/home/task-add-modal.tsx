@@ -129,7 +129,7 @@ export function TaskAddModal({
             <Sparkles />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-[9px] font-bold tracking-[0.28em] text-frost">NEW QUEST</p>
+            <p className="font-display text-[0.5625rem] font-bold tracking-[0.28em] text-frost">NEW QUEST</p>
             <DialogTitle className="mt-1 text-xl font-bold tracking-tight">調査票に記す</DialogTitle>
             <DialogDescription className="mt-1 text-xs">名前と期限だけで受注できます</DialogDescription>
           </div>
@@ -322,7 +322,7 @@ export function TaskAddModal({
               {saving ? <Spinner data-icon="inline-start" /> : <Plus data-icon="inline-start" />}
               {saving ? "調査票に記録中…" : "このクエストを受注"}
             </Button>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            <p className="mt-2 text-center text-[0.6875rem] text-muted-foreground">
               メモと繰り返しは後からでも変更できます
             </p>
           </div>

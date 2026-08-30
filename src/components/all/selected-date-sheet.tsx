@@ -61,7 +61,7 @@ export function SelectedDateSheet({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold">この日にタスクを追加</span>
-              <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+              <span className="mt-0.5 block truncate text-[0.6875rem] text-muted-foreground">
                 期限は {formatDateLabel(selectedDate)} に設定
               </span>
             </span>

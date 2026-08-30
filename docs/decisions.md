@@ -1481,3 +1481,61 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
 
 - 将来見直し条件: 実機(中位Android)でオーブが電池/発熱に響くなら、
   DPR上限1.5をさらに下げるか、非操作時のフレームレートを落とす。
+
+## D-050: プロジェクトMCPサーバーの追加
+- 日付: 2026-08-30
+- 対象: `.mcp.json`
+- 調査: CodeGraph、Vercel、GitHub、Playwright、Context7 の公式/保守元設定を確認。
+- 決定: `codegraph`（ローカルstdio）、`vercel`（`https://mcp.vercel.com`）、
+  `github`（`https://api.githubcopilot.com/mcp/`）、`playwright`（`npx -y
+  @playwright/mcp@latest`）、`context7`（`https://mcp.context7.com/mcp`）を
+  プロジェクトスコープへ追加する。認証情報は保存しない。
+- 採用理由: 既存のプロジェクトMCP設定へ、指定された5サーバーだけを最小構成で追加するため。
+- 確認結果: JSONパース成功、Claude Codeで5件すべてがProject configとして認識された。
+
+## D-051: アプリ内文字サイズを2段階化し、満開後施策は観察マイルストーンを第一候補にする
+
+- 日付: 2026-08-31（外部調査: 2026-08-30）
+- 対象: T048
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 | 既設project MCP / npm `@upstash/context7-mcp` 4.0.4、[公式クライアント設定](https://context7.com/docs/resources/all-clients)・[API Guide](https://context7.com/docs/api-guide) | 外部へ送るのはライブラリIDと質問。認証情報・アプリデータ・ソースは送らない | 採用。MCP呼出し口がこのセッションに公開されなかったため、同じ公式APIを読み取り専用で使用。導入中Next.js 16.3.1に最も近い16.2.9 snapshot / React 19.2 / Tailwindの資料取得をスモーク確認 |
+| Chrome DevTools MCP | 既設local MCP / 1.8.0、[保守元README](https://github.com/ChromeDevTools/chrome-devtools-mcp) | ローカルChromeのページ・storage・networkを閲覧/操作。外部アカウント認証なし | 採用。実行中routeと主要操作、幅/高さ、console/network、Lighthouse、performanceを確認 |
+| Playwright MCP | 既設project MCP / 0.0.79、[保守元README](https://github.com/microsoft/playwright-mcp) | 自動ブラウザ操作。対象ページ内容を取得可能 | 不採用。今回の検証はChrome DevToolsと重複し、追加context/権限に改善がない |
+| frontend-design / shadcn skills | 既設local skills、shadcn CLI 4.1.2 | ローカルファイルと公開component docsのみ | UI規律と既存構成確認に使用。新規component/依存は不要と判断 |
+| 追加plugin/ライブラリ | — | 導入なら新しい供給網・bundle・権限が増える | 不採用。CSS root scalingと既存controlだけで要件を満たす |
+
+選定は既設Context7・Chrome DevTools・local skillだけ。追加installは0件、project scope外の設定変更も0件とする。
+
+### UIモデルと実装判断
+
+- 1つだけ選んだモデルはApple「設定 > 画面表示と明るさ」の文字サイズ設定。
+  [Appleの案内](https://support.apple.com/guide/iphone/make-text-easier-to-read-iph3c076905a/26/ios/26)と
+  [HIG Typography](https://developer.apple.com/design/human-interface-guidelines/typography)を参照した。
+  借りるのは「設定内の独立した表示項目」「変更が即時に全体へ反映」「現在状態が明白」
+  という構造だけ。Apple固有の外観、slider、文言、brand assetはコピーしない。実際のcontrolは
+  オーナー指示を優先し、このアプリの既存設定行と同じ説明付きON/OFF buttonにする。
+- `html[data-text-size]`の`font-size`をNormal=16px、Large=20px(125%)とする。
+  固定pxの文字指定はNormal時に同じ見た目になるremへ機械変換し、React Context/全画面再描画、
+  resize listener、追加dependencyを避ける。変更はroot attributeとlocalStorageの同期だけにする。
+- 初回描画前にlayout内の短いinline scriptで保存値を検証し、`large`だけを受理する。
+  読出し不能・破損値・SSRはNormalへ安全に倒し、`suppressHydrationWarning`をrootへ限定する。
+- Large時は一覧名のtruncate/2行clampを解除する。研究所は横だけを隠して縦scrollを許可し、
+  drop revealは低い画面でscroll可能にする。新しく実装する設定面/controlは角丸にしない。
+
+### 満開後の第一候補（今回は提案のみ）
+
+「満開後の観察マイルストーン」を第一候補とする。満開条件の月10件は変えず、以後3件ごと
+（13/16/19件）に「満開後の観察 1/3・次まで2件」と短い観察記録を1つ解放する。演出は到達時だけ
+1〜2秒の控えめなCSS光、`prefers-reduced-motion`では即時表示。`monthlyCompleted`から導出できるため、
+新button、通貨、DB schema、常時rAF、日次入力は増やさない。
+
+ヒントは、現実の行動を花の変化へ返す
+[Pikmin Bloomの花植え](https://niantic.helpshift.com/hc/ja/23-pikmin-bloom/faq/2855-planting-flowers/?p=android)、
+短い反復目標を更新する[Finch Daily Quests](https://help.finchcare.com/hc/en-us/articles/37943131828749-Daily-Quests)、
+継続を木の成長・蓄積として見せる[Forest](https://www.forestapp.cc/en/)から得た。
+日次ワンタップ観察は新しい習慣state、標本variantは図鑑との重複が生じるため、現段階では採らない。
+導入判断時は「満開後の次タスク完了率」「7日再訪率」「マイルストーン到達率」を主指標にする。

@@ -60,8 +60,7 @@ credentials.json
 .claude/cache/
 .codegraph/
 
-# pm-zero v12.1 §16.7 -- UI tooling auto-provisioned by scripts/setup.mjs.
-# Vendored third-party skill content, not this project's source.
+# Local third-party agent tooling, not this project's source.
 .claude/skills/**
 .agents/
 skills-lock.json

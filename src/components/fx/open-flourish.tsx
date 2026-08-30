@@ -131,7 +131,7 @@ export function OpenFlourish() {
         <span className="open-flourish-corner open-flourish-corner-br" aria-hidden />
 
         <div className="relative px-6 text-center">
-          <p className="font-display text-[11px] font-bold tracking-[0.32em] text-gold">
+          <p className="font-display text-[0.6875rem] font-bold tracking-[0.32em] text-gold">
             GRIMOIRE
           </p>
           <p className="open-flourish-message mt-2 text-sm text-white/85">
@@ -147,7 +147,7 @@ export function OpenFlourish() {
         onKeyDown={(event) => {
           if (event.key === "Escape") dismiss();
         }}
-        className="open-flourish-skip absolute bottom-10 text-[11px] text-white/60"
+        className="open-flourish-skip absolute bottom-10 text-[0.6875rem] text-white/60"
       >
         タップしてスキップ
       </button>

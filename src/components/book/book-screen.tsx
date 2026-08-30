@@ -70,10 +70,10 @@ export function BookScreen() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="aurora px-5 pt-8 pb-4">
-        <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+        <p className="font-display text-[0.625rem] font-bold tracking-[0.32em] text-frost">
           SURVEY NOTES
         </p>
-        <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
+        <h1 className="mt-0.5 text-[1.75rem]/[1.15] font-bold tracking-tight text-foreground">
           調査記録
         </h1>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
@@ -154,9 +154,9 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
     <>
       <section aria-label="遠征記録">
         <div className="mb-1.5 flex items-center gap-2">
-          <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">EXPEDITIONS</p>
+          <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-frost">EXPEDITIONS</p>
           <h2 className="text-sm font-bold text-foreground">遠征記録</h2>
-          <span className="ml-auto text-[10px] font-semibold tracking-wide text-muted-foreground">
+          <span className="ml-auto text-[0.625rem] font-semibold tracking-wide text-muted-foreground">
             タップして探索
           </span>
         </div>
@@ -193,19 +193,19 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
                 />
                 <span aria-hidden className="absolute inset-3 border-x border-white/20" />
                 <span className="absolute inset-x-3 top-3 flex items-center justify-between text-white drop-shadow-md">
-                  <span className="font-display text-[8px] font-bold tracking-[0.28em] text-white/75">
+                  <span className="font-display text-[0.5rem] font-bold tracking-[0.28em] text-white/75">
                     AREA {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-[9px] font-bold tabular-nums text-white/90">
+                  <span className="text-[0.5625rem] font-bold tabular-nums text-white/90">
                     {found}/{total}
                   </span>
                 </span>
                 <span className="absolute inset-x-4 bottom-4 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-                  <span className="block text-[15px] font-bold leading-tight">{region.name}</span>
-                  <span className="mt-1 line-clamp-2 block text-[9px] leading-relaxed text-white/75">
+                  <span className="block text-[0.9375rem] font-bold leading-tight">{region.name}</span>
+                  <span className="mt-1 line-clamp-2 block text-[0.5625rem] leading-relaxed text-white/75">
                     {region.subtitle}
                   </span>
-                  <span className="mt-2 block font-display text-[8px] font-bold tracking-[0.22em] text-white/70">
+                  <span className="mt-2 block font-display text-[0.5rem] font-bold tracking-[0.22em] text-white/70">
                     OPEN SURVEY ↗
                   </span>
                 </span>
@@ -300,7 +300,7 @@ function ChronicleSection({ chronicle }: { chronicle: ChronicleMonth[] }) {
   return (
     <section aria-label="年代記">
       <div className="mb-1.5 flex items-center gap-2">
-        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-gold">CHRONICLE</p>
+        <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-gold">CHRONICLE</p>
         <h2 className="text-sm font-bold text-foreground">年代記</h2>
         <span className="ml-auto text-xs text-muted-foreground tabular-nums">{chronicle.length}か月</span>
       </div>
@@ -337,12 +337,12 @@ function CurrentMonthPage({ month }: { month: ChronicleMonth }) {
           {monthEmoji(month.month)}
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-gold">今月の調査対象</p>
+          <p className="text-[0.6875rem] font-semibold text-gold">今月の調査対象</p>
           <p className="truncate text-base font-bold text-foreground">
             {month.year}年{month.month}月 · {month.species.name}
           </p>
         </div>
-        <span className="ml-auto flex-shrink-0 rounded-full bg-frost-soft px-2 py-0.5 text-[10px] font-bold text-frost">
+        <span className="ml-auto flex-shrink-0 rounded-full bg-frost-soft px-2 py-0.5 text-[0.625rem] font-bold text-frost">
           調査中
         </span>
       </div>
@@ -378,10 +378,10 @@ function PastMonthCard({ month }: { month: ChronicleMonth }) {
 function ChronicleStat({ label, value, unit }: { label: string; value: number; unit?: string }) {
   return (
     <div className="rounded-xl bg-muted/50 py-1.5">
-      <dt className="text-[10px] text-muted-foreground">{label}</dt>
+      <dt className="text-[0.625rem] text-muted-foreground">{label}</dt>
       <dd className="text-base font-bold tabular-nums text-foreground">
         {value}
-        {unit && <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>}
+        {unit && <span className="ml-0.5 text-[0.625rem] font-medium text-muted-foreground">{unit}</span>}
       </dd>
     </div>
   );
@@ -412,7 +412,7 @@ function Section({
     <section aria-label={title}>
       <div className="mb-1.5 flex items-center gap-2">
         <h2 className="text-sm font-bold text-foreground">{title}</h2>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider ${badgeClass}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-bold tracking-wider ${badgeClass}`}>
           {rarityBadge}
         </span>
         <span className="ml-auto text-xs text-muted-foreground tabular-nums">
@@ -456,7 +456,7 @@ function Section({
                   {renderIcon(drop, isFound)}
                   <p
                     title={drop.name}
-                    className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-foreground"
+                    className="mt-1.5 line-clamp-2 text-[0.625rem] font-semibold leading-tight text-foreground"
                   >
                     {drop.name}
                   </p>
@@ -464,14 +464,14 @@ function Section({
               ) : (
                 <>
                   {renderIcon(drop, isFound)}
-                  <p className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-tight text-muted-foreground/60">
+                  <p className="mt-1.5 line-clamp-2 text-[0.625rem] font-semibold leading-tight text-muted-foreground/60">
                     ？？？
                   </p>
                 </>
               )}
               {isFound && <span className="sr-only">{region.name}産</span>}
               {count > 1 && (
-                <span className="absolute right-1.5 top-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold text-secondary-foreground tabular-nums">
+                <span className="absolute right-1.5 top-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[0.5625rem] font-bold text-secondary-foreground tabular-nums">
                   ×{count}
                 </span>
               )}

@@ -1,6 +1,17 @@
 # state.md
 
 ## Current
+- 2026-08-31: T048 / D-051 — Normal/Large(125%)のアプリ内文字サイズ設定を追加した。
+  - 設定は既存項目と同じ説明付きON/OFF行。root attributeを即時更新し、localStorageへ
+    保存。初回paint前に検証済み値を読むため、再読込時のちらつき・hydration差分を避ける。
+  - 全固定px文字をNormal等価のremへ移し、Largeだけtruncate/clampを解除。研究所と
+    drop revealは低い画面で縦scrollできる。Provider、常駐listener、追加dependencyは0件。
+  - Chrome DevToolsで主要5routeを320/375/414幅、320×568、667×375で確認し、
+    horizontal overflow / clipped visible text / console error・warnはいずれも0。
+    設定の即時切替と再読込保持、クエスト追加全画面も確認。Lighthouse mobileは4カテゴリ100、
+    traceはLCP 1.395s / CLS 0.00。`pnpm verify`全合格。
+  - 満開後は3タスクごとの「観察マイルストーン」を第一候補として提案。既存の
+    `monthlyCompleted`から導出できる最小案で、今回は実装していない。
 - 2026-08-23: T047 — オーナー報告の3件のUI回帰を修正した。
   - クエスト追加を全ブレークポイントで`dvh`全画面にし、ノッチとホームバーの
     safe area、固定フッター、低い画面での入力欄スクロールを維持した。

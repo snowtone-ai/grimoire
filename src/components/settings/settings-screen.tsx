@@ -3,6 +3,7 @@
 import { Link } from "next-view-transitions";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
+  ALargeSmall,
   ArrowLeft,
   ArrowLeftRight,
   Bell,
@@ -56,6 +57,10 @@ import {
   setSoundEnabled,
 } from "@/lib/sound";
 import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
+import {
+  getStoredTextSize,
+  setTextSize,
+} from "@/lib/text-size";
 
 /* Settings (D-036).
  *
@@ -75,10 +80,10 @@ export function SettingsScreen() {
           <ArrowLeft className="size-3.5" aria-hidden />
           ホームへ戻る
         </Link>
-        <p className="mt-2 font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+        <p className="mt-2 font-display text-[0.625rem] font-bold tracking-[0.32em] text-frost">
           SETTINGS
         </p>
-        <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
+        <h1 className="mt-0.5 text-[1.75rem]/[1.15] font-bold tracking-tight text-foreground">
           設定
         </h1>
       </header>
@@ -87,6 +92,7 @@ export function SettingsScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
+        <TextSizeSection />
         <BasicFeedbackSection />
         <MoreEffectsSection />
         <NotificationSection />
@@ -96,6 +102,65 @@ export function SettingsScreen() {
 
       <BottomNav />
     </div>
+  );
+}
+
+function TextSizeSection() {
+  const [textSize, setTextSizeState] = useState(getStoredTextSize);
+  const large = textSize === "large";
+
+  function toggle() {
+    const next = large ? "normal" : "large";
+    setTextSize(next);
+    setTextSizeState(next);
+  }
+
+  return (
+    <section aria-labelledby="text-size-title" className="border-y border-border py-4">
+      <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-frost">
+        DISPLAY
+      </p>
+      <h2 id="text-size-title" className="mt-1 text-base font-semibold text-foreground">
+        文字サイズ
+      </h2>
+      <p id="text-size-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
+        アプリ全体の文字と余白を、読みやすい大きさへ切り替えます
+      </p>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={large}
+        aria-describedby="text-size-description"
+        className="btn-squish mt-3 flex w-full items-center gap-3 rounded-none border border-border p-3 text-left hover:bg-muted"
+      >
+        <span
+          aria-hidden
+          className={`flex size-10 shrink-0 items-center justify-center rounded-none ${
+            large ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          <ALargeSmall className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-foreground">大きい文字</span>
+          <span className="block text-xs text-muted-foreground">
+            現在: {large ? "大きめ" : "標準"}
+          </span>
+        </span>
+        <span
+          aria-hidden
+          className={`h-6 w-11 shrink-0 rounded-none p-0.5 transition-colors ${
+            large ? "bg-primary" : "bg-muted"
+          }`}
+        >
+          <span
+            className={`block size-5 rounded-none bg-background transition-transform ${
+              large ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </span>
+      </button>
+    </section>
   );
 }
 
@@ -119,7 +184,7 @@ function SettingsSection({
     >
       <div className="flex items-center gap-2">
         <p
-          className={`font-display text-[10px] font-bold tracking-[0.26em] ${
+          className={`font-display text-[0.625rem] font-bold tracking-[0.26em] ${
             tone === "destructive" ? "text-destructive" : "text-frost"
           }`}
         >
@@ -302,7 +367,7 @@ function EffectToggleRow({
         </span>
       </button>
       {enabled && reducedMotion && (
-        <p className="mt-1.5 px-1 text-[11px] leading-relaxed text-muted-foreground/80">
+        <p className="mt-1.5 px-1 text-[0.6875rem] leading-relaxed text-muted-foreground">
           端末側で「視差効果を減らす」が有効なため、いまは動作しません
         </p>
       )}
@@ -337,7 +402,7 @@ function BasicFeedbackSection() {
           <EffectToggleRow key={key} effectKey={key} icon={EFFECT_ICONS[key]} />
         ))}
       </div>
-      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80">
+      <p className="mt-2.5 text-[0.6875rem] leading-relaxed text-muted-foreground">
         調査記録の記録をタップして見返す演出は、この設定に関わらずいつでも使えます
       </p>
     </SettingsSection>

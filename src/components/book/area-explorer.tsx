@@ -365,7 +365,7 @@ export function AreaExplorer({
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.48),transparent_18%,transparent_72%,rgba(0,0,0,0.54))]" />
 
           <div className="pointer-events-none absolute inset-x-16 top-[calc(env(safe-area-inset-top)+1rem)] z-10 text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-            <p className="font-display text-[9px] font-bold tracking-[0.34em] text-white/70">AREA SURVEY</p>
+            <p className="font-display text-[0.5625rem] font-bold tracking-[0.34em] text-white/70">AREA SURVEY</p>
             <p className="mt-1 truncate text-sm font-bold text-white">{region.name}</p>
           </div>
 
@@ -385,7 +385,7 @@ export function AreaExplorer({
             aria-hidden
             className={`pointer-events-none absolute inset-x-0 top-[46%] z-10 flex justify-center transition-opacity duration-500 ${showHint ? "opacity-100" : "opacity-0"}`}
           >
-            <p className="rounded-full border border-white/25 bg-black/55 px-4 py-2 text-[11px] font-semibold tracking-[0.08em] text-white shadow-lg backdrop-blur-md">
+            <p className="rounded-full border border-white/25 bg-black/55 px-4 py-2 text-[0.6875rem] font-semibold tracking-[0.08em] text-white shadow-lg backdrop-blur-md">
               ↕ スワイプして周囲を探索 ↔
             </p>
           </div>

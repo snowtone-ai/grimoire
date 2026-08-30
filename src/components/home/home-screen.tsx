@@ -34,11 +34,11 @@ export function HomeScreen() {
       {screen.showMorningLight && <div className="morning-light" aria-hidden />}
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <div>
-          <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+          <p className="font-display text-[0.625rem] font-bold tracking-[0.32em] text-frost">
             GRIMOIRE
           </p>
-          <p className="mt-1 text-[13px] font-medium text-muted-foreground">{dateLabel}</p>
-          <h1 className="mt-0.5 text-[28px]/[1.15] font-bold tracking-tight text-foreground">
+          <p className="mt-1 text-[0.8125rem] font-medium text-muted-foreground">{dateLabel}</p>
+          <h1 className="mt-0.5 text-[1.75rem]/[1.15] font-bold tracking-tight text-foreground">
             今日のクエスト
           </h1>
         </div>
@@ -192,7 +192,7 @@ function HeroCard({
         <ProgressRing completedCount={completedCount} totalCount={totalCount} />
         <div className="min-w-0 flex-1">
           <p className="text-lg font-bold text-foreground text-balance">{title}</p>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">{sub}</p>
+          <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">{sub}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {streakCount > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand">
@@ -308,7 +308,7 @@ function NotificationPrompt({
       >
         通知を許可する
       </button>
-      <p className="mt-1.5 text-center text-[11px] text-brand/70">あとから設定画面でも変更できます</p>
+      <p className="mt-1.5 text-center text-[0.6875rem] text-brand/70">あとから設定画面でも変更できます</p>
     </div>
   );
 }

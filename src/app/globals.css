@@ -2,6 +2,25 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* A single root-scale switch keeps typography, spacing, and meaningful icons in
+ * proportion without adding a React subscription to every screen. */
+html[data-text-size="large"] {
+  font-size: 125%;
+}
+
+/* Large text favors complete content over compact one-line summaries. */
+html[data-text-size="large"] .truncate {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+html[data-text-size="large"] .line-clamp-2 {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
 /* Area survey: a single image is deliberately larger than the phone in both
  * axes. CSS variables keep pointer updates on the compositor while the
  * centered origin guarantees that opening and reset show the middle frame. */

@@ -6,10 +6,11 @@ paths:
 
 # Stale service worker masks fresh dev-server builds
 
-**Fixed in code as of T046 (2026-08-23) — this file is now history, not a
-procedure.** `src/components/pwa-register.tsx` refuses to register the service
-worker outside `NODE_ENV === "production"` and actively unregisters any worker
-plus its caches on load, so a dev session self-heals on the first page view.
+**Prevented for new dev sessions as of T046 (2026-08-23).**
+`src/components/pwa-register.tsx` refuses to register the service worker outside
+`NODE_ENV === "production"` and unregisters workers/caches once current code loads.
+An already controlling stale worker can still serve the old cleanup bundle, so a
+reused browser profile does not always self-heal.
 
 What used to happen: `public/sw.js` serves `/_next/static/` cache-first, which
 is correct in production (those filenames are content-addressed) and wrong in
@@ -18,8 +19,9 @@ across sessions kept replaying a bundle from before the last edit while the dev
 server reported a successful rebuild. The tell was a stack trace or a computed
 style pointing at source that grep shows no longer exists.
 
-If it ever recurs — an old profile, a build that ran with `NODE_ENV` unset —
-the manual recovery is still:
+If it ever recurs — an old profile, a build that ran with `NODE_ENV` unset — use
+a fresh browser context or perform this recovery before restarting the dev server
+or deleting `.next`:
 ```js
 const regs = await navigator.serviceWorker.getRegistrations();
 for (const r of regs) await r.unregister();

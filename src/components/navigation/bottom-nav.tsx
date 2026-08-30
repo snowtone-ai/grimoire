@@ -107,7 +107,7 @@ export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
                 <Icon className="size-5" strokeWidth={isActive ? 2.4 : 2} />
               </span>
               <span
-                className={`text-[11px] font-semibold ${
+                className={`text-[0.6875rem] font-semibold ${
                   isActive ? "text-brand" : "text-muted-foreground"
                 }`}
               >

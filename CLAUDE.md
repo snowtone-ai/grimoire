@@ -13,8 +13,9 @@
   is read, not on every session)
 
 ## Startup Read
-- This file, docs/state.md, docs/issues.md, docs/decisions.md, docs/repo-map.md Summary.
-  Nothing else.
+- This file, docs/state.md, docs/issues.md, and docs/repo-map.md Summary. Nothing else
+  in full. Resolve the active task from state, then query only its row and relevant
+  decisions by ID or keyword; historical ledgers are read on demand.
 
 ## Budget (Pro plan, hard wall)
 - Do not split work across sessions -- long sessions are cheaper (cached input bills at
@@ -52,19 +53,27 @@
 - tasks.md is the only execution ledger; the main agent is the only writer.
 - Every ready task: owner, dependencies, write scope, acceptance, verification, evidence.
 - Product code changes require an explicit task in tasks.md.
+- Record each fact once: tasks owns execution/result, state owns only the current pointer,
+  decisions owns rationale, and specialist ledgers own their domain detail. Link by ID instead
+  of copying test logs or review findings between files.
 
 ## Parallelism
 - Disjoint write scopes or worktree isolation. Same file -> serialize.
+- In one worktree, never run `next dev` and `next build` concurrently because both write `.next`;
+  use a separate worktree/output directory when they must overlap.
 - Default cap: <=2 concurrent worker subagents; raise only if budget clearly allows.
 
 ## Self-Review (no human reviewer)
-- Tier 0: verify script + tests + lint, then CI (.github/workflows/ci.yml) on the PR.
-  Nothing merges past a red check; a self-reported local pass is not sufficient on its
-  own.
+- Tier 0: during implementation run the narrowest affected command. On a stable product-code
+  candidate run `pnpm verify` once; if it fails, iterate on only the failing command, then run
+  one final `pnpm verify`. Markdown-only follow-up does not invalidate a green product-code run;
+  use `git diff --check`. CI (.github/workflows/ci.yml) remains the merge gate.
 - Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
-  changes behaviour, is hard to undo, or touches shared UI components or design tokens
-  (v12.1 §16.5). Ask for every issue with severity/confidence -- do not restrict it to
-  serious issues only, or recall drops.
+  crosses routes/subsystems, changes persistence or integration contracts, is hard to undo,
+  or touches shared UI primitives/design tokens with multiple consumers (v12.1 §16.5).
+  The reviewer uses current Tier 0 evidence and reruns deterministic suites only when evidence
+  is missing/stale or a finding needs reproduction. Ask for every issue with
+  severity/confidence -- do not restrict it to serious issues only, or recall drops.
 - Tier 2 is retired: it fired on auth/billing/DB-schema/deploy/production-data classes
   that essentially do not occur in this project. If one of those classes ever appears,
   re-derive the tier rather than re-enabling it from memory.
@@ -74,6 +83,11 @@
   instruction (start the dev server, check the changed screen with Playwright MCP at
   the breakpoints touched, confirm no console/runtime error) -- code-reading is not a
   substitute.
+- Before diagnosing a UI mismatch, prove the browser is serving the worktree. If a stack frame,
+  selector, or computed style contradicts current source, stop editing: compare the raw dev-server
+  response, then use a fresh browser context or unregister Service Workers and clear Cache Storage.
+  Clear `.next` only when the dev-server/build response itself is stale. This is the first step,
+  not a fallback after repeated CSS edits or server restarts.
 - For a change big enough to need sign-off before or mid-implementation (a new screen,
   a visual-direction change), generate the design at claude.ai/design via `/design-sync`
   and show it to the owner instead of deciding unilaterally -- they can react to a
@@ -83,19 +97,20 @@
   token-registry pattern and there is no current plan to retrofit one. §7's raw-value
   lint therefore stays unwired in `scripts/verify.mjs` -- it only activates once a
   project adopts `DESIGN.md`.
-- Per-project UI tool auto-provisioning (impeccable skill; shadcn skill if `shadcn/ui`
-  is ever added as a dependency) runs from `scripts/setup.mjs` on framework detection
-  (v12.1 §16.7). No chrome-devtools MCP: Playwright MCP is already registered globally
-  (user scope) and in active use for browser verification across this operator's
+- Project-local UI tools are added only for a concrete task: impeccable after explicit adoption
+  of its detector/final visual audit, and the shadcn skill when adding, updating, or migrating
+  registry primitives or presets (v12.1 §16.7). No chrome-devtools MCP: Playwright MCP is already
+  registered globally (user scope) and in active use for browser verification across this operator's
   projects -- adding a second, overlapping browser-automation MCP would be redundant
   tool-schema cost with no functional gain.
 
 ## Self-Evolution
-- On the first surprising failure, ask one question: can a machine detect this?
-  Yes -> add the check to scripts/verify.mjs (+ a reproduction test if it is a bug);
-  the lesson is now a build failure, not a paragraph. No -> write it to
-  .claude/rules/<zone>.md with a paths: frontmatter glob and a `由来:` line naming the
-  failure and date (last resort only). Delete any rules file not needed in six months.
+- On a surprising failure, first identify the failing layer and create the smallest deterministic
+  reproduction. Add a permanent check only when recurrence or impact justifies its runtime and
+  false-positive cost; prefer a focused automated test when cheap/stable, or a repeatable browser
+  scenario for browser-only faults. If prevention cannot be executable but is durable and
+  path-specific, write .claude/rules/<zone>.md with a `paths:` glob and a `由来:` line (last
+  resort). Delete any rules file not needed in six months.
 - docs/issues.md holds only what is currently blocked right now; resolved items leave
   it. Operator-level lessons go to auto-memory; project facts never do.
 
@@ -122,7 +137,8 @@
   `pnpm check:production`. A READY deploy is not proof the build is correct: Vercel
   restores a build cache, and a Turbopack cache miss once shipped a CSS chunk with none
   of the branch's hand-written classes while logging no error (T046, docs/issues.md).
-  If it exits 1, push any commit to main to force a fresh build and run it again.
+  If it exits 1, use Vercel's cache-free redeploy and run it again; do not create an empty or
+  unrelated commit solely to invalidate provider cache.
 - Docs-only exception: a change touching only Markdown/doc files (no source, config, or CI
   files) may commit straight to the active base branch (main, or grimore-v2 per
   grimore-v2/CLAUDE.md), skipping branch/PR/CI. git diff --check still required.
