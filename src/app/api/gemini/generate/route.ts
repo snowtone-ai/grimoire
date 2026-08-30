@@ -11,10 +11,13 @@ export const maxDuration = 60;
 
 /** Whole-request budget for the model/payload retry ladder, inside maxDuration. */
 const LADDER_BUDGET_MS = 50_000;
+const ATTEMPT_BUDGET_MS = 12_000;
 
 // Google hot-swaps this alias to the newest Flash release. Unlike a pinned
 // model ID, it keeps the app current without a deploy for each Gemini release.
-const GEMINI_MODEL = "gemini-flash-latest";
+// The current GA release is only a continuity fallback when the alias target
+// is temporarily overloaded or unavailable.
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.7-flash"] as const;
 const MAX_TEXT_LENGTH = 500;
 const MAX_MESSAGES = 30;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -57,52 +60,81 @@ async function callGemini(apiKey: string, prompt: string): Promise<Response> {
     { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 2048 } },
   ] as const;
 
-  let last400Status = 0;
+  let rejectedPayload = false;
+  let retryableFailure = false;
   // One budget for the whole payload ladder rather than per attempt, so every
   // compatibility fallback stays inside the route's 60s maxDuration.
   const deadline = Date.now() + LADDER_BUDGET_MS;
 
+  // Try the preferred JSON payload on both models before relaxing the payload.
+  // This guarantees the continuity model gets a turn even if the latest alias
+  // hangs, while the whole ladder remains inside the route budget.
   for (const payload of payloads) {
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) {
-      console.error("[gemini/generate] exhausted the time budget before finding a working payload");
-      return Response.json({ error: "Gemini API request failed" }, { status: 504 });
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(remaining),
+    for (const model of GEMINI_MODELS) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        console.error("[gemini/generate] exhausted the time budget before finding a working payload");
+        return Response.json({ error: "Gemini API request failed" }, { status: 504 });
       }
-    );
 
-    if (response.status === 429) return Response.json({ error: "rate_limit" }, { status: 429 });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      if (response.status === 400) {
-        // Kept server-side only: it can carry project identifiers, and this
-        // endpoint is reachable by anyone. Without it, an all-400 ladder is
-        // undiagnosable.
-        last400Status = 400;
-        console.error(`[gemini/generate] ${GEMINI_MODEL} rejected a payload:`, redactSecret(body).slice(0, 200));
-        continue;
+      let response: Response;
+      try {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(Math.min(remaining, ATTEMPT_BUDGET_MS)),
+          }
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "TimeoutError") {
+          retryableFailure = true;
+          console.error(`[gemini/generate] ${model} timed out`);
+          continue;
+        }
+        throw err;
       }
-      console.error("[gemini/generate] upstream error", response.status, redactSecret(body).slice(0, 200));
-      return Response.json({ error: "Gemini API request failed" }, { status: 502 });
-    }
 
-    const data = (await response.json()) as GeminiResponse;
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (content?.trim()) return Response.json({ text: content });
+      if (response.status === 429) return Response.json({ error: "rate_limit" }, { status: 429 });
+
+      if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        if (response.status === 400 || response.status === 404) {
+          // Kept server-side only: it can carry project identifiers, and this
+          // endpoint is reachable by anyone. Without it, a rejected ladder is
+          // undiagnosable.
+          rejectedPayload = true;
+          console.error(`[gemini/generate] ${model} rejected a payload:`, redactSecret(body).slice(0, 200));
+          continue;
+        }
+        if ([500, 502, 503, 504].includes(response.status)) {
+          retryableFailure = true;
+          console.error(
+            `[gemini/generate] ${model} temporarily unavailable`,
+            response.status,
+            redactSecret(body).slice(0, 200)
+          );
+          continue;
+        }
+        console.error("[gemini/generate] upstream error", response.status, redactSecret(body).slice(0, 200));
+        return Response.json({ error: "Gemini API request failed" }, { status: 502 });
+      }
+
+      const data = (await response.json()) as GeminiResponse;
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content?.trim()) return Response.json({ text: content });
+    }
   }
 
-  if (last400Status) {
+  if (rejectedPayload) {
     console.error("[gemini/generate] all payload variants returned 400");
     return Response.json({ error: "Gemini API request failed" }, { status: 502 });
+  }
+  if (retryableFailure) {
+    console.error("[gemini/generate] all model attempts were temporarily unavailable");
+    return Response.json({ error: "Gemini API request failed" }, { status: 503 });
   }
   return Response.json({ error: "Empty response from Gemini API" }, { status: 502 });
 }
