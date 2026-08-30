@@ -1571,3 +1571,7 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
 - Gemini 3.6以降でdeprecatedになった`temperature`指定を同時に除く。固定入力shape、
   server-only API key、出力上限、全体50秒予算、429処理、upstream detail非公開は維持する。
   各attemptは12秒に制限し、aliasのhangが全体予算を使い切ってfallbackを阻害しないようにする。
+- 最新Flashの既定`thinkingLevel`はmediumで、単純なタスク抽出には遅延・token消費が過大なため、
+  Google公式がlatency-critical用途に示す`low`をgenerationConfigへ指定する。応答は最初のpartだけで
+  なく、非thoughtの全text partsを結合する。これによりthinking対応モデルの複数part応答でも
+  最終JSONを取りこぼさない。
