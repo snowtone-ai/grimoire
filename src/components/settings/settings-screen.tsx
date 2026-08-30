@@ -131,11 +131,11 @@ function TextSizeSection() {
         onClick={toggle}
         aria-pressed={large}
         aria-describedby="text-size-description"
-        className="btn-squish mt-3 flex w-full items-center gap-3 rounded-none border border-border p-3 text-left hover:bg-muted"
+        className="btn-squish mt-3 flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
       >
         <span
           aria-hidden
-          className={`flex size-10 shrink-0 items-center justify-center rounded-none ${
+          className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
             large ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
           }`}
         >
@@ -149,13 +149,13 @@ function TextSizeSection() {
         </span>
         <span
           aria-hidden
-          className={`h-6 w-11 shrink-0 rounded-none p-0.5 transition-colors ${
+          className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
             large ? "bg-primary" : "bg-muted"
           }`}
         >
           <span
-            className={`block size-5 rounded-none bg-background transition-transform ${
-              large ? "translate-x-5" : "translate-x-0"
+            className={`block size-5 rounded-full bg-background transition-transform ${
+              large ? "translate-x-5" : ""
             }`}
           />
         </span>
