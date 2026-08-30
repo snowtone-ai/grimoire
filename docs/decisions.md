@@ -1539,3 +1539,33 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
 継続を木の成長・蓄積として見せる[Forest](https://www.forestapp.cc/en/)から得た。
 日次ワンタップ観察は新しい習慣state、標本variantは図鑑との重複が生じるため、現段階では採らない。
 導入判断時は「満開後の次タスク完了率」「7日再訪率」「マイルストーン到達率」を主指標にする。
+
+## D-052: Gemini Flashの最新版をGoogle管理エイリアスで自動追従する
+
+- 日付: 2026-08-31
+- 対象: T049
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 | 既設project MCP / npm `@upstash/context7-mcp` 4.0.4 (MIT)、`/websites/ai_google_dev_gemini-api` snapshot 2026-08-25、trust score 9 | 外部へ送ったのはライブラリ名とモデル選定の質問のみ。APIキー・アプリデータ・ソースは送信しない | 採用。セッションにMCP呼出し口が公開されなかったため、同じContext7公式read-only APIでlibrary searchとcontext取得を実行。`generateContent` REST形式とlatest aliasのhot-swapを確認 |
+| Google Gemini API公式資料 | [Models](https://ai.google.dev/gemini-api/docs/models)、[Release notes](https://ai.google.dev/gemini-api/docs/changelog)、2026-08-31閲覧 | 公開資料のread-only閲覧。認証・データ露出なし | 採用。最新GA FlashはGemini 3.7 Flash。`gemini-flash-latest`はFlashの最新リリースへGoogleがhot-swapし、破壊的変更は2週間前にメール通知する公式aliasであることを確認 |
+| Google Gen AI SDK | npm `@google/genai` 2.19.0 (Apache-2.0)、[保守元](https://github.com/googleapis/js-genai) | 導入時は新しいdependencyと供給網が増える。実行時の送信データは現行RESTと同等 | 不採用。既存の短いREST実装で正式endpointを利用でき、SDK追加は自動モデル選定を改善せず重複する |
+| 追加MCP / plugin / skill | — | 導入ごとに権限・供給網・context costが増える | 不採用。既設Context7とGoogle公式資料で要件を満たし、実装自体に外部操作は不要 |
+
+追加installは0件、project scope外の設定変更も0件。Context7の検索・context取得はいずれも200でスモーク確認した。
+
+### 決定
+
+- 固定列挙していた`gemini-2.5-flash`と、2026-06-01に停止済みの
+  `gemini-2.0-flash`を削除し、`gemini-flash-latest`だけを使用する。Google側の
+  alias更新が次回リクエストから反映されるため、Geminiの世代更新ごとのコード変更・
+  build・deployを不要にする。
+- latest aliasはstableだけでなくpreview/experimentalを指す場合もある。これは
+  「Googleの最新デフォルトへ自動追従する」という今回の明示要件を優先した判断で、
+  Googleは破壊的変更の2週間前通知を行う。可用性のため、モデルを古い固定IDへ戻す
+  fallbackは置かず、JSON response modeを受理しない場合だけ通常JSON生成へ落とす
+  payload fallbackを維持する。
+- Gemini 3.6以降でdeprecatedになった`temperature`指定を同時に除く。固定入力shape、
+  server-only API key、出力上限、全体50秒予算、429処理、upstream detail非公開は維持する。

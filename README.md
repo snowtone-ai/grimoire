@@ -3,7 +3,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![PWA](https://img.shields.io/badge/PWA-IndexedDB-green)
-![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-orange?logo=google)
+![Gemini](https://img.shields.io/badge/Gemini-Flash_Latest-orange?logo=google)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 > 「今、何をすべきか」を瞬時に把握できるタスク管理アプリ。クエストを達成するたびに素材がドロップし、凍てついた調査拠点の植物が育つ
@@ -33,7 +33,7 @@ Status: 個人利用中
 |---|---|
 | フロントエンド | Next.js 16, TypeScript, Tailwind CSS v4, Dexie.js |
 | インフラ | Vercel |
-| AI / 外部連携 | Gemini 2.5 Flash, Google OAuth, Gmail API, Google Calendar API |
+| AI / 外部連携 | Gemini Flash Latest, Google OAuth, Gmail API, Google Calendar API |
 
 ---
 
