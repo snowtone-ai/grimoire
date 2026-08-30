@@ -12,6 +12,10 @@
     traceはLCP 1.395s / CLS 0.00。`pnpm verify`全合格。
   - 満開後は3タスクごとの「観察マイルストーン」を第一候補として提案。既存の
     `monthlyCompleted`から導出できる最小案で、今回は実装していない。
+  - PR #43をsquash merge（`3237865`）。main CIとVercel Productionはsuccess。
+    `pnpm check:production`は配信CSS 47クラス中欠落0。本番URLでもLargeの即時反映・
+    再読込保持、主要5routeのoverflow/clipped text 0、console error/warn 0、
+    Lighthouse mobile 4カテゴリ100を再確認した。
 - 2026-08-23: T047 — オーナー報告の3件のUI回帰を修正した。
   - クエスト追加を全ブレークポイントで`dvh`全画面にし、ノッチとホームバーの
     safe area、固定フッター、低い画面での入力欄スクロールを維持した。
