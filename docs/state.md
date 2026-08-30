@@ -1,7 +1,12 @@
 # state.md
 
 ## Current
-- 2026-08-31: T049 / D-052 — Gemini音声タスク登録のモデル更新とGoogle管理の最新Flashモデルへの自動追従を実装中。
+- 2026-08-31: T049 / D-052 — Gemini音声タスク登録をGoogle管理の`gemini-flash-latest`へ更新した。
+  - Google側のalias更新へdeployなしで自動追従し、一時的な混雑時だけ抽出向け安定版
+    `gemini-3.5-flash-lite`へ継続fallbackする。廃止済み2.0と固定2.5への依存を削除した。
+  - Context7とGoogle公式資料を確認。`pnpm verify`は120テストを含め全合格、PR #45 / #46 /
+    #47 / #48をsquash merge。本番APIは14.74秒・HTTP 200で期限日時を含むJSONを返却し、
+    Vercel ProductionはReady、配信CSSは47クラス中欠落0。
 - 2026-08-31: T048 / D-051 — Normal/Large(125%)のアプリ内文字サイズ設定を追加した。
   - 設定は既存項目と同じ説明付きON/OFF行。root attributeを即時更新し、localStorageへ
     保存。初回paint前に検証済み値を読むため、再読込時のちらつき・hydration差分を避ける。

@@ -1575,3 +1575,11 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
   Google公式がlatency-critical用途に示す`low`をgenerationConfigへ指定する。応答は最初のpartだけで
   なく、非thoughtの全text partsを結合する。これによりthinking対応モデルの複数part応答でも
   最終JSONを取りこぼさない。
+
+### 検証
+
+- Context7とGoogle公式資料でモデルalias・REST形式・thinking設定を確認した。
+- `pnpm verify`（lint、typecheck、test 120件、production build）、`git diff --check`、
+  gitleaks、PR CIを通過した。
+- Vercel Productionで音声解析APIを実行し、14.74秒・HTTP 200でtitle / dueDate /
+  dueTime / categoryを含むJSONを取得した。`pnpm check:production`も配信CSS 47クラス中欠落0。
