@@ -1481,3 +1481,14 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
 
 - 将来見直し条件: 実機(中位Android)でオーブが電池/発熱に響くなら、
   DPR上限1.5をさらに下げるか、非操作時のフレームレートを落とす。
+
+## D-050: プロジェクトMCPサーバーの追加
+- 日付: 2026-08-30
+- 対象: `.mcp.json`
+- 調査: CodeGraph、Vercel、GitHub、Playwright、Context7 の公式/保守元設定を確認。
+- 決定: `codegraph`（ローカルstdio）、`vercel`（`https://mcp.vercel.com`）、
+  `github`（`https://api.githubcopilot.com/mcp/`）、`playwright`（`npx -y
+  @playwright/mcp@latest`）、`context7`（`https://mcp.context7.com/mcp`）を
+  プロジェクトスコープへ追加する。認証情報は保存しない。
+- 採用理由: 既存のプロジェクトMCP設定へ、指定された5サーバーだけを最小構成で追加するため。
+- 確認結果: JSONパース成功、Claude Codeで5件すべてがProject configとして認識された。
