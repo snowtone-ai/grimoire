@@ -15,9 +15,9 @@ const ATTEMPT_BUDGET_MS = 12_000;
 
 // Google hot-swaps this alias to the newest Flash release. Unlike a pinned
 // model ID, it keeps the app current without a deploy for each Gemini release.
-// The current GA release is only a continuity fallback when the alias target
-// is temporarily overloaded or unavailable.
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.7-flash"] as const;
+// Flash-Lite is the stable, low-latency continuity fallback for this endpoint's
+// simple structured extraction when the alias target is temporarily unavailable.
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite"] as const;
 const MAX_TEXT_LENGTH = 500;
 const MAX_MESSAGES = 30;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;

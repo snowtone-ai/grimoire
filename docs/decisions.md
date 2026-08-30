@@ -1564,9 +1564,9 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
   build・deployを不要にする。
 - latest aliasはstableだけでなくpreview/experimentalを指す場合もある。これは
   「Googleの最新デフォルトへ自動追従する」という今回の明示要件を優先した判断で、
-  Googleは破壊的変更の2週間前通知を行う。primaryは常にaliasとし、現在の最新GA
-  `gemini-3.7-flash`はalias targetが一時的な高需要・timeout・5xxのときだけ使う
-  continuity fallbackとする。通常時の自動追従を妨げず、一時障害で音声登録全体が
+  Googleは破壊的変更の2週間前通知を行う。primaryは常にaliasとし、単純なデータ抽出向けの
+  低遅延な安定版`gemini-3.5-flash-lite`はalias targetが一時的な高需要・timeout・5xxの
+  ときだけ使うcontinuity fallbackとする。通常時の自動追従を妨げず、一時障害で音声登録全体が
   停止することを避ける。JSON response modeを受理しない場合のpayload fallbackも維持する。
 - Gemini 3.6以降でdeprecatedになった`temperature`指定を同時に除く。固定入力shape、
   server-only API key、出力上限、全体50秒予算、429処理、upstream detail非公開は維持する。
