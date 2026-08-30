@@ -1,6 +1,7 @@
 # state.md
 
 ## Current
+- 2026-08-31: T049 / D-052 — Gemini音声タスク登録のモデル更新とGoogle管理の最新Flashモデルへの自動追従を実装中。
 - 2026-08-31: T048 / D-051 — Normal/Large(125%)のアプリ内文字サイズ設定を追加した。
   - 設定は既存項目と同じ説明付きON/OFF行。root attributeを即時更新し、localStorageへ
     保存。初回paint前に検証済み値を読むため、再読込時のちらつき・hydration差分を避ける。
