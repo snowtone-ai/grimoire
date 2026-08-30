@@ -385,7 +385,7 @@ function SurveyLog({
     <div className="mt-4 px-4">
       <div className="rounded-2xl border border-border bg-card/70 px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="font-display text-[10px] font-bold tracking-[0.28em] text-gold">SURVEY LOG</span>
+          <span className="font-display text-[0.625rem] font-bold tracking-[0.28em] text-gold">SURVEY LOG</span>
           <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-gold/40 to-transparent" />
         </div>
         <dl className="mt-2 flex items-end gap-5">
@@ -393,7 +393,7 @@ function SurveyLog({
           <Stat label="活動" value={stats.activeDays} unit="日" valueClass="text-frost" />
           <Stat label="予定" value={stats.pending} unit="件" valueClass="text-foreground" />
         </dl>
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-[0.6875rem] text-muted-foreground">
           通算 <span className="font-semibold text-foreground tabular-nums">{lifetimeCompleted}</span> 件の調査記録
         </p>
       </div>
@@ -414,7 +414,7 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="text-[11px] text-muted-foreground">{label}</dt>
+      <dt className="text-[0.6875rem] text-muted-foreground">{label}</dt>
       <dd className={`text-lg font-bold tabular-nums ${valueClass}`}>
         {value}
         <span className="ml-0.5 text-xs font-medium text-muted-foreground">{unit}</span>

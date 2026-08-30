@@ -15,7 +15,7 @@ export function BountyBoard({ bounties }: { bounties: BountyView[] }) {
       className="mx-4 mt-3 rounded-2xl border border-border bg-card p-4"
     >
       <div className="flex items-center gap-2">
-        <p className="font-display text-[10px] font-bold tracking-[0.26em] text-frost">
+        <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-frost">
           BOUNTIES
         </p>
         <p className="text-xs font-semibold text-muted-foreground">調査依頼</p>
@@ -41,7 +41,7 @@ export function BountyBoard({ bounties }: { bounties: BountyView[] }) {
               <Check className="size-3" strokeWidth={3} />
             </span>
             <span
-              className={`flex-1 text-[13px] font-medium ${
+              className={`flex-1 text-[0.8125rem] font-medium ${
                 claimed ? "text-muted-foreground line-through" : "text-foreground"
               }`}
             >
@@ -54,7 +54,7 @@ export function BountyBoard({ bounties }: { bounties: BountyView[] }) {
           </li>
         ))}
       </ul>
-      <p className="mt-2.5 text-[11px] text-muted-foreground">
+      <p className="mt-2.5 text-[0.6875rem] text-muted-foreground">
         依頼を達成すると素材がドロップします
       </p>
     </section>

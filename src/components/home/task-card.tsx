@@ -68,7 +68,7 @@ export function TaskCard({ task, departed, onToggle, onTap, onDepart }: TaskCard
         >
           <div className="min-w-0 flex-1">
             <p
-              className={`task-strike text-[15px] font-medium leading-snug ${
+              className={`task-strike text-[0.9375rem] font-medium leading-snug ${
                 task.completed ? "is-struck text-muted-foreground" : "text-foreground"
               }`}
             >

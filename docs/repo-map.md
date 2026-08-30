@@ -17,6 +17,8 @@
 - Presentation/effects core: src/lib/domain/fx.ts (per-effect ON/OFF toggles), src/lib/fx.ts,
   src/lib/domain/vfx-scenes.ts + src/lib/vfx.ts (particle scenes + canvas engine),
   src/lib/domain/sound-cues.ts + src/lib/sound.ts (cue map + sampler), src/lib/spark.ts, src/components/fx/.
+- Accessibility preference: src/lib/text-size.ts (validated Normal/Large storage + root attribute),
+  src/app/layout.tsx (pre-paint restore), src/app/globals.css (root rem scale + Large overflow rules).
 - Verification command: pnpm verify.
 
 ## Directory Map
@@ -43,7 +45,7 @@
 | Home | src/app/page.tsx | Main quest (task) view + drop reveal. |
 | Plant | src/app/plant/page.tsx | Botanical research (monthly growth) view. |
 | Survey notes | src/app/book/page.tsx | Drop collection (RARE1/4/8 encyclopedia); tapping a collected entry replays its reveal. |
-| Settings | src/app/settings/page.tsx | Per-effect ON/OFF toggles, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
+| Settings | src/app/settings/page.tsx | Text size, per-effect ON/OFF toggles, sound/haptics, notifications, backup, reset. Sub-page, not a nav tab. |
 | Layout | src/app/layout.tsx | App shell, metadata, ViewTransitions provider, mounts GraceParticlesGate + OpenFlourish. |
 | Sound engine | src/lib/sound.ts | Sampler over the vendored CC0 cues: fetch/decode/cache/schedule + haptics. Owns no opinion about which sound belongs to which action; skips everything until the first user gesture (a suspended AudioContext queues rather than drops). |
 | Sound cue map | src/lib/domain/sound-cues.ts | The only place deciding what plays when. One SoundAction per action in the app; three CC0 packs each own one layer (touch / world / reward). Only clearHigh and flourish layer two sounds. |

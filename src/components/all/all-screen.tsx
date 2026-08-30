@@ -116,7 +116,7 @@ export function AllScreen() {
     <div className="flex min-h-dvh flex-col">
       <header className="px-4 pt-8 pb-3 flex items-center justify-between gap-2">
         <div>
-          <p className="font-display text-[10px] font-bold tracking-[0.32em] text-frost">
+          <p className="font-display text-[0.625rem] font-bold tracking-[0.32em] text-frost">
             FIELD MAP
           </p>
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">全クエスト</h1>

@@ -326,7 +326,7 @@ export function ItemExplorer({
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-black/75 to-transparent" aria-hidden />
         <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
-          <div className="rounded-full bg-black/38 px-3 py-1.5 text-[10px] font-bold tracking-[0.18em] text-white/78 backdrop-blur-md">
+          <div className="rounded-full bg-black/38 px-3 py-1.5 text-[0.625rem] font-bold tracking-[0.18em] text-white/78 backdrop-blur-md">
             RECORD {index + 1} / {items.length}
           </div>
           <button
@@ -405,7 +405,7 @@ export function ItemExplorer({
             <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => adjustZoom(-0.25)} disabled={view.scale <= MIN_SCALE} aria-label="縮小" className="btn-squish flex size-10 items-center justify-center rounded-full text-white disabled:opacity-35">
               <Minus className="size-4" />
             </button>
-            <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => settle({ x: 0, y: 0, scale: 1 })} aria-label="拡大率を戻す" className="btn-squish flex min-w-12 items-center justify-center gap-1 rounded-full px-1 text-[10px] font-bold tabular-nums text-white/85">
+            <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => settle({ x: 0, y: 0, scale: 1 })} aria-label="拡大率を戻す" className="btn-squish flex min-w-12 items-center justify-center gap-1 rounded-full px-1 text-[0.625rem] font-bold tabular-nums text-white/85">
               <RotateCcw className="size-3.5" /> {Math.round(view.scale * 100)}%
             </button>
             <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => adjustZoom(0.25)} disabled={view.scale >= MAX_SCALE} aria-label="拡大" className="btn-squish flex size-10 items-center justify-center rounded-full text-white disabled:opacity-35">
@@ -416,14 +416,14 @@ export function ItemExplorer({
 
         <section className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-t-[1.75rem] border-t border-white/10 bg-[#0b151c]/96 px-5 pt-4" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
           <div className="flex items-center gap-2">
-            <span className="rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.16em]" style={{ color: rarity.color, backgroundColor: `color-mix(in oklab, ${rarity.color} 18%, transparent)` }}>
+            <span className="rounded-full px-2.5 py-1 text-[0.625rem] font-bold tracking-[0.16em]" style={{ color: rarity.color, backgroundColor: `color-mix(in oklab, ${rarity.color} 18%, transparent)` }}>
               {getRarityLabel(item.rarity)}
             </span>
-            <span className="text-[10px] font-semibold tracking-wide text-white/48">{region.name}</span>
+            <span className="text-[0.625rem] font-semibold tracking-wide text-white/48">{region.name}</span>
           </div>
-          <h2 className="mt-2 text-[22px] font-bold leading-tight text-white">{item.name}</h2>
-          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-white/64">{item.flavor}</p>
-          <p className="mt-3 text-[10px] font-bold tracking-[0.2em] text-white/34">
+          <h2 className="mt-2 text-[1.375rem] font-bold leading-tight text-white">{item.name}</h2>
+          <p className="mt-2 max-w-lg text-[0.8125rem] leading-relaxed text-white/64">{item.flavor}</p>
+          <p className="mt-3 text-[0.625rem] font-bold tracking-[0.2em] text-white/34">
             {view.scale > 1 ? "DRAG TO EXAMINE" : "SWIPE FOR NEXT RECORD · DOUBLE TAP TO ZOOM"}
           </p>
         </section>

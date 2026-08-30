@@ -65,12 +65,12 @@ export function DropReveal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-8 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/45 p-4 animate-fade-in"
       role="status"
       aria-live="polite"
       onClick={onDismiss}
     >
-      <div className="relative w-full max-w-[280px]">
+      <div className="relative my-auto w-full max-w-[280px]">
         {halo && (
           <div
             aria-hidden
@@ -101,12 +101,12 @@ export function DropReveal({
           {shine && <div aria-hidden className="drop-reveal-shine pointer-events-none absolute inset-0" />}
           <div className="flex items-center gap-2.5">
           <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/60" />
-          <p className="font-display text-[13px] font-bold tracking-[0.24em] text-gold">
+          <p className="font-display text-[0.8125rem] font-bold tracking-[0.24em] text-gold">
             {replay ? "SURVEY RECORD" : "QUEST CLEAR"}
           </p>
           <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/60" />
         </div>
-        <p className="mt-1 text-[10px] font-bold tracking-[0.2em] text-brand">
+        <p className="mt-1 text-[0.625rem] font-bold tracking-[0.2em] text-brand">
           {replay ? "調査記録より" : "クエスト達成！"}
         </p>
 
@@ -130,12 +130,12 @@ export function DropReveal({
 
         <div className="mt-4 flex items-center justify-center gap-2">
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider ${style.badge}`}
+            className={`rounded-full px-2 py-0.5 text-[0.625rem] font-bold tracking-wider ${style.badge}`}
           >
             {getRarityLabel(grant.rarity)}
           </span>
           {!replay && grant.isNew && (
-            <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-bold tracking-wider text-gold">
+            <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[0.625rem] font-bold tracking-wider text-gold">
               NEW!
             </span>
           )}
@@ -145,7 +145,7 @@ export function DropReveal({
           {grant.drop.flavor}
         </p>
         {!replay && (
-          <p className="mt-3 text-[11px] font-semibold text-frost">
+          <p className="mt-3 text-[0.6875rem] font-semibold text-frost">
             {grant.isNew ? "調査記録に追加された！" : "調査記録 +1"}
           </p>
         )}

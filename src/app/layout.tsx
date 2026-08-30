@@ -6,6 +6,7 @@ import { PwaRegister } from "@/components/pwa-register";
 import { GraceParticlesGate } from "@/components/fx/grace-particles-gate";
 import { OpenFlourish } from "@/components/fx/open-flourish";
 import { DialogBackHistoryBridge } from "@/lib/use-dialog-back-close";
+import { TEXT_SIZE_STORAGE_KEY } from "@/lib/text-size";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
       <html
         lang="ja"
         className={`h-full antialiased ${cinzel.variable}`}
+        data-text-size="normal"
         // globals.css sets `scroll-behavior: smooth` for in-page anchors. Without
         // this attribute Next.js cannot tell that apart from a route change, so
         // it animates the scroll-to-top of every navigation — on top of the view
@@ -57,6 +59,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var value=localStorage.getItem(${JSON.stringify(TEXT_SIZE_STORAGE_KEY)});document.documentElement.dataset.textSize=value==="large"?"large":"normal"}catch(_){}})()`,
+            }}
+          />
           <script
             src="https://accounts.google.com/gsi/client"
             async

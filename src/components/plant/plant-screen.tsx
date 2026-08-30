@@ -20,7 +20,7 @@ export function PlantScreen() {
   }, []);
 
   return (
-    <div className={`relative flex min-h-dvh flex-col overflow-hidden ${flipped ? "flip-enter" : ""}`}>
+    <div className={`relative flex min-h-dvh flex-col overflow-x-hidden ${flipped ? "flip-enter" : ""}`}>
       {!isBlooming && <Snowfall />}
       {isBlooming ? (
         <>
@@ -42,7 +42,7 @@ export function PlantScreen() {
       >
         <div className="mb-4 text-center drop-shadow-sm">
           <p
-            className={`font-display text-[10px] font-bold tracking-[0.28em] ${isBlooming ? "text-white/80" : "text-frost"}`}
+            className={`font-display text-[0.625rem] font-bold tracking-[0.28em] ${isBlooming ? "text-white/80" : "text-frost"}`}
           >
             BOTANICAL LAB <span aria-hidden>✦</span> 植生研究所
           </p>
