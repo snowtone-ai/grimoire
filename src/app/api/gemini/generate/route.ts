@@ -24,7 +24,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 type GeminiResponse = {
   candidates?: Array<{
-    content?: { parts?: Array<{ text?: string }> };
+    content?: { parts?: Array<{ text?: string; thought?: boolean }> };
   }>;
 };
 
@@ -55,9 +55,16 @@ async function callGemini(apiKey: string, prompt: string): Promise<Response> {
   const payloads = [
     {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json", maxOutputTokens: 2048 },
+      generationConfig: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 2048,
+        thinkingConfig: { thinkingLevel: "low" },
+      },
     },
-    { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 2048 } },
+    {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: "low" } },
+    },
   ] as const;
 
   let rejectedPayload = false;
@@ -123,7 +130,10 @@ async function callGemini(apiKey: string, prompt: string): Promise<Response> {
       }
 
       const data = (await response.json()) as GeminiResponse;
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const content = data.candidates?.[0]?.content?.parts
+        ?.filter((part) => !part.thought && part.text)
+        .map((part) => part.text)
+        .join("");
       if (content?.trim()) return Response.json({ text: content });
     }
   }
