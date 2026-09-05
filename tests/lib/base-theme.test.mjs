@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   BASE_THEMES,
   DEFAULT_BASE_THEME,
@@ -8,6 +9,11 @@ import {
   parseBaseTheme,
   setBaseTheme,
 } from "../../src/lib/base-theme.ts";
+
+const SETTINGS_SOURCE = readFileSync(
+  new URL("../../src/components/settings/settings-screen.tsx", import.meta.url),
+  "utf8",
+);
 
 test("the base atmosphere offers ten stable, unique choices", () => {
   assert.equal(BASE_THEMES.length, 10);
@@ -48,4 +54,13 @@ test("selecting an atmosphere persists it and applies it immediately", () => {
 
   applyBaseTheme("hearth", root);
   assert.equal(root.dataset.baseTheme, "hearth");
+});
+
+test("wallpaper choices stay collapsed until the explicit accessible control is pressed", () => {
+  assert.match(SETTINGS_SOURCE, /const \[showThemes, setShowThemes\] = useState\(false\)/);
+  assert.match(SETTINGS_SOURCE, /aria-expanded=\{showThemes\}/);
+  assert.match(SETTINGS_SOURCE, /aria-controls="base-theme-options"/);
+  assert.match(SETTINGS_SOURCE, /\{showThemes && \(/);
+  assert.match(SETTINGS_SOURCE, /id="base-theme-options"[\s\S]*role="radiogroup"/);
+  assert.match(SETTINGS_SOURCE, /playCue\(showThemes \? "modalClose" : "modalOpen"\)/);
 });

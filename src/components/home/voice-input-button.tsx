@@ -541,14 +541,14 @@ export function VoiceInputButton({
         onClick={handleClick}
         disabled={isDisabled}
         className={cn(
-          "btn-squish relative flex size-14 items-center justify-center rounded-none shadow-lg disabled:cursor-not-allowed",
+          "btn-squish relative flex size-16 items-center justify-center rounded-full shadow-lg disabled:cursor-not-allowed",
           buttonColor,
         )}
       >
         {status === "listening" && (
           <span
             aria-hidden
-            className="absolute inset-0 rounded-none bg-destructive/40 motion-safe:animate-ping"
+            className="absolute inset-0 rounded-full bg-destructive/40 motion-safe:animate-ping"
           />
         )}
         {status === "processing" ? (

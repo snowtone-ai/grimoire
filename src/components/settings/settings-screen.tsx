@@ -58,7 +58,6 @@ import {
 } from "@/lib/notifications";
 import { getSurveyResetCount, resetSurveyNotes } from "@/lib/rewardDb";
 import {
-  haptic,
   isHapticEnabled,
   isSoundEnabled,
   playCue,
@@ -159,6 +158,8 @@ function BaseThemeSection() {
     getStoredBaseTheme,
     () => DEFAULT_BASE_THEME,
   );
+  const [showThemes, setShowThemes] = useState(false);
+  const selectedTheme = BASE_THEMES.find((option) => option.id === theme) ?? BASE_THEMES[0];
 
   function choose(nextTheme: BaseTheme) {
     if (nextTheme === theme) return;
@@ -176,40 +177,76 @@ function BaseThemeSection() {
         <FieldDescription id="base-theme-description">
           好きな空気を選ぶと、すべての画面へすぐに反映されます
         </FieldDescription>
-        <div
-          role="radiogroup"
-          aria-describedby="base-theme-description"
-          className="grid grid-cols-2 gap-x-3 gap-y-4"
-        >
-          {BASE_THEMES.map((option) => {
-            const selected = option.id === theme;
-            return (
-              <label key={option.id} className="group min-w-0 cursor-pointer">
-                <input
-                  type="radio"
-                  name="base-theme"
-                  value={option.id}
-                  checked={selected}
-                  onChange={() => choose(option.id)}
-                  className="peer sr-only"
-                />
-                <span
-                  aria-hidden
-                  data-base-theme-preview={option.id}
-                  className="base-theme-preview block h-14 w-full border border-border transition-[outline-color,filter] duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring group-active:brightness-90"
-                />
-                <span className="mt-1.5 flex min-w-0 items-baseline justify-between gap-2">
-                  <span className="truncate text-sm font-semibold text-foreground">
-                    {option.label}
-                  </span>
-                  <span className="shrink-0 text-[0.625rem] font-medium text-muted-foreground">
-                    {selected ? "選択中" : option.description}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden
+            data-base-theme-preview={selectedTheme.id}
+            className="base-theme-preview block size-14 shrink-0 border border-border"
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-foreground">
+              {selectedTheme.label}
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {selectedTheme.description}
+            </span>
+          </span>
         </div>
+        <button
+          type="button"
+          id="base-theme-toggle"
+          aria-expanded={showThemes}
+          aria-controls="base-theme-options"
+          aria-describedby="base-theme-description"
+          onClick={() => {
+            playCue(showThemes ? "modalClose" : "modalOpen");
+            setShowThemes((open) => !open);
+          }}
+          className="btn-squish mt-3 flex w-full items-center justify-between border border-border px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+        >
+          <span>{showThemes ? "壁紙候補を閉じる" : "壁紙候補を表示"}</span>
+          <span aria-hidden className="text-xs text-muted-foreground">
+            {BASE_THEMES.length}種類
+          </span>
+        </button>
+        {showThemes && (
+          <div
+            id="base-theme-options"
+            role="radiogroup"
+            aria-labelledby="base-theme-title"
+            aria-describedby="base-theme-description"
+            className="grid grid-cols-2 gap-x-3 gap-y-4"
+          >
+            {BASE_THEMES.map((option) => {
+              const selected = option.id === theme;
+              return (
+                <label key={option.id} className="group min-w-0 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="base-theme"
+                    value={option.id}
+                    checked={selected}
+                    onChange={() => choose(option.id)}
+                    className="peer sr-only"
+                  />
+                  <span
+                    aria-hidden
+                    data-base-theme-preview={option.id}
+                    className="base-theme-preview block h-14 w-full border border-border transition-[outline-color,filter] duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring group-active:brightness-90"
+                  />
+                  <span className="mt-1.5 flex min-w-0 items-baseline justify-between gap-2">
+                    <span className="truncate text-sm font-semibold text-foreground">
+                      {option.label}
+                    </span>
+                    <span className="shrink-0 text-[0.625rem] font-medium text-muted-foreground">
+                      {selected ? "選択中" : option.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
       </FieldSet>
     </section>
   );
@@ -226,6 +263,7 @@ function TextSizeSection() {
     const next = large ? "normal" : "large";
     setTextSize(next);
     setTextSizeState(next);
+    playCue("toggle");
   }
 
   return (
@@ -384,7 +422,7 @@ function SoundToggleRow() {
     if (!next) stopPreview();
     setSoundEnabled(next);
     setEnabled(next);
-    if (next) playCue("toggle");
+    playCue("toggle");
   }
 
   function previewSound() {
@@ -426,10 +464,10 @@ function SoundToggleRow() {
           type="button"
           onClick={toggle}
           aria-pressed={enabled}
-          className="btn-squish flex w-full items-center gap-3 rounded-none p-1 text-left hover:bg-muted"
+          className="btn-squish flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
         >
           <span
-            className={`flex size-10 shrink-0 items-center justify-center rounded-none ${
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
               enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
             }`}
           >
@@ -443,12 +481,12 @@ function SoundToggleRow() {
           </span>
           <span
             aria-hidden
-            className={`h-6 w-11 shrink-0 rounded-none p-0.5 transition-colors ${
+            className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
               enabled ? "bg-primary" : "bg-muted"
             }`}
           >
             <span
-              className={`block size-5 rounded-none bg-background transition-transform ${
+              className={`block size-5 rounded-full bg-background transition-transform ${
                 enabled ? "translate-x-5" : ""
               }`}
             />
@@ -488,7 +526,6 @@ function HapticToggleRow() {
     setHapticEnabled(next);
     setEnabled(next);
     playCue("toggle");
-    if (next) haptic(10);
   }
 
   return (
@@ -553,7 +590,7 @@ function EffectToggleRow({
     const next = !enabled;
     setEffectEnabled(effectKey, next);
     setEnabled(next);
-    if (next) playCue("toggle");
+    playCue("toggle");
   }
 
   return (
