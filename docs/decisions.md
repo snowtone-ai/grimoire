@@ -1583,3 +1583,110 @@ OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う
   gitleaks、PR CIを通過した。
 - Vercel Productionで音声解析APIを実行し、14.74秒・HTTP 200でtitle / dueDate /
   dueTime / categoryを含むJSONを取得した。`pnpm check:production`も配信CSS 47クラス中欠落0。
+
+2026-09-05追記: Google公式の[最新モデル案内](https://ai.google.dev/gemini-api/docs/latest-model)で
+Gemini 3.8 Flashへの更新を確認した。実装は世代名を固定せず`gemini-flash-latest`をprimaryにするため、
+この更新にもコード変更なしで追従する。安定版`gemini-3.5-flash-lite`はlatest aliasが一時失敗した場合の
+continuity fallbackであり、通常リクエストのモデル選択を固定しない。
+
+## D-053: 破壊的・予測不能操作をlocal test環境だけで再現するseeded resilience harness
+
+- 日付: 2026-09-04
+- 対象: testing / agent skill / browser automation
+- 要求: rapid tap、duplicate submit、navigation churn、reload/tab close/browser restart、
+  offline/abort/delay、quota/corrupt storageを再現可能な順序で注入し、時間・操作数・並列数を
+  必ず有限にする。production・実データ・外部通信には到達させない。
+
+### 実装前Capability Gate（2026-09-04調査）
+
+| 候補 | 種別・版/一次出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| `@playwright/test` | npm devDependency 1.62.1 / Apache-2.0 / Node >=20。[公式Isolation](https://playwright.dev/docs/browser-contexts)、[Timeouts](https://playwright.dev/docs/test-timeouts)、[BrowserContext route/offline/tracing](https://playwright.dev/docs/api/class-browsercontext)、[trace設定](https://playwright.dev/docs/test-use-options) | 新規の一時browser profileでlocal fixtureのDOM、same-origin request、明示したsynthetic storageだけを操作。traceはrepo内`logs/`またはOS tempへ保存 | 採用。npm registryで1.62.1が当日更新のcurrent、Node 24.14.0互換、direct dependencyは`playwright` 1.62.1だけと確認。browser lifecycle/network/storageを同じseedでCI再生できる |
+| 既設Playwright MCP | project MCP / `@playwright/mcp@latest` | agent contextへpage内容を取得し、対話的にbrowserを操作 | 主runnerには不採用。spot検証には有用だが、package scriptとしての固定budget、seed、history、invariant checkerを再現できず、既設機能とも重複する。設定変更・追加installはしない |
+| Node built-in test + `fake-indexeddb` | 既設dependency / Node 24 | process内のpure logicとmock storageのみ。外部露出なし | core safety/seed/budget testには継続採用。real browserのclose/restart、routing、quota exception注入は担えない |
+| Jepsen本体 / WPT全体 | 外部test suites。[Jepsen histories/model](https://jepsen.io/consistency/models)、[nemesis例](https://jepsen.io/analyses/rethinkdb-2-2-3-reconfiguration)、[W3C WebDriver BiDi](https://www.w3.org/TR/webdriver-bidi/) | 大きい別runtime/test surface。対象外のsystemやbrowserまで試験する | 不採用。Jepsenのinvoke/completion historyとbounded nemesisという設計だけを借り、browser appを分散DBとして過大主張しない。WPTは標準実装の適合suiteでありapp invariant試験とは目的が違う |
+| 追加plugin / MCP / skill | 推奨plugin一覧および既設local tools | 導入ごとに権限・認証・context costが増える | 不採用。外部account/dataは不要。再利用判断だけをproject-local skillへ閉じる |
+
+### 根拠と決定
+
+- W3C [IndexedDB 3.0](https://www.w3.org/TR/IndexedDB/) はtransaction abort時のrollback、
+  commit失敗時のatomicity、`QuotaExceededError` / `NotReadableError` / `UnknownError`を定義する。
+  実disk破壊ではなく、isolated pageのWeb Storage / IndexedDB / Cache書込境界へ
+  `QuotaExceededError`を注入し、corruptionはscenarioが列挙したsynthetic key/recordだけに限定する。
+- W3C WebDriver BiDiのnetwork moduleはoffline conditionとrequest failure/interceptionを区別する。
+  harnessもoffline、1回限定abort、有限delayを別operationとして履歴化する。
+- web.dev [Storage for the web](https://web.dev/articles/storage-for-the-web) はquota超過時の
+  `QuotaExceededError`とbest-effort storage evictionを、[Network reliability](https://web.dev/explore/reliable)
+  はoffline/不安定回線での明示的な信頼性を扱う。よって「画面が落ちない」ではなく、false success、
+  acknowledged write loss、recovery/degraded stateをscenario invariantで判定する。
+- targetはexplicit port付きloopbackだけ、credential/query付きURLは拒否し、
+  `/.well-known/resilience-test`が`environment=test`・scenario token・`Cache-Control: no-store`を
+  返すまでbrowserを起動しない。browser内のcross-origin requestはabortし、force bypassは作らない。
+- defaultは30秒・16 actions・2 tabs・browser restart最大2回。hard capは120秒・128 actions・
+  4 tabs・restart 4回で、全operationをseeded shuffleして最低1回ずつ実行する。seedと
+  Jepsen型`invoke/ok/fail` history、trace segment、failure screenshotを診断に残し、最初の
+  invariant違反で停止する。runner自身が作った一時browser profile以外のprocessは停止しない。
+- `.agents/`全体のignoreは維持し、`.agents/skills/resilience-tester/**`だけを明示的に追跡する。
+
+### 確認結果
+
+- `pnpm test:resilience:unit`: 14/14 pass。
+- `pnpm test:resilience`: seed `424242`で7/7 passを2回連続確認。全11 faultを含む同一順序を再生し、
+  request abort / offline由来のbrowser errorは、同じoperation・同じURL・対応するrequest failureが
+  揃う場合だけexpectedとして分類する。その他のconsole errorはinvariant違反として失敗する。
+- `node --test tests/resilience/core.test.mjs tests/resilience/campaign.smoke.mjs`: pass。
+- `pnpm exec eslint scripts/resilience tests/resilience`: pass。
+
+## D-054: 2026-09-05 ユーザーFB一括改善
+
+- 日付: 2026-09-05
+- 対象: feminine Areas / Gemini voice / Base wallpaper / first navigation / startup sound
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/一次出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 remote MCP | MCP 4.0.4 / [公式client設定](https://context7.com/docs/resources/all-clients) | 公開ドキュメントqueryだけを送信。認証なし。API key・利用者データ・source codeは送信しない | 採用。project-local `.codex/config.toml`へ公式Streamable HTTP URLを追加し、MCP initialize HTTP 200 / protocol 2025-06-18を確認 |
+| Gemini公式 + Web Speech仕様 | [Gemini Models](https://ai.google.dev/gemini-api/docs/models)、[latest model](https://ai.google.dev/gemini-api/docs/latest-model)、[MDN SpeechRecognition error](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error) | 公開資料のread-only閲覧。音声・API key・アプリデータ送信なし | 採用。latest aliasのhot-swap、stable fallback、権限拒否・無音・audio capture等の失敗区別を実装へ反映 |
+| Next.js 16.3.1 built-in routing | [公式Linking and Navigating](https://nextjs.org/docs/app/getting-started/linking-and-navigating)、[Lazy Loading](https://nextjs.org/docs/app/guides/lazy-loading) | 外部権限なし。既存bundleだけ | 採用。静的routeのserver renderと`Link` prefetchを回復し、追加prefetch libraryは導入しない |
+| Chromium / web.dev rendering guidance | [DOM size](https://developer.chrome.com/docs/lighthouse/performance/dom-size/)、[content-visibility](https://web.dev/articles/content-visibility) | 公開資料のread-only閲覧。認証・データ露出なし | 採用。図鑑の全項目は検索可能なDOMに保ちつつ、画面外rarity sectionのstyle/layout/paintだけを延期する |
+| Apple iPhone wallpaper gallery | [公式Wallpaper案内](https://support.apple.com/en-us/102638) | 公開UI資料のread-only閲覧 | UIモデルとして1つだけ採用。選択肢一覧・即時preview・保存という構造だけを借り、Appleの外観、角丸component、固有素材、文言はコピーしない |
+| Kenney RPG Audio / Music Jingles | CC0 1.0 / [RPG Audio](https://kenney.nl/assets/rpg-audio)、[Music Jingles](https://kenney.nl/assets/music-jingles)、[CC0 legal code](https://creativecommons.org/publicdomain/zero/1.0/legalcode.en) | 同梱asset取得だけ。認証・利用者データなし | 採用。既存同梱CC0 sourceをmixした1.31秒のstartup flourishを追加。出典、source hash、再現手順は`docs/startup-sound-sources.md`へ固定 |
+| project-local skills | `frontend-design`、`shadcn`、`imagegen`、`resilience-tester`、`chrome-devtools` | repository内手順とlocal/browser testだけ | 採用。UI規約、生成asset要件、bounded fault campaign、実画面検証に限定 |
+| 追加UI/audio/model SDK | — | dependency・bundle・供給網を増やす | 不採用。既存React/CSS/Web Audio/RESTとPlaywrightで要件を満たす |
+
+### 決定と実装
+
+- `petal`（花菓子宮殿の庭）と`lullaby`（夢織り星谷）を追加し、各47点を既存エリアと同じ
+  R1/2/3/5/6/7 = 11/10/9/7/6/4で構成する。新規94点と2エリア画像は写実的な自然幻想の
+  共通art bibleを保ちつつ、花菓子・陶磁器・レース・星空・月・夢織りで女性向けの可愛さを明確にする。
+- Gemini keyをclient公開可能な`NEXT_PUBLIC_*`からserver-only `GEMINI_API_KEY`へ移し、
+  latest alias → stable liteの有限fallback、attempt timeout、payload互換fallback、秘密情報を含まない
+  error logを採用する。音声認識は二重開始、無限待機、unmount後callback、権限拒否、無音、network、
+  capture失敗を区別し、必ず手入力へ復帰できるようにする。
+- Base背景は10種類とする。白/紺の二択を置換するのではなく、各themeにlight/darkのatmosphereを持たせ、
+  設定画面のnative radioで即時適用・永続化する。SSRでは安全な既定値、初回paint前inline scriptでは
+  許可IDだけを受理し、hydration差分と白いflashを避ける。新規controlは`border-radius: 0`。
+- 各routeの`next/dynamic({ ssr: false })`と初回loading fallbackを外して静的server renderへ戻す。
+  下部navigationの既存`Link`がviewport内static routeを自動prefetchするため、最初の画面表示でも
+  client chunk待ちのblank/loading stateを作らない。IndexedDB読出し中もHome/All/Chronicleの骨格を
+  初回から固定し、状態は`aria-busy`で伝える。図鑑の画面外rarity sectionは`content-visibility: auto`と
+  intrinsic sizeで描画を延期し、最初に見えるエリア画像だけを高priorityで取得する。
+- 起動演出音は非blockingな単一audio elementで再生する。演出skip、unmount、page hide、
+  reduced motion、起動演出OFF、効果音OFFで停止し、autoplay拒否は画面操作を阻害せず静かにdegradeする。
+
+### 検証結果
+
+- `pnpm verify`でlint、TypeScript、unit 144/144、production buildがpass。画面5routeはすべてstatic prerender、
+  Gemini APIだけがon-demand server routeであることを確認した。
+- Catalog unit 14/14 pass。RARE 1–7は518点、全master hashは一意、shipping derivativeは2,072点。
+  Area processorは10/10、item validatorは518/518、resilience campaignは同一seedで2回連続7/7 pass。
+- Chrome DevTools MCPのproduction serverを412×915、device scale 2、touchで確認。初回reload時の
+  HomeはLCP 354ms / CLS 0.00、Allは265ms / 0.00、Bookは489ms / 0.00。Bookは横overflowなし、
+  新2エリアと総数530を実DOMで確認し、console warning/error/issueは0件だった。
+- Base背景10種はlight/dark双方でcomputed値が10種類すべて一意で、選択値はhard reload後も保持した。
+  Gemini APIは実リクエストHTTP 200、音声は無音timeout後にbuttonと手入力へ復帰することを確認した。
+- `startup-flourish.wav`はproduction serverからHTTP 200、`audio/wav`、115,522 bytesで配信された。
+  自動Chromeではbrowser autoplay policyにより可聴再生を保証できないため、拒否時は意図的に無音で継続する。
+- Lighthouse mobileはAccessibility 100、Best Practices 100、SEO 100。Agentic browsingは88で、
+  一般利用者向け画面にagent metadataがないという非機能要件外の1項目だけが未達だった。

@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-23T05:41:40.986Z",
+  "generatedAt": "2026-09-04T16:39:39.138Z",
   "artBible": "docs/asset-art-bible.md",
-  "count": 424,
+  "count": 518,
   "entries": [
     {
       "id": "frost-1-yukinoshita",
@@ -2205,6 +2205,556 @@
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ウミホタルの光沙. Story trace: 夜の浅瀬で青く光る、小さな発光生物の砂. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     },
     {
+      "id": "petal-1-rose-sugar-petal",
+      "name": "薔薇砂糖の花びら",
+      "flavor": "朝露の代わりに細かな砂糖をまとった薔薇の花びら",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-rose-sugar-petal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-rose-sugar-petal.avif",
+          "public/item-rewards/thumb/petal-1-rose-sugar-petal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-rose-sugar-petal.avif",
+          "public/item-rewards/inspect/petal-1-rose-sugar-petal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "05dfb461d6d0b0324d8312d85046ad9d198cfebf305741d3498b50531f4a2bee",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 薔薇砂糖の花びら. Story trace: 朝露の代わりに細かな砂糖をまとった薔薇の花びら. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-strawberry-dew",
+      "name": "苺露のしずく",
+      "flavor": "苺畑の葉先で甘く香る、朝だけの露",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-strawberry-dew.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-strawberry-dew.avif",
+          "public/item-rewards/thumb/petal-1-strawberry-dew.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-strawberry-dew.avif",
+          "public/item-rewards/inspect/petal-1-strawberry-dew.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ad35a1330756ffdd38a4e7dceb0310890a9b1d8545465aa1ae037543f25f84c2",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 苺露のしずく. Story trace: 苺畑の葉先で甘く香る、朝だけの露. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-vanilla-clover",
+      "name": "バニラクローバー",
+      "flavor": "指で撫でると焼き菓子の香りがする四つ葉",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-vanilla-clover.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-vanilla-clover.avif",
+          "public/item-rewards/thumb/petal-1-vanilla-clover.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-vanilla-clover.avif",
+          "public/item-rewards/inspect/petal-1-vanilla-clover.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "13a173298e90abb68c468936ac46725236b8df186934c8a2f6fac4512e5dfc19",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of バニラクローバー. Story trace: 指で撫でると焼き菓子の香りがする四つ葉. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-cream-daisy",
+      "name": "クリームデイジー",
+      "flavor": "花芯まで淡いクリーム色をした小さなデイジー",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-cream-daisy.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-cream-daisy.avif",
+          "public/item-rewards/thumb/petal-1-cream-daisy.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-cream-daisy.avif",
+          "public/item-rewards/inspect/petal-1-cream-daisy.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "0e0fb18fd4182c2095993344608bd3ae387a5102be4dd076aac1e0131bff5890",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of クリームデイジー. Story trace: 花芯まで淡いクリーム色をした小さなデイジー. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-mint-ribbonleaf",
+      "name": "ミントリボン草",
+      "flavor": "そよ風に合わせ、結び目のように揺れる香草",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-mint-ribbonleaf.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-mint-ribbonleaf.avif",
+          "public/item-rewards/thumb/petal-1-mint-ribbonleaf.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-mint-ribbonleaf.avif",
+          "public/item-rewards/inspect/petal-1-mint-ribbonleaf.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "332c85cecc131376c8c71a2930593abeaa8894c5b2b8c3191b48b2e91e05bbb6",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ミントリボン草. Story trace: そよ風に合わせ、結び目のように揺れる香草. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-peach-bell",
+      "name": "ピーチベルの花",
+      "flavor": "熟れた桃の色をした、鈴形の花",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-peach-bell.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-peach-bell.avif",
+          "public/item-rewards/thumb/petal-1-peach-bell.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-peach-bell.avif",
+          "public/item-rewards/inspect/petal-1-peach-bell.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "9a1b1fc4b8c7c4f3c3ffcabe52b57594c0ed2ab390564e65a1477f98bf338387",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ピーチベルの花. Story trace: 熟れた桃の色をした、鈴形の花. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-sugar-pearl",
+      "name": "糖花の真珠粒",
+      "flavor": "花の蜜が丸く固まり、真珠のようになった粒",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-sugar-pearl.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-sugar-pearl.avif",
+          "public/item-rewards/thumb/petal-1-sugar-pearl.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-sugar-pearl.avif",
+          "public/item-rewards/inspect/petal-1-sugar-pearl.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "e0b4261a61a03414c0c68a842036a7be4f9fabda466e457cbfca291ca565aa2c",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 糖花の真珠粒. Story trace: 花の蜜が丸く固まり、真珠のようになった粒. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-teacup-moss",
+      "name": "ティーカップ苔",
+      "flavor": "使われなくなった茶器の中にだけ育つ柔らかな苔",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-teacup-moss.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-teacup-moss.avif",
+          "public/item-rewards/thumb/petal-1-teacup-moss.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-teacup-moss.avif",
+          "public/item-rewards/inspect/petal-1-teacup-moss.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "53874395d2719adb09508926338393b9ac2035b9d78c149f103b62e05f975d5e",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ティーカップ苔. Story trace: 使われなくなった茶器の中にだけ育つ柔らかな苔. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-raspberry-leaf",
+      "name": "木苺の若葉",
+      "flavor": "宮殿の生垣に芽吹いた、香りのよい若葉",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-raspberry-leaf.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-raspberry-leaf.avif",
+          "public/item-rewards/thumb/petal-1-raspberry-leaf.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-raspberry-leaf.avif",
+          "public/item-rewards/inspect/petal-1-raspberry-leaf.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "7cbf450d70cacf46e3901ba3d1bf6b66865b36a593ec9adf6629d6e8afaa4c6f",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 木苺の若葉. Story trace: 宮殿の生垣に芽吹いた、香りのよい若葉. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-meringue-mushroom",
+      "name": "メレンゲ茸",
+      "flavor": "雨上がりに現れる、焼き菓子そっくりの茸",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-meringue-mushroom.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-meringue-mushroom.avif",
+          "public/item-rewards/thumb/petal-1-meringue-mushroom.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-meringue-mushroom.avif",
+          "public/item-rewards/inspect/petal-1-meringue-mushroom.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "c6043cfe1827ade794a560c4dbc9e0dfc93d535266d1198a7aa5d6d9d8503a5f",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of メレンゲ茸. Story trace: 雨上がりに現れる、焼き菓子そっくりの茸. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-1-candied-violet",
+      "name": "砂糖漬けスミレ",
+      "flavor": "庭園の料理人が保存した、透き通る紫の花",
+      "region": "petal",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-1-candied-violet.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-1-candied-violet.avif",
+          "public/item-rewards/thumb/petal-1-candied-violet.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-1-candied-violet.avif",
+          "public/item-rewards/inspect/petal-1-candied-violet.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "acee2a138342248338c1f49246697575d0f621ead38affa6d0fcb2c6581d8a77",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 砂糖漬けスミレ. Story trace: 庭園の料理人が保存した、透き通る紫の花. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-moonbell-petal",
+      "name": "月鈴花の花びら",
+      "flavor": "夜風に揺れると鈴のような余韻を残す花びら",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-moonbell-petal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-moonbell-petal.avif",
+          "public/item-rewards/thumb/lullaby-1-moonbell-petal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-moonbell-petal.avif",
+          "public/item-rewards/inspect/lullaby-1-moonbell-petal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "24ed99dbcec27d4c8026729eeb03f52c07364c4f525ec63580c61c0146be3893",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月鈴花の花びら. Story trace: 夜風に揺れると鈴のような余韻を残す花びら. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-star-dew",
+      "name": "星露のしずく",
+      "flavor": "夜明け前の草先にだけ結ぶ淡い光の露",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-star-dew.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-star-dew.avif",
+          "public/item-rewards/thumb/lullaby-1-star-dew.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-star-dew.avif",
+          "public/item-rewards/inspect/lullaby-1-star-dew.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "cd05db037f685e23e0586b866f58aef0be98d3e804496e195419df637aaff1a7",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星露のしずく. Story trace: 夜明け前の草先にだけ結ぶ淡い光の露. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-cloud-clover",
+      "name": "雲綿クローバー",
+      "flavor": "雲の縁に根を張る、綿毛のような四つ葉",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-cloud-clover.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-cloud-clover.avif",
+          "public/item-rewards/thumb/lullaby-1-cloud-clover.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-cloud-clover.avif",
+          "public/item-rewards/inspect/lullaby-1-cloud-clover.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "67bee8a1463a8b354253f174c1333e71d11b5807e7b62c7da60028f9913f6196",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲綿クローバー. Story trace: 雲の縁に根を張る、綿毛のような四つ葉. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-lullaby-grass",
+      "name": "子守歌草",
+      "flavor": "葉擦れがゆっくりした三拍子に聞こえる草",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-lullaby-grass.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-lullaby-grass.avif",
+          "public/item-rewards/thumb/lullaby-1-lullaby-grass.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-lullaby-grass.avif",
+          "public/item-rewards/inspect/lullaby-1-lullaby-grass.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "b10637bd8182e91d528d33c0e1f0f9a666ab7e5894bee74132a99543f3925c2b",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 子守歌草. Story trace: 葉擦れがゆっくりした三拍子に聞こえる草. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-lavender-feathergrass",
+      "name": "薄紫の羽毛草",
+      "flavor": "眠る鳥の羽毛ほど軽い薄紫の穂",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-lavender-feathergrass.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-lavender-feathergrass.avif",
+          "public/item-rewards/thumb/lullaby-1-lavender-feathergrass.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-lavender-feathergrass.avif",
+          "public/item-rewards/inspect/lullaby-1-lavender-feathergrass.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "7f50f1ea468bdf0c8f9e4571289b9b1a60b4e606ae80cd9b50c8584069c47c95",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 薄紫の羽毛草. Story trace: 眠る鳥の羽毛ほど軽い薄紫の穂. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-night-pansy",
+      "name": "夜空パンジー",
+      "flavor": "花弁に小さな夜空の色を映すパンジー",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-night-pansy.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-night-pansy.avif",
+          "public/item-rewards/thumb/lullaby-1-night-pansy.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-night-pansy.avif",
+          "public/item-rewards/inspect/lullaby-1-night-pansy.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "d5ce1a1d3f325e86f9bebadb153b98b15b7e39e1c39d9e3fab270b3c65671cdb",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夜空パンジー. Story trace: 花弁に小さな夜空の色を映すパンジー. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-silver-dandelion",
+      "name": "銀綿毛",
+      "flavor": "月光を受けて銀色にほどける綿毛",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-silver-dandelion.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-silver-dandelion.avif",
+          "public/item-rewards/thumb/lullaby-1-silver-dandelion.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-silver-dandelion.avif",
+          "public/item-rewards/inspect/lullaby-1-silver-dandelion.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "c00f0b6815dbeb1d9a9885db6b1117e92f0bfe63910cccd238c81fec6f1d5632",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 銀綿毛. Story trace: 月光を受けて銀色にほどける綿毛. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-dream-moss",
+      "name": "夢見苔",
+      "flavor": "枕元に置くと穏やかな夢を見るという苔",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-dream-moss.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-dream-moss.avif",
+          "public/item-rewards/thumb/lullaby-1-dream-moss.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-dream-moss.avif",
+          "public/item-rewards/inspect/lullaby-1-dream-moss.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "b6bf4edfcc713fa8e1774fe1ab1e2974a73c3061b585c0ba770422488c804ad0",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢見苔. Story trace: 枕元に置くと穏やかな夢を見るという苔. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-comet-seed",
+      "name": "ほうき星の種",
+      "flavor": "長い銀の尾を引いて谷を渡る小さな種",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-comet-seed.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-comet-seed.avif",
+          "public/item-rewards/thumb/lullaby-1-comet-seed.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-comet-seed.avif",
+          "public/item-rewards/inspect/lullaby-1-comet-seed.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "151e734ab9d6a2bac30bebe319c00a8e8746ce0f2ef48235a6ebbced34d4efa8",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ほうき星の種. Story trace: 長い銀の尾を引いて谷を渡る小さな種. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-pillow-cotton",
+      "name": "雲枕の綿花",
+      "flavor": "浮島の端に育つ、ひんやり柔らかな綿花",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-pillow-cotton.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-pillow-cotton.avif",
+          "public/item-rewards/thumb/lullaby-1-pillow-cotton.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-pillow-cotton.avif",
+          "public/item-rewards/inspect/lullaby-1-pillow-cotton.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ac1350795fbf8f48b6d2010ec5d1a1c9a8ed137df83229073b4c01b8a891a54e",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲枕の綿花. Story trace: 浮島の端に育つ、ひんやり柔らかな綿花. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-1-twilight-berry",
+      "name": "宵色ベリー",
+      "flavor": "日没直後の空と同じ色に熟す小さな実",
+      "region": "lullaby",
+      "rarity": 1,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-1-twilight-berry.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-1-twilight-berry.avif",
+          "public/item-rewards/thumb/lullaby-1-twilight-berry.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-1-twilight-berry.avif",
+          "public/item-rewards/inspect/lullaby-1-twilight-berry.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "7a7357ac144043076d8c7d2e3c5cf4188a04eebf6c6d936ea30e164bb4680c12",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 宵色ベリー. Story trace: 日没直後の空と同じ色に熟す小さな実. humble field-gathered material, simple irregular silhouette, diffuse natural light. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
       "id": "frost-2-aotsurara",
       "name": "アオツララ",
       "flavor": "青みを帯びた、溶けにくい氷柱",
@@ -4205,6 +4755,506 @@
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星の砂. Story trace: 浜辺に打ち上げられる、星の形をした砂. selected or carefully prepared material, refined surface and one controlled highlight. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     },
     {
+      "id": "petal-2-porcelain-button",
+      "name": "磁器の花ボタン",
+      "flavor": "小さな花模様を手描きした乳白色のボタン",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-porcelain-button.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-porcelain-button.avif",
+          "public/item-rewards/thumb/petal-2-porcelain-button.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-porcelain-button.avif",
+          "public/item-rewards/inspect/petal-2-porcelain-button.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "80a7cccd95c284d2447854a88f05bde44a2b04787b5bfbc6abcec7cb24e2005f",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 磁器の花ボタン. Story trace: 小さな花模様を手描きした乳白色のボタン. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-lace-thread",
+      "name": "花レースの糸束",
+      "flavor": "蔓花の模様を編むための、淡桃色の細糸",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-lace-thread.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-lace-thread.avif",
+          "public/item-rewards/thumb/petal-2-lace-thread.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-lace-thread.avif",
+          "public/item-rewards/inspect/petal-2-lace-thread.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "41072845c45ec1aa2e79b5aae321b7fad7b108a55716ca25699d801f8f4e6b2a",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 花レースの糸束. Story trace: 蔓花の模様を編むための、淡桃色の細糸. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-macaron-shell",
+      "name": "マカロン石の殻",
+      "flavor": "丸い飛び石から薄く剥がれた、菓子色の石片",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-macaron-shell.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-macaron-shell.avif",
+          "public/item-rewards/thumb/petal-2-macaron-shell.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-macaron-shell.avif",
+          "public/item-rewards/inspect/petal-2-macaron-shell.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "609d1daae06731e698c2704843f3ea98853b7cab01156323cefeb08a8950873d",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of マカロン石の殻. Story trace: 丸い飛び石から薄く剥がれた、菓子色の石片. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-rose-teaspoon",
+      "name": "薔薇彫りの小匙",
+      "flavor": "柄に蔓薔薇を刻んだ、茶会用の小さな匙",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-rose-teaspoon.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-rose-teaspoon.avif",
+          "public/item-rewards/thumb/petal-2-rose-teaspoon.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-rose-teaspoon.avif",
+          "public/item-rewards/inspect/petal-2-rose-teaspoon.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "665e9ae7af39dea89d4c13be9b594adddb1a2322c70e98b5417722475a8b1925",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 薔薇彫りの小匙. Story trace: 柄に蔓薔薇を刻んだ、茶会用の小さな匙. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-berry-ribbon",
+      "name": "木苺染めのリボン",
+      "flavor": "木苺の果汁でむらなく染め上げた絹のリボン",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-berry-ribbon.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-berry-ribbon.avif",
+          "public/item-rewards/thumb/petal-2-berry-ribbon.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-berry-ribbon.avif",
+          "public/item-rewards/inspect/petal-2-berry-ribbon.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "488b69fadc6d1b7a468eb5b15d984e9273bc50419e19fa10bca873165e7891d3",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 木苺染めのリボン. Story trace: 木苺の果汁でむらなく染め上げた絹のリボン. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-sugar-glass",
+      "name": "砂糖硝子の欠片",
+      "flavor": "窓辺で虹色に光る、甘い香りの透明片",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-sugar-glass.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-sugar-glass.avif",
+          "public/item-rewards/thumb/petal-2-sugar-glass.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-sugar-glass.avif",
+          "public/item-rewards/inspect/petal-2-sugar-glass.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "47b5fb14eac34cef5b049c760040c14942a07220c8b62bab0428f7e224e7183f",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 砂糖硝子の欠片. Story trace: 窓辺で虹色に光る、甘い香りの透明片. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-cream-wax-drop",
+      "name": "クリーム蝋の雫",
+      "flavor": "祝宴の燭台から落ち、花形に固まった蝋",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-cream-wax-drop.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-cream-wax-drop.avif",
+          "public/item-rewards/thumb/petal-2-cream-wax-drop.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-cream-wax-drop.avif",
+          "public/item-rewards/inspect/petal-2-cream-wax-drop.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "595781e82df210794fb2185df7497fc2096bf26175985cc912dd825ecb3370e9",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of クリーム蝋の雫. Story trace: 祝宴の燭台から落ち、花形に固まった蝋. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-pearl-tea-leaf",
+      "name": "真珠包みの茶葉",
+      "flavor": "薄い真珠紙に一服分だけ包まれた香茶",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-pearl-tea-leaf.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-pearl-tea-leaf.avif",
+          "public/item-rewards/thumb/petal-2-pearl-tea-leaf.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-pearl-tea-leaf.avif",
+          "public/item-rewards/inspect/petal-2-pearl-tea-leaf.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "81683c6e6aef92e1378db0396f77f6fd51215b1422e857b8977c520dc6f60bc1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 真珠包みの茶葉. Story trace: 薄い真珠紙に一服分だけ包まれた香茶. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-petal-thimble",
+      "name": "花守りの指ぬき",
+      "flavor": "庭師が刺繍仕事にも使う、花弁形の指ぬき",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-petal-thimble.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-petal-thimble.avif",
+          "public/item-rewards/thumb/petal-2-petal-thimble.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-petal-thimble.avif",
+          "public/item-rewards/inspect/petal-2-petal-thimble.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "367bfa694d5fb3ad53b777f735df21c7babdd598cf82b825192c2d80c3a8a940",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 花守りの指ぬき. Story trace: 庭師が刺繍仕事にも使う、花弁形の指ぬき. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-2-pistachio-tile",
+      "name": "ピスタチオ釉のタイル",
+      "flavor": "回廊の床を彩っていた淡緑色の磁器片",
+      "region": "petal",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/petal-2-pistachio-tile.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-2-pistachio-tile.avif",
+          "public/item-rewards/thumb/petal-2-pistachio-tile.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-2-pistachio-tile.avif",
+          "public/item-rewards/inspect/petal-2-pistachio-tile.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "143b2a40863441df831df680108688beb8880903d4ad9be2c7038411d9024b80",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ピスタチオ釉のタイル. Story trace: 回廊の床を彩っていた淡緑色の磁器片. selected or carefully prepared material, refined surface and one controlled highlight. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-moon-lace-thread",
+      "name": "月レースの糸",
+      "flavor": "月明かりを撚って作る、ほつれにくい銀糸",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-moon-lace-thread.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-moon-lace-thread.avif",
+          "public/item-rewards/thumb/lullaby-2-moon-lace-thread.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-moon-lace-thread.avif",
+          "public/item-rewards/inspect/lullaby-2-moon-lace-thread.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "71399b861487c59c5b7f00be6e68fe6c75bd84f9f30ffc5a72456a3a9c21bec8",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月レースの糸. Story trace: 月明かりを撚って作る、ほつれにくい銀糸. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-starlight-button",
+      "name": "星灯りのボタン",
+      "flavor": "夜道で淡く光る、星形の貝ボタン",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-starlight-button.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-starlight-button.avif",
+          "public/item-rewards/thumb/lullaby-2-starlight-button.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-starlight-button.avif",
+          "public/item-rewards/inspect/lullaby-2-starlight-button.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "a9d85d40bdb2ccc923d17a4a776a05430df8e61c2b96a4d3ebda1673094facb1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星灯りのボタン. Story trace: 夜道で淡く光る、星形の貝ボタン. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-velvet-tassel",
+      "name": "天鵞絨クッションの房",
+      "flavor": "夢見台のクッションから外れた柔らかな房",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-velvet-tassel.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-velvet-tassel.avif",
+          "public/item-rewards/thumb/lullaby-2-velvet-tassel.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-velvet-tassel.avif",
+          "public/item-rewards/inspect/lullaby-2-velvet-tassel.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "5294fc831ff3f6200f1520705f42888fcaa5d71225c5fc6adfcac1638131c256",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 天鵞絨クッションの房. Story trace: 夢見台のクッションから外れた柔らかな房. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-silver-bridge-chip",
+      "name": "銀橋の細工片",
+      "flavor": "浮島を結ぶ細い橋から剥がれた装飾片",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-silver-bridge-chip.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-silver-bridge-chip.avif",
+          "public/item-rewards/thumb/lullaby-2-silver-bridge-chip.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-silver-bridge-chip.avif",
+          "public/item-rewards/inspect/lullaby-2-silver-bridge-chip.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "9751b1b85c9274300f3bd688b2045b81126c6402e68ef5d95a703270d983e692",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 銀橋の細工片. Story trace: 浮島を結ぶ細い橋から剥がれた装飾片. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-cloud-glass",
+      "name": "雲硝子の欠片",
+      "flavor": "曇った内側を雲がゆっくり流れる硝子片",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-cloud-glass.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-cloud-glass.avif",
+          "public/item-rewards/thumb/lullaby-2-cloud-glass.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-cloud-glass.avif",
+          "public/item-rewards/inspect/lullaby-2-cloud-glass.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "27a2f4b0455224bab60189f7ede2a4e75b32790fbafb3c5d321952d693f81518",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲硝子の欠片. Story trace: 曇った内側を雲がゆっくり流れる硝子片. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-dream-ribbon",
+      "name": "夢結びのリボン",
+      "flavor": "忘れたくない夢をそっと結んでおくリボン",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-dream-ribbon.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-dream-ribbon.avif",
+          "public/item-rewards/thumb/lullaby-2-dream-ribbon.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-dream-ribbon.avif",
+          "public/item-rewards/inspect/lullaby-2-dream-ribbon.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "cbfcbcc39064e14908a8bbda10c63b6140a6769e75dc9e3886b04947fda298ae",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢結びのリボン. Story trace: 忘れたくない夢をそっと結んでおくリボン. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-musicbox-spring",
+      "name": "星琴箱のぜんまい",
+      "flavor": "回すと遠くの星音をひと節だけ奏でるぜんまい",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-musicbox-spring.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-musicbox-spring.avif",
+          "public/item-rewards/thumb/lullaby-2-musicbox-spring.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-musicbox-spring.avif",
+          "public/item-rewards/inspect/lullaby-2-musicbox-spring.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "230ab1a6ae89b29db89c801fd401c64e5a7d5318fab2c0b2473583655a515b44",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星琴箱のぜんまい. Story trace: 回すと遠くの星音をひと節だけ奏でるぜんまい. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-moon-parasol-lace",
+      "name": "月見傘のレース",
+      "flavor": "月見のための小傘を縁取っていたレース",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-moon-parasol-lace.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-moon-parasol-lace.avif",
+          "public/item-rewards/thumb/lullaby-2-moon-parasol-lace.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-moon-parasol-lace.avif",
+          "public/item-rewards/inspect/lullaby-2-moon-parasol-lace.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "d2478e6e4ed36cb5ceba27428d58add78686b66c77bc9b99088400d5f7bfe7b3",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月見傘のレース. Story trace: 月見のための小傘を縁取っていたレース. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-bellflower-chime",
+      "name": "月鈴花の風鈴",
+      "flavor": "花殻を乾かして作った、澄んだ音の風鈴",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-bellflower-chime.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-bellflower-chime.avif",
+          "public/item-rewards/thumb/lullaby-2-bellflower-chime.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-bellflower-chime.avif",
+          "public/item-rewards/inspect/lullaby-2-bellflower-chime.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "55f1ce605e65e5ce22526ec4ae04487b6431cdce7b2df007da9cb7e3771e65b3",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月鈴花の風鈴. Story trace: 花殻を乾かして作った、澄んだ音の風鈴. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-2-sleep-tea-leaf",
+      "name": "眠り茶の葉包み",
+      "flavor": "穏やかな眠りへ導く香草を一服分包んだもの",
+      "region": "lullaby",
+      "rarity": 2,
+      "assignment": "Luna/high",
+      "source": "public/item-rewards/master/lullaby-2-sleep-tea-leaf.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-2-sleep-tea-leaf.avif",
+          "public/item-rewards/thumb/lullaby-2-sleep-tea-leaf.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-2-sleep-tea-leaf.avif",
+          "public/item-rewards/inspect/lullaby-2-sleep-tea-leaf.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "36881d988554df3de1b74c44e7364a5603bc828edf05e40f384d72e009c116bc",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 眠り茶の葉包み. Story trace: 穏やかな眠りへ導く香草を一服分包んだもの. selected or carefully prepared material, refined surface and one controlled highlight. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
       "id": "frost-3-hyousho",
       "name": "ヒョウショウ",
       "flavor": "六角形に育った氷の結晶",
@@ -6003,6 +7053,456 @@
       ],
       "sha256": "fc789a9c2c35a306d465a904ba9a363a11c96eac24f4a990e85de5e0a17f9c48",
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 貝紫の結晶. Story trace: 貴重な染料の元となる貝から採れる紫の結晶. unusual material or skilled workmanship with one precise secondary feature. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-rose-quartz-candy",
+      "name": "薔薇糖晶",
+      "flavor": "薔薇蜜が地中で結晶化した、淡紅色の鉱物",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-rose-quartz-candy.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-rose-quartz-candy.avif",
+          "public/item-rewards/thumb/petal-3-rose-quartz-candy.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-rose-quartz-candy.avif",
+          "public/item-rewards/inspect/petal-3-rose-quartz-candy.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "474143a33dac70e3d788747d4b7b2dcd66a128912b0dae7b38457bfba7a0dd6b",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 薔薇糖晶. Story trace: 薔薇蜜が地中で結晶化した、淡紅色の鉱物. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-strawberry-spinel",
+      "name": "苺色尖晶石",
+      "flavor": "摘みたての苺のように鮮やかな尖晶石",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-strawberry-spinel.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-strawberry-spinel.avif",
+          "public/item-rewards/thumb/petal-3-strawberry-spinel.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-strawberry-spinel.avif",
+          "public/item-rewards/inspect/petal-3-strawberry-spinel.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "7e677119335924a5cdc8680dab2ae15e2a8bdd7358610325664a3818b0825651",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 苺色尖晶石. Story trace: 摘みたての苺のように鮮やかな尖晶石. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-milk-opal",
+      "name": "ミルクオパール",
+      "flavor": "乳白の奥に淡い虹を宿す丸い宝石",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-milk-opal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-milk-opal.avif",
+          "public/item-rewards/thumb/petal-3-milk-opal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-milk-opal.avif",
+          "public/item-rewards/inspect/petal-3-milk-opal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "6393af7740b6cc7e47f9ccc758144eb9c12761725e0d241c6e55f5e5bab8af05",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ミルクオパール. Story trace: 乳白の奥に淡い虹を宿す丸い宝石. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-violet-amethyst",
+      "name": "スミレ雫の紫水晶",
+      "flavor": "スミレの露を閉じ込めたような紫水晶",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-violet-amethyst.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-violet-amethyst.avif",
+          "public/item-rewards/thumb/petal-3-violet-amethyst.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-violet-amethyst.avif",
+          "public/item-rewards/inspect/petal-3-violet-amethyst.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "2e64f6864a29abae1ea71df4d9f6f9188e41c179b62692b6271eabbeecad78fa",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of スミレ雫の紫水晶. Story trace: スミレの露を閉じ込めたような紫水晶. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-mint-fluorite",
+      "name": "ミント蛍石",
+      "flavor": "爽やかな香りと淡緑の光を帯びた蛍石",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-mint-fluorite.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-mint-fluorite.avif",
+          "public/item-rewards/thumb/petal-3-mint-fluorite.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-mint-fluorite.avif",
+          "public/item-rewards/inspect/petal-3-mint-fluorite.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "f32cac0fa010ec6d0d819efa27bf2a07f9817a62c491cc115c1ef4e203bb8797",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of ミント蛍石. Story trace: 爽やかな香りと淡緑の光を帯びた蛍石. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-peach-moonstone",
+      "name": "桃霞の月長石",
+      "flavor": "春霞のような桃色の光が浮かぶ月長石",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-peach-moonstone.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-peach-moonstone.avif",
+          "public/item-rewards/thumb/petal-3-peach-moonstone.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-peach-moonstone.avif",
+          "public/item-rewards/inspect/petal-3-peach-moonstone.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "764daf187e9d15d8669b928dfe4acc25743909bbced3d4b0763a051305d8b80a",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 桃霞の月長石. Story trace: 春霞のような桃色の光が浮かぶ月長石. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-ribbon-agate",
+      "name": "リボン縞瑪瑙",
+      "flavor": "幾重もの帯模様が結び目を描く瑪瑙",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-ribbon-agate.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-ribbon-agate.avif",
+          "public/item-rewards/thumb/petal-3-ribbon-agate.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-ribbon-agate.avif",
+          "public/item-rewards/inspect/petal-3-ribbon-agate.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "9786ecb9bf4ddae5b0fedd1594a85a71f388a0e686d4af4bfbc69a01c0415023",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of リボン縞瑪瑙. Story trace: 幾重もの帯模様が結び目を描く瑪瑙. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-tea-citrine",
+      "name": "紅茶色黄水晶",
+      "flavor": "よく蒸らした紅茶の色をした澄んだ黄水晶",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-tea-citrine.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-tea-citrine.avif",
+          "public/item-rewards/thumb/petal-3-tea-citrine.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-tea-citrine.avif",
+          "public/item-rewards/inspect/petal-3-tea-citrine.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "70e06a91f8e145552079a04b0dd1a3873bab173155dfbc3ada4dce9cf0225b0f",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 紅茶色黄水晶. Story trace: よく蒸らした紅茶の色をした澄んだ黄水晶. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-3-sugar-diamond",
+      "name": "星砂糖金剛片",
+      "flavor": "金平糖の角を思わせる小さな金剛石片",
+      "region": "petal",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/petal-3-sugar-diamond.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-3-sugar-diamond.avif",
+          "public/item-rewards/thumb/petal-3-sugar-diamond.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-3-sugar-diamond.avif",
+          "public/item-rewards/inspect/petal-3-sugar-diamond.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "e982d627a7dc2b5308bc23e7eaf967d9530202d56bfa4549a62272dd6bbfdb5d",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星砂糖金剛片. Story trace: 金平糖の角を思わせる小さな金剛石片. unusual material or skilled workmanship with one precise secondary feature. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-periwinkle-sapphire",
+      "name": "花紺青の蒼玉",
+      "flavor": "月鈴花の青紫を映した澄んだ蒼玉",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-periwinkle-sapphire.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-periwinkle-sapphire.avif",
+          "public/item-rewards/thumb/lullaby-3-periwinkle-sapphire.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-periwinkle-sapphire.avif",
+          "public/item-rewards/inspect/lullaby-3-periwinkle-sapphire.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ebdac4febcaa91823089c735c0a19d5cec4168d63180ba95529cb5a5e9d68832",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 花紺青の蒼玉. Story trace: 月鈴花の青紫を映した澄んだ蒼玉. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-dream-amethyst",
+      "name": "夢霞の紫水晶",
+      "flavor": "内部に淡い霧がたゆたう紫水晶",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-dream-amethyst.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-dream-amethyst.avif",
+          "public/item-rewards/thumb/lullaby-3-dream-amethyst.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-dream-amethyst.avif",
+          "public/item-rewards/inspect/lullaby-3-dream-amethyst.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "5467b16552bfa095698c136804ee5869bc9cf1305209a3d7240315d9b552948c",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢霞の紫水晶. Story trace: 内部に淡い霧がたゆたう紫水晶. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-moonstone-teardrop",
+      "name": "月長石の涙",
+      "flavor": "涙形に磨かれ、青白い光を返す月長石",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-moonstone-teardrop.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-moonstone-teardrop.avif",
+          "public/item-rewards/thumb/lullaby-3-moonstone-teardrop.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-moonstone-teardrop.avif",
+          "public/item-rewards/inspect/lullaby-3-moonstone-teardrop.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ac372759405df6baf40e5ee777739e14eeeb4de1fe7608f284c5a5191671f5aa",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月長石の涙. Story trace: 涙形に磨かれ、青白い光を返す月長石. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-cloud-opal",
+      "name": "雲海オパール",
+      "flavor": "乳白の中に虹色の雲海を抱くオパール",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-cloud-opal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-cloud-opal.avif",
+          "public/item-rewards/thumb/lullaby-3-cloud-opal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-cloud-opal.avif",
+          "public/item-rewards/inspect/lullaby-3-cloud-opal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "8b29bf39e492dae559672989372fdcc6a473127ff8168add8f45dad9c4d04218",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲海オパール. Story trace: 乳白の中に虹色の雲海を抱くオパール. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-star-aquamarine",
+      "name": "星映し藍玉",
+      "flavor": "小さな星影を内側に映す淡青の藍玉",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-star-aquamarine.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-star-aquamarine.avif",
+          "public/item-rewards/thumb/lullaby-3-star-aquamarine.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-star-aquamarine.avif",
+          "public/item-rewards/inspect/lullaby-3-star-aquamarine.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "6de82a74f1ab2be5fef1019362231a2ac4ba6878e21de5d1e44d2e10951e1eae",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星映し藍玉. Story trace: 小さな星影を内側に映す淡青の藍玉. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-lullaby-quartz",
+      "name": "子守歌水晶",
+      "flavor": "掌で温めると静かな旋律が響く水晶",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-lullaby-quartz.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-lullaby-quartz.avif",
+          "public/item-rewards/thumb/lullaby-3-lullaby-quartz.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-lullaby-quartz.avif",
+          "public/item-rewards/inspect/lullaby-3-lullaby-quartz.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "dda23a970560e60b5bdec6c018ac7276be3eefc0be57b05835a98d4c18ebbad1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 子守歌水晶. Story trace: 掌で温めると静かな旋律が響く水晶. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-silver-fluorite",
+      "name": "銀灯蛍石",
+      "flavor": "銀の灯火に似た冷たい光を放つ蛍石",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-silver-fluorite.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-silver-fluorite.avif",
+          "public/item-rewards/thumb/lullaby-3-silver-fluorite.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-silver-fluorite.avif",
+          "public/item-rewards/inspect/lullaby-3-silver-fluorite.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "b4572a14f90eeb76be4ee9c582dabce3c7b543f353eed93ebc9d50989c1071f0",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 銀灯蛍石. Story trace: 銀の灯火に似た冷たい光を放つ蛍石. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-night-pearl",
+      "name": "宵空真珠",
+      "flavor": "夕暮れから夜へ移る色を帯びた真珠",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-night-pearl.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-night-pearl.avif",
+          "public/item-rewards/thumb/lullaby-3-night-pearl.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-night-pearl.avif",
+          "public/item-rewards/inspect/lullaby-3-night-pearl.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "3a5e94692c7c9facc81d6bb1c620b73bde163ba462d0b1eb2e32fb7a99824351",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 宵空真珠. Story trace: 夕暮れから夜へ移る色を帯びた真珠. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-3-comet-crystal",
+      "name": "彗星晶",
+      "flavor": "細長い尾の形に自然成長した星色の結晶",
+      "region": "lullaby",
+      "rarity": 3,
+      "assignment": "Terra/high-max",
+      "source": "public/item-rewards/master/lullaby-3-comet-crystal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-3-comet-crystal.avif",
+          "public/item-rewards/thumb/lullaby-3-comet-crystal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-3-comet-crystal.avif",
+          "public/item-rewards/inspect/lullaby-3-comet-crystal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "00fc27b2b780da3e1a25c4a1a000912e23f667e5315727b2c8473ae56baeed10",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 彗星晶. Story trace: 細長い尾の形に自然成長した星色の結晶. unusual material or skilled workmanship with one precise secondary feature. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     },
     {
       "id": "r-plum",
@@ -8605,6 +10105,356 @@
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 潮満珠(伝説の欠片). Story trace: 潮の満ち引きを操ったという珠の小さな欠片. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     },
     {
+      "id": "petal-5-everbloom-confiture",
+      "name": "枯れない花のコンフィチュール",
+      "flavor": "瓶の中で今も咲き続ける花の蜜煮",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-everbloom-confiture.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-everbloom-confiture.avif",
+          "public/item-rewards/thumb/petal-5-everbloom-confiture.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-everbloom-confiture.avif",
+          "public/item-rewards/inspect/petal-5-everbloom-confiture.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "dd99b32c4ee5c51667ac200928bf460e3e3828f51c77ea10b389468002287d54",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 枯れない花のコンフィチュール. Story trace: 瓶の中で今も咲き続ける花の蜜煮. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-rainbow-teacup",
+      "name": "虹映しのティーカップ",
+      "flavor": "注いだ茶の表面に小さな虹を映す磁器",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-rainbow-teacup.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-rainbow-teacup.avif",
+          "public/item-rewards/thumb/petal-5-rainbow-teacup.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-rainbow-teacup.avif",
+          "public/item-rewards/inspect/petal-5-rainbow-teacup.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "409cbf747971bc7604b8a5e242ce6b5ab2237b730c2f46fa07950a9b1b038b71",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 虹映しのティーカップ. Story trace: 注いだ茶の表面に小さな虹を映す磁器. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-whisper-lace",
+      "name": "囁き花のレース",
+      "flavor": "耳を寄せると庭の思い出を囁く花レース",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-whisper-lace.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-whisper-lace.avif",
+          "public/item-rewards/thumb/petal-5-whisper-lace.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-whisper-lace.avif",
+          "public/item-rewards/inspect/petal-5-whisper-lace.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "9f7e68c5c5f65e44b4f944d63f3d16a8858334042fe80b299e2bc78aca5f575e",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 囁き花のレース. Story trace: 耳を寄せると庭の思い出を囁く花レース. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-palace-strawberry",
+      "name": "宮殿苺の宝珠",
+      "flavor": "一世代に一粒だけ実る、宝石のような苺",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-palace-strawberry.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-palace-strawberry.avif",
+          "public/item-rewards/thumb/petal-5-palace-strawberry.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-palace-strawberry.avif",
+          "public/item-rewards/inspect/petal-5-palace-strawberry.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ee9dc45567943b8c839508cda626bff4252b8a75201cb2ac6148d9643e7ed859",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 宮殿苺の宝珠. Story trace: 一世代に一粒だけ実る、宝石のような苺. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-satin-bow",
+      "name": "蝶結びの星サテン",
+      "flavor": "ほどいても夜ごと元の形へ戻るサテンの結び",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-satin-bow.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-satin-bow.avif",
+          "public/item-rewards/thumb/petal-5-satin-bow.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-satin-bow.avif",
+          "public/item-rewards/inspect/petal-5-satin-bow.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "2bcc7bfe964f92afa552a34cf4d4a0435d017e89323d68fb960fb8d3faf0b660",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 蝶結びの星サテン. Story trace: ほどいても夜ごと元の形へ戻るサテンの結び. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-crystal-sugar-rose",
+      "name": "水晶砂糖の薔薇",
+      "flavor": "薄い花弁の一枚まで透明に結晶化した薔薇",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-crystal-sugar-rose.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-crystal-sugar-rose.avif",
+          "public/item-rewards/thumb/petal-5-crystal-sugar-rose.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-crystal-sugar-rose.avif",
+          "public/item-rewards/inspect/petal-5-crystal-sugar-rose.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "533d3eed8a11e70cdce3455767fe03a9f1d7b761d160fd40042006c87a821dd2",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 水晶砂糖の薔薇. Story trace: 薄い花弁の一枚まで透明に結晶化した薔薇. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-5-midnight-macaron",
+      "name": "真夜中のマカロン石",
+      "flavor": "月が高い間だけ甘い香りを放つ丸石",
+      "region": "petal",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/petal-5-midnight-macaron.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-5-midnight-macaron.avif",
+          "public/item-rewards/thumb/petal-5-midnight-macaron.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-5-midnight-macaron.avif",
+          "public/item-rewards/inspect/petal-5-midnight-macaron.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "a04792b2b064593533813ebdbb9d73b969be3e9978bc849ae4c58a19b0bbec29",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 真夜中のマカロン石. Story trace: 月が高い間だけ甘い香りを放つ丸石. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-neverending-ribbon",
+      "name": "果てない夢のリボン",
+      "flavor": "どこまでほどいても終端が現れない夢色の帯",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-neverending-ribbon.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-neverending-ribbon.avif",
+          "public/item-rewards/thumb/lullaby-5-neverending-ribbon.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-neverending-ribbon.avif",
+          "public/item-rewards/inspect/lullaby-5-neverending-ribbon.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "6f48d62331305b68df16d82d6407bb04cc70fa4674013ba3a96bcdf0f836f55e",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 果てない夢のリボン. Story trace: どこまでほどいても終端が現れない夢色の帯. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-moon-picnic-key",
+      "name": "月見野餐の小鍵",
+      "flavor": "月光の野餐籠に隠された小箱を開く鍵",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-moon-picnic-key.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-moon-picnic-key.avif",
+          "public/item-rewards/thumb/lullaby-5-moon-picnic-key.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-moon-picnic-key.avif",
+          "public/item-rewards/inspect/lullaby-5-moon-picnic-key.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "53f705bd1940a1f0945f2405d5773f1c9ee538231a4a94f70820f83df03f3448",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月見野餐の小鍵. Story trace: 月光の野餐籠に隠された小箱を開く鍵. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-sleeping-star",
+      "name": "星のまどろみ核",
+      "flavor": "落ちた星が眠りにつき、丸く静まった光核",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-sleeping-star.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-sleeping-star.avif",
+          "public/item-rewards/thumb/lullaby-5-sleeping-star.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-sleeping-star.avif",
+          "public/item-rewards/inspect/lullaby-5-sleeping-star.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "361e7dea8fbb23eb7448ee9d695d41b8de04d8cd359fe469cf730db917e0f2bb",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星のまどろみ核. Story trace: 落ちた星が眠りにつき、丸く静まった光核. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-cloud-pillow-piece",
+      "name": "雲枕のひとひら",
+      "flavor": "夜明けまで形を失わない、最も柔らかな雲",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-cloud-pillow-piece.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-cloud-pillow-piece.avif",
+          "public/item-rewards/thumb/lullaby-5-cloud-pillow-piece.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-cloud-pillow-piece.avif",
+          "public/item-rewards/inspect/lullaby-5-cloud-pillow-piece.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "b87a3a9fae87a81b2a1725bfc6d6f87eee314aa5898f632afc226a38186f0175",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲枕のひとひら. Story trace: 夜明けまで形を失わない、最も柔らかな雲. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-musicbox-melody",
+      "name": "星琴箱の旋律片",
+      "flavor": "音が薄い結晶になって残った、失われた一節",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-musicbox-melody.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-musicbox-melody.avif",
+          "public/item-rewards/thumb/lullaby-5-musicbox-melody.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-musicbox-melody.avif",
+          "public/item-rewards/inspect/lullaby-5-musicbox-melody.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "d8234d1e5b9f17bd02a6c8a90c5f01a7f15222676f2b49514927b2cb553b1217",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 星琴箱の旋律片. Story trace: 音が薄い結晶になって残った、失われた一節. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-dream-embroidered-petal",
+      "name": "夢刺繍の花びら",
+      "flavor": "本物の花より柔らかい、夢糸で刺した花びら",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-dream-embroidered-petal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-dream-embroidered-petal.avif",
+          "public/item-rewards/thumb/lullaby-5-dream-embroidered-petal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-dream-embroidered-petal.avif",
+          "public/item-rewards/inspect/lullaby-5-dream-embroidered-petal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "d6f3bbbe2ea0d13207dd7b9fa6e9de81c52b1d4cd8079292cc47906116fdd50c",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢刺繍の花びら. Story trace: 本物の花より柔らかい、夢糸で刺した花びら. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-5-bluehour-lantern",
+      "name": "青時の月灯",
+      "flavor": "昼と夜の境目にだけ灯る小さな月灯",
+      "region": "lullaby",
+      "rarity": 5,
+      "assignment": "Terra/max (Sol review when flagged)",
+      "source": "public/item-rewards/master/lullaby-5-bluehour-lantern.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-5-bluehour-lantern.avif",
+          "public/item-rewards/thumb/lullaby-5-bluehour-lantern.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-5-bluehour-lantern.avif",
+          "public/item-rewards/inspect/lullaby-5-bluehour-lantern.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "0a059168350c8750948a59c1aa263f9ad1fe32d20ff9378a18fa88a92c3e6e0a",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 青時の月灯. Story trace: 昼と夜の境目にだけ灯る小さな月灯. exceptional object with a memorable silhouette and focused supernatural behavior. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
       "id": "frost-6-reikaseki",
       "name": "レイカセキ",
       "flavor": "凍て地で見つかる古い化石",
@@ -9805,6 +11655,306 @@
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 台風を呼ぶ法螺貝(伝説). Story trace: 吹き鳴らすと嵐を呼ぶと恐れられた法螺貝. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     },
     {
+      "id": "petal-6-queen-teapot-fragment",
+      "name": "花菓子女王の茶器片",
+      "flavor": "最初の祝宴で使われたという王家の茶器片",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-queen-teapot-fragment.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-queen-teapot-fragment.avif",
+          "public/item-rewards/thumb/petal-6-queen-teapot-fragment.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-queen-teapot-fragment.avif",
+          "public/item-rewards/inspect/petal-6-queen-teapot-fragment.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "61bda5281d6236dea65701ebcceb3d1cc847c26cac3ac2388f52f839c05dc8d2",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 花菓子女王の茶器片. Story trace: 最初の祝宴で使われたという王家の茶器片. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-6-eternal-cake-dome",
+      "name": "永遠菓子の硝子ドーム",
+      "flavor": "中の菓子をいつまでも焼きたてに保つ硝子蓋",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-eternal-cake-dome.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-eternal-cake-dome.avif",
+          "public/item-rewards/thumb/petal-6-eternal-cake-dome.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-eternal-cake-dome.avif",
+          "public/item-rewards/inspect/petal-6-eternal-cake-dome.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "df6f34105671f1ec1a76e5968576ebeff49daf3f1ee03954a17435cd0fe77019",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 永遠菓子の硝子ドーム. Story trace: 中の菓子をいつまでも焼きたてに保つ硝子蓋. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-6-rose-chandelier",
+      "name": "薔薇晶の灯飾り",
+      "flavor": "大広間の灯りを七色に散らした薔薇形の飾り",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-rose-chandelier.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-rose-chandelier.avif",
+          "public/item-rewards/thumb/petal-6-rose-chandelier.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-rose-chandelier.avif",
+          "public/item-rewards/inspect/petal-6-rose-chandelier.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "e204e7520010550c7062a8262d3f4419905315b3722ba57bd18f1f782dfd34f6",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 薔薇晶の灯飾り. Story trace: 大広間の灯りを七色に散らした薔薇形の飾り. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-6-fountain-syrup",
+      "name": "宮殿噴水の星蜜",
+      "flavor": "祝日の夜だけ噴水から湧く金色の蜜",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-fountain-syrup.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-fountain-syrup.avif",
+          "public/item-rewards/thumb/petal-6-fountain-syrup.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-fountain-syrup.avif",
+          "public/item-rewards/inspect/petal-6-fountain-syrup.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "ff25af698c78fd0657efe5b25d1e2d9856953e498b6465168076b99bd0fc93db",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 宮殿噴水の星蜜. Story trace: 祝日の夜だけ噴水から湧く金色の蜜. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-6-porcelain-crown",
+      "name": "磁器庭師の花冠",
+      "flavor": "歴代の庭師長に託された繊細な磁器の冠",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-porcelain-crown.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-porcelain-crown.avif",
+          "public/item-rewards/thumb/petal-6-porcelain-crown.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-porcelain-crown.avif",
+          "public/item-rewards/inspect/petal-6-porcelain-crown.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "961e34c65720247035c4e2fdc91e97fc017a97be078c868804bc5ec37d0ba2eb",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 磁器庭師の花冠. Story trace: 歴代の庭師長に託された繊細な磁器の冠. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-6-first-tea-key",
+      "name": "始まりの茶会鍵",
+      "flavor": "宮殿最奥の茶室を開く唯一の薔薇鍵",
+      "region": "petal",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/petal-6-first-tea-key.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-6-first-tea-key.avif",
+          "public/item-rewards/thumb/petal-6-first-tea-key.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-6-first-tea-key.avif",
+          "public/item-rewards/inspect/petal-6-first-tea-key.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "5bb0fce95917a5562566dcfd0446459975223fce065d0097823bb3c903f4beb1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 始まりの茶会鍵. Story trace: 宮殿最奥の茶室を開く唯一の薔薇鍵. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-observatory-lens",
+      "name": "三日月天文台の鏡",
+      "flavor": "雲の向こうの夢星まで映した銀の観測鏡",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-observatory-lens.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-observatory-lens.avif",
+          "public/item-rewards/thumb/lullaby-6-observatory-lens.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-observatory-lens.avif",
+          "public/item-rewards/inspect/lullaby-6-observatory-lens.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "dfb98b428183da06eea32aad903637c52a054bb4dc83ba88fde14f07e6b19199",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 三日月天文台の鏡. Story trace: 雲の向こうの夢星まで映した銀の観測鏡. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-silver-bridge-keystone",
+      "name": "銀橋の要石",
+      "flavor": "浮島同士の距離を変えても橋を繋ぎ止める石",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-silver-bridge-keystone.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-silver-bridge-keystone.avif",
+          "public/item-rewards/thumb/lullaby-6-silver-bridge-keystone.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-silver-bridge-keystone.avif",
+          "public/item-rewards/inspect/lullaby-6-silver-bridge-keystone.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "28076749a8a68fc2e10533bdd0970448c2c12f876e5c58e527c8c8c5b15aeb27",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 銀橋の要石. Story trace: 浮島同士の距離を変えても橋を繋ぎ止める石. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-dreamweaver-spindle",
+      "name": "夢織りの銀紡錘",
+      "flavor": "眠る者の夢を細い糸へ紡ぐ古い銀具",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-dreamweaver-spindle.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-dreamweaver-spindle.avif",
+          "public/item-rewards/thumb/lullaby-6-dreamweaver-spindle.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-dreamweaver-spindle.avif",
+          "public/item-rewards/inspect/lullaby-6-dreamweaver-spindle.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "c52bea47a02c9077540a7c94600447ebfd696404d7f91bc029e9c5fdc3f806b6",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢織りの銀紡錘. Story trace: 眠る者の夢を細い糸へ紡ぐ古い銀具. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-moon-queen-veil",
+      "name": "月后の星紗ヴェール",
+      "flavor": "夜空の星を透かして輝く、王家の薄紗",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-moon-queen-veil.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-moon-queen-veil.avif",
+          "public/item-rewards/thumb/lullaby-6-moon-queen-veil.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-moon-queen-veil.avif",
+          "public/item-rewards/inspect/lullaby-6-moon-queen-veil.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "04359047292be77b6368903a610ddcebae99842e3c8ccee01e84ba2352e39ea1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 月后の星紗ヴェール. Story trace: 夜空の星を透かして輝く、王家の薄紗. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-thousand-night-musicbox",
+      "name": "千夜の星琴箱",
+      "flavor": "千通りの子守歌を一夜ずつ奏でる星琴箱",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-thousand-night-musicbox.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-thousand-night-musicbox.avif",
+          "public/item-rewards/thumb/lullaby-6-thousand-night-musicbox.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-thousand-night-musicbox.avif",
+          "public/item-rewards/inspect/lullaby-6-thousand-night-musicbox.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "a4576e561f420998216a22380e2e0bb37d248134e81c86ff54b389a80449450d",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 千夜の星琴箱. Story trace: 千通りの子守歌を一夜ずつ奏でる星琴箱. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-6-cloud-sea-compass",
+      "name": "雲海渡りの羅針盤",
+      "flavor": "方角ではなく、帰りたい場所を指す羅針盤",
+      "region": "lullaby",
+      "rarity": 6,
+      "assignment": "Sol/xhigh-max",
+      "source": "public/item-rewards/master/lullaby-6-cloud-sea-compass.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-6-cloud-sea-compass.avif",
+          "public/item-rewards/thumb/lullaby-6-cloud-sea-compass.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-6-cloud-sea-compass.avif",
+          "public/item-rewards/inspect/lullaby-6-cloud-sea-compass.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "4eb0bcdb4f9a5bfdc83555bcc4991dc110ec525ca79960111b571764cfede714",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 雲海渡りの羅針盤. Story trace: 方角ではなく、帰りたい場所を指す羅針盤. legendary surviving fragment with authoritative mass, age and quiet radiance. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
       "id": "frost-7-koreitama",
       "name": "コレイタマ",
       "flavor": "調査班に語り継がれる霊珠",
@@ -10603,6 +12753,206 @@
       ],
       "sha256": "d0be02653fb71f7eaa7da43d6add22f7d96415175765f19280d51d2f687969c3",
       "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 巨鯨神の心臓石(神話). Story trace: 神話に語られる、島を運んだという巨鯨の心臓石. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: deep cyan water, coral limestone, volcanic black and moon silver. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-7-wish-cake",
+      "name": "願いを叶える祝福菓子",
+      "flavor": "一口だけで大切な願いを思い出させる伝説の菓子",
+      "region": "petal",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/petal-7-wish-cake.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-7-wish-cake.avif",
+          "public/item-rewards/thumb/petal-7-wish-cake.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-7-wish-cake.avif",
+          "public/item-rewards/inspect/petal-7-wish-cake.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "19f03fd075b57208ebb2c647ebcfb37ba1fe3dc04cbc59d81a96d75d0489437a",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 願いを叶える祝福菓子. Story trace: 一口だけで大切な願いを思い出させる伝説の菓子. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-7-thousand-bloom-tiara",
+      "name": "千花咲きのティアラ",
+      "flavor": "千種の花が朝ごと姿を変えて咲く王冠",
+      "region": "petal",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/petal-7-thousand-bloom-tiara.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-7-thousand-bloom-tiara.avif",
+          "public/item-rewards/thumb/petal-7-thousand-bloom-tiara.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-7-thousand-bloom-tiara.avif",
+          "public/item-rewards/inspect/petal-7-thousand-bloom-tiara.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "13b4980258cf08ae531ba0e3e87b83306d186c9921b9355d4921ae698978d2e8",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 千花咲きのティアラ. Story trace: 千種の花が朝ごと姿を変えて咲く王冠. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-7-eternal-tea-service",
+      "name": "永遠の茶会の銀器",
+      "flavor": "失われた客人の席にも温かな茶を注ぐ銀器",
+      "region": "petal",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/petal-7-eternal-tea-service.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-7-eternal-tea-service.avif",
+          "public/item-rewards/thumb/petal-7-eternal-tea-service.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-7-eternal-tea-service.avif",
+          "public/item-rewards/inspect/petal-7-eternal-tea-service.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "2e08beb965ca0b49c3f3de6fe04258797dcf078f81c06b455fef3e23aa1ed9dc",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 永遠の茶会の銀器. Story trace: 失われた客人の席にも温かな茶を注ぐ銀器. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "petal-7-palace-rose-seal",
+      "name": "花菓子宮殿の薔薇印章",
+      "flavor": "庭のすべての花門を開く王家の印章",
+      "region": "petal",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/petal-7-palace-rose-seal.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/petal-7-palace-rose-seal.avif",
+          "public/item-rewards/thumb/petal-7-palace-rose-seal.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/petal-7-palace-rose-seal.avif",
+          "public/item-rewards/inspect/petal-7-palace-rose-seal.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "3bb77aa20c6231116af6b965a78ded7080979d3385bbc885e5959c420e970bb1",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 花菓子宮殿の薔薇印章. Story trace: 庭のすべての花門を開く王家の印章. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: muted blush, cream and pistachio porcelain with sugared flowers and soft window light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-7-first-dream-thread",
+      "name": "はじまりの夢糸",
+      "flavor": "この谷で最初に見られた夢から紡がれた一本の糸",
+      "region": "lullaby",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/lullaby-7-first-dream-thread.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-7-first-dream-thread.avif",
+          "public/item-rewards/thumb/lullaby-7-first-dream-thread.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-7-first-dream-thread.avif",
+          "public/item-rewards/inspect/lullaby-7-first-dream-thread.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "5e9ecb4cbad3c8d77466436c6fa92a77e4548aa6ac6b62fa20829561d7c01bd7",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of はじまりの夢糸. Story trace: この谷で最初に見られた夢から紡がれた一本の糸. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-7-fallen-moon-crown",
+      "name": "欠け月の星冠",
+      "flavor": "空から欠け落ちた月片で作られた銀の冠",
+      "region": "lullaby",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/lullaby-7-fallen-moon-crown.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-7-fallen-moon-crown.avif",
+          "public/item-rewards/thumb/lullaby-7-fallen-moon-crown.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-7-fallen-moon-crown.avif",
+          "public/item-rewards/inspect/lullaby-7-fallen-moon-crown.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "d98542989e769b5b314a9350e3b854f617b6c5f5e19883ffaffa751697a4df5c",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 欠け月の星冠. Story trace: 空から欠け落ちた月片で作られた銀の冠. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-7-eternal-lullaby-score",
+      "name": "永遠の子守歌譜",
+      "flavor": "文字を持たず、触れた者の心へ旋律を伝える楽譜",
+      "region": "lullaby",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/lullaby-7-eternal-lullaby-score.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-7-eternal-lullaby-score.avif",
+          "public/item-rewards/thumb/lullaby-7-eternal-lullaby-score.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-7-eternal-lullaby-score.avif",
+          "public/item-rewards/inspect/lullaby-7-eternal-lullaby-score.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "1c85a7f7658ebdf10919b81a7da0e736aecad282ffc19a0b5cf5b77ccb0f6f4d",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 永遠の子守歌譜. Story trace: 文字を持たず、触れた者の心へ旋律を伝える楽譜. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
+    },
+    {
+      "id": "lullaby-7-star-valley-core",
+      "name": "夢織り星谷の天球核",
+      "flavor": "浮島と星明かりを静かに巡らせ続ける谷の心臓",
+      "region": "lullaby",
+      "rarity": 7,
+      "assignment": "Sol/max",
+      "source": "public/item-rewards/master/lullaby-7-star-valley-core.png",
+      "outputs": {
+        "thumb": [
+          "public/item-rewards/thumb/lullaby-7-star-valley-core.avif",
+          "public/item-rewards/thumb/lullaby-7-star-valley-core.webp"
+        ],
+        "inspect": [
+          "public/item-rewards/inspect/lullaby-7-star-valley-core.avif",
+          "public/item-rewards/inspect/lullaby-7-star-valley-core.webp"
+        ]
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "sha256": "203d52ff3e4bd7f0c2995983fb610af7ef5a5bf618ca587b1bb57972deb62644",
+      "canonicalPrompt": "Realistic natural-fantasy expedition archive portrait of 夢織り星谷の天球核. Story trace: 浮島と星明かりを静かに巡らせ続ける谷の心臓. world-significant icon with a singular impossible-but-coherent material phenomenon. Region language: moonlit lavender, periwinkle, cloud white and silver with quiet observatory light. Near-square macro/product camera, intact silhouette with 8-12% breathing room, believable material wear and motivated light, quiet origin-specific surface, readable at 112px. No people, mascot pose, readable text, logo, watermark, baked UI frame, generic neon aura, excessive bloom, cartoon or copied franchise motifs."
     }
   ]
 }

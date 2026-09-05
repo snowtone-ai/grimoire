@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { createTask } from "@/lib/taskDb";
 import { parseTaskFromText } from "@/lib/gemini";
@@ -14,6 +14,33 @@ interface VoiceInputButtonProps {
 }
 
 type VoiceStatus = "idle" | "listening" | "processing" | "error" | "success";
+const VOICE_CAPTURE_TIMEOUT_MS = 20_000;
+
+function detachRecognitionHandlers(recognition: SpeechRecognition): void {
+  recognition.onstart = null;
+  recognition.onresult = null;
+  recognition.onerror = null;
+  recognition.onend = null;
+}
+
+function speechErrorMessage(error: SpeechRecognitionErrorCode): string {
+  switch (error) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "マイクの使用が許可されていません。ブラウザの設定を確認してください";
+    case "audio-capture":
+      return "マイクを利用できません。接続とブラウザの設定を確認してください";
+    case "network":
+      return "音声認識の通信に失敗しました。接続を確認してもう一度お試しください";
+    case "language-not-supported":
+    case "language-unavailable":
+      return "このブラウザでは日本語の音声認識を利用できません";
+    case "no-speech":
+      return "音声を聞き取れませんでした。もう一度お試しください";
+    default:
+      return "音声の認識に失敗しました。もう一度お試しください";
+  }
+}
 
 export function VoiceInputButton({
   onTaskCreated,
@@ -23,39 +50,128 @@ export function VoiceInputButton({
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const requestAbortRef = useRef<AbortController | null>(null);
+  const captureTimeoutRef = useRef<number | null>(null);
+  const scheduledTimersRef = useRef<Set<number>>(new Set());
+  const mountedRef = useRef(false);
+
+  const clearCaptureTimeout = useCallback(() => {
+    if (captureTimeoutRef.current !== null) {
+      window.clearTimeout(captureTimeoutRef.current);
+      captureTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearScheduledTimers = useCallback(() => {
+    for (const timer of scheduledTimersRef.current) window.clearTimeout(timer);
+    scheduledTimersRef.current.clear();
+  }, []);
+
+  const schedule = useCallback((callback: () => void, delay: number) => {
+    const timer = window.setTimeout(() => {
+      scheduledTimersRef.current.delete(timer);
+      if (mountedRef.current) callback();
+    }, delay);
+    scheduledTimersRef.current.add(timer);
+  }, []);
+
+  const releaseRecognition = useCallback(
+    (recognition: SpeechRecognition) => {
+      clearCaptureTimeout();
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
+      detachRecognitionHandlers(recognition);
+    },
+    [clearCaptureTimeout],
+  );
+
+  const showTemporaryError = useCallback(
+    (message: string, delay = 3_000, withCue = true) => {
+      if (withCue) playCue("error");
+      setErrorMsg(message);
+      setStatus("error");
+      schedule(() => setStatus("idle"), delay);
+    },
+    [schedule],
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      clearScheduledTimers();
+      clearCaptureTimeout();
+      requestAbortRef.current?.abort();
+      requestAbortRef.current = null;
+
+      const recognition = recognitionRef.current;
+      recognitionRef.current = null;
+      if (recognition) {
+        detachRecognitionHandlers(recognition);
+        try {
+          recognition.abort();
+        } catch {
+          // The recognizer may already have disconnected during navigation.
+        }
+      }
+    };
+  }, [clearCaptureTimeout, clearScheduledTimers]);
 
   const startListening = useCallback(() => {
+    // React state updates are asynchronous, so status alone cannot prevent two
+    // clicks in the same frame from starting two recognizers.
+    if (recognitionRef.current || requestAbortRef.current) return;
+
+    clearScheduledTimers();
+    setErrorMsg("");
+    setSuccessMsg("");
+
     // Cross-browser SpeechRecognition (webkit prefix for Chrome/Android)
     const SpeechRecognitionAPI =
       window.SpeechRecognition ?? window.webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
-      setErrorMsg("このブラウザは音声入力に対応していません");
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 3000);
+      showTemporaryError("このブラウザは音声入力に対応していません", 3_000, false);
       return;
     }
 
     const recognition = new SpeechRecognitionAPI();
+    let captureTimedOut = false;
+    let resultHandled = false;
     recognition.lang = "ja-JP";
     recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
+    // Reflect the user action immediately while Chrome may still be waiting
+    // for its first microphone permission decision.
+    setStatus("listening");
 
-    recognition.onstart = () => setStatus("listening");
+    recognition.onstart = () => {
+      if (mountedRef.current && recognitionRef.current === recognition) {
+        setStatus("listening");
+      }
+    };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript?.trim() ?? "";
+      if (resultHandled) return;
+      resultHandled = true;
+      clearCaptureTimeout();
+
+      const result = event.results[event.resultIndex] ?? event.results[0];
+      const transcript = result?.[0]?.transcript?.trim() ?? "";
       if (!transcript) {
-        setErrorMsg("音声がうまく取得できませんでした。もう一度お試しください");
-        setStatus("error");
-        setTimeout(() => setStatus("idle"), 2500);
+        showTemporaryError("音声がうまく取得できませんでした。もう一度お試しください", 2_500);
         return;
       }
+
+      const controller = new AbortController();
+      requestAbortRef.current = controller;
       setStatus("processing");
 
-      parseTaskFromText(transcript, todayDateString())
+      parseTaskFromText(transcript, todayDateString(), { signal: controller.signal })
         .then(async (parsed) => {
+          if (!mountedRef.current || controller.signal.aborted) return;
           await createTask({
             title: parsed.title,
             dueDate: parsed.dueDate,
@@ -65,6 +181,7 @@ export function VoiceInputButton({
             completedAt: null,
             recurrence: "none",
           });
+          if (!mountedRef.current || controller.signal.aborted) return;
           onTaskCreated();
           const isToday = parsed.dueDate === todayDateString();
           const dateObj = new Date(parsed.dueDate + "T00:00:00");
@@ -74,65 +191,99 @@ export function VoiceInputButton({
           setSuccessMsg(`「${parsed.title}」を${dateLabel}に受注しました`);
           playCue("save");
           setStatus("success");
-          setTimeout(() => setStatus("idle"), 3000);
+          schedule(() => setStatus("idle"), 3_000);
         })
         .catch((err: unknown) => {
+          if (controller.signal.aborted || !mountedRef.current) return;
           console.error("[VoiceInput] error:", redactSecret(err));
+          playCue("error");
           if (err instanceof RateLimitError) {
-            playCue("error");
             setErrorMsg("AI解析が一時的に利用できません。手動で入力してください");
-            setStatus("error");
-            setTimeout(() => {
-              setStatus("idle");
-              // The capture sheet's own cue lives on QuestAddButton, and this
-              // is the one route that reaches the sheet without going through
-              // it — without this the sheet slides up in silence after the
-              // error tone, which reads as a second failure rather than as the
-              // handover to manual entry it is.
-              playCue("add");
-              onFallbackToManual(transcript);
-            }, 2000);
           } else {
-            const msg = err instanceof Error ? err.message : String(err);
-            playCue("error");
-            setErrorMsg(`エラー: ${msg}`);
-            setStatus("error");
-            setTimeout(() => setStatus("idle"), 5000);
+            setErrorMsg("AI解析に失敗しました。内容を確認して手動で入力してください");
           }
+          setStatus("error");
+          schedule(() => {
+            setStatus("idle");
+            // The capture sheet has its own cue when opened from the add
+            // button; this path needs the same handover feedback.
+            playCue("add");
+            onFallbackToManual(transcript);
+          }, 2_000);
+        })
+        .finally(() => {
+          if (requestAbortRef.current === controller) requestAbortRef.current = null;
         });
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (event.error === "no-speech") {
-        setStatus("idle");
-        return;
-      }
+      clearCaptureTimeout();
+      if (captureTimedOut) return;
       if (event.error === "aborted") {
+        releaseRecognition(recognition);
         setStatus("idle");
         return;
       }
-      playCue("error");
-      setErrorMsg("音声の認識に失敗しました");
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 2500);
+      releaseRecognition(recognition);
+      showTemporaryError(speechErrorMessage(event.error), 3_500);
     };
 
     recognition.onend = () => {
+      releaseRecognition(recognition);
       // If still "listening" (no result arrived), go back to idle
       setStatus((prev) => (prev === "listening" ? "idle" : prev));
     };
 
-    recognition.start();
-  }, [onTaskCreated, onFallbackToManual]);
+    try {
+      recognition.start();
+      captureTimeoutRef.current = window.setTimeout(() => {
+        captureTimeoutRef.current = null;
+        if (recognitionRef.current !== recognition || resultHandled) return;
+        captureTimedOut = true;
+        releaseRecognition(recognition);
+        showTemporaryError("音声入力がタイムアウトしました。もう一度お試しください", 3_500);
+        try {
+          recognition.abort();
+        } catch {
+          // The timeout raced with the browser ending the session.
+        }
+      }, VOICE_CAPTURE_TIMEOUT_MS);
+    } catch (error) {
+      console.error("[VoiceInput] failed to start:", redactSecret(error));
+      releaseRecognition(recognition);
+      showTemporaryError("音声入力を開始できませんでした。もう一度お試しください", 3_500);
+    }
+  }, [
+    clearCaptureTimeout,
+    clearScheduledTimers,
+    onFallbackToManual,
+    onTaskCreated,
+    releaseRecognition,
+    schedule,
+    showTemporaryError,
+  ]);
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-  }, []);
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+    clearCaptureTimeout();
+    try {
+      recognition.stop();
+    } catch (error) {
+      console.error("[VoiceInput] failed to stop:", redactSecret(error));
+      releaseRecognition(recognition);
+      showTemporaryError("音声入力を停止できませんでした。もう一度お試しください", 3_500);
+    }
+  }, [clearCaptureTimeout, releaseRecognition, showTemporaryError]);
 
   const handleClick = () => {
     if (status === "listening") {
       stopListening();
-    } else if (status === "idle") {
+    } else if (
+      status === "idle" &&
+      !recognitionRef.current &&
+      !requestAbortRef.current
+    ) {
       playCue("tap");
       startListening();
     }

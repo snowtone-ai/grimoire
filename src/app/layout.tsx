@@ -5,6 +5,10 @@ import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
 import { GraceParticlesGate } from "@/components/fx/grace-particles-gate";
 import { OpenFlourish } from "@/components/fx/open-flourish";
+import {
+  DEFAULT_BASE_THEME,
+  getBaseThemeInitScript,
+} from "@/lib/base-theme";
 import { DialogBackHistoryBridge } from "@/lib/use-dialog-back-close";
 import { TEXT_SIZE_STORAGE_KEY } from "@/lib/text-size";
 
@@ -50,6 +54,7 @@ export default function RootLayout({
       <html
         lang="ja"
         className={`h-full antialiased ${cinzel.variable}`}
+        data-base-theme={DEFAULT_BASE_THEME}
         data-text-size="normal"
         // globals.css sets `scroll-behavior: smooth` for in-page anchors. Without
         // this attribute Next.js cannot tell that apart from a route change, so
@@ -59,6 +64,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: getBaseThemeInitScript(),
+            }}
+          />
           <script
             dangerouslySetInnerHTML={{
               __html: `(function(){try{var value=localStorage.getItem(${JSON.stringify(TEXT_SIZE_STORAGE_KEY)});document.documentElement.dataset.textSize=value==="large"?"large":"normal"}catch(_){}})()`,

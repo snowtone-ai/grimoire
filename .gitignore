@@ -13,6 +13,7 @@
 # testing
 /coverage
 /.playwright-mcp/
+/output/playwright/
 
 # next.js
 /.next/
@@ -64,6 +65,15 @@ credentials.json
 .claude/skills/**
 .agents/
 skills-lock.json
+
+# This repository owns one bounded resilience-testing skill. Keep all other
+# third-party/local agent skills ignored while allowing this skill to be reviewed.
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/resilience-tester/
+!.agents/skills/resilience-tester/**
 
 # impeccable (Stop-hook code checker). config.json IS tracked: it records
 # reviewed false-positive decisions with their reasons, which are worth

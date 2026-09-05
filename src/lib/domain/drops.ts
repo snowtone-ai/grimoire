@@ -9,6 +9,8 @@ import { LANTERN_RARE1, LANTERN_RARE2, LANTERN_RARE3, LANTERN_RARE5, LANTERN_RAR
 import { GROVE_RARE1, GROVE_RARE2, GROVE_RARE3, GROVE_RARE5, GROVE_RARE6, GROVE_RARE7 } from "./reward-catalog/grove.ts";
 import { SAVANNA_RARE1, SAVANNA_RARE2, SAVANNA_RARE3, SAVANNA_RARE5, SAVANNA_RARE6, SAVANNA_RARE7 } from "./reward-catalog/savanna.ts";
 import { TIDE_RARE1, TIDE_RARE2, TIDE_RARE3, TIDE_RARE5, TIDE_RARE6, TIDE_RARE7 } from "./reward-catalog/tide.ts";
+import { PETAL_RARE1, PETAL_RARE2, PETAL_RARE3, PETAL_RARE5, PETAL_RARE6, PETAL_RARE7 } from "./reward-catalog/petal.ts";
+import { LULLABY_RARE1, LULLABY_RARE2, LULLABY_RARE3, LULLABY_RARE5, LULLABY_RARE6, LULLABY_RARE7 } from "./reward-catalog/lullaby.ts";
 
 /* Material-drop reward domain — pure functions, no side effects. (D-032)
  *
@@ -18,7 +20,7 @@ import { TIDE_RARE1, TIDE_RARE2, TIDE_RARE3, TIDE_RARE5, TIDE_RARE6, TIDE_RARE7 
  * scale has no gaps. Higher ranks are exponentially rarer.
  *
  * World-atlas structure (D-032, full rewrite — see docs/decisions.md): the
- * institute dispatches survey expeditions to eight world regions (an
+ * institute dispatches survey expeditions to ten world regions (an
  * original fusion of a real culture/era/mythology with light fantasy —
  * see regions.ts), each contributing ranks 1/2/3/5/6/7. Rank 4 and rank 8
  * stay on a separate axis: the institute's own seasonal home garden, one
@@ -85,40 +87,46 @@ function ssrFromSpecies(species: PlantSpecies): DropDef {
   };
 }
 
-/** RARE1 — common gathering materials, all eight expedition regions. */
+/** RARE1 — common gathering materials, all ten expedition regions. */
 export const COMMON_DROPS: DropDef[] = [
   ...FROST_RARE1, ...AEGIS_RARE1, ...CARAVAN_RARE1, ...CANOPY_RARE1,
   ...LANTERN_RARE1, ...GROVE_RARE1, ...SAVANNA_RARE1, ...TIDE_RARE1,
+  ...PETAL_RARE1, ...LULLABY_RARE1,
 ];
 
 /** RARE2 — good-quality materials. */
 export const TIER2_DROPS: DropDef[] = [
   ...FROST_RARE2, ...AEGIS_RARE2, ...CARAVAN_RARE2, ...CANOPY_RARE2,
   ...LANTERN_RARE2, ...GROVE_RARE2, ...SAVANNA_RARE2, ...TIDE_RARE2,
+  ...PETAL_RARE2, ...LULLABY_RARE2,
 ];
 
 /** RARE3 — crystals and ores. */
 export const TIER3_DROPS: DropDef[] = [
   ...FROST_RARE3, ...AEGIS_RARE3, ...CARAVAN_RARE3, ...CANOPY_RARE3,
   ...LANTERN_RARE3, ...GROVE_RARE3, ...SAVANNA_RARE3, ...TIDE_RARE3,
+  ...PETAL_RARE3, ...LULLABY_RARE3,
 ];
 
 /** RARE5 — special materials. */
 export const TIER5_DROPS: DropDef[] = [
   ...FROST_RARE5, ...AEGIS_RARE5, ...CARAVAN_RARE5, ...CANOPY_RARE5,
   ...LANTERN_RARE5, ...GROVE_RARE5, ...SAVANNA_RARE5, ...TIDE_RARE5,
+  ...PETAL_RARE5, ...LULLABY_RARE5,
 ];
 
 /** RARE6 — precious specimens. */
 export const TIER6_DROPS: DropDef[] = [
   ...FROST_RARE6, ...AEGIS_RARE6, ...CARAVAN_RARE6, ...CANOPY_RARE6,
   ...LANTERN_RARE6, ...GROVE_RARE6, ...SAVANNA_RARE6, ...TIDE_RARE6,
+  ...PETAL_RARE6, ...LULLABY_RARE6,
 ];
 
 /** RARE7 — treasured relics. */
 export const TIER7_DROPS: DropDef[] = [
   ...FROST_RARE7, ...AEGIS_RARE7, ...CARAVAN_RARE7, ...CANOPY_RARE7,
   ...LANTERN_RARE7, ...GROVE_RARE7, ...SAVANNA_RARE7, ...TIDE_RARE7,
+  ...PETAL_RARE7, ...LULLABY_RARE7,
 ];
 
 /** RARE4 — the 12 canonical home-garden specimens (one per season month).

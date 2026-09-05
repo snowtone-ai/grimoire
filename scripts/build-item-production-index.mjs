@@ -27,6 +27,8 @@ const REGION_LIGHT = {
   grove: "desaturated pine, peat black, rune silver and cold moonlit fog",
   savanna: "dry gold grass, ebony, aged brass and a storm-violet horizon",
   tide: "deep cyan water, coral limestone, volcanic black and moon silver",
+  petal: "muted blush, cream and pistachio porcelain with sugared flowers and soft window light",
+  lullaby: "moonlit lavender, periwinkle, cloud white and silver with quiet observatory light",
   garden: "seasonal botanical archive light",
 };
 const RARITY_LANGUAGE = {

@@ -1,7 +1,7 @@
 # Grimoire Asset Art Bible
 
 Status: approved with Area exploration amendment  
-Scope: RARE 1–7 item art (424 items) and the eight expedition regions exposed from the Record page  
+Scope: RARE 1–7 item art (518 items) and the ten expedition regions exposed from the Record page
 Protected: all twelve RARE 8 photographs, IDs, rarity values, region assignments, month mappings, and existing IndexedDB history
 
 ## 1. Creative thesis
@@ -10,7 +10,7 @@ The collection should feel like a field archive assembled after dangerous expedi
 
 The art is realistic rather than cartoon-like: believable weight, erosion, plant fibres, mineral fracture, patina, condensation, soot, salt, and imperfect handcraft. Magic is expressed through physically plausible light and material behaviour. It is never a generic neon aura pasted over an ordinary prop.
 
-The eight regions deliberately occupy different positions on a spectrum from adventurous natural fantasy to solemn dark myth. This variation belongs to the world, not to inconsistent rendering styles.
+The ten regions deliberately occupy different positions on a spectrum from adventurous natural fantasy through gentle storybook wonder to solemn dark myth. This variation belongs to the world, not to inconsistent rendering styles.
 
 ## 2. Visual constants
 
@@ -64,6 +64,8 @@ The eight regions deliberately occupy different positions on a spectrum from adv
 | `grove` | ancient northern dread | desaturated pine, rune silver, moon blue, peat black | a rune-bound world tree disappearing into sentient-looking fog | high |
 | `savanna` | regal loss beneath immense skies | dry gold, storm violet, ebony, aged brass | ruined royal drums and walls revealed along a migration path | medium |
 | `tide` | navigational awe at the world's edge | deep cyan, coral limestone, moon silver, volcanic black | star-aligned tidal channels glowing between islands | low-medium |
+| `petal` | delicate confectionery court fantasy | blush rose, cream porcelain, pistachio, sugar-glass highlights | a flower-sweet palace garden arranged for an enchanted tea ceremony | low |
+| `lullaby` | tranquil celestial bedtime wonder | periwinkle, moon silver, cloud white, lavender | a dream-weaving valley where moon bridges and music-box lights cross the clouds | low-medium |
 
 No people appear in Area imagery. Small fauna may appear only when ecologically and fantastically plausible, subordinate to the landscape, and never posed as a mascot.
 
@@ -124,7 +126,7 @@ Each production record contains:
 - Item thumbnails and inspection images are separate delivery sizes; the grid must never decode full-size masters.
 - Area panels use a compact preview derived from the centered initial window and load the exploration master on intent/open. Area images are not speculatively prefetched as a carousel because gestures belong to two-axis exploration.
 - The exploration source should map close to 2 source pixels per viewport CSS dimension where practical, but decode cost and texture limits remain bounded for the Pixel 7a. The runtime renders one Area master at a time and releases the previous decoded surface on close.
-- Do not precache all 424 item images. Cache acquired or viewed assets with a bounded runtime policy so daily task use remains reliable offline without unbounded storage growth.
+- Do not precache all 518 item images. Cache acquired or viewed assets with a bounded runtime policy so daily task use remains reliable offline without unbounded storage growth.
 - Target devices are Xiaomi 14T Pro and Pixel 7a. The Pixel 7a is the performance floor for full effects; lower capability or thermal pressure may reduce particle count, DPR, and speculative prefetch.
 - Quality/speed target is 60/40. Interaction response remains immediate even when art is still decoding.
 

@@ -16,10 +16,10 @@
  *   300ms  the gold frame draws itself in      (CSS, unchanged from T036)
  *   400ms  light rises out of the page         (cues/flourish.wav + motes)
  *
- * The sound half lives in domain/sound-cues.ts ("flourish", a three-step cue)
- * and the particle half in domain/vfx-scenes.ts (FLOURISH_SCENE); the delays
- * above are set in those two files, not here. This component owns only the
- * frame, the greeting, and the dismissal.
+ * The sound half lives in domain/sound-cues.ts (a single-clock, three-beat
+ * startup mix) and the particle half in domain/vfx-scenes.ts
+ * (FLOURISH_SCENE); the delays above are set in those two files, not here.
+ * This component owns only the frame, the greeting, and the dismissal.
  *
  * Overlay only: {children} in layout.tsx mounts and starts loading its own data
  * immediately underneath, so this never blocks or delays the app's own content
@@ -28,9 +28,9 @@
  * sessionStorage-scoped (not localStorage): shows once per fresh session/tab,
  * not on every in-app navigation between routes. */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isEffectEnabled } from "@/lib/fx";
-import { playCue } from "@/lib/sound";
+import { playStartupFlourish, type SoundPlayback } from "@/lib/sound";
 import { cancelEffects, fireFlourishEffect } from "@/lib/vfx";
 
 const SESSION_KEY = "grimoire-flourish-shown";
@@ -46,11 +46,52 @@ type Phase = "hidden" | "shown" | "closing";
 
 export function OpenFlourish() {
   const [phase, setPhase] = useState<Phase>("hidden");
+  const playbackRef = useRef<SoundPlayback | null>(null);
+  const autoDismissRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopStartupSound = useCallback(() => {
+    playbackRef.current?.cancel();
+    playbackRef.current = null;
+  }, []);
+
+  const clearAutoDismiss = useCallback(() => {
+    if (autoDismissRef.current === null) return;
+    clearTimeout(autoDismissRef.current);
+    autoDismissRef.current = null;
+  }, []);
 
   useEffect(() => {
     if (!isEffectEnabled("openFlourish")) return;
+    // Never start an arrival in a background tab. Resuming it on visibility
+    // would detach the sound and visuals from the actual app launch.
+    if (document.visibilityState !== "visible") return;
+
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let motionPreference: MediaQueryList | null = null;
+
+    const abortImmediately = () => {
+      cancelled = true;
+      clearAutoDismiss();
+      stopStartupSound();
+      cancelEffects();
+      setPhase("hidden");
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") abortImmediately();
+    };
+    const onMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      if (event.matches) abortImmediately();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    try {
+      motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+      motionPreference.addEventListener("change", onMotionPreferenceChange);
+    } catch {
+      // matchMedia is already guarded by isEffectEnabled; live observation is
+      // best-effort in old or embedded browsers.
+    }
+
     // Deferred to a microtask: setting state straight from an effect body
     // triggers a cascading render (react-hooks/set-state-in-effect, see T013).
     // The sessionStorage check-and-claim also lives inside this microtask
@@ -68,17 +109,26 @@ export function OpenFlourish() {
         // sessionStorage unavailable: fall through and show it anyway, once per mount.
       }
       setPhase("shown");
-      // Both halves start here, on the same tick; each carries its own internal
-      // timing so the sound and the light stay in step without a shared clock.
-      playCue("flourish");
+      // Both halves are requested in the same JS turn. Audio is a single
+      // pre-mixed 0/200/400ms timeline, and play() is never awaited, so a cold
+      // or blocked media request cannot delay the visual or the app beneath it.
+      playbackRef.current = playStartupFlourish();
       fireFlourishEffect();
-      timer = setTimeout(() => setPhase("closing"), AUTO_DISMISS_MS);
+      autoDismissRef.current = setTimeout(() => {
+        autoDismissRef.current = null;
+        stopStartupSound();
+        setPhase("closing");
+      }, AUTO_DISMISS_MS);
     });
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      motionPreference?.removeEventListener("change", onMotionPreferenceChange);
+      clearAutoDismiss();
+      stopStartupSound();
+      cancelEffects();
     };
-  }, []);
+  }, [clearAutoDismiss, stopStartupSound]);
 
   useEffect(() => {
     if (phase !== "closing") return;
@@ -92,8 +142,10 @@ export function OpenFlourish() {
     // Skipping has to take the particles with it: the sprite canvas is above
     // this overlay by design, so motes left running would keep drawing over the
     // quest list the user just skipped ahead to see.
+    clearAutoDismiss();
+    stopStartupSound();
     cancelEffects();
-    setPhase("closing");
+    setPhase((current) => (current === "shown" ? "closing" : current));
   }
 
   return (
@@ -143,7 +195,10 @@ export function OpenFlourish() {
       <button
         type="button"
         autoFocus
-        onClick={dismiss}
+        onClick={(event) => {
+          event.stopPropagation();
+          dismiss();
+        }}
         onKeyDown={(event) => {
           if (event.key === "Escape") dismiss();
         }}

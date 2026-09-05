@@ -179,7 +179,8 @@ function ExpeditionsSection({ counts }: { counts: Map<string, number> | null }) 
                   <img
                     src={`/area-heroes/preview/${region.id}.webp`}
                     alt=""
-                    loading="lazy"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
                     decoding="async"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-fluid group-hover:scale-[1.025]"
                   />
@@ -294,21 +295,22 @@ function monthEmoji(month: number): string {
 }
 
 function ChronicleSection({ chronicle }: { chronicle: ChronicleMonth[] }) {
-  if (chronicle.length === 0) return null;
   const [current, ...past] = chronicle;
 
   return (
-    <section aria-label="年代記">
+    <section aria-label="年代記" aria-busy={!current}>
       <div className="mb-1.5 flex items-center gap-2">
         <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-gold">CHRONICLE</p>
         <h2 className="text-sm font-bold text-foreground">年代記</h2>
-        <span className="ml-auto text-xs text-muted-foreground tabular-nums">{chronicle.length}か月</span>
+        <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+          {Math.max(chronicle.length, 1)}か月
+        </span>
       </div>
       <div
         aria-hidden
         className="mb-2.5 h-px bg-gradient-to-r from-gold/45 via-gold/15 to-transparent"
       />
-      <CurrentMonthPage month={current} />
+      {current ? <CurrentMonthPage month={current} /> : <CurrentMonthPlaceholder />}
       {past.length > 0 && (
         <ul className="mt-2 space-y-1.5">
           {past.map((month) => (
@@ -319,6 +321,34 @@ function ChronicleSection({ chronicle }: { chronicle: ChronicleMonth[] }) {
         </ul>
       )}
     </section>
+  );
+}
+
+/** Keep the first frame structurally identical while IndexedDB supplies the
+ * actual month. This is intentionally a finished neutral state rather than a
+ * spinner/skeleton, so opening Survey Notes never swaps the whole canvas or
+ * pushes the rarity ladder down after paint. */
+function CurrentMonthPlaceholder() {
+  return (
+    <div aria-hidden className="rounded-2xl border border-gold/25 bg-card p-4">
+      <div className="flex items-center gap-3">
+        <span className="flex size-12 flex-shrink-0 items-center justify-center rounded-xl bg-gold-soft text-2xl select-none">
+          🌸
+        </span>
+        <div className="min-w-0">
+          <p className="text-[0.6875rem] font-semibold text-gold">今月の調査対象</p>
+          <p className="truncate text-base font-bold text-foreground">季節の調査記録</p>
+        </div>
+        <span className="ml-auto flex-shrink-0 rounded-full bg-frost-soft px-2 py-0.5 text-[0.625rem] font-bold text-frost">
+          調査中
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <ChronicleStat label="討伐" value={0} />
+        <ChronicleStat label="希少" value={0} />
+        <ChronicleStat label="活動" value={0} unit="日" />
+      </dl>
+    </div>
   );
 }
 
@@ -407,9 +437,17 @@ function Section({
   onReplay: (drop: DropDef) => void;
 }) {
   const foundCount = drops.filter((drop) => (counts?.get(drop.id) ?? 0) > 0).length;
+  const columnCount = columns === "grid-cols-3" ? 3 : 4;
+  const intrinsicHeight = 48 + Math.ceil(drops.length / columnCount) * 112;
 
   return (
-    <section aria-label={title}>
+    <section
+      aria-label={title}
+      style={{
+        contentVisibility: "auto",
+        containIntrinsicSize: `auto ${intrinsicHeight}px`,
+      }}
+    >
       <div className="mb-1.5 flex items-center gap-2">
         <h2 className="text-sm font-bold text-foreground">{title}</h2>
         <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-bold tracking-wider ${badgeClass}`}>

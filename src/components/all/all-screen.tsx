@@ -134,10 +134,12 @@ export function AllScreen() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(8rem + env(safe-area-inset-bottom))" }}>
-        {loading ? (
-          <LoadingState />
-        ) : view === "calendar" ? (
+      <main
+        aria-busy={loading}
+        className="flex-1 overflow-y-auto"
+        style={{ paddingBottom: "calc(8rem + env(safe-area-inset-bottom))" }}
+      >
+        {view === "calendar" ? (
           <CalendarView
             currentMonth={currentMonth}
             selectedDate={selectedDate}
@@ -195,7 +197,6 @@ export function AllScreen() {
     </div>
   );
 }
-
 function ViewToggle({
   view,
   onChange,
@@ -213,14 +214,6 @@ function ViewToggle({
         <List className="size-3.5" />
         リスト
       </button>
-    </div>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="flex items-center justify-center py-24">
-      <p className="text-sm text-muted-foreground">読み込み中...</p>
     </div>
   );
 }

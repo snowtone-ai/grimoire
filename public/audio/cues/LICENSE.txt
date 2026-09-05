@@ -40,9 +40,15 @@ this project; the selection and the file names are.
 	  jingles_STEEL06.ogg -> morning.wav
 	  jingles_STEEL10.ogg -> flourish.wav
 
+	Derived startup mix:
+	  clasp.wav at 0ms + book-open.wav at 200ms + flourish.wav at 400ms
+	  -> startup-flourish.wav
+	  Exact gains, hashes, tool version, and reproduction command are recorded in
+	  docs/startup-sound-sources.md.
+
 --------------------------------------------------------------------------
 
-Re-encoding applied to every file (T044):
+Re-encoding applied to every direct pack source (T044):
 
 	ffmpeg -i <source> -af volume=<g>dB -ac 1 -ar 44100 -c:a pcm_s16le <out>
 

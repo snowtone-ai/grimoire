@@ -24,6 +24,7 @@ import {
   clearAction,
   PAGE_ACTION,
   SOUND_CUES,
+  STARTUP_FLOURISH,
   type SoundAction,
 } from "./domain/sound-cues.ts";
 
@@ -94,11 +95,10 @@ let ctx: AudioContext | null = null;
  * correct failure here — a sound that arrives detached from the moment it was
  * describing is worse than no sound at all.
  *
- * The one cue this genuinely costs is the app-open flourish, which by
- * definition fires before the user can have touched anything. Its visual half
- * still plays in full. There is no way around this on the web: it is the
- * autoplay policy working as intended, not something a workaround should try
- * to defeat. */
+ * The sampler therefore deliberately skips the app-open flourish, which fires
+ * before a user gesture. playStartupFlourish() below makes a separate, single
+ * HTMLMediaElement attempt for environments where policy already allows it;
+ * blocked environments stay silent and never replay the cue late. */
 let unlocked = false;
 
 function ac(): AudioContext | null {
@@ -222,6 +222,83 @@ export function haptic(pattern: number | readonly number[]): void {
  * reads as a click rather than as feedback. */
 const RETRIGGER_MIN_MS = 55;
 const lastPlayedAt = new Map<SoundAction, number>();
+
+export interface SoundPlayback {
+  cancel(): void;
+}
+
+const INACTIVE_PLAYBACK: SoundPlayback = { cancel() {} };
+let cancelActiveStartup: (() => void) | null = null;
+
+/**
+ * Attempt the one app-start cue through a single HTMLMediaElement.
+ *
+ * Unlike the sampler above, this path may run before a gesture. Browsers can
+ * permit that for an installed PWA, an engaged origin, or a user allow-list;
+ * otherwise play() rejects and the visual continues silently. The rejection
+ * is never replayed on a later gesture, because sound arriving after its
+ * visual moment is worse than silence.
+ *
+ * One pre-mixed media file preserves the cue's internal 0/200/400 ms timing.
+ * This function never awaits loading or playback, so it cannot hold up the
+ * startup visual or the app beneath it. The returned handle also aborts a
+ * pending play promise by pausing and detaching the source.
+ */
+export function playStartupFlourish(): SoundPlayback {
+  // Calling this twice must never stack two arrivals. Cancel first even when
+  // the second call finds sound disabled, so a live preference change wins.
+  cancelActiveStartup?.();
+
+  if (typeof Audio === "undefined" || !isSoundEnabled()) return INACTIVE_PLAYBACK;
+
+  let audio: HTMLAudioElement;
+  try {
+    audio = new Audio();
+  } catch {
+    return INACTIVE_PLAYBACK;
+  }
+
+  let cancelled = false;
+  function release() {
+    if (cancelActiveStartup === cancel) cancelActiveStartup = null;
+    audio.removeEventListener("ended", release);
+    audio.removeEventListener("error", onError);
+  }
+  function cancel() {
+    if (cancelled) return;
+    cancelled = true;
+    release();
+    try {
+      audio.pause();
+      audio.removeAttribute("src");
+      // Reset the resource selection algorithm too: pause() alone can leave a
+      // pending autoplay attempt eligible to start after activation.
+      audio.load();
+    } catch {
+      // Cancellation is best-effort; the element is no longer retained here.
+    }
+  }
+  function onError() {
+    cancel();
+  }
+
+  cancelActiveStartup = cancel;
+  audio.preload = "auto";
+  audio.autoplay = true;
+  audio.volume = STARTUP_FLOURISH.gain;
+  audio.src = `/audio/${STARTUP_FLOURISH.src}`;
+  audio.addEventListener("ended", release, { once: true });
+  audio.addEventListener("error", onError, { once: true });
+
+  try {
+    const attempt = audio.play();
+    if (attempt !== undefined) void attempt.catch(cancel);
+  } catch {
+    cancel();
+  }
+
+  return { cancel };
+}
 
 /** Play one action's cue. Fire-and-forget: never awaited by a call site, never
  * throws, and silently does nothing when sound is off or unavailable. */

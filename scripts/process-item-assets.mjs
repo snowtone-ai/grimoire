@@ -80,7 +80,7 @@ for (const [id, source] of [...sources].sort(([a], [b]) => a.localeCompare(b))) 
 }
 
 // AVIF encoding is CPU-heavy. Three item workers keep libvips busy without
-// allowing all 424 masters to inflate in memory at once; manifest ordering is
+// allowing all 518 masters to inflate in memory at once; manifest ordering is
 // still deterministic because validation populated `assets` synchronously.
 let nextRender = 0;
 async function renderWorker() {

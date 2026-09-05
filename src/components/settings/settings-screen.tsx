@@ -1,7 +1,13 @@
 "use client";
 
 import { Link } from "next-view-transitions";
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ComponentType,
+} from "react";
 import {
   ALargeSmall,
   ArrowLeft,
@@ -30,6 +36,7 @@ import {
   type ParsedBackup,
 } from "@/lib/backup";
 import {
+  DEFAULT_EFFECT_PREFS,
   EFFECT_KEYS,
   EFFECT_LABELS,
   EFFECT_SECTIONS,
@@ -61,6 +68,41 @@ import {
   getStoredTextSize,
   setTextSize,
 } from "@/lib/text-size";
+import {
+  BASE_THEMES,
+  DEFAULT_BASE_THEME,
+  getStoredBaseTheme,
+  setBaseTheme,
+  subscribeBaseTheme,
+  type BaseTheme,
+} from "@/lib/base-theme";
+import {
+  FieldDescription,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+
+const NOOP_SUBSCRIBE = () => () => undefined;
+
+function useHydrationSafeStoredState<T>(
+  readClientValue: () => T,
+  serverValue: T,
+): [T, (value: T) => void] {
+  const storedValue = useSyncExternalStore(
+    NOOP_SUBSCRIBE,
+    readClientValue,
+    () => serverValue,
+  );
+  const [override, setOverride] = useState<{ value: T } | null>(null);
+  return [override?.value ?? storedValue, (value) => setOverride({ value })];
+}
+
+function subscribeReducedMotion(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
 
 /* Settings (D-036).
  *
@@ -92,6 +134,7 @@ export function SettingsScreen() {
         className="flex-1 space-y-6 px-4 pt-2"
         style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
+        <BaseThemeSection />
         <TextSizeSection />
         <BasicFeedbackSection />
         <MoreEffectsSection />
@@ -105,8 +148,73 @@ export function SettingsScreen() {
   );
 }
 
+function BaseThemeSection() {
+  const theme = useSyncExternalStore(
+    subscribeBaseTheme,
+    getStoredBaseTheme,
+    () => DEFAULT_BASE_THEME,
+  );
+
+  function choose(nextTheme: BaseTheme) {
+    if (nextTheme === theme) return;
+    setBaseTheme(nextTheme);
+    playCue("toggle");
+  }
+
+  return (
+    <section aria-labelledby="base-theme-title" className="border-y border-border py-4">
+      <p className="font-display text-[0.625rem] font-bold tracking-[0.26em] text-frost">
+        BASE ATMOSPHERE
+      </p>
+      <FieldSet className="mt-1 gap-3">
+        <FieldLegend id="base-theme-title">拠点の壁紙</FieldLegend>
+        <FieldDescription id="base-theme-description">
+          好きな空気を選ぶと、すべての画面へすぐに反映されます
+        </FieldDescription>
+        <div
+          role="radiogroup"
+          aria-describedby="base-theme-description"
+          className="grid grid-cols-2 gap-x-3 gap-y-4"
+        >
+          {BASE_THEMES.map((option) => {
+            const selected = option.id === theme;
+            return (
+              <label key={option.id} className="group min-w-0 cursor-pointer">
+                <input
+                  type="radio"
+                  name="base-theme"
+                  value={option.id}
+                  checked={selected}
+                  onChange={() => choose(option.id)}
+                  className="peer sr-only"
+                />
+                <span
+                  aria-hidden
+                  data-base-theme-preview={option.id}
+                  className="base-theme-preview block h-14 w-full border border-border transition-[outline-color,filter] duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring group-active:brightness-90"
+                />
+                <span className="mt-1.5 flex min-w-0 items-baseline justify-between gap-2">
+                  <span className="truncate text-sm font-semibold text-foreground">
+                    {option.label}
+                  </span>
+                  <span className="shrink-0 text-[0.625rem] font-medium text-muted-foreground">
+                    {selected ? "選択中" : option.description}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </FieldSet>
+    </section>
+  );
+}
+
 function TextSizeSection() {
-  const [textSize, setTextSizeState] = useState(getStoredTextSize);
+  const [textSize, setTextSizeState] = useHydrationSafeStoredState(
+    getStoredTextSize,
+    "normal",
+  );
   const large = textSize === "large";
 
   function toggle() {
@@ -216,9 +324,7 @@ function SettingsSection({
 /* Sound and device vibration are deliberately separate. Neither follows
  * reduced-motion: that preference describes visual movement, not feedback. */
 function SoundToggleRow() {
-  // Lazy initializer rather than an effect: this screen is mounted client-only
-  // (dynamic ssr:false), so localStorage is available on first render.
-  const [enabled, setEnabled] = useState(isSoundEnabled);
+  const [enabled, setEnabled] = useHydrationSafeStoredState(isSoundEnabled, true);
 
   function toggle() {
     const next = !enabled;
@@ -266,7 +372,7 @@ function SoundToggleRow() {
 }
 
 function HapticToggleRow() {
-  const [enabled, setEnabled] = useState(isHapticEnabled);
+  const [enabled, setEnabled] = useHydrationSafeStoredState(isHapticEnabled, true);
 
   function toggle() {
     const next = !enabled;
@@ -323,8 +429,15 @@ function EffectToggleRow({
   effectKey: EffectKey;
   icon: ComponentType<{ className?: string }>;
 }) {
-  const [enabled, setEnabled] = useState(() => getStoredEffectPref(effectKey));
-  const reducedMotion = isReducedMotionForced();
+  const [enabled, setEnabled] = useHydrationSafeStoredState(
+    () => getStoredEffectPref(effectKey),
+    DEFAULT_EFFECT_PREFS[effectKey],
+  );
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    isReducedMotionForced,
+    () => false,
+  );
   const label = EFFECT_LABELS[effectKey];
 
   function toggle() {
@@ -430,9 +543,14 @@ function MoreEffectsSection() {
  * the same way as effects (below), which is the only ON/OFF switch that can
  * ever exist here. */
 function NotificationSection() {
-  const [permission, setPermission] =
-    useState<NotificationPermissionState>(getNotificationPermission);
-  const [enabled, setEnabled] = useState(getNotificationsEnabled);
+  const [permission, setPermission] = useHydrationSafeStoredState<NotificationPermissionState>(
+    getNotificationPermission,
+    "unsupported",
+  );
+  const [enabled, setEnabled] = useHydrationSafeStoredState(
+    getNotificationsEnabled,
+    true,
+  );
   const [busy, setBusy] = useState(false);
   const [testSent, setTestSent] = useState(false);
   const testTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);

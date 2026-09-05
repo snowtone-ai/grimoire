@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resilience Tester"
+  short_description: "Run bounded seeded local browser fault campaigns"
+  default_prompt: "Use $resilience-tester to test this local workflow under bounded duplicate, lifecycle, network, and storage faults."

@@ -80,6 +80,23 @@ export interface SoundCue {
   readonly haptic: number | readonly number[] | null;
 }
 
+/**
+ * One pre-mixed file keeps the three audible beats locked to the same clock as
+ * the startup visual. Separate media elements can begin at different times
+ * while they buffer, which made the 0/200/400 ms choreography nondeterministic
+ * on a cold launch. See docs/startup-sound-sources.md for the reproducible mix.
+ */
+export const STARTUP_FLOURISH = {
+  src: "cues/startup-flourish.wav",
+  gain: 1,
+  durationMs: 1308.889,
+  markersMs: {
+    clasp: 0,
+    bookOpen: 200,
+    lightRise: 400,
+  },
+} as const;
+
 const one = (src: string, gain: number, haptic: SoundCue["haptic"] = null): SoundCue => ({
   steps: [{ src, gain, delayMs: 0 }],
   haptic,
@@ -144,7 +161,9 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   morning: one("cues/morning.wav", 0.35),
   /* The grimoire opening: the clasp springs, the cover lifts, light rises out.
    * Three steps because it is three physical events, timed to the frame-draw
-   * choreography in open-flourish.tsx. */
+   * choreography in open-flourish.tsx. The startup-only HTMLMediaElement path
+   * uses STARTUP_FLOURISH instead; keeping that file out of this sampler also
+   * keeps it out of the post-gesture warm-up after its launch moment passed. */
   flourish: {
     steps: [
       { src: "cues/clasp.wav", gain: 0.45, delayMs: 0 },

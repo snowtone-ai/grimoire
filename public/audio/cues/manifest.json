@@ -5,10 +5,10 @@
     "kenney_music-jingles"
   ],
   "license": "CC0 1.0 (public domain, no attribution required)",
-  "format": "PCM s16le, 44.1kHz, mono, peak-normalised to -1.0 dBFS — decodeAudioData-safe on Safari/iOS",
+  "format": "PCM s16le, 44.1kHz, mono — direct pack sources are peak-normalised to -1.0 dBFS; startup-flourish.wav is the documented -7.0 dBFS derived mix",
   "status": "In use. src/lib/domain/sound-cues.ts maps every app action to a file here or in ../ui/; src/lib/sound.ts plays it.",
   "note": "These are the cues that needed a musical or physical character the Interface Sounds pack does not contain (page turns, treasure, jingles). Plain UI feedback still comes from ../ui/.",
-  "count": 14,
+  "count": 15,
   "files": [
     {
       "file": "book-open.wav",
@@ -58,6 +58,39 @@
       "hint": "ascending steel bells rising an octave — the app-open flourish",
       "durationMs": 909,
       "bytes": 80242
+    },
+    {
+      "file": "startup-flourish.wav",
+      "category": "flourish",
+      "hint": "single-clock startup mix: clasp at 0ms, cover at 200ms, steel-bell light rise at 400ms",
+      "durationMs": 1308.889,
+      "bytes": 115522,
+      "sha256": "e0c0bacbd217aece6b478cc042f4f57f367e96b1f3938da67e0277c73817a942",
+      "markersMs": {
+        "clasp": 0,
+        "bookOpen": 200,
+        "lightRise": 400
+      },
+      "sourceMix": [
+        {
+          "file": "clasp.wav",
+          "gain": 0.45,
+          "delayMs": 0,
+          "sha256": "a1cd621a73e62a1d0a1fe2d2b47525703024536d9d273aafcf79fb9a9aa47c45"
+        },
+        {
+          "file": "book-open.wav",
+          "gain": 0.45,
+          "delayMs": 200,
+          "sha256": "4e5a53f095508b4e629315d47d54d0a62c21cbd4526e63ff6108716181eb0aac"
+        },
+        {
+          "file": "flourish.wav",
+          "gain": 0.5,
+          "delayMs": 400,
+          "sha256": "f18331fa4d0cff7e0f574daeaf5e6cb58c62dcdf85004814b5db8713150e1830"
+        }
+      ]
     },
     {
       "file": "morning.wav",

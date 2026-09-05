@@ -1,7 +1,19 @@
 // Web Speech API type declarations (not included in all TypeScript DOM libs)
 
+type SpeechRecognitionErrorCode =
+  | "aborted"
+  | "audio-capture"
+  | "bad-grammar"
+  | "language-not-supported"
+  | "language-unavailable"
+  | "network"
+  | "no-speech"
+  | "not-allowed"
+  | "phrases-not-supported"
+  | "service-not-allowed";
+
 interface SpeechRecognitionErrorEvent extends Event {
-  readonly error: string;
+  readonly error: SpeechRecognitionErrorCode;
   readonly message: string;
 }
 
@@ -24,12 +36,14 @@ interface SpeechRecognition extends EventTarget {
   abort(): void;
 }
 
-declare const SpeechRecognition: {
+interface SpeechRecognitionConstructor {
   prototype: SpeechRecognition;
   new (): SpeechRecognition;
-};
+}
+
+declare const SpeechRecognition: SpeechRecognitionConstructor;
 
 interface Window {
-  SpeechRecognition: typeof SpeechRecognition | undefined;
-  webkitSpeechRecognition: typeof SpeechRecognition | undefined;
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
 }

@@ -16,7 +16,7 @@ import { REGIONS, EXPEDITION_REGIONS, getRegionById } from "../../../src/lib/dom
 /* Catalog integrity + long-term-use simulation.
  *
  * D-032 rebuilt the catalog from a single frozen-tundra theme into an
- * eight-region world atlas (region material ranks 1/2/3/5/6/7) plus the
+ * ten-region world atlas (region material ranks 1/2/3/5/6/7) plus the
  * unchanged home-garden season axis (rank 4/8). Unlike D-031's 5x expansion,
  * this rewrite intentionally does NOT preserve old drop ids — the user
  * explicitly authorized breaking backward compatibility for the world-theme
@@ -79,24 +79,33 @@ test("every drop belongs to a real region, and region use matches the season/exp
   }
 });
 
-test("every expedition region contributes to every non-seasonal rank", () => {
+test("every expedition region contributes the same complete non-seasonal catalog", () => {
+  const expectedPerRarity = { 1: 11, 2: 10, 3: 9, 5: 7, 6: 6, 7: 4 };
   for (const region of EXPEDITION_REGIONS) {
-    for (const rarity of [1, 2, 3, 5, 6, 7]) {
+    for (const [rarityKey, expected] of Object.entries(expectedPerRarity)) {
+      const rarity = Number(rarityKey);
       const count = POOL_BY_RARITY[rarity].filter((drop) => drop.region === region.id).length;
-      assert.ok(count > 0, `region ${region.id} has no RARE${rarity} materials`);
+      assert.equal(
+        count,
+        expected,
+        `region ${region.id} should have ${expected} RARE${rarity} materials`
+      );
     }
+    assert.equal(
+      DROP_CATALOG.filter((drop) => drop.region === region.id).length,
+      47,
+      `region ${region.id} should contribute exactly 47 materials`
+    );
   }
 });
 
-test("the catalog is a full RARE 1-8 ladder sized in the 400-500 range", () => {
+test("the catalog is a complete 530-item RARE 1-8 ladder", () => {
   for (let rarity = 1; rarity <= 8; rarity++) {
     assert.ok(POOL_BY_RARITY[rarity].length > 0, `rank ${rarity} has drops`);
   }
   assert.equal(SSR_DROPS.length, 12, "RARE8 stays the 12 photo-backed seasonal vistas");
-  assert.ok(
-    DROP_CATALOG.length >= 400 && DROP_CATALOG.length <= 500,
-    `catalog should be in the 400-500 range, got ${DROP_CATALOG.length}`
-  );
+  assert.equal(DROP_CATALOG.length, 530);
+  assert.equal(EXPEDITION_REGIONS.length, 10);
 });
 
 test("RARE4 keeps exactly one canonical specimen per month for the chronicle", () => {
@@ -112,7 +121,7 @@ test("RARE4 keeps exactly one canonical specimen per month for the chronicle", (
   }
 });
 
-/* Unlike the expedition-region ids (376 of them, intentionally NOT preserved
+/* Unlike the original expedition-region ids (376 of them, intentionally NOT preserved
  * by D-032), these 60 season-linked "garden" ids already have real drop
  * records in the user's IndexedDB from before this rewrite, and D-032
  * explicitly promised to leave them byte-identical. If a future edit ever

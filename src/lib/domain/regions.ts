@@ -2,7 +2,7 @@
  *
  * The research institute (already implied by existing flavor text like
  * "研究所で大切に育てられている") runs its home base in the frozen north and
- * dispatches survey expeditions to seven further world regions, each an
+ * dispatches survey expeditions to nine further world regions, each an
  * original fusion of a real-world culture/era/mythology with light fantasy
  * elements. A ninth pseudo-region ("garden") is the institute's own seasonal
  * garden — the existing month/species-linked RARE4/RARE8 mechanic — kept
@@ -81,6 +81,20 @@ export const REGIONS: RegionDef[] = [
     accent: "#2f9e8f",
   },
   {
+    id: "petal",
+    name: "花菓子宮殿の庭",
+    subtitle: "磁器の茶園と薔薇雲がほどける、甘い祝祭の庭",
+    blurb: "花菓子の香る回廊と磁器の庭が連なる宮殿。朝露の茶会が毎日を祝福する。",
+    accent: "#e887a8",
+  },
+  {
+    id: "lullaby",
+    name: "夢織り星谷",
+    subtitle: "月花と星の小径が浮島を結ぶ、眠り前の谷",
+    blurb: "雲海に浮かぶ島々を銀の橋が結ぶ谷。月明かりの糸が穏やかな夢を織る。",
+    accent: "#8f83d8",
+  },
+  {
     id: "garden",
     name: "本部の季節庭園",
     subtitle: "調査本部に併設された、四季を映す庭",
@@ -103,5 +117,5 @@ export function getRegionById(id: string): RegionDef {
   return region;
 }
 
-/** The eight expedition regions the atlas overview shows (excludes the home garden). */
+/** The ten expedition regions the atlas overview shows (excludes the home garden). */
 export const EXPEDITION_REGIONS: RegionDef[] = REGIONS.filter((region) => region.id !== "garden");

@@ -10,7 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MASTER_DIR = path.join(ROOT, "public", "area-heroes", "master");
 const EXPLORE_DIR = path.join(ROOT, "public", "area-heroes", "explore");
 const PREVIEW_DIR = path.join(ROOT, "public", "area-heroes", "preview");
-const AREA_IDS = ["frost", "aegis", "caravan", "canopy", "lantern", "grove", "savanna", "tide"];
+const AREA_IDS = ["frost", "aegis", "caravan", "canopy", "lantern", "grove", "savanna", "tide", "petal", "lullaby"];
 
 await Promise.all([
   mkdir(EXPLORE_DIR, { recursive: true }),

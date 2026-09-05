@@ -87,12 +87,11 @@ export function HomeScreen() {
       )}
 
       <main
+        aria-busy={screen.loading}
         className="flex-1 px-4 pt-4"
         style={{ paddingBottom: "calc(8.5rem + env(safe-area-inset-bottom))" }}
       >
-        {screen.loading ? (
-          <LoadingState />
-        ) : screen.tasks.length === 0 ? (
+        {screen.tasks.length === 0 ? (
           <EmptyState />
         ) : (
           <ul className="space-y-3">
@@ -309,20 +308,6 @@ function NotificationPrompt({
         通知を許可する
       </button>
       <p className="mt-1.5 text-center text-[0.6875rem] text-brand/70">あとから設定画面でも変更できます</p>
-    </div>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="space-y-3" aria-hidden>
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="h-16 animate-pulse rounded-2xl bg-muted"
-          style={{ animationDelay: `${i * 140}ms` }}
-        />
-      ))}
     </div>
   );
 }

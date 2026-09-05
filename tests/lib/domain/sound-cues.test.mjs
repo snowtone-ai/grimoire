@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import {
   ALL_CUE_SOURCES,
   clearAction,
   PAGE_ACTION,
   SOUND_CUES,
+  STARTUP_FLOURISH,
 } from "../../../src/lib/domain/sound-cues.ts";
 
 /* The check this file exists for: a cue whose `src` does not name a real file
@@ -54,6 +56,43 @@ test("the sound budget holds: layering is the exception, not the rule", () => {
     ["add", "clearHigh", "flourish"],
     "a new layered cue was added; confirm it is a genuinely compound moment (D-047)"
   );
+});
+
+test("startup flourish is one verified file with exact visual beat markers", () => {
+  assert.deepEqual(STARTUP_FLOURISH.markersMs, {
+    clasp: 0,
+    bookOpen: 200,
+    lightRise: 400,
+  });
+  assert.equal(
+    ALL_CUE_SOURCES.includes(STARTUP_FLOURISH.src),
+    false,
+    "a startup-only file must not be fetched by the post-gesture sampler warm-up"
+  );
+
+  const manifest = JSON.parse(
+    readFileSync(new URL("../../../public/audio/cues/manifest.json", import.meta.url), "utf8")
+  );
+  const entry = manifest.files.find((file) => file.file === "startup-flourish.wav");
+  assert.ok(entry, "startup mix is missing from the audio manifest");
+  assert.deepEqual(entry.markersMs, STARTUP_FLOURISH.markersMs);
+  assert.equal(entry.durationMs, STARTUP_FLOURISH.durationMs);
+
+  const startupBytes = readFileSync(
+    new URL("../../../public/audio/cues/startup-flourish.wav", import.meta.url)
+  );
+  assert.equal(createHash("sha256").update(startupBytes).digest("hex"), entry.sha256);
+
+  for (const source of entry.sourceMix) {
+    const sourceBytes = readFileSync(
+      new URL(`../../../public/audio/cues/${source.file}`, import.meta.url)
+    );
+    assert.equal(
+      createHash("sha256").update(sourceBytes).digest("hex"),
+      source.sha256,
+      `${source.file}: startup source changed without rebuilding the exact mix`
+    );
+  }
 });
 
 test("clearAction walks the RARE 1-8 ladder without gaps or repeats out of order", () => {

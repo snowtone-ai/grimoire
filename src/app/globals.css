@@ -317,6 +317,183 @@ html[data-text-size="large"] .line-clamp-2 {
   }
 }
 
+/* User-selected base atmosphere. Every option stays close to the semantic
+ * page background so foreground contrast continues to come from the token
+ * system rather than from a wallpaper-specific text override. The attribute
+ * is restored by layout.tsx before first paint. */
+:root[data-base-theme="aurora"] {
+  --atmosphere:
+    radial-gradient(95% 58% at 14% -8%, oklch(0.82 0.095 174 / 34%), transparent 62%),
+    radial-gradient(85% 55% at 88% 2%, oklch(0.77 0.11 296 / 22%), transparent 60%),
+    linear-gradient(180deg, oklch(0.95 0.025 226), var(--background) 48%);
+}
+
+:root[data-base-theme="daybreak"] {
+  --atmosphere:
+    radial-gradient(95% 58% at 82% -8%, oklch(0.86 0.105 61 / 34%), transparent 64%),
+    radial-gradient(85% 54% at 8% 0%, oklch(0.84 0.07 330 / 20%), transparent 62%),
+    linear-gradient(180deg, oklch(0.965 0.02 64), var(--background) 50%);
+}
+
+:root[data-base-theme="glacier"] {
+  --atmosphere:
+    linear-gradient(148deg, transparent 0 45%, oklch(0.82 0.055 220 / 22%) 45.3% 59%, transparent 59.3%),
+    radial-gradient(100% 60% at 20% -5%, oklch(0.78 0.09 216 / 28%), transparent 64%),
+    linear-gradient(180deg, oklch(0.955 0.028 220), var(--background) 54%);
+}
+
+:root[data-base-theme="moonlit"] {
+  --atmosphere:
+    radial-gradient(circle at 82% 8%, oklch(0.9 0.035 94 / 42%) 0 3.5%, transparent 12%),
+    radial-gradient(90% 56% at 78% -4%, oklch(0.74 0.075 267 / 22%), transparent 62%),
+    linear-gradient(180deg, oklch(0.94 0.025 267), var(--background) 52%);
+}
+
+:root[data-base-theme="hearth"] {
+  --atmosphere:
+    radial-gradient(110% 62% at 16% -10%, oklch(0.84 0.12 55 / 34%), transparent 63%),
+    radial-gradient(90% 48% at 92% 4%, oklch(0.78 0.08 25 / 18%), transparent 62%),
+    linear-gradient(180deg, oklch(0.965 0.028 63), var(--background) 54%);
+}
+
+:root[data-base-theme="tundra"] {
+  --atmosphere:
+    radial-gradient(100% 58% at 14% -6%, oklch(0.77 0.075 144 / 28%), transparent 63%),
+    radial-gradient(84% 46% at 88% 0%, oklch(0.8 0.055 205 / 20%), transparent 60%),
+    linear-gradient(180deg, oklch(0.955 0.023 151), var(--background) 52%);
+}
+
+:root[data-base-theme="deep-sea"] {
+  --atmosphere:
+    radial-gradient(100% 56% at 50% -10%, oklch(0.76 0.1 221 / 32%), transparent 62%),
+    radial-gradient(80% 42% at 92% 8%, oklch(0.76 0.08 187 / 18%), transparent 62%),
+    linear-gradient(180deg, oklch(0.945 0.035 236), var(--background) 54%);
+}
+
+:root[data-base-theme="blossom"] {
+  --atmosphere:
+    radial-gradient(90% 54% at 82% -5%, oklch(0.85 0.075 348 / 32%), transparent 62%),
+    radial-gradient(85% 45% at 10% 0%, oklch(0.82 0.055 282 / 18%), transparent 62%),
+    linear-gradient(180deg, oklch(0.97 0.022 345), var(--background) 52%);
+}
+
+:root[data-base-theme="parchment"] {
+  --atmosphere:
+    linear-gradient(90deg, oklch(0.79 0.045 75 / 8%) 1px, transparent 1px),
+    radial-gradient(100% 58% at 18% -8%, oklch(0.84 0.075 76 / 28%), transparent 64%),
+    linear-gradient(180deg, oklch(0.965 0.025 82), var(--background) 54%);
+  background-size: 2.5rem 100%, auto, auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-base-theme="aurora"] {
+    --atmosphere:
+      radial-gradient(100% 62% at 12% -8%, oklch(0.68 0.15 172 / 26%), transparent 64%),
+      radial-gradient(90% 56% at 88% -4%, oklch(0.62 0.16 301 / 20%), transparent 62%),
+      linear-gradient(180deg, oklch(0.21 0.06 247), var(--background) 52%);
+  }
+  :root[data-base-theme="daybreak"] {
+    --atmosphere:
+      radial-gradient(100% 58% at 80% -6%, oklch(0.7 0.14 55 / 27%), transparent 64%),
+      radial-gradient(86% 54% at 8% 0%, oklch(0.57 0.11 329 / 17%), transparent 62%),
+      linear-gradient(180deg, oklch(0.22 0.05 284), var(--background) 54%);
+  }
+  :root[data-base-theme="glacier"] {
+    --atmosphere:
+      linear-gradient(148deg, transparent 0 45%, oklch(0.64 0.085 215 / 13%) 45.3% 59%, transparent 59.3%),
+      radial-gradient(100% 62% at 18% -6%, oklch(0.64 0.11 216 / 21%), transparent 65%),
+      linear-gradient(180deg, oklch(0.2 0.05 228), var(--background) 54%);
+  }
+  :root[data-base-theme="moonlit"] {
+    --atmosphere:
+      radial-gradient(circle at 82% 8%, oklch(0.88 0.045 92 / 32%) 0 3.5%, transparent 12%),
+      radial-gradient(92% 58% at 78% -4%, oklch(0.55 0.12 273 / 18%), transparent 64%),
+      linear-gradient(180deg, oklch(0.18 0.045 273), var(--background) 56%);
+  }
+  :root[data-base-theme="hearth"] {
+    --atmosphere:
+      radial-gradient(115% 62% at 14% -10%, oklch(0.63 0.15 48 / 24%), transparent 64%),
+      radial-gradient(90% 50% at 92% 2%, oklch(0.55 0.1 25 / 16%), transparent 62%),
+      linear-gradient(180deg, oklch(0.215 0.045 55), var(--background) 56%);
+  }
+  :root[data-base-theme="tundra"] {
+    --atmosphere:
+      radial-gradient(102% 60% at 14% -8%, oklch(0.54 0.1 143 / 20%), transparent 64%),
+      radial-gradient(86% 46% at 88% 0%, oklch(0.56 0.08 203 / 16%), transparent 62%),
+      linear-gradient(180deg, oklch(0.19 0.04 157), var(--background) 56%);
+  }
+  :root[data-base-theme="deep-sea"] {
+    --atmosphere:
+      radial-gradient(102% 58% at 50% -10%, oklch(0.56 0.13 224 / 25%), transparent 64%),
+      radial-gradient(82% 44% at 92% 6%, oklch(0.5 0.1 184 / 16%), transparent 62%),
+      linear-gradient(180deg, oklch(0.16 0.055 240), var(--background) 58%);
+  }
+  :root[data-base-theme="blossom"] {
+    --atmosphere:
+      radial-gradient(92% 56% at 82% -6%, oklch(0.59 0.13 345 / 20%), transparent 64%),
+      radial-gradient(86% 46% at 10% 0%, oklch(0.54 0.1 285 / 15%), transparent 62%),
+      linear-gradient(180deg, oklch(0.2 0.045 325), var(--background) 56%);
+  }
+  :root[data-base-theme="parchment"] {
+    --atmosphere:
+      linear-gradient(90deg, oklch(0.72 0.055 76 / 5%) 1px, transparent 1px),
+      radial-gradient(102% 60% at 18% -8%, oklch(0.56 0.1 72 / 20%), transparent 65%),
+      linear-gradient(180deg, oklch(0.21 0.04 70), var(--background) 58%);
+    background-size: 2.5rem 100%, auto, auto;
+  }
+}
+
+/* Compact previews are visual content, not decorative cards. The square
+ * horizon crop makes ten choices scannable without a nested panel layout. */
+.base-theme-preview {
+  background: var(--background);
+}
+
+.base-theme-preview[data-base-theme-preview="hoarfrost"] {
+  background: linear-gradient(145deg, oklch(0.75 0.075 222), oklch(0.97 0.012 240) 62%, oklch(0.82 0.09 60));
+}
+.base-theme-preview[data-base-theme-preview="aurora"] {
+  background: linear-gradient(145deg, oklch(0.56 0.14 176), oklch(0.3 0.12 257) 58%, oklch(0.58 0.15 302));
+}
+.base-theme-preview[data-base-theme-preview="daybreak"] {
+  background: linear-gradient(145deg, oklch(0.58 0.11 294), oklch(0.83 0.1 28) 52%, oklch(0.91 0.105 76));
+}
+.base-theme-preview[data-base-theme-preview="glacier"] {
+  background: linear-gradient(145deg, oklch(0.62 0.11 220), oklch(0.91 0.045 210) 52%, oklch(0.72 0.075 232));
+}
+.base-theme-preview[data-base-theme-preview="moonlit"] {
+  background: radial-gradient(circle at 74% 25%, oklch(0.91 0.04 92) 0 8%, transparent 9%), linear-gradient(145deg, oklch(0.3 0.08 275), oklch(0.14 0.045 256));
+}
+.base-theme-preview[data-base-theme-preview="hearth"] {
+  background: linear-gradient(145deg, oklch(0.45 0.105 32), oklch(0.72 0.155 52) 54%, oklch(0.91 0.08 78));
+}
+.base-theme-preview[data-base-theme-preview="tundra"] {
+  background: linear-gradient(145deg, oklch(0.42 0.09 145), oklch(0.72 0.085 168) 52%, oklch(0.91 0.04 210));
+}
+.base-theme-preview[data-base-theme-preview="deep-sea"] {
+  background: linear-gradient(145deg, oklch(0.52 0.13 211), oklch(0.24 0.105 238) 55%, oklch(0.12 0.05 252));
+}
+.base-theme-preview[data-base-theme-preview="blossom"] {
+  background: linear-gradient(145deg, oklch(0.7 0.105 339), oklch(0.9 0.055 350) 54%, oklch(0.95 0.025 280));
+}
+.base-theme-preview[data-base-theme-preview="parchment"] {
+  background: linear-gradient(145deg, oklch(0.66 0.07 66), oklch(0.88 0.055 79) 54%, oklch(0.96 0.025 87));
+}
+
+:root[data-base-theme="hoarfrost"] .base-theme-preview[data-base-theme-preview="hoarfrost"],
+:root[data-base-theme="aurora"] .base-theme-preview[data-base-theme-preview="aurora"],
+:root[data-base-theme="daybreak"] .base-theme-preview[data-base-theme-preview="daybreak"],
+:root[data-base-theme="glacier"] .base-theme-preview[data-base-theme-preview="glacier"],
+:root[data-base-theme="moonlit"] .base-theme-preview[data-base-theme-preview="moonlit"],
+:root[data-base-theme="hearth"] .base-theme-preview[data-base-theme-preview="hearth"],
+:root[data-base-theme="tundra"] .base-theme-preview[data-base-theme-preview="tundra"],
+:root[data-base-theme="deep-sea"] .base-theme-preview[data-base-theme-preview="deep-sea"],
+:root[data-base-theme="blossom"] .base-theme-preview[data-base-theme-preview="blossom"],
+:root[data-base-theme="parchment"] .base-theme-preview[data-base-theme-preview="parchment"] {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* Fixed sky behind every screen; screens stay transparent so cards float
  * over the vista. Falls back to the flat background token if unsupported. */
 body::before {

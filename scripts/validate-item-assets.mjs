@@ -18,7 +18,7 @@ const pilotSources = new Map([
 ]);
 
 const targets = DROP_CATALOG.filter((drop) => drop.rarity >= 1 && drop.rarity <= 7);
-if (targets.length !== 424) throw new Error(`expected 424 RARE 1-7 catalog entries, got ${targets.length}`);
+if (targets.length !== 518) throw new Error(`expected 518 RARE 1-7 catalog entries, got ${targets.length}`);
 const expectedIds = new Set(targets.map((drop) => drop.id));
 
 /* The ~1GB of working masters is deliberately outside git (D-048), so this
@@ -52,7 +52,7 @@ for (const variant of ["thumb", "inspect"]) {
     const files = (await readdir(path.join(rewardRoot, variant))).filter((name) => name.endsWith(suffix));
     const ids = new Set(files.map((name) => name.slice(0, -suffix.length)));
     if (files.length !== targets.length || ids.size !== targets.length) {
-      throw new Error(`${variant}.${format}: expected exactly 424 unique derivatives, got ${files.length}`);
+      throw new Error(`${variant}.${format}: expected exactly 518 unique derivatives, got ${files.length}`);
     }
     for (const id of expectedIds) {
       if (!ids.has(id)) throw new Error(`${variant}.${format}: missing ${id}`);
@@ -111,7 +111,7 @@ for (const drop of targets) {
   rarityCounts.set(drop.rarity, (rarityCounts.get(drop.rarity) ?? 0) + 1);
 }
 
-if (manifest.count !== targets.length) throw new Error(`manifest count ${manifest.count} !== 424`);
+if (manifest.count !== targets.length) throw new Error(`manifest count ${manifest.count} !== 518`);
 const manifestIds = new Set(manifestById.keys());
 if (manifestIds.size !== targets.length) {
   throw new Error("manifest IDs are missing or duplicated");
