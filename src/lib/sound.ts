@@ -34,26 +34,56 @@ const LEGACY_PREF_KEY = "fx-enabled";
 const SOUND_PREF_KEY = "sound-enabled";
 const HAPTIC_PREF_KEY = "haptic-enabled";
 
+type PreferenceFallback = {
+  enabled: boolean;
+  persistedValue: string | null | undefined;
+};
+
+// A storage write can fail while reads still return the previous value (for
+// example, a quota/security exception from setItem only). Keep that failed
+// intent in memory until storage successfully changes or a later read sees a
+// value written by another tab.
+const failedPreferenceWrites = new Map<string, PreferenceFallback>();
+
 function readPreference(key: string): boolean {
+  const fallback = failedPreferenceWrites.get(key);
   try {
     const stored = localStorage.getItem(key);
+    if (fallback) {
+      if (
+        fallback.persistedValue === undefined ||
+        stored === fallback.persistedValue
+      ) {
+        return fallback.enabled;
+      }
+      failedPreferenceWrites.delete(key);
+    }
     if (stored !== null) return stored !== "0";
     const legacy = localStorage.getItem(LEGACY_PREF_KEY);
     if (legacy !== null) {
-      localStorage.setItem(key, legacy);
-      return legacy !== "0";
+      const enabled = legacy !== "0";
+      try {
+        localStorage.setItem(key, legacy);
+        failedPreferenceWrites.delete(key);
+      } catch {
+        failedPreferenceWrites.set(key, { enabled, persistedValue: null });
+      }
+      return enabled;
     }
     return true;
   } catch {
-    return true;
+    return fallback?.enabled ?? true;
   }
 }
 
 function writePreference(key: string, enabled: boolean): void {
+  let persistedValue: string | null | undefined;
   try {
+    persistedValue = localStorage.getItem(key);
     localStorage.setItem(key, enabled ? "1" : "0");
+    failedPreferenceWrites.delete(key);
   } catch {
-    // Preference storage is best-effort.
+    failedPreferenceWrites.set(key, { enabled, persistedValue });
   }
 }
 
@@ -63,6 +93,7 @@ export function isSoundEnabled(): boolean {
 
 export function setSoundEnabled(enabled: boolean): void {
   writePreference(SOUND_PREF_KEY, enabled);
+  if (!enabled) cancelActiveStartup?.();
 }
 
 export function isHapticEnabled(): boolean {
@@ -223,51 +254,92 @@ export function haptic(pattern: number | readonly number[]): void {
 const RETRIGGER_MIN_MS = 55;
 const lastPlayedAt = new Map<SoundAction, number>();
 
+export type StartupPlaybackState =
+  | "loading"
+  | "playing"
+  | "blocked"
+  | "error"
+  | "ended"
+  | "cancelled"
+  | "disabled";
+
 export interface SoundPlayback {
   cancel(): void;
+  /** Retry from a user gesture without creating a second media element. */
+  retry(): void;
+  getState(): StartupPlaybackState;
+  subscribe(listener: (state: StartupPlaybackState) => void): () => void;
 }
 
-const INACTIVE_PLAYBACK: SoundPlayback = { cancel() {} };
+function inactivePlayback(state: "disabled" | "error"): SoundPlayback {
+  return {
+    cancel() {},
+    retry() {},
+    getState: () => state,
+    subscribe(listener) {
+      listener(state);
+      return () => {};
+    },
+  };
+}
 let cancelActiveStartup: (() => void) | null = null;
+const STARTUP_PLAY_TIMEOUT_MS = 2_000;
 
 /**
  * Attempt the one app-start cue through a single HTMLMediaElement.
  *
  * Unlike the sampler above, this path may run before a gesture. Browsers can
  * permit that for an installed PWA, an engaged origin, or a user allow-list;
- * otherwise play() rejects and the visual continues silently. The rejection
- * is never replayed on a later gesture, because sound arriving after its
- * visual moment is worse than silence.
+ * otherwise play() rejects and the visual continues silently. The caller can
+ * observe a blocked state and retry synchronously from an explicit gesture;
+ * an old rejection can never replay the cue after cancellation.
  *
  * One pre-mixed media file preserves the cue's internal 0/200/400 ms timing.
  * This function never awaits loading or playback, so it cannot hold up the
  * startup visual or the app beneath it. The returned handle also aborts a
- * pending play promise by pausing and detaching the source.
+ * pending play promise by pausing and detaching the source. A finite deadline
+ * prevents a browser that never settles play() from retaining the element.
  */
 export function playStartupFlourish(): SoundPlayback {
   // Calling this twice must never stack two arrivals. Cancel first even when
   // the second call finds sound disabled, so a live preference change wins.
   cancelActiveStartup?.();
 
-  if (typeof Audio === "undefined" || !isSoundEnabled()) return INACTIVE_PLAYBACK;
+  if (!isSoundEnabled()) return inactivePlayback("disabled");
+  if (typeof Audio === "undefined") return inactivePlayback("error");
 
   let audio: HTMLAudioElement;
   try {
     audio = new Audio();
   } catch {
-    return INACTIVE_PLAYBACK;
+    return inactivePlayback("error");
   }
 
   let cancelled = false;
-  function release() {
+  let state: StartupPlaybackState = "loading";
+  let attemptId = 0;
+  let deadline: ReturnType<typeof setTimeout> | null = null;
+  const listeners = new Set<(state: StartupPlaybackState) => void>();
+
+  function notify(next: StartupPlaybackState): void {
+    if (cancelled && next !== "cancelled") return;
+    state = next;
+    for (const listener of listeners) listener(next);
+  }
+
+  function clearDeadline(): void {
+    if (deadline === null) return;
+    clearTimeout(deadline);
+    deadline = null;
+  }
+
+  function release(): void {
     if (cancelActiveStartup === cancel) cancelActiveStartup = null;
-    audio.removeEventListener("ended", release);
+    audio.removeEventListener("ended", onEnded);
     audio.removeEventListener("error", onError);
   }
-  function cancel() {
-    if (cancelled) return;
-    cancelled = true;
-    release();
+
+  function detachMedia(): void {
     try {
       audio.pause();
       audio.removeAttribute("src");
@@ -275,29 +347,128 @@ export function playStartupFlourish(): SoundPlayback {
       // pending autoplay attempt eligible to start after activation.
       audio.load();
     } catch {
-      // Cancellation is best-effort; the element is no longer retained here.
+      // Cleanup is best-effort; the element is no longer retained here.
     }
   }
-  function onError() {
-    cancel();
+
+  function cancel() {
+    if (cancelled) return;
+    cancelled = true;
+    attemptId += 1;
+    clearDeadline();
+    release();
+    detachMedia();
+    notify("cancelled");
+  }
+
+  function onEnded(): void {
+    if (cancelled) return;
+    attemptId += 1;
+    clearDeadline();
+    release();
+    notify("ended");
+  }
+
+  function onError(): void {
+    if (cancelled) return;
+    attemptId += 1;
+    clearDeadline();
+    release();
+    detachMedia();
+    notify("error");
+  }
+
+  function finishPlaying(id: number): void {
+    if (cancelled || id !== attemptId) return;
+    clearDeadline();
+    notify("playing");
+  }
+
+  function finishRejected(id: number, reason: unknown): void {
+    if (cancelled || id !== attemptId) return;
+    clearDeadline();
+    const reasonName =
+      typeof reason === "object" && reason !== null && "name" in reason
+        ? reason.name
+        : undefined;
+    if (reasonName === "NotAllowedError") {
+      // Keep the media source attached so retry() can be called from the
+      // user's gesture. No visual or audio work is queued here.
+      notify("blocked");
+      return;
+    }
+    attemptId += 1;
+    release();
+    detachMedia();
+    notify("error");
+  }
+
+  function finishDeadline(id: number): void {
+    if (cancelled || id !== attemptId) return;
+    attemptId += 1;
+    deadline = null;
+    release();
+    detachMedia();
+    notify("error");
+  }
+
+  function attempt(): void {
+    if (cancelled) return;
+    if (!isSoundEnabled()) {
+      cancel();
+      return;
+    }
+
+    const id = ++attemptId;
+    clearDeadline();
+    if (state === "ended") {
+      try {
+        audio.currentTime = 0;
+      } catch {
+        // Some test doubles and media implementations do not expose seeking.
+      }
+    }
+    notify("loading");
+    deadline = setTimeout(() => finishDeadline(id), STARTUP_PLAY_TIMEOUT_MS);
+
+    try {
+      const promise = audio.play();
+      if (promise === undefined) {
+        finishPlaying(id);
+      } else {
+        void promise.then(
+          () => finishPlaying(id),
+          (reason: unknown) => finishRejected(id, reason),
+        );
+      }
+    } catch (reason) {
+      finishRejected(id, reason);
+    }
   }
 
   cancelActiveStartup = cancel;
   audio.preload = "auto";
-  audio.autoplay = true;
+  // Calling play() explicitly lets a blocked startup be retried only from a
+  // deliberate gesture; an autoplay-eligible element must never linger.
+  audio.autoplay = false;
   audio.volume = STARTUP_FLOURISH.gain;
   audio.src = `/audio/${STARTUP_FLOURISH.src}`;
-  audio.addEventListener("ended", release, { once: true });
-  audio.addEventListener("error", onError, { once: true });
+  audio.addEventListener("ended", onEnded);
+  audio.addEventListener("error", onError);
+  attempt();
 
-  try {
-    const attempt = audio.play();
-    if (attempt !== undefined) void attempt.catch(cancel);
-  } catch {
-    cancel();
-  }
-
-  return { cancel };
+  return {
+    cancel,
+    retry: () => {
+      if (state === "blocked") attempt();
+    },
+    getState: () => state,
+    subscribe(listener) {
+      listeners.add(listener);
+      listener(state);
+      return () => listeners.delete(listener);
+    },
+  };
 }
 
 /** Play one action's cue. Fire-and-forget: never awaited by a call site, never
@@ -332,7 +503,9 @@ export function playCue(action: SoundAction): void {
       continue;
     }
     void load(audio, step.src).then((buffer) => {
-      if (buffer) emit(audio, buffer, step.gain, Math.max(at, audio.currentTime));
+      if (buffer && isSoundEnabled()) {
+        emit(audio, buffer, step.gain, Math.max(at, audio.currentTime));
+      }
     });
   }
 }

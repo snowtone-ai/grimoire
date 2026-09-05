@@ -1,6 +1,15 @@
 # state.md
 
 ## Current
+- 2026-09-05: 残存リスク対応（D-055）は実装済みで、[PR #49](https://github.com/snowtone-ai/grimoire/pull/49)
+  でrelease tracking中。本変更はproductionへ未deployで、Chromeのproduction確認とrelease完了は
+  未確認。依存4系統を修正しaudit 0、Node 24/read-only CI、音声認識の20秒terminal watchdog・
+  session/mounted guard・明示retry/manual復帰、Geminiの55秒body込み予算・typed failure・privacy-safe
+  server logs/request ID、autoplay blocked時の手動再生/previewを実装した。
+  `pnpm verify`（lint/typecheck/test 164/build）、focused 33/33、resilience 7/7（seed `424242`）、
+  working diff gitleaks 0をlocalで確認。Chrome isolated runtimeでは無terminal停止、重複result、
+  pagehide、quota、autoplay、responsive overflow、reduced-motion、local API request IDを確認済み。
+  最終production結果は実deploy後にPR #49のrelease comment/bodyへ記録する。
 - 2026-09-05: ユーザーFB一括改善（D-054）を `main` に反映し、Vercel Productionへ自動デプロイした。
   - commit `e26a712`、GitHub Actions `main CI` は lint / typecheck / test / build 全成功。
   - Vercel deployment は Ready。公開URL `https://task-plant.vercel.app` の主要5route、manifest、

@@ -1,5 +1,3 @@
-import { redactSecret } from "../../../../lib/errors.ts";
-
 /** Whole-request budget, kept below the route's 60-second maxDuration. */
 const DEFAULT_LADDER_BUDGET_MS = 50_000;
 const DEFAULT_ATTEMPT_BUDGET_MS = 12_000;
@@ -8,21 +6,6 @@ const DEFAULT_ATTEMPT_BUDGET_MS = 12_000;
 // fixed Flash-Lite model is a distinct, stable continuity path for this small
 // structured-extraction workload when the alias target is unavailable.
 export const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite"] as const;
-
-type GeminiResponse = {
-  candidates?: Array<{
-    finishReason?: string;
-    content?: { parts?: Array<{ text?: string; thought?: boolean }> };
-  }>;
-  promptFeedback?: { blockReason?: string };
-};
-
-type GeminiErrorEnvelope = {
-  error?: {
-    status?: string;
-    details?: Array<{ reason?: string }>;
-  };
-};
 
 type FetchImplementation = (
   input: string | URL | Request,
@@ -34,6 +17,7 @@ export interface GeminiClientOptions {
   ladderBudgetMs?: number;
   attemptBudgetMs?: number;
   now?: () => number;
+  requestId?: string;
 }
 
 function errorResponse(error: string, status: number): Response {
@@ -45,38 +29,84 @@ function boundedMilliseconds(value: number | undefined, fallback: number): numbe
   return Math.max(1, Math.floor(value));
 }
 
-function parseErrorEnvelope(body: string): GeminiErrorEnvelope | null {
-  try {
-    const parsed = JSON.parse(body) as unknown;
-    return parsed !== null && typeof parsed === "object"
-      ? (parsed as GeminiErrorEnvelope)
-      : null;
-  } catch {
-    return null;
-  }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
-function upstreamReason(body: string): string | undefined {
-  return parseErrorEnvelope(body)?.error?.details?.find(
-    (detail) => typeof detail?.reason === "string",
-  )?.reason;
+function hasCredentialMarker(body: string): boolean {
+  try {
+    const parsed = JSON.parse(body) as unknown;
+    if (!isRecord(parsed) || !isRecord(parsed.error)) return false;
+    const details = parsed.error.details;
+    if (!Array.isArray(details)) return false;
+    return details.some(
+      (detail) =>
+        isRecord(detail) &&
+        typeof detail.reason === "string" &&
+        detail.reason.startsWith("API_KEY_"),
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isCredentialFailure(status: number, body: string): boolean {
   if (status === 401 || status === 403) return true;
-  return upstreamReason(body)?.startsWith("API_KEY_") ?? false;
+  return hasCredentialMarker(body);
 }
 
 function isRetryableStatus(status: number): boolean {
   return status === 408 || status === 425 || status === 500 || status === 502 || status === 503 || status === 504;
 }
 
-function safeDetail(body: string): string {
-  return redactSecret(body).slice(0, 200);
-}
-
 function isTimeoutError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "TimeoutError";
+}
+
+function validRequestId(requestId: string | undefined): string | undefined {
+  return requestId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)
+    ? requestId
+    : undefined;
+}
+
+function logClientOutcome(
+  outcome:
+    | "time_budget_exhausted"
+    | "timeout"
+    | "network_failure"
+    | "credential_rejected"
+    | "model_or_payload_rejected"
+    | "temporarily_unavailable"
+    | "upstream_rejected"
+    | "invalid_json"
+    | "empty_response",
+  fields: { model?: (typeof GEMINI_MODELS)[number]; status?: number; requestId?: string },
+): void {
+  const event: Record<string, string | number> = {
+    scope: "gemini/generate",
+    outcome,
+  };
+  if (fields.model) event.model = fields.model;
+  if (fields.status !== undefined) event.status = fields.status;
+  const requestId = validRequestId(fields.requestId);
+  if (requestId) event.requestId = requestId;
+  console.error(JSON.stringify(event));
+}
+
+function responseText(data: unknown): string | null {
+  if (!isRecord(data) || !Array.isArray(data.candidates)) return null;
+  const candidate = data.candidates[0];
+  if (!isRecord(candidate) || !isRecord(candidate.content)) return null;
+  const parts = candidate.content.parts;
+  if (!Array.isArray(parts)) return null;
+  const content = parts
+    .filter(
+      (part) =>
+        isRecord(part) && !part.thought && typeof part.text === "string",
+    )
+    .map((part) => (part as { text: string }).text)
+    .join("");
+  return content.trim() ? content : null;
 }
 
 export async function callGemini(
@@ -86,6 +116,7 @@ export async function callGemini(
 ): Promise<Response> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const now = options.now ?? Date.now;
+  const requestId = validRequestId(options.requestId);
   const ladderBudgetMs = boundedMilliseconds(options.ladderBudgetMs, DEFAULT_LADDER_BUDGET_MS);
   const attemptBudgetMs = boundedMilliseconds(options.attemptBudgetMs, DEFAULT_ATTEMPT_BUDGET_MS);
   const deadline = now() + ladderBudgetMs;
@@ -118,7 +149,7 @@ export async function callGemini(
     for (const model of GEMINI_MODELS) {
       const remaining = deadline - now();
       if (remaining <= 0) {
-        console.error("[gemini/generate] exhausted the request time budget");
+        logClientOutcome("time_budget_exhausted", { requestId });
         return errorResponse("upstream_timeout", 504);
       }
 
@@ -135,11 +166,10 @@ export async function callGemini(
         );
       } catch (error) {
         retryableFailure = true;
-        console.error(
-          isTimeoutError(error)
-            ? `[gemini/generate] ${model} timed out`
-            : `[gemini/generate] ${model} network request failed`,
-        );
+        logClientOutcome(isTimeoutError(error) ? "timeout" : "network_failure", {
+          model,
+          requestId,
+        });
         continue;
       }
 
@@ -153,63 +183,55 @@ export async function callGemini(
         // Auth/account failures apply to every model and payload. Retrying
         // them only adds latency and can amplify a configuration problem.
         if (isCredentialFailure(response.status, body)) {
-          console.error(
-            "[gemini/generate] credential or account request rejected",
-            response.status,
-            upstreamReason(body) ?? "unknown",
-          );
+          logClientOutcome("credential_rejected", {
+            status: response.status,
+            requestId,
+          });
           return errorResponse("service_configuration", 502);
         }
 
         if (response.status === 400 || response.status === 404) {
           rejectedPayload = true;
-          console.error(
-            `[gemini/generate] ${model} rejected a model or payload`,
-            response.status,
-            safeDetail(body),
-          );
+          logClientOutcome("model_or_payload_rejected", {
+            model,
+            status: response.status,
+            requestId,
+          });
           continue;
         }
 
         if (isRetryableStatus(response.status)) {
           retryableFailure = true;
-          console.error(
-            `[gemini/generate] ${model} temporarily unavailable`,
-            response.status,
-            safeDetail(body),
-          );
+          logClientOutcome("temporarily_unavailable", {
+            model,
+            status: response.status,
+            requestId,
+          });
           continue;
         }
 
-        console.error(
-          "[gemini/generate] upstream request rejected",
-          response.status,
-          safeDetail(body),
-        );
+        logClientOutcome("upstream_rejected", {
+          status: response.status,
+          requestId,
+        });
         return errorResponse("upstream_rejected", 502);
       }
 
-      let data: GeminiResponse;
+      let data: unknown;
       try {
-        data = (await response.json()) as GeminiResponse;
+        data = (await response.json()) as unknown;
       } catch {
         retryableFailure = true;
-        console.error(`[gemini/generate] ${model} returned invalid JSON`);
+        logClientOutcome("invalid_json", { model, status: response.status, requestId });
         continue;
       }
 
-      const content = data.candidates?.[0]?.content?.parts
-        ?.filter((part) => !part.thought && typeof part.text === "string")
-        .map((part) => part.text)
-        .join("");
+      const content = responseText(data);
 
-      if (content?.trim()) return Response.json({ text: content });
+      if (content) return Response.json({ text: content });
 
       emptyResponse = true;
-      console.error(
-        `[gemini/generate] ${model} returned no text`,
-        data.promptFeedback?.blockReason ?? data.candidates?.[0]?.finishReason ?? "unknown",
-      );
+      logClientOutcome("empty_response", { model, status: response.status, requestId });
     }
   }
 
