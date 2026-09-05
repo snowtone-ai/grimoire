@@ -1791,3 +1791,30 @@ actions/[checkout releases](https://github.com/actions/checkout/releases)、
 - 以前ignoreされていたresolved fixture artifactは
   `C:\Users\chidj\AppData\Local\Temp\task-plant-resolved-resilience-20260905`へ回収可能な形で移動した。
   untrackedの`AGENTS.md`はユーザー所有ファイルとして変更しない。
+
+## D-056: 壁紙候補の折りたたみと意味別触覚フィードバック
+
+- 日付: 2026-09-05
+- 対象: settings wallpaper / feedback controls / home floating actions / haptics
+- 要求: 設定画面の初期表示を圧迫しない壁紙選択、既存トグルとの視覚的一貫性、
+  泉の紋章とマイクの整列、各操作の意味に合う短い触覚を実装する。
+
+### 実装前Capability Gate
+
+既存のReact/CSS、`src/lib/domain/sound-cues.ts` と `src/lib/sound.ts` の単一経路で要件を満たすため、
+外部haptic library/plugin/MCPや依存追加は不採用。採用候補は公開Web標準の
+[W3C Vibration API](https://www.w3.org/TR/vibration/) と
+[MDN `navigator.vibrate()`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate)のみで、
+権限・データ露出はなく、sticky user activation、非対応ブラウザでのsilent degradation、
+既存のhaptic設定OFF・retrigger guardを維持する。Appleの
+[Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics)
+に従い、consistent/causal/short/optionalな意味別patternに限定する。
+
+### UIモデルと決定
+
+既存D-055のApple wallpaper galleryを継続し、「項目 → 明示操作 → 選択肢 → 即時preview」の
+構造だけを借りる。Apple固有の外観、角丸資産、文言は複製しない。候補一覧は同一ページ内の
+accessible radiogroupとして初期非表示・buttonで展開し、選択後も開いたままにする。効果音行は
+既存Text/Haptic rowと同じ円形track/knob・iconに揃え、マイクと泉の紋章は同一の円形タッチ領域へ揃える。
+触覚はselection/toggle、open/close、navigation、add/save/undo、error、rewardsを短く区別し、
+設定toggleのON時にcue経由の一回だけ振動する。

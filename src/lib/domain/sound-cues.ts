@@ -105,7 +105,7 @@ const one = (src: string, gain: number, haptic: SoundCue["haptic"] = null): Soun
 export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   /* TOUCH — quiet on purpose. These fire dozens of times a session, and the
    * ADHD persona D-039 protects is the one who notices an over-eager UI first. */
-  tap: one("ui/click_002.wav", 0.45),
+  tap: one("ui/click_002.wav", 0.45, 8),
   /* A droplet landing, then a small glassy bloom. This is intentionally
    * distinct from a button click and is synchronized with the Add ripple. */
   add: {
@@ -113,13 +113,13 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
       { src: "ui/drop_004.wav", gain: 0.44, delayMs: 0 },
       { src: "ui/glass_002.wav", gain: 0.2, delayMs: 75 },
     ],
-    haptic: 10,
+    haptic: [14, 22, 8],
   },
-  save: one("ui/confirmation_002.wav", 0.5, 10),
-  undo: one("ui/back_002.wav", 0.45),
-  toggle: one("ui/switch_003.wav", 0.4),
-  modalOpen: one("ui/open_002.wav", 0.4),
-  modalClose: one("ui/close_002.wav", 0.4),
+  save: one("ui/confirmation_002.wav", 0.5, 16),
+  undo: one("ui/back_002.wav", 0.45, [8, 26, 8]),
+  toggle: one("ui/switch_003.wav", 0.4, 12),
+  modalOpen: one("ui/open_002.wav", 0.4, [8, 22, 8]),
+  modalClose: one("ui/close_002.wav", 0.4, [6, 18, 6]),
   /* The upward inquisitive blip, used only where the app has just asked a
    * question the user must answer twice — the destructive-reset confirm. It is
    * the one TOUCH cue that is meant to make you stop. */
@@ -128,21 +128,21 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   /* 出発 — an ascending sweep, the one TOUCH cue allowed to point upward,
    * because committing to a quest is the only button press that is itself a
    * small act of momentum. */
-  depart: one("ui/maximize_006.wav", 0.45, 10),
+  depart: one("ui/maximize_006.wav", 0.45, [14, 28, 10]),
 
   /* WORLD — the grimoire being handled. */
-  pageHome: one("cues/page-home.wav", 0.4),
-  pageCalendar: one("cues/page-calendar.wav", 0.4),
-  pageLab: one("cues/page-lab.wav", 0.35),
-  pageRecord: one("cues/page-record.wav", 0.4),
+  pageHome: one("cues/page-home.wav", 0.4, [8, 24, 8]),
+  pageCalendar: one("cues/page-calendar.wav", 0.4, [8, 24, 8]),
+  pageLab: one("cues/page-lab.wav", 0.35, [8, 24, 8]),
+  pageRecord: one("cues/page-record.wav", 0.4, [8, 24, 8]),
 
   /* REWARD */
   /* Looking back at something already earned: a short coin tick, deliberately
    * not the clear jingle. Same rule the replay VFX follows (D-036). */
-  replay: one("cues/treasure-light.wav", 0.45),
+  replay: one("cues/treasure-light.wav", 0.45, [9, 24, 9]),
   bounty: one("cues/treasure.wav", 0.5, [12, 40, 18]),
   clearLow: one("cues/clear-low.wav", 0.45, 12),
-  clearMid: one("cues/clear-mid.wav", 0.5, [12, 40, 18]),
+  clearMid: one("cues/clear-mid.wav", 0.5, [14, 36, 14]),
   /* The only layered REWARD cue: the pizzicato run plus a glass ring landing on
    * its final note, so RARE 7-8 is audibly a different event and not just the
    * mid cue turned up. */
@@ -158,7 +158,7 @@ export const SOUND_CUES: Record<SoundAction, SoundCue> = {
   /* ONCE A DAY */
   /* The quietest thing in the app. Nothing has been earned; it is only saying
    * good morning, so it stays a flat low bell with no melodic rise (D-036). */
-  morning: one("cues/morning.wav", 0.35),
+  morning: one("cues/morning.wav", 0.35, 10),
   /* The grimoire opening: the clasp springs, the cover lifts, light rises out.
    * Three steps because it is three physical events, timed to the frame-draw
    * choreography in open-flourish.tsx. The startup-only HTMLMediaElement path

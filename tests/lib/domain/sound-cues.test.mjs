@@ -95,6 +95,45 @@ test("startup flourish is one verified file with exact visual beat markers", () 
   }
 });
 
+test("every sound action has a short, bounded haptic pattern", () => {
+  for (const [action, cue] of Object.entries(SOUND_CUES)) {
+    assert.notEqual(cue.haptic, null, `${action} has no haptic coverage`);
+    const pattern = Array.isArray(cue.haptic) ? cue.haptic : [cue.haptic];
+    assert.ok(pattern.length <= 5, `${action}: haptic pattern is too long`);
+    assert.equal(pattern.length % 2, 1, `${action}: haptic pattern must end with a pulse`);
+    assert.ok(
+      pattern.every((value) => Number.isInteger(value) && value >= 0 && value <= 100),
+      `${action}: haptic values must be short, non-negative integers`,
+    );
+    assert.ok(
+      pattern.filter((_, index) => index % 2 === 0).every((value) => value > 0),
+      `${action}: every vibration pulse must be positive`,
+    );
+    assert.ok(
+      pattern.filter((_, index) => index % 2 === 0).reduce((total, value) => total + value, 0) <= 100,
+      `${action}: total vibration time is too long`,
+    );
+    assert.ok(
+      pattern.reduce((total, value) => total + value, 0) <= 240,
+      `${action}: haptic pattern is too long overall`,
+    );
+  }
+});
+
+test("haptic patterns preserve the meaning of their action", () => {
+  const pattern = (action) => JSON.stringify(SOUND_CUES[action].haptic);
+  assert.notEqual(pattern("tap"), pattern("toggle"), "selection and toggle should differ");
+  assert.notEqual(pattern("modalOpen"), pattern("modalClose"), "open and close should differ");
+  assert.notEqual(pattern("pageHome"), pattern("add"), "navigation and add should differ");
+  assert.notEqual(pattern("save"), pattern("undo"), "save and undo should differ");
+  assert.notEqual(pattern("error"), pattern("clearMid"), "error and reward should differ");
+  assert.notEqual(pattern("bounty"), pattern("clearMid"), "reward actions should differ");
+  assert.ok(
+    new Set(Object.values(SOUND_CUES).map((cue) => JSON.stringify(cue.haptic))).size >= 8,
+    "meaningful actions should not collapse to one generic haptic",
+  );
+});
+
 test("clearAction walks the RARE 1-8 ladder without gaps or repeats out of order", () => {
   assert.deepEqual(
     [1, 2, 3, 4, 5, 6, 7, 8].map(clearAction),
