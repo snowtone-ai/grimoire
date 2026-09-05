@@ -1,6 +1,10 @@
 # state.md
 
 ## Current
+- 2026-09-05: ユーザーFB一括改善（D-054）を `main` に反映し、Vercel Productionへ自動デプロイした。
+  - commit `e26a712`、GitHub Actions `main CI` は lint / typecheck / test / build 全成功。
+  - Vercel deployment は Ready。公開URL `https://task-plant.vercel.app` の主要5route、manifest、
+    新2エリア（総数530）、startup audio（HTTP 200）をChrome DevToolsで確認し、console error/warn 0。
 - 2026-08-31: T049 / D-052 — Gemini音声タスク登録をGoogle管理の`gemini-flash-latest`へ更新した。
   - Google側のalias更新へdeployなしで自動追従し、一時的な混雑時だけ抽出向け安定版
     `gemini-3.5-flash-lite`へ継続fallbackする。廃止済み2.0と固定2.5への依存を削除した。
