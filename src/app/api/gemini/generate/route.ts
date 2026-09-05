@@ -12,6 +12,8 @@ const MAX_TEXT_LENGTH = 500;
 const MAX_MESSAGES = 30;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+type RequestKind = "voice" | "gmail" | "invalid";
+
 type RequestBody =
   | { kind: "voice"; text: string; todayDate: string }
   | { kind: "gmail"; messages: Pick<GmailMessage, "subject" | "from" | "snippet">[] };
@@ -35,28 +37,70 @@ function buildPrompt(body: RequestBody): string | null {
   return null;
 }
 
+function requestKind(body: unknown): RequestKind {
+  if (
+    body !== null &&
+    typeof body === "object" &&
+    "kind" in body &&
+    (body.kind === "voice" || body.kind === "gmail")
+  ) {
+    return body.kind;
+  }
+  return "invalid";
+}
+
+function requestId(): string {
+  return crypto.randomUUID();
+}
+
+function withRequestId(response: Response, id: string): Response {
+  const headers = new Headers(response.headers);
+  headers.set("x-request-id", id);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export async function POST(request: Request): Promise<Response> {
+  const startedAt = Date.now();
+  const id = requestId();
+  let kind: RequestKind = "invalid";
+
+  const finish = (response: Response): Response => {
+    const result = withRequestId(response, id);
+    console.info(
+      JSON.stringify({
+        scope: "gemini/generate",
+        requestId: id,
+        durationMs: Math.max(0, Date.now() - startedAt),
+        status: result.status,
+        kind,
+      }),
+    );
+    return result;
+  };
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error("[gemini/generate] GEMINI_API_KEY is not configured");
-      return Response.json({ error: "service_configuration" }, { status: 503 });
+      return finish(Response.json({ error: "service_configuration" }, { status: 503 }));
     }
 
     const body = (await request.json().catch(() => null)) as RequestBody | null;
+    kind = requestKind(body);
     const prompt = body ? buildPrompt(body) : null;
     if (!prompt) {
-      return Response.json({ error: "invalid request" }, { status: 400 });
+      return finish(Response.json({ error: "invalid request" }, { status: 400 }));
     }
 
-    return await callGemini(apiKey, prompt);
-  } catch (err) {
+    return finish(await callGemini(apiKey, prompt, { requestId: id }));
+  } catch {
     // Do not serialize arbitrary thrown values here: a custom fetch layer can
     // include request headers, including the server-only API key, in errors.
-    console.error(
-      "[gemini/generate] unexpected error",
-      err instanceof Error ? err.name : "unknown",
-    );
-    return Response.json({ error: "Gemini API request failed" }, { status: 502 });
+    console.error("[gemini/generate] unexpected error");
+    return finish(Response.json({ error: "Gemini API request failed" }, { status: 502 }));
   }
 }

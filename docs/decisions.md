@@ -1690,3 +1690,104 @@ continuity fallbackであり、通常リクエストのモデル選択を固定�
   自動Chromeではbrowser autoplay policyにより可聴再生を保証できないため、拒否時は意図的に無音で継続する。
 - Lighthouse mobileはAccessibility 100、Best Practices 100、SEO 100。Agentic browsingは88で、
   一般利用者向け画面にagent metadataがないという非機能要件外の1項目だけが未達だった。
+
+## D-055: 残存リスクの依存関係・CI・音声回復・autoplay対策
+
+- 日付: 2026-09-05
+- 対象: dependency integrity / CI supply chain / voice recovery and privacy / autoplay control
+- 要求: Dependabotで検出されたtransitive dependencyの修正版をlockfileへ固定し、CIで全severityの
+  `pnpm audit`をfail closedで実行する。Node 20 runtime警告を解消し、workflow tokenをread-onlyにする。
+  あわせて、音声認識の停止・再試行・server privacy境界と、ブラウザが許可しない可聴autoplayの
+  回復経路を、有限かつ観測可能な状態として扱う。
+
+### 実装前Capability Gate
+
+既存のpnpm/gh CLIと公式GitHub metadataで完結するため、追加MCP/plugin/skillは導入しない。
+Chrome DevTools MCPは親ステージのruntime確認に限定し、本変更では外部データ・認証情報を扱わない。
+参照はpnpm [audit CLI](https://pnpm.io/cli/audit)、fast-uri [v3.1.6 release](https://github.com/fastify/fast-uri/releases/tag/v3.1.6)、
+browserslist [releases](https://github.com/browserslist/browserslist/releases)、
+actions/[checkout releases](https://github.com/actions/checkout/releases)、
+[setup-node releases](https://github.com/actions/setup-node/releases)と各tagの公式`action.yml`である。
+
+### 決定と確認
+
+- 既存overrideを最小変更し、`ajv>fast-uri: ^3.1.6`、`qs: ^6.16.0`を更新。
+  `browserslist: ^4.28.7`と`@humanfs/node: ^0.16.8`だけを追加し、pnpm 10.33.0を
+  `packageManager`とCI `version`へ固定した。lockfile実解決値はfast-uri 3.1.7、browserslist 4.28.9、
+  @humanfs/node 0.16.8、qs 6.16.0。
+- CIは`pnpm install --frozen-lockfile`後に`pnpm audit --audit-level=low`を実行し、registry errorや
+  advisoryを抑制しない。push/PRに加え毎週月曜のscheduleと手動dispatchを同一workflowで実行し、
+  jobは15分で打ち切る。`permissions: contents: read`を明示し、checkout v7.0.1、setup-node v7.0.0、
+  pnpm/action-setup v6.0.10を公式tagのimmutable SHA（各`action.yml`の`using: node24`確認済み）で参照する。
+
+### 検証結果
+
+- `pnpm install --lockfile-only`（pnpm 10.33.0）成功。
+- frozen installと`pnpm audit --audit-level=low`を実行し、既知脆弱性0件（audit 9件から0件）を確認。
+- `gh api`で3 action tagの公式`action.yml`を取得し、すべて`using: node24`を確認した。
+
+### 起動音のautoplay回復（同D-055追補）
+
+- Capability gateは既存のpnpm/ghとChrome DevTools MCPで完結し、追加MCP/plugin/依存は導入しない。
+  UIモデルはApple [サウンド設定](https://support.apple.com/guide/iphone/change-sounds-and-vibrations-iph07c867f28/ios)
+  のラベル付き設定行と明示的な試聴操作だけを借り、外観・固有資産は複製しない。
+- [Chrome autoplay policy](https://developer.chrome.com/blog/autoplay)と
+  [WebKit autoplay policy](https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/)に従い、
+  audible autoplayを強制しない。`playStartupFlourish()`は単一mediaの有限deadlineと
+  `loading/playing/blocked/error/ended/cancelled/disabled`状態を公開し、拒否時だけ同じ要素を
+  ユーザー操作から同期retryする。Sound OFF、重複要求、skip、hidden、unmountで即時cancelする。
+- OpenFlourishの拒否時は「音付きで再生」を表示し、retryと同じ操作ターンでVFXと3秒dismiss timerを
+  再起動する。設定画面の「起動音を試聴」は停止操作を兼ね、状態を`role=status`で通知する。
+
+### 追補の確認結果
+
+- `node --test tests/lib/sound-preferences.test.mjs`: 10/10 pass（blocked/error/ended、同期retry、
+  Sound OFFとstale promise、never-settling play deadlineを含む）。
+- `pnpm lint -- src/lib/sound.ts src/components/fx/open-flourish.tsx src/components/settings/settings-screen.tsx`: pass。
+- `pnpm typecheck`: pass。`git diff --check`: pass。
+
+### 音声認識の回復とGemini privacy（同D-055追補）
+
+- 原因の再現: 元のproduction挙動では、recognizerの`stop()`後にterminal callbackが来ない
+  ケースを23.3秒観測しても、UIはlisteningのままだった。ただしhistorical mother-device/account
+  logsはなく、この再現だけでは当時の利用者環境の正確な原因までは証明できない。従来のwatchdogは
+  `stop()`より前にcancelされていたため、この経路を回復不能にしていた。修正では20秒watchdogを
+  terminalまで保持し、mounted状態とsession identityを確認する。結果後はrecognizerをdetach/abortし、
+  staleなerror/end callbackを無視する。
+- 停止・無音・権限・network・capture・AI設定の失敗を混同せず、transcriptを保持した明示的な
+  retryまたは手入力へ復帰する。新しい試行では古いtranscriptを消し、storage failureはAI failure
+  として表示しない。[Web Speech API仕様](https://webaudio.github.io/web-speech-api/)と
+  [MDNのSpeechRecognition error event](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error)
+  を状態分類の根拠とした。
+- clientのGemini全体予算はresponse body読み込みまで含む55秒。quota、configuration、upstream、
+  invalid responseをtyped errorとして扱う。serverは全responseにUUIDの`x-request-id`を付け、
+  `durationMs`/HTTP status/allowlist済みkindだけをstructured logへ出す。upstream body、任意の
+  error、reason、finishReason、transcript、keyはログへ出さず、markerを含む回帰テストで確認する。
+  根拠は[Gemini公式troubleshooting](https://ai.google.dev/gemini-api/docs/troubleshooting)。
+
+### 現在の確認結果とrelease tracking（同D-055追補）
+
+- focused checksは33/33 pass（sound 13、Gemini client 14、server privacy 4、voice watchdog 2）。
+  `pnpm audit`は0件、`pnpm test:resilience`はseed `424242`で11 bounded disruptionsを含む7/7 pass、
+  working diffのgitleaksは0件。親ステージの`pnpm verify`はlint/typecheck/test 164件/buildを
+  すべてpassした。
+- Chrome DevToolsのisolated local runtimeで、20秒の無terminal停止からpersistent errorとretry/manual、
+  service-not-allowedの区別、20回resultの1 API/1 task、late callback無視、pagehide cancel、
+  quota時save error、double-clickの1保存を確認した。startup autoplay blockから明示clickで実mediaが
+  playing→ended（1.308889秒）、settings previewのendedとOFF中pause/detach、320px/1280pxの
+  overflow 0、new controlsのradius 0を確認した。settingsの通常操作runtimeではconsole
+  error/warn/issue 0だった（故障注入テストの想定済みerror/warnとAPI 400 probeは別扱い）。reduced-motionは
+  `matchMedia`を強制したbrowser probeでoverlay/audioなしを確認した（OSそのもののsimulationではない）。
+  local APIは400（88ms）と200（2202ms）の双方でUUID `x-request-id`を確認した。
+- releaseは [PR #49](https://github.com/snowtone-ai/grimoire/pull/49) で追跡する。本変更はこの時点で
+  productionへ未deployであり、Chromeのproduction確認とrelease完了は未確認とする。実deploy後の
+  最終結果はPRのrelease comment/bodyへ記録し、post-release docs commit loopは作らない。
+
+### 既知の制限と回収メモ（同D-055追補）
+
+- historical mother-device/account logsは利用できないため、上記production停止不具合の正確な
+  過去原因は推定できても証明できない。audible autoplayはブラウザポリシー上強制できず、明示的な
+  retry/previewを提供する。storage blocked時のsession fallbackは再起動後へは永続化されない。
+- 以前ignoreされていたresolved fixture artifactは
+  `C:\Users\chidj\AppData\Local\Temp\task-plant-resolved-resilience-20260905`へ回収可能な形で移動した。
+  untrackedの`AGENTS.md`はユーザー所有ファイルとして変更しない。

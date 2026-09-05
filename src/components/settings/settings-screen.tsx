@@ -2,6 +2,7 @@
 
 import { Link } from "next-view-transitions";
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -28,6 +29,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { BottomNav } from "@/components/navigation/bottom-nav";
+import { Button } from "@/components/ui/button";
 import {
   buildBackupJson,
   downloadBackup,
@@ -60,8 +62,11 @@ import {
   isHapticEnabled,
   isSoundEnabled,
   playCue,
+  playStartupFlourish,
   setHapticEnabled,
   setSoundEnabled,
+  type SoundPlayback,
+  type StartupPlaybackState,
 } from "@/lib/sound";
 import { getCalendarResetCounts, resetCalendar } from "@/lib/taskDb";
 import {
@@ -325,49 +330,153 @@ function SettingsSection({
  * reduced-motion: that preference describes visual movement, not feedback. */
 function SoundToggleRow() {
   const [enabled, setEnabled] = useHydrationSafeStoredState(isSoundEnabled, true);
+  const [preview, setPreview] = useState<SoundPlayback | null>(null);
+  const [previewState, setPreviewState] =
+    useState<StartupPlaybackState | "idle">("idle");
+  const previewRef = useRef<SoundPlayback | null>(null);
+  const previewSubscriptionRef = useRef<(() => void) | null>(null);
+
+  const releasePreview = useCallback((resetState: boolean) => {
+    previewSubscriptionRef.current?.();
+    previewSubscriptionRef.current = null;
+    previewRef.current?.cancel();
+    previewRef.current = null;
+    if (resetState) {
+      setPreview(null);
+      setPreviewState("idle");
+    }
+  }, []);
+
+  const stopPreview = useCallback(() => {
+    releasePreview(true);
+  }, [releasePreview]);
+
+  useEffect(() => {
+    previewSubscriptionRef.current?.();
+    previewSubscriptionRef.current = null;
+    if (!preview) return;
+    const unsubscribe = preview.subscribe(setPreviewState);
+    previewSubscriptionRef.current = unsubscribe;
+    return () => {
+      unsubscribe();
+      if (previewSubscriptionRef.current === unsubscribe) {
+        previewSubscriptionRef.current = null;
+      }
+    };
+  }, [preview]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") stopPreview();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", stopPreview);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", stopPreview);
+    };
+  }, [stopPreview]);
+
+  useEffect(() => () => releasePreview(false), [releasePreview]);
 
   function toggle() {
     const next = !enabled;
+    if (!next) stopPreview();
     setSoundEnabled(next);
     setEnabled(next);
     if (next) playCue("toggle");
   }
 
+  function previewSound() {
+    const active = previewRef.current;
+    const activeState = active?.getState();
+    if (active && (activeState === "loading" || activeState === "playing")) {
+      stopPreview();
+      return;
+    }
+    if (!enabled) return;
+    if (active) releasePreview(false);
+    const next = playStartupFlourish();
+    previewRef.current = next;
+    setPreview(next);
+    setPreviewState(next.getState());
+  }
+
+  const statusText =
+    previewState === "loading"
+      ? "起動音を読み込み中"
+      : previewState === "playing"
+        ? "起動音を再生中"
+        : previewState === "blocked"
+          ? "起動音の再生がブロックされました。もう一度試してください"
+          : previewState === "error"
+            ? "起動音を再生できませんでした"
+            : previewState === "ended"
+              ? "起動音の再生が完了しました"
+              : previewState === "disabled"
+                ? "起動音は無効です"
+                : "";
+  const previewActive =
+    previewState === "loading" || previewState === "playing";
+
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={enabled}
-      className="btn-squish flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted"
-    >
-      <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
-          enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
-        }`}
-      >
-        {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-foreground">
-          効果音
-        </span>
-        <span className="block text-xs text-muted-foreground">
-          クエスト達成・追加・キャンセルなどの音を切り替えます
-        </span>
-      </span>
-      <span
-        aria-hidden
-        className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${
-          enabled ? "bg-primary" : "bg-muted"
-        }`}
-      >
-        <span
-          className={`block size-5 rounded-full bg-background transition-transform ${
-            enabled ? "translate-x-5" : ""
-          }`}
-        />
-      </span>
-    </button>
+    <>
+      <div className="border-b border-border pb-3">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-pressed={enabled}
+          className="btn-squish flex w-full items-center gap-3 rounded-none p-1 text-left hover:bg-muted"
+        >
+          <span
+            className={`flex size-10 shrink-0 items-center justify-center rounded-none ${
+              enabled ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {enabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-foreground">効果音</span>
+            <span className="block text-xs text-muted-foreground">
+              クエスト達成・追加・キャンセルなどの音を切り替えます
+            </span>
+          </span>
+          <span
+            aria-hidden
+            className={`h-6 w-11 shrink-0 rounded-none p-0.5 transition-colors ${
+              enabled ? "bg-primary" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`block size-5 rounded-none bg-background transition-transform ${
+                enabled ? "translate-x-5" : ""
+              }`}
+            />
+          </span>
+        </button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full rounded-none"
+          onClick={previewSound}
+          disabled={!enabled}
+          aria-describedby={statusText ? "startup-sound-status" : undefined}
+        >
+          {previewActive ? "停止" : "起動音を試聴"}
+        </Button>
+      </div>
+      {statusText ? (
+        <p
+          id="startup-sound-status"
+          role="status"
+          aria-live="polite"
+          className="mt-2 text-xs text-muted-foreground"
+        >
+          {statusText}
+        </p>
+      ) : null}
+    </>
   );
 }
 
