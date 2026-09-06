@@ -1,10 +1,11 @@
 import { buildTaskParsePrompt, buildGmailExtractionPrompt } from "@/lib/api/gemini-prompts";
 import type { GmailMessage } from "@/lib/api/gmail";
 import { callGemini } from "./gemini-client";
+import { buildCalendarDuplicatePrompt, parseComparisonPairs, parseDuplicateMatches } from "@/lib/domain/calendar-import";
 
 // Server-only proxy for Gemini calls. The API key never reaches the client,
-// and — since this endpoint is unauthenticated on a public URL — only two
-// fixed, size-bounded request shapes are accepted. There is no free-form
+// and — since this endpoint is unauthenticated on a public URL — only fixed
+// size-bounded request shapes are accepted. There is no free-form
 // "prompt" field: accepting one would turn this into an open LLM relay for
 // anyone who finds the URL.
 export const maxDuration = 60;
@@ -12,13 +13,18 @@ const MAX_TEXT_LENGTH = 500;
 const MAX_MESSAGES = 30;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-type RequestKind = "voice" | "gmail" | "invalid";
+type RequestKind = "voice" | "gmail" | "calendar-duplicates" | "invalid";
 
 type RequestBody =
   | { kind: "voice"; text: string; todayDate: string }
-  | { kind: "gmail"; messages: Pick<GmailMessage, "subject" | "from" | "snippet">[] };
+  | { kind: "gmail"; messages: Pick<GmailMessage, "subject" | "from" | "snippet">[] }
+  | { kind: "calendar-duplicates"; pairs: unknown };
 
 function buildPrompt(body: RequestBody): string | null {
+  if (body.kind === "calendar-duplicates") {
+    const pairs = parseComparisonPairs(body.pairs);
+    return pairs ? buildCalendarDuplicatePrompt(pairs) : null;
+  }
   if (body.kind === "voice") {
     if (typeof body.text !== "string" || typeof body.todayDate !== "string") return null;
     const text = body.text.trim().slice(0, MAX_TEXT_LENGTH);
@@ -42,7 +48,7 @@ function requestKind(body: unknown): RequestKind {
     body !== null &&
     typeof body === "object" &&
     "kind" in body &&
-    (body.kind === "voice" || body.kind === "gmail")
+    (body.kind === "voice" || body.kind === "gmail" || body.kind === "calendar-duplicates")
   ) {
     return body.kind;
   }
@@ -96,6 +102,18 @@ export async function POST(request: Request): Promise<Response> {
       return finish(Response.json({ error: "invalid request" }, { status: 400 }));
     }
 
+    if (body?.kind === "calendar-duplicates") {
+      const pairs = parseComparisonPairs(body.pairs)!;
+      const response = await callGemini(apiKey, prompt, { requestId: id, ladderBudgetMs: 12_000, attemptBudgetMs: 8_000 });
+      if (!response.ok) return finish(response);
+      try {
+        const result = await response.json() as { text: string };
+        const matches = parseDuplicateMatches(JSON.parse(result.text), pairs);
+        return finish(Response.json({ matches }));
+      } catch {
+        return finish(Response.json({ error: "invalid_response" }, { status: 502 }));
+      }
+    }
     return finish(await callGemini(apiKey, prompt, { requestId: id }));
   } catch {
     // Do not serialize arbitrary thrown values here: a custom fetch layer can

@@ -7,6 +7,7 @@ import {
 } from "./domain/task-date.ts";
 import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant.ts";
 import { calcStreakCount } from "./domain/streak.ts";
+import { validAppointment, type CalendarImportTask } from "./domain/calendar-import.ts";
 
 // ── Task CRUD ──────────────────────────────────────────────────────────────
 
@@ -41,6 +42,26 @@ export async function createTask(
   };
   await db.tasks.add(newTask);
   return newTask;
+}
+
+/** All-or-nothing import; the transaction also serializes competing tabs. */
+export async function importCalendarTasks(tasks: CalendarImportTask[]): Promise<{ added: number; skipped: number }> {
+  if (tasks.length > 30 || tasks.some(t => !validAppointment(t) ||
+    typeof t.importSourceKey !== "string" || !t.importSourceKey.startsWith("google-calendar:") ||
+    t.importSourceKey.length > 3100 || !["job", "university", "life"].includes(t.category) ||
+    t.recurrence !== "none")) throw new Error("Invalid calendar import");
+  return db.transaction("rw", db.tasks, async () => {
+    let added = 0;
+    let skipped = 0;
+    for (const task of tasks) {
+      const existing = await db.tasks.where("importSourceKey").equals(task.importSourceKey).first();
+      if (existing) { skipped++; continue; }
+      // Stable IDs preserve source identity in backups exchanged across devices.
+      await db.tasks.add({ ...task, id: task.importSourceKey, completed: false, completedAt: null, createdAt: new Date().toISOString() });
+      added++;
+    }
+    return { added, skipped };
+  });
 }
 
 /** タスクを更新 */
