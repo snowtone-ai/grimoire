@@ -1,11 +1,11 @@
-import { db, type DropRecord, type PlantState, type Streak, type Task } from "./db";
+import { db, type DropRecord, type PlantState, type Streak, type Task } from "./db.ts";
 
 /* JSON backup of the whole local store. Import upserts by primary key in a
  * single transaction, so re-importing the same file is idempotent and an
  * import can never delete existing data. */
 
 /** Dexie schema version snapshots are written at; imports newer than this are rejected. */
-export const BACKUP_VERSION = 3;
+export const BACKUP_VERSION = 4;
 
 export interface BackupPayload {
   app: "grimoire";

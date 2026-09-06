@@ -17,6 +17,8 @@ export interface Task {
   recurrenceDayOfWeek?: number; // 0=Sun ~ 6=Sat (weekly only)
   recurrenceDayOfMonth?: number; // 1-31 (monthly only)
   createdAt: string; // ISO datetime
+  /** Stable identity for imported external records (currently Calendar). */
+  importSourceKey?: string;
 }
 
 export interface Streak {
@@ -85,6 +87,15 @@ class TaskManagerDB extends Dexie {
             delete state.weekStartDate;
           });
       });
+    // v4: imported Calendar occurrences are idempotent across replayed and
+    // concurrent imports. The ampersand makes the sparse source key unique;
+    // legacy tasks without a key are left untouched.
+    this.version(4).stores({
+      tasks: "id, dueDate, category, completed, recurrence, &importSourceKey",
+      streaks: "date",
+      plantState: "++id",
+      drops: "++id, taskId, dateKey, rarity, &[taskId+dateKey]",
+    });
   }
 }
 
