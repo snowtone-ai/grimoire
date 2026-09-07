@@ -1856,3 +1856,19 @@ accessible radiogroupとして初期非表示・buttonで展開し、選択後�
 既存Text/Haptic rowと同じ円形track/knob・iconに揃え、マイクと泉の紋章は同一の円形タッチ領域へ揃える。
 触覚はselection/toggle、open/close、navigation、add/save/undo、error、rewardsを短く区別し、
 設定toggleのON時にcue経由の一回だけ振動する。
+
+## D-057: Codex MCP 定義の競合解消
+
+- 日付: 2026-09-06（プロダクト横断再確認: 2026-09-07）
+- 要求: 任意のプロジェクトフォルダから Codex と MCP を起動できるようにする。
+- 調査: OpenAI 公式 [MCP ドキュメント](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) を確認。全プロジェクトの `.codex/config.toml` と MCP 定義を走査した。追加の MCP、plugin、skill、依存関係は不要で、権限・データ露出の変更もない。
+- 決定: グローバル設定の stdio 版 `context7` を唯一の定義とし、`task-plant/.codex/config.toml` の同名 HTTP 定義を削除した。同一サーバー名に異なる transport を重ねると `url is not supported for stdio` で Codex の起動前検証が失敗する。
+- 確認: `codex mcp list` を `.codex` を持つ全 11 プロジェクトで実行し、すべて exit code 0。さらに `C:\Users\chidj\project\プロダクト` 配下の全 19 リポジトリ直下でも再実行し、全件 exit code 0。`task-plant` では chrome-devtools、clasp、context7、google-workspace が enabled として表示された。Context7 4.0.5 と `npx`、`uvx`、`codegraph` の実行可能性も確認した。
+
+## D-058: pm-zero v13 への運用移行
+
+- 日付: 2026-09-07
+- 要求: Grimoire を pm-zero v13 に沿って保守し、次回の作業を安全に再開できる状態にする。
+- 調査: 現行 `main`、GitHub Actions、既存の台帳・判断記録、プロジェクト固有の実行コマンドを確認した。既存のデータモデル、公開設定、依存関係、外部接続を変更しなくても、v13 の共通規約を参照する短いプロジェクト規約と台帳先頭の現在地で要求を満たせる。
+- 決定: 旧来の長大な一般規約は履歴で保持しつつ、現行 `AGENTS.md` は pm-zero v13 への実在する参照、Grimoire 固有の IndexedDB・外部 API・UI・検証・記録先だけに絞る。`tasks.md` は先頭を v13 の再開形式へ更新し、過去の作業行は証跡として残す。
+- 影響と確認: プロダクトコード、利用者データ、Vercel の公開範囲、Gemini/Google の認証情報と scope、新規依存は変更しない。GitHub 反映後の CI とデプロイ確認を台帳・状態記録へ追記する。

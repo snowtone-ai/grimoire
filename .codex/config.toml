@@ -1,2 +1,3 @@
-[mcp_servers.context7]
-url = "https://mcp.context7.com/mcp"
+# Context7 is configured globally in C:\Users\chidj\.codex\config.toml.
+# Do not redefine it here: mixing this HTTP definition with the global stdio
+# definition makes Codex fail before it starts.
