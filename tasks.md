@@ -1,29 +1,28 @@
-# tasks.md -- pm-zero v12 Execution Ledger
+# 作業台帳
 
-## Goal Binding
-- Vision source: docs/vision.md
-- Active goal: Maintain Grimoire (formerly Task Plant) under pm-zero v12 with product code changes tracked as explicit tasks.
-- Main agent: Claude Code (Sonnet-first) — sole owner of this ledger.
-- Implementation: Claude Code main agent; Sonnet worker subagents on disjoint scopes.
-- Review: fresh-context reviewer subagent (Opus 5, Tier 1) for large/behaviour-changing/hard-to-undo diffs; Tier 2 retired in v12.
-- Historical rows below owned "Codex CLI" under pm-zero v9.4; kept as-is for evidence integrity.
+更新日: 2026-09-07 JST
 
-## Status Vocabulary
-- proposed: idea exists, not ready
-- ready: owner, dependencies, write scope, acceptance, verification, and expected evidence are clear
-- doing: one owner is actively working
-- blocked: needs decision, dependency, credential, environment, or human action
-- review: implementation complete, review pending
-- done: accepted by reviewer
-- verified: evidence recorded
+現在地: pm-zero v13 への運用移行中。直近の製品変更 T050（カレンダー再取込の重複防止と意味的な重複候補表示）は `main` の `c183ee0` に反映済みで、GitHub Actions CI は成功した。v13 移行ではプロダクトコード・IndexedDB・公開設定を変更しない。
 
-## Parallelization Rules
-- The main agent owns tasks.md.
-- Worker subagents own only their assigned Write Scope.
-- Parallel implementation requires disjoint Write Scopes or worktree isolation.
-- If two tasks need the same file, serialize them.
-- Default cap: <=2 concurrent worker subagents on a Pro plan.
-- Subagents return reports; the main agent updates tasks.md.
+次の手順: この移行コミットを GitHub に反映し、CI と Vercel のデプロイ状態を確認する。次の機能依頼では `AGENTS.md`、この先頭、必要な `docs/state.md` と `docs/decisions.md` を読み、専用ブランチで開始する。
+
+受入条件の状態:
+
+- v13 の共通規約を参照する短いプロジェクト規約があり、実行・検証・台帳の場所が分かる。
+- Context7 はグローバル設定の一つの定義だけを使い、Codex の起動時競合がない。
+- GitHub 反映後の CI と必要なデプロイ確認を記録する。
+
+未解決の質問・仮定: 追加費用 0 円、既存の GitHub/Vercel/Gemini/Google 接続と公開範囲を維持する。プロダクト機能変更・データ移行・新しい外部接続は今回の対象外。
+
+変更ブランチ: `work/pm-zero-v13-alignment`
+
+検証済み: 移行前 `main` は `origin/main` と同期、直近の `main` CI は成功。MCP 競合解消は `codex mcp list` で確認済み。移行後の文書差分・CI・デプロイ確認はこの作業で追記する。
+
+停止理由や制限: なし。
+
+## 履歴
+
+以下は根拠を保つための過去作業記録であり、現行の手順は上記と `AGENTS.md` を正とする。
 
 ## Tasks
 | ID | Status | Owner | Depends On | Write Scope | Acceptance | Verification | Evidence |
