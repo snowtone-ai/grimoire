@@ -1871,4 +1871,4 @@ accessible radiogroupとして初期非表示・buttonで展開し、選択後�
 - 要求: Grimoire を pm-zero v13 に沿って保守し、次回の作業を安全に再開できる状態にする。
 - 調査: 現行 `main`、GitHub Actions、既存の台帳・判断記録、プロジェクト固有の実行コマンドを確認した。既存のデータモデル、公開設定、依存関係、外部接続を変更しなくても、v13 の共通規約を参照する短いプロジェクト規約と台帳先頭の現在地で要求を満たせる。
 - 決定: 旧来の長大な一般規約は履歴で保持しつつ、現行 `AGENTS.md` は pm-zero v13 への実在する参照、Grimoire 固有の IndexedDB・外部 API・UI・検証・記録先だけに絞る。`tasks.md` は先頭を v13 の再開形式へ更新し、過去の作業行は証跡として残す。
-- 影響と確認: プロダクトコード、利用者データ、Vercel の公開範囲、Gemini/Google の認証情報と scope、新規依存は変更しない。GitHub 反映後の CI とデプロイ確認を台帳・状態記録へ追記する。
+- 影響と確認: プロダクトコード、利用者データ、Vercel の公開範囲、Gemini/Google の認証情報と scope、新規依存は変更しない。PR #52 は GitHub Actions CI 成功後に `main`（`f81652f`）へ統合し、Vercel Production と `pnpm check:production`（配信 CSS 48 クラス、欠落 0）を確認した。
