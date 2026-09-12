@@ -1,30 +1,63 @@
 # Grimoire の作業規約
 
-このリポジトリは個人向けタスク管理 PWA「Grimoire」を管理する。利用者はタスクを登録・完了し、必要に応じて Gmail、Google Calendar、Gemini 音声入力を使う。タスク、報酬、植物、設定は端末内の IndexedDB に保存される。
+このリポジトリは、個人向けタスク管理 PWA「Grimoire」を管理する。利用者はタスクを登録・完了し、必要に応じて Gmail、Google Calendar、Gemini 音声入力を使う。タスク、報酬、植物、設定は端末内の IndexedDB に保存される。
 
-## pm-zero v13
+## 作業開始
 
-- 共通規約は `C:/Users/chidj/project/プロダクト/pm-zero/AGENTS.md`、詳細手順は `C:/Users/chidj/project/プロダクト/pm-zero/pm-zero-knowledge-v13.md` を参照する。新規機能、UI、能力追加、公開、品質確認では該当節だけ読む。
-- 継続作業は最初にこのファイル、`tasks.md` の先頭、必要なら `docs/state.md` と `docs/decisions.md` を読む。判断、検証、次の操作を台帳へ短く残す。
-- main では編集しない。変更前に専用ブランチを作り、既存の未コミット差分は所有者の作業として保護する。意図したファイルだけ stage する。
-- 追加費用、課金、秘密の送信、公開範囲の変更、既存利用者データの破壊につながる操作は、根拠と対象を確認してから扱う。`.env*`、認証情報、利用者データをコミット・ログ出力しない。
+- このファイル、`tasks.md` の先頭、`xp.md` を読む。必要な場合だけ `docs/state.md`、`docs/decisions.md`、対象コードを読む。
+- `tasks.md` で現在の作業、受入条件、write scope、未解決点、検証結果を確認してから編集する。
+- 既存の未コミット差分はユーザーの作業として保護する。`reset`、discard、stash、checkout、上書き、削除を行わない。
+- `main` では編集しない。安全な専用ブランチで作業し、意図したファイルだけを stage する。
 
-## プロダクト固有の境界
+## 自律実行と確認境界
 
-- IndexedDB の schema、task persistence、バックアップ形式を変える場合は、既存端末のデータを保持する後方互換性と rollback を確認する。既存データの自動削除・重複の自動解消はしない。
-- Gemini と Google API は server-side key、既存の OAuth scope、入力検証、有限 timeout、利用者が回復できるエラー表示を維持する。外部 API の再試行では二重登録を防ぐ。
-- UI は `src/app/globals.css` と既存部品を再利用する。v13 の UI 基準（角丸 0、カード群を増やさない、reduced-motion、キーボードと画面幅確認）に従い、画面変更時は Chrome DevTools で実画面を確認する。
-- 依存追加、MCP、skill、plugin は既存機能で不足すると確認できた場合だけ、保守元の資料、権限・データ露出、ライセンス、Windows 互換性を記録して最小導入する。Context7 はグローバル設定のみを使い、このリポジトリで再定義しない。
+目的と範囲が明確な調査・編集・検証は自律的に進める。次の場合だけ停止して確認する。
+
+- 新たな費用・課金、秘密情報の外部送信、既存データの不可逆な破壊
+- 公開範囲、認証、権限に重大な不明点がある場合
+
+既存の月額契約や接続を勝手に別サービスへ切り替えない。`.env*`、認証情報、利用者データをコミット・ログ出力しない。
+
+## プロダクト固有の危険領域
+
+- IndexedDB の schema、task persistence、backup 形式を変更する場合は、既存端末のデータ保持、重複、migration、rollback/recovery を確認する。既存データを自動削除・自動統合しない。
+- Gemini と Google API は server-side key、既存 OAuth scope、入力検証、有限 timeout、回復可能なエラー表示を維持する。retry で二重登録を起こさない。
+- 外部入力、権限、秘密、意図しない情報露出、依存関係のリスクを変更内容に応じて確認する。
+
+## Engineering
+
+- 既存コードと標準機能を優先し、理由のない refactor、抽象化、新規依存を追加しない。
+- コードは短く理解可能にし、入力検証、部分失敗、network failure、timeout、save failure、error boundary、recoverable state を必要な範囲で扱う。
+- 推測で最適化しない。利用者が感じる主要操作で問題を測定してから性能を変更する。
+
+## UI
+
+- 既存の `src/app/globals.css` と既存部品を再利用する。基本は `border-radius: 0`、角丸カード群・pill/capsule・装飾 panel の乱用なしとする。
+- 1ページ1主要目的・1主要 action を保ち、余白、配置、文字サイズ、太さ、整列、区切りで階層を作る。
+- keyboard、semantic structure、contrast、loading、empty、success、error、reduced motion、responsive width を確認する。
+- UIを変更したら、利用可能な Browser/Chrome DevTools 能力で実画面を確認する。コードを読むだけで完了にしない。console、network、runtime の問題が必要なら適切な開発 tool で確認する。
 
 ## 実行と検証
 
 - 開発: `pnpm dev`
-- 通常確認: `pnpm verify`（lint、typecheck、test、production build）
-- 本番反映後: `pnpm check:production`。UI変更は該当経路、主要操作、対応幅、console/network/runtime を確認する。
-- CI は `.github/workflows/ci.yml` が `main` と PR で実行する。GitHub 反映を依頼された場合は、CI と必要なデプロイ状態まで確認して完了とする。
+- 通常検証: `pnpm verify`（lint、typecheck、test、production build）
+- 本番反映後: `pnpm check:production`
+- 基本順序は syntax/format → typecheck → lint → 必要な test → build → 受入条件の主要操作 → failure recovery → 変更固有の risk。検証量は変更とリスクに比例させる。
+- UI変更では対象経路、主要操作、対応幅、console/network/runtime を実画面で確認する。
+- CI は `.github/workflows/ci.yml` の lint/typecheck/test/build を merge gate とする。公開を依頼された場合は CI、deployment、production を確認する。
 
-## 記録先
+## 主要 tool と依存
 
-- 現在地・受入条件・未解決点・次の操作: `tasks.md`
-- 現在のプロダクト状態とリリース結果: `docs/state.md`
-- 長期的な設計、能力選定、失敗と再発防止: `docs/decisions.md`
+- ファイル検索は `rg` / `rg --files`、シェルは Windows PowerShell、パッケージ操作は pnpm を使う。
+- Browser 検証は既存の Playwright/Chrome DevTools 能力を使う。追加 Plugin、MCP、Skill、依存は既存能力で不足すると確認した場合だけ、保守元、権限、data exposure、license、Windows compatibility、保守コストを記録して最小導入する。
+- 同じ目的の能力を二重登録しない。新しい外部能力を導入する場合も、認証情報や利用者データを不要に送信しない。
+
+## 記録と完了条件
+
+- `tasks.md`: 現在地、次の操作、受入条件、未解決点、branch、verification。会話ログにはしない。
+- `xp.md`: 実作業で確認でき、再利用できる具体的な経験則。単なる履歴・推測・一時的な状態は記録しない。
+- `docs/state.md`: production の現在の事実。履歴を増やす場合は現在 pointer と混同しない。
+- `docs/decisions.md`: architecture、database、auth、security boundary、重要な外部サービス、難しい migration など長期判断の理由。
+- 依頼範囲について、受入条件、ユーザーの既存作業、必要な検証、変更固有の重大 risk を確認し、`tasks.md`を最新にする。重要な新しい経験則だけ`xp.md`へ追加する。
+
+最終報告は、変更、検証、残る問題を短く伝える。

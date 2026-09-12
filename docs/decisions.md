@@ -1,5 +1,23 @@
 # decisions.md
 
+## D-060: Codex の実験的 compaction 経路と環境インベントリ
+
+- 日付: 2026-09-12
+- 要求: 最新の実験的な compact 方式をグローバル設定へ追加し、PC の開発環境と MCP/plugin/skill をリスト化する。
+- 決定: `C:\Users\chidj\.codex\config.toml` の既存 `context_management.experimental_mode = true` を維持し、Codex CLI 0.154.0 の `remote_compaction_v2 = true` を `[features]` に明示した。リポジトリには `docs/environment-inventory.md` を追加し、検出時点の開発関連ソフトウェア、MCP、plugin、skill と設定状態だけを記録する。
+- 範囲: グローバル Codex 設定、`docs/repo-map.md`、`docs/environment-inventory.md`、`tasks.md`、この判断記録。認証情報、環境変数の値、OAuth 内容、プロダクトコード、利用者データは対象外。
+- 根拠: OpenAI の公式ドキュメントは compaction を会話状態の管理機能として扱っており、インストール済み CLI の feature 一覧で `context_management` と `remote_compaction_v2` の有効状態を確認した。
+- 確認: `codex features list`、`git diff --check`、repo-map の旧バージョン表記なし、環境インベントリの秘密情報なしを確認する。
+
+## D-059: pm-zero knowledge v14.1 への自己完結型運用移行
+
+- 日付: 2026-09-12
+- 要求: pm-zero 本体の v14.1 を参照し、Grimoire のシステム部分だけを更新する。
+- 決定: 現行 `AGENTS.md` から pm-zero 本体と Global AGENTS への依存を外し、Grimoire 固有の目的、データ境界、自律実行境界、Engineering、UI、tool、検証、記録責務、完了条件を一つの自己完結した規約へ整理した。`tasks.md` は現在地の台帳、`xp.md` は検証済み経験則として分離した。
+- 範囲: `AGENTS.md`、`tasks.md`、`xp.md`、`docs/state.md`、`docs/decisions.md` のみ。プロダクトコード、IndexedDB schema、外部 API、認証情報、依存関係、公開範囲は変更しない。
+- 採用理由: v14.1 は初期構築後に各 repository だけで安全に継続開発できる状態を完成形とし、規約・現在地・学習・production事実・長期判断の責務を重複させないため。
+- 確認: `AGENTS.md` に pm-zero/Global AGENTS の参照がないこと、`xp.md` の形式と再利用性、既存ユーザー差分の保持、`git diff --check` を確認する。
+
 ## D-057: Calendar import identity and semantic duplicate review
 
 - Date: 2026-09-06. Owner: Codex parent (investigation, plan, review, release); implementation started by Luna/high, then completed by parent after Luna usage limit and user's explicit instruction to continue through deployment.

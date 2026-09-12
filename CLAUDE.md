@@ -1,4 +1,4 @@
-# CLAUDE.md -- Grimoire (formerly Task Plant) / pm-zero v12.1 (Claude Code only, Windows PowerShell, Pro plan)
+# CLAUDE.md -- Grimoire (formerly Task Plant) / Claude Code supplement (Windows PowerShell)
 
 ## Language
 - Reports, error reports, manual confirmation requests: Japanese.
@@ -70,7 +70,7 @@
   use `git diff --check`. CI (.github/workflows/ci.yml) remains the merge gate.
 - Tier 1: fresh-context reviewer subagent (Opus 5, read-only) when the change is large,
   crosses routes/subsystems, changes persistence or integration contracts, is hard to undo,
-  or touches shared UI primitives/design tokens with multiple consumers (v12.1 §16.5).
+  or touches shared UI primitives/design tokens with multiple consumers.
   The reviewer uses current Tier 0 evidence and reruns deterministic suites only when evidence
   is missing/stale or a finding needs reproduction. Ask for every issue with
   severity/confidence -- do not restrict it to serious issues only, or recall drops.
@@ -78,7 +78,7 @@
   that essentially do not occur in this project. If one of those classes ever appears,
   re-derive the tier rather than re-enabling it from memory.
 
-## Frontend/UI Operating Layer (pm-zero v12.1 §16)
+## Frontend/UI Operating Layer
 - Browser self-verification before "done" is already covered by the global judgment
   instruction (start the dev server, check the changed screen with Playwright MCP at
   the breakpoints touched, confirm no console/runtime error) -- code-reading is not a
@@ -99,7 +99,7 @@
   project adopts `DESIGN.md`.
 - Project-local UI tools are added only for a concrete task: impeccable after explicit adoption
   of its detector/final visual audit, and the shadcn skill when adding, updating, or migrating
-  registry primitives or presets (v12.1 §16.7). No chrome-devtools MCP: Playwright MCP is already
+  registry primitives or presets. No chrome-devtools MCP: Playwright MCP is already
   registered globally (user scope) and in active use for browser verification across this operator's
   projects -- adding a second, overlapping browser-automation MCP would be redundant
   tool-schema cost with no functional gain.

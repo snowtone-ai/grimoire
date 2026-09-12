@@ -26,6 +26,7 @@
     "lucide-react": "^1.7.0",
     "next": "16.3.1",
     "next-view-transitions": "^0.3.5",
+    "pixi.js": "^8.20.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -42,6 +43,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "fake-indexeddb": "^6.2.5",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"

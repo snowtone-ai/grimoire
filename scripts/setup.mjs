@@ -8,4 +8,4 @@ for (const dir of dirs) {
   console.log(`ready: ${dir}`)
 }
 
-console.log('pm-zero v12.1 directory structure ready.')
+console.log('Grimoire project directory structure ready.')

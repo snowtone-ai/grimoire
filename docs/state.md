@@ -1,6 +1,7 @@
 # state.md
 
 ## Current
+- 2026-09-12: pm-zero knowledge v14.1 に合わせ、運用文書を自己完結型へ更新した。`AGENTS.md` は pm-zero 本体・Global AGENTS への参照を持たず、`xp.md` を新設して再利用可能な確認済み経験則を分離した。`tasks.md` の先頭を v14.1 の再開形式へ更新した。プロダクトコード、IndexedDB、公開設定、依存関係、Gemini/Google 接続は変更していない。
 - 2026-09-07: pm-zero v13 へ運用移行。`AGENTS.md` を共通規約への参照と Grimoire 固有のデータ・外部 API・UI・検証境界へ整理し、`tasks.md` の先頭を現在地、受入条件、検証、次の操作から再開できる形式へ更新した。プロダクトコード、IndexedDB、公開設定、依存関係、Gemini/Google 接続は変更していない。Context7 はグローバル定義だけを使うため、プロジェクト設定の重複定義を削除した。PR #52 を `main`（`f81652f`）へ統合し、GitHub Actions CI、Vercel Production、`pnpm check:production`（配信 CSS 48 クラス、欠落 0）を確認済み。
 - 2026-09-06: T050 / D-057 — Calendar import duplicate fix is implemented and locally verified; release tracking is the PR from `fix/calendar-import-deduplication`. Source-ID uniqueness/atomic saves prevent replay duplicates; bounded Gemini suggestions cover paraphrased existing appointments without deleting data. Focused tests 9/9, touched-file lint/typecheck, live synthetic Gemini 6 cases and Chrome 320/1280px checks passed. Required CI and production results will be recorded in that PR before session completion. Schema v4 must be retained on rollback; see D-057.
 - 2026-09-05: 残存リスク対応（D-055）は実装済みで、[PR #49](https://github.com/snowtone-ai/grimoire/pull/49)
