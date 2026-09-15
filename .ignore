@@ -1,0 +1,4 @@
+# Keep history and the embedded-image proposal out of default ripgrep searches.
+# These files remain versionable; use pnpm context history or explicit paths.
+/docs/archive/
+/docs/grimo-final-proposal.html

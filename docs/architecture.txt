@@ -1,0 +1,16 @@
+src/app
+  -> src/components
+    -> src/hooks
+      -> src/lib/taskDb
+        -> src/lib/db
+      -> src/lib/notifications
+      -> src/lib/domain/task-date
+    -> src/lib/domain/task-date
+    -> src/lib/errors
+    -> src/lib/gemini
+      -> src/lib/api/gemini-prompts
+      -> src/lib/errors
+
+Dependency rule:
+components -> hooks/domain/api/services -> data
+data layer must not import React components.

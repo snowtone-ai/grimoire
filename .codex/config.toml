@@ -1,0 +1,22 @@
+model_verbosity = "low"
+
+[mcp_servers.codegraph]
+command = "codegraph"
+args = [
+    "serve",
+    "--mcp",
+]
+
+[mcp_servers.context7]
+command = "npx"
+args = [
+    "-y",
+    "@upstash/context7-mcp@latest",
+]
+
+[mcp_servers.playwright]
+command = "npx"
+args = [
+    "-y",
+    "@playwright/mcp@latest",
+]

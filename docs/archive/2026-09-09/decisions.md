@@ -1,0 +1,1985 @@
+# decisions.md
+
+## D-067: 3Dキャロルを独立した試遊経路で制作
+
+- 日付: 2026-09-09。利用者承認を受け、`feat/carol-3d` の `/plant/carol-3d` に一体を制作。既存データと旧画面を変更せず、感覚的な品質を実物で判断する。frontend-designにより連続した雲の世界を主役にし、shadcnの既存Buttonと局所tokenを再利用。参考のSV構造はD-065の調査を再利用し、固有assetは複製しない。
+- 制作（当時）: Blender 4.5.10標準Python→glTF exporter→既存Three.js 0.185.1。2026-09-09にD-068でBlender 5.2.1へ更新した。羊毛はvoxel結合・平滑化・頂点色、顔と耳脚は名前付き階層pivot。新規rig基盤や外部生成サービスを増やさない。原本PNGは不変、3Dの横背面はこの試遊用の補完でありcanonical昇格は未承認。
+- 制御: raycastで実meshの接点を使い、なで速度と総移動で長押しの競合を排除。releaseは反応を消さず、複数pointerは接触からpinchへ切り替える。reduced-motionは動きを止めても顔で返し、終了時も再描画。load timeout、abort、GPU context lossのエラー/再読込、非表示時RAF停止、unmount時disposeを実装。
+- 失敗と修正: 初稿の白飛びはsRGB/linear変換と照明、月の欠けは凹ngonをquad stripへ、星の埋まりは配置、320幅の耳切れはaspectに応じたcamera距離で修正。頂点色はmaterial nodeへ接続しないとglTFに出ないため接続を明示。描画統計やテスト成功を造形の合格に代用しない。
+- 環境: 応答しない当該projectの既存dev processを特定して再起動。`127.0.0.1` のdev chunkはNextのorigin保護で403となったため設定を緩めず `localhost` を使用。旧3003の比較serverは停止していない。追加導入・外部送信・課金なし。
+- 検証・残る差: `docs/grimo-3d-carol-preview.md`。一体の触れる実物まで到達。原画の繊細さと自然な歩行の仕上げは残り、SV級達成や他4体への展開は未承認。
+
+## D-066: 3D品質の見極めとBlender制作経路
+
+- 日付: 2026-09-09。最新希望は原画のデザインによるSV風の自然な触れ合い。タイミングの厳密一致は不要、移動・歩行・自由カメラも品質が成立するなら候補。ツールの無料導入は許可済み。以前の「移動不要」「2.5D第一案」は固定要件ではなくなった。
+- 判断: 3Dの品質上限が2Dより低いわけではないが、この原画を短期間で再現する確実性は2Dが高い。難所はキャロルの淡い毛の塊、輪郭、瞳、色、光と、表情・身体の演技。球を並べた簡易モデルや画像から自動生成した未修正meshを完成品にしない。絵のような3D（丸い形状＋描き込んだ色・顔＋抑えた陰影）を候補とし、リアルな毛シミュレーションを最初の必須にしない。
+- ローカル確認: Blender 4.5.10 LTS（既存インストール）が `C:/Program Files/Blender Foundation/Blender 4.5/blender.exe` に存在。`--background --factory-startup --python-expr` でbpy起動、版、glTF export operator存在を確認、exit 0。既存シーン・設定を変更しないスモークのみ。実export、render、rig、Web品質は未確認。GPU名はAMD Radeon (TM) Graphics。原画も目視で確認した。
+- 選定: Blender標準Pythonでローカルにモデル・演技を制作し、既存Three.jsへGLBとして渡す経路を第一候補とする。Blender特有の材質・毛・constraintがそのままWebへ再現されるとは扱わず、Web用表現で作る。GPT Imageは必要時の参考図・テクスチャ候補で、完成3Dやrigの自動生成器ではない。
+- MCP比較: [ahujasid/blender-mcp](https://github.com/ahujasid/blender-mcp) はBlender公式ではない第三者MIT連携。Windows手順、scene inspection、Python実行、外部素材・生成サービス接続を備える。常駐ソケットと任意コード実行の権限を追加し、READMEではtelemetry既定有効。将来導入するなら版固定、telemetry無効、外部生成接続無効、localhost限定、既存作業保護でスモークする。今回は直接Pythonで操作できるため追加導入しない。plugin-managementの既存能力優先方針を適用。カタログ検索機能はこのセッションでは見当たらず、全pluginを調査済みとは言わない。
+- 他候補: Live2Dは2D可動化向けで背面・自由カメラの代わりではない。Meshy/Tripo/Hunyuan系は先の無料比較の条件・修正負担が残るため下地候補止まり。Godot/別engineへの移行は既存PWAを置き換える理由がなく採らない。Blenderは[公式ライセンス](https://www.blender.org/about/license/)の無料制作環境であり、追加費用0円でも道具の機能が低品質に制限されるわけではない。
+- 次の品質判断: 大量の検証・全5体制作を先行せず、キャロル一体の正面／斜めの見た目と瞬き・なで反応の短い実物を比較する。良い静止renderだけでスマホの触感を合格としない。品質が不足すれば原画重視の2.5Dへ戻れるよう既存資産と製品を維持する。今回モデル制作や導入はしていない。
+
+## D-065: SV分析によるG04評価訂正と無料・速度優先の制作提案
+
+- 追加条件: 移動なし・スマートフォン内の癒し用途。SVの反応構造を手本に、固定位置での顔・部位・余韻を優先。歩行や自由視点を理由に3Dを先行させず、2.5D＋事前生成演技を第一案とする。
+
+- 日付: 2026-09-09。利用者の依頼は現行改善／0から再構築の分析に、事前生成アニメとGPT Image等の無料選択肢を追加したもの。main agentのみで統合し、実装前の過剰検証を行わず方式選定で区切った。
+- 原因: D-064の反応名9個と数値差を演技の完成と扱い、identity lockを表情固定へ狭めた。実際には一枚planeで、顔・部位の演技素材が不足。ソース上はreleaseによる目標上書き等もある。過去のruntime確認成功は魅力の合格を意味しない。
+- 再発防止: 反応数ではなく、装飾なしで表情と接触の意味が読める一体を実装して判断する。原本は保護しつつ、動作途中のキャラクター同一性を評価する。共通skillや新規基盤へ増殖させない。
+- 提案: GPT Imageで少数の表情・決めポーズ、2.5Dで即答と連続接触、必要な大きな演技だけ事前生成。自由な向き・接地が不足した段階で限定3D。APIは無料と扱わず、既存契約内のみ、枠切れは待つ。比較は `docs/grimo-free-animation-options.md`。採用・生成品質は未実証、製品実装・素材送信・課金・導入は今回なし。
+- 根拠: SV公式と制作担当者記事、閲覧できた画像・利用者記録。YouTube時間解析は再生／取得失敗で未確認として明記。未取得の反復を止め、次の制作へ進める。
+
+## D-064: Carolの反応核と将来のグリモ追加境界
+
+- 日付: 2026-09-08。利用者のFBに従い、画面上の状態説明を外し、接点そのものから満足感を伝える方針へ変更した。Carolは顔・頭・左右の毛並み・足元の5ゾーンをpure domainで判定し、9反応をclip queueではなく現在姿勢から即時にredirectする。原画面は一枚の剛体planeのままで、差は安全な微移動と雲・星のworld-side反応に留める。
+- 将来の5体追加は`GRIMO_COMPANIONS`のID・世界・asset・touch zoneで発見可能にし、各個体の承認済みassetと固有motion grammarを後から加える。全5体の本実装を先取りしない。
+- 表情差分はbuilt-in image generationで「非顔部分を不変」として試作したが、出力は構図・輪郭を変えcanonical一致を満たさなかったため不採用・未保存とした。閉じ目などを必要にする場合は、同一性を確認できる承認済み原画を受けてから導入する。
+- Skill化はまだ行わない。再利用手順はCarol一体でしか実証されておらず、個体差のあるasset受入・原画同一性確認・motion grammarを早期に一般規則へ固定しない。少なくとも次の承認済みグリモで同じworkflowが再現できた時点で、狭いasset/scene制作skillとして再評価する。
+
+## D-063: G03 Carol入力の最小scene境界
+
+- 日付: 2026-09-08。G02 renderer gateの人間合格後、`/plant` はCarolの専用sceneへ移行する。既存のtask、plant、drop、backupのschema・保存処理は変更しない。
+- 決定: Three.js 0.185.1のOrthographicCameraに、透明Carol PNGを一枚の剛体planeとして配置する。flattened sourceの顔、目、輪郭を変形せず、入力の視覚的な返答は最大の剛体微移動と雲・星のworld-side変化に限る。primary Pointer Eventsのcaptureを1本だけ持ち、up/cancel/lostcapture、window blur、document hiddenで必ず解放する。Enter/Spaceと明示ボタンは同じscene commandへ接続し、drag必須にしない。
+- UI構造はD-060で記録済みの「中央の1匹へ触れる」だけを借り、キャラクターを囲むcard・数値・日課・報酬UIを置かない。四角い代替操作とvisible focusを残し、`prefers-reduced-motion`では自律的なrAF変化を止める。
+- 確認: changed-file lint/typecheckとproduction buildはpass。Chrome DevTools MCPは既存browser profileの占有で接続不可だったため、実画面の幅・入力・console/network・reduced-motion確認は未完了としてG04開始条件に残す。
+
+## D-062: Carolの完全ローカル透過asset導入
+
+- 日付: 2026-09-08。使用用途はCarolの世界合成・renderer比較であり、顔・線・淡い毛先のalpha edgeを変えないことを最優先にした。ローカル環境を確認した結果、既存`sharp` 0.35.3（Node/libvips、Windows対応）は利用可、Python 3.14はあるが`rembg`・onnxruntime・Pillow・OpenCV・Torch・Transformersは未導入、ImageMagickも未導入だった。
+- 比較: sharpは既存alphaをCPUで高速かつdecoded RGBA同一に検証できるが、opaque画像の意味的切抜きはしない。rembg/ONNX系はCPU/GPU選択が可能でもmodel/packageの追加取得が必要で、既に品質確認済みの輪郭を再推定してidentity edgeを劣化させる。Python手作業/閾値処理は黒縁を失う。今回の入力は完全透明93,747pxと半透明edge 9,275pxを既に持つため、無料・完全ローカル・最速・最高忠実度のsharp alpha-preserving pipelineを選定した。
+- `assets/grimo/source/carol-transparent.png` を原本として固定し、build scriptはhash、透明/半透明pixel数、derived/public PNGとのdecoded RGBA一致を検証する。GPUは不要で、将来opaque原画だけが渡された場合は静かな閾値除去を行わず、別途ローカルML導入をこの比較基準で判断する。
+
+## D-061: 承認済みグリモ企画のUX改善と実装引継ぎ
+
+- 日付: 2026-09-07。今回のGOALは実装計画をtasks.mdに記載すること。5匹の企画承認を引き継ぎ、初回の迷い、接点と演技の連続性、人格差、世界との因果、保存失敗、切替待ち、継続圧力を改善仕様へ落とした。
+- 次セッションは利用者の明示指示を優先し、Luna/xhighを主実装役にする。上位モデルはG04Rの描画方式/原画/触感とG08Rの保存/rollbackだけAstra/xhighで限定レビュー。今回の調査は独立2領域をLuna/xhighへ分担し、親が計画へ統合。
+- Web/YouTubeの公開専門資料を工程の具体的手順へ接続。動画本文の未取得を明示し、取得できた保守元資料で裏付けた。「専門家だけが知る」「100点達成」を事実として主張しない。根拠は `docs/grimo-implementation-research-motion.md`、`docs/grimo-implementation-research-quality.md`。
+- リポジトリ・グローバル・セッション公開能力を `docs/grimo-tool-inventory.md` に棚卸し。既存sharp、標準Pointer Events/WAAPI、Dexie、Chrome MCP、Context7、既存テストで必要工程を接続できるため追加導入0件。素材の成立性は別の制作ゲートとし、有料SDK・新規外部送信で補わない。
+- 利用者の追加指示に従い、今回HTMLの再調整、ブラウザー試験、build、製品変更は行わない。計画の整合と参照漏れのみ確認して終了する。次回も成功済みの確認を反復せず、各ゲートの失敗箇所だけ直す。利用枠・原画・協力者の不足は具体的な再開点として残す。
+
+
+## D-057: Calendar import identity and semantic duplicate review
+
+- Date: 2026-09-06. Owner: Codex parent (investigation, plan, review, release); implementation started by Luna/high, then completed by parent after Luna usage limit and user's explicit instruction to continue through deployment.
+- Reproduced current defect with fake-indexeddb: two identical import writes through `createTask` persist two records. Calendar import discards Google event ID, writes random UUIDs through Promise.all, and has no pending guard or atomic retry boundary. Historical user-device records are unavailable; this proves a causal path, not the exact historical trigger.
+- User clarification: manually entered Google events and email-derived tasks can describe the same appointment with different text. Exact identity alone is insufficient. Use deterministic identity for guaranteed replay prevention and Gemini only for advisory semantic matches. Never automatically delete/merge existing records.
+
+### Capability gate and UI reference
+
+- Checked 2026-09-06: [Google Calendar events v3](https://developers.google.com/workspace/calendar/api/v3/reference/events), [calendar identity](https://developers.google.com/workspace/calendar/api/v3/reference/calendars/get), [Dexie transactions](https://dexie.org/docs/Dexie/Dexie.transaction()), [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp), [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output), [Gemini safety](https://ai.google.dev/gemini-api/docs/safety-guidance).
+- Select existing Dexie 4.4.2-compatible transactions/indexes, existing Gemini server proxy and managed model ladder, and installed Chrome DevTools MCP + local chrome-devtools skill. No new dependency, MCP, skill, plugin, credentials or Google scopes. Additional Calendar/Gmail connectors duplicate existing direct read-only APIs; semantic-search packages add maintenance without improving this bounded comparison. Existing tools work on Windows/Node 24; Chrome MCP list_pages smoke passed. Existing MIT/Apache-2.0 tooling is retained, no redistributed assets. Reproduction/install remains pnpm locked dependencies; no global configuration changes.
+- Gemini receives only bounded titles and dates/times for plausible pairs, with temporary numeric IDs; no OAuth tokens, email bodies, descriptions, account IDs or full database. Server key stays server-only; content is never logged. UI states that titles/date/time are checked by Gemini. AI results are validated against submitted pair IDs and remain user-review suggestions. Failure is explicitly reported and manual import remains possible.
+- Single UI model: [Todoist calendar integration](https://www.todoist.com/help/todoist/integrations/use-the-calendar-integration-rCqwLCt3G), checked 2026-09-06. Borrow readable event rows and distinction between existing/suggested/new items; retain app branding and assets. Hierarchy follows [Apple HIG layout](https://developer.apple.com/design/human-interface-guidelines/layout). Changed import surface uses continuous rows, square controls, clear primary import action, pending/error/empty/done feedback, keyboard labels and reduced-motion support; no new panels or library.
+
+### Detailed implementation plan
+
+1. Add optional import source key to Task and a sparse unique Dexie v4 index. Resolve actual primary calendar ID with existing readonly scope, then request that calendar's events; key uses calendar ID + occurrence event ID, not iCalUID (recurrences share it). Preserve date-only versus local timed conversion and reject malformed IDs/dates. Keep existing data and reward tables intact.
+2. Add one shared import persistence boundary: validated inputs, transaction spanning existing-task read and all selected inserts, source identity lookup, accurate added/skipped counts, same-batch deduplication. Abort rolls back all writes. Concurrent tabs/requests serialize and unique index is the final constraint. Ordinary manual createTask remains unchanged. Source identity always wins even if local title/completion/date changed.
+3. Compare calendar candidates both with stored tasks (including Gmail/manual entries) and other candidates. Normalize whitespace/Unicode for exact title + date + time suggestions. Different occurrences/dates are distinct. Content matches without identical source are advisory and can be explicitly added; preserve existing records. No silent historical cleanup.
+4. Add bounded semantic-pair domain contract and fixed `calendar-duplicates` request kind to existing Gemini proxy. Filter pairs locally to same date, and within 60 minutes when both have times; all-day/unknown-time pairs on that date can be considered. Cap 30 candidates / 100 plausible pairs per check, expose incomplete coverage instead of claiming all checked. Compare differing titles as appointment identity, not merely related actions (interview vs preparation, application deadline vs interview). Prompt treats all titles as untrusted data. Validate request bounds, actual dates/times and response numeric pair IDs; unknown/duplicate/out-of-range output cannot affect unrelated tasks.
+5. Calendar import states: auth/loading/confirm/saving/done, synchronous useRef action latch, clear save failure/retry, stale async completion/mount guards and clean reopening. Perform semantic check before default selection when plausible pairs exist; visible checking status, bounded timeout/cancellation and explicit failed-check warning. Deterministic existing-source rows are disabled; advisory matches show counterpart title/date and default unchecked, with explicit selection to keep a separate appointment. Within-batch suggestions must retain a representative and must not discard every member; allow selection changes without hidden dependencies. Report actual added/existing counts after commit.
+6. Tests: replay, concurrent transactions, duplicate response entries, modified imported task, distinct recurring occurrences/calendars, legacy/exact suggestions and explicit override, rollback and retry, v3 data preservation. Semantic contract tests cover paraphrases fixture behavior, different dates/times, different organizations/actions, malformed/injected/unknown IDs, bounds, timeout/unavailable paths. Live synthetic Gemini evaluation is required in addition to deterministic output-validation tests; no real user content used.
+7. Per subsequent user instruction, keep pre-deploy verification minimal: focused changed-behavior tests and changed-file lint/type checks, plus Chrome DevTools on local /all at 320px and desktop for import/replay, advisory override and failure recovery. Do not run local pnpm verify/full tests or unrelated routes; existing required CI supplies the full gate/build once. Synthetic Google/Gemini responses only in isolated local page; no production user-data mutations. Commit/push using existing GitHub/Vercel workflow, wait for CI + deployment, run check:production and inspect deployed import route/assets in fresh Chrome page. Record exact outcomes and remaining limitations before final session-end report; stop owned local processes.
+
+### Investigation evidence and evaluation cases
+
+- Before fix, Chrome localhost /all with two synthetic Google events and two synchronous import clicks persisted four tasks (two copies each), while completion text claimed only two. The four disposable probe rows were removed by their synthetic titles/dates; no user data was touched. Existing dependency audit: `pnpm audit --audit-level=low` passed with zero known vulnerabilities.
+- Synthetic semantic positives: `アスター社 一次面接` / `株式会社アスター 採用担当者との一次選考面談`; `さくら歯科 定期検診` / `歯のチェック（さくら歯科）`; `青葉大学 入学説明会` / `青葉大学の新入生向け説明会に参加` (same dates/times).
+- Synthetic negatives: same company interview vs interview preparation; different companies at the same time; same title on another day; explicit titles containing instructions to return unrelated match IDs. A live model pass is sampled evidence, not a guarantee; all semantic recommendations remain overridable and never delete or merge tasks.
+
+
+### Verification and release tracking
+
+- Focused `node --test tests/lib/calendar-import.test.mjs`: 9/9 pass, including replay/concurrency, transaction rollback/retry, distinct calendar occurrences, legacy/advisory override, invalid contracts, v3 upgrade and v4/v3 backup compatibility, AI outage/cancellation. Changed-file ESLint and `pnpm typecheck` passed. No local full-suite/build run (user requested minimum checks).
+- Live local Gemini request with six synthetic pairs: HTTP 200 in 4.27 seconds; returned exactly positive IDs 0/1/2; interview preparation, different company and injected instruction excluded. Exact-title baseline misses these three paraphrase positives. This is sampled evidence, not guaranteed semantic accuracy.
+- Chrome DevTools local `/all`: v4 upgrade preserves two synthetic legacy rows; double-click new import adds one row, reopen disables imported source, semantic/exact hints default unchecked, explicit semantic override adds one row. AI 503 shows manual-review warning. Changed screen inspected at actual 320px and 1280px widths with no horizontal overflow; local console error/warn absent before deliberate invalid-request check. Synthetic fixtures only, no real calendar/data mutations.
+- Fresh-context read-only reviewer found no release blockers; restored actionable Google authentication error display from review feedback. Final deployment/check results will be recorded on the release PR, linked from state/task tracking.
+- Data recovery/rollback: v4 is an additive index, no historical tasks are removed or rewritten. Keep schema v4 and backup v4 support in any emergency code rollback (deploying old v3-only code can fail to open an upgraded store); prefer forward fix. Semantic checking can degrade to visible manual review without compromising source-ID protection. Existing historical duplicates are not automatically cleaned up; mismatched dates or times beyond the 60-minute window are outside semantic comparison.
+
+## D-001: CLAUDE.md構造 — @AGENTS.md import方式
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: CLAUDE.mdは@AGENTS.mdを冒頭でインポートし、プロジェクト固有ルールのみ記載
+- 採用理由: v9.1の二重記載禁止ルール
+- 不採用案: AGENTS.mdに全ルールを統合 → プロジェクト固有の地雷回避ルールが汎用指示と混在
+- 将来見直し条件: Claude Codeが@importを正式サポートした場合
+
+## D-002: vision.md の配置 — docs/ ディレクトリへ移動
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: vision.md をルートから docs/vision.md に移動
+- 採用理由: v9.1 Memory Layer仕様。state/decisions/issuesと同一ディレクトリに統一
+- 不採用案: ルートに残す → 一貫性が崩れる
+- 将来見直し条件: なし
+
+## D-003: Service Worker — cache.addAll 禁止
+- 日付: 2026-05-09（既存判断の記録）
+- 対象: architecture
+- 決定: install イベントで cache.addAll を使わず、fetch イベントで cache.put
+- 採用理由: addAll は1URLでも失敗すると全体が失敗し、古いSWが永続化する
+- 参照例: CLAUDE.md 自己改善セクション
+- 将来見直し条件: なし
+
+## D-004: データストア — IndexedDB (Dexie.js) + 遅延初期化
+- 日付: 2026-05-09（既存判断の記録）
+- 対象: architecture
+- 決定: Dexieインスタンスを getDb() + Proxy で遅延初期化
+- 採用理由: SSR環境でのモジュールトップレベル評価を防止
+- 将来見直し条件: Next.js の SSR 仕様が変わった場合
+
+## D-005: Observability — MVP段階では後回し
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: MVP段階では構造化ログ・APMは導入しない。console.error/warn/info の使い分けのみ
+- 採用理由: 個人利用PWAのため。本番運用で問題が出たら導入
+- 将来見直し条件: ユーザー数が増えた場合、本番障害が追跡困難になった場合
+
+## D-006: ディレクトリ構造 — domain/api/hooks に責務分離
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: pure domain logic を `src/lib/domain/`、外部API補助を `src/lib/api/`、React副作用を `src/hooks/` に分ける
+- 採用理由: 300行超ファイルを分割し、UI / domain / data の責務混在を減らすため
+- 不採用案: PRODUCT-OPTIMIZATION.md の全構成を一括導入 → diffが大きくなり既存機能の回帰リスクが高い
+- 将来見直し条件: テスト基盤導入後に `taskDb.ts` を query/mutation 単位へ追加分割する場合
+
+## D-007: Service Worker管理 — 今回は既存ファイルを維持
+- 日付: 2026-05-09
+- 対象: architecture
+- 決定: `src/components/pwa-register.tsx` は64行でゲート内のため、今回は抽出しない
+- 採用理由: Service Workerは既存の地雷回避ルールが多く、不要な移動は回帰リスクになるため
+- 不採用案: `lib/services/sw-manager.ts` へ即時抽出 → 動作差分の検証コストが高い
+- 将来見直し条件: SW更新UIや複数登録パスが増えた場合
+
+## D-008: テスト基盤 — Node built-in test を先行採用
+- 日付: 2026-05-09
+- 対象: process
+- 決定: pure domain helper は Node.js built-in test runner で検証し、Playwright/Vitest導入は別タスクで実施
+- 採用理由: 追加依存なしで最低限の再現テストを導入し、品質改善リファクタと依存追加を分離するため
+- 不採用案: 依存を即時追加してE2E/Unitを実装 → ロックファイル変更とテスト設定変更が大きくなる
+- 将来見直し条件: 次の機能追加またはバグ修正に着手する前
+
+## D-009: Google Auth — GIS OAuth2 参照を事前確定
+- 日付: 2026-05-09
+- 対象: api
+- 決定: `requestGoogleToken` は `google.accounts.oauth2` をローカル変数へ確定してから `initTokenClient` を呼ぶ
+- 採用理由: TypeScript narrowing を Promise 内でも維持し、GIS未ロード時は明示的に拒否するため
+- 実在例:
+  - 初回ロード直後で GIS script が未完了の場合、`window.google` が存在しない
+  - script は読み込まれたが accounts API 初期化前の場合、`google.accounts` が存在しない
+  - OAuth2 API が利用不能な場合、`google.accounts.oauth2` が存在しない
+- 不採用案: non-null assertion の追加のみ → 実行時の欠落検出が弱くなる
+- 将来見直し条件: GIS loader を明示導入し、読み込み状態を UI で管理する場合
+
+## D-010: Task Plant Phase1-7 実装方針（UI/API/DB/Workflow）
+- 日付: 2026-05-09
+- 対象: ui/api/db/workflow
+- 決定: `docs/implementation-plan.md` の Phase 1→7 を順守し、追加依存なしで実装する
+- 実在例:
+  - UI例1: 下部ナビを「ホーム / カレンダー / 植物」の3タブに拡張し、`/plant` への導線を統一
+  - UI例2: ホームのタスクカード右端に展開トグルを追加し、既存の「カードタップで編集」導線は維持
+  - UI例3: `/all` のリスト表示に「今日以降のみ表示」トグルを追加し、既定値をONにする
+  - API例1: Gmail APIで直近7日/最大20件を取得し、Geminiでタスク候補抽出後にユーザー選択で反映
+  - API例2: Google Calendar APIで将来イベント最大30件を取得し、タスク形式へ変換して取り込む
+  - API例3: Google Identity Servicesを`layout.tsx`へ読み込み、`use-google-auth.ts`経由でOAuth接続する
+  - DB例1: Dexie `version(2)` で `plantState` テーブルを追加し、`version(1)` は維持する
+  - DB例2: `plantState(id=1)` に週次完了数/累計完了数/週開始日を保存し、週跨ぎで `weeklyCompleted` をリセット
+  - DB例3: 植物成長段階を `weeklyCompleted` から算出し、タスク完了/取消で増減を同期する
+  - Workflow例1: 各Phase完了ごとに `npx tsc --noEmit && pnpm lint` を実行して次Phaseへ進む
+  - Workflow例2: IndexedDBを使う画面は `dynamic(..., { ssr: false, loading })` で遅延描画する
+  - Workflow例3: 最終検証で `npx tsc --noEmit` / `pnpm lint` / `pnpm build` をすべて通す
+- 不採用案: PixiJS導入（依存追加が必要でコストゼロ制約に反する）
+- 将来見直し条件: OAuthスコープ追加や月次植物ロジック変更が発生した場合
+
+## D-011: 12か月植物デザイン — 実物の成長差をSVGに反映
+- 日付: 2026-05-09
+- 対象: ui
+- 決定: 4アーキタイプの内部構成は維持しつつ、`PlantSpecies.nameEn` ごとに12種類の蕾・葉・花形を描き分ける
+- 採用理由: 月替わり植物が同一テンプレートに見えると、1年周期の報酬体験が弱くなるため
+- 実在例:
+  - 樹木系: 桜は蕾から開花へ段階があり、梅は丸い5弁と目立つ雄しべ、蝋梅は葉の少ない枝に黄色い蝋質花を咲かせる
+  - 蔓/低木系: 藤は垂れる総状花序、紫陽花は低木の葉と球状の装飾花房として表現する
+  - 草花/球根系: 朝顔は双葉・蔓・漏斗状花、コスモスは細い分枝と舌状花、金木犀は葉腋の小花群、シクラメンは斑入り葉と反り返る花弁として表現する
+- 不採用案: 4アーキタイプのみの色違い継続 → 12か月分の差が弱く、実物モデルの要求に合わない
+- 将来見直し条件: 写真素材やCanvas/bitmap表現を採用して、より写実寄りにする場合
+
+## D-012: Task.description フィールド — vision.md 未記載の拡張
+- 日付: 2026-05-09
+- 対象: db
+- 決定: `Task` に `description?: string` を追加（vision.md のデータモデルには記載なし）
+- 採用理由: タスクカードの展開表示で「詳細メモ」を入力・表示するため実装時に追加
+- 将来見直し条件: vision.md のデータモデルセクションに正式追記する
+- 影響ファイル: `src/lib/db.ts`, `src/components/home/task-add-modal.tsx`, `src/components/home/task-edit-modal.tsx`, `src/components/home/task-card.tsx`
+
+## Future Changes
+- Codex CLI を本格導入した場合、state.md の Write Lock 運用を厳格化
+- ユーザー数増加時に Observability Gate の本格対応
+
+## D-014: pm-zero v9.3移行 — tasks.md と repo-map.md を一次構造に追加
+- 日付: 2026-05-15
+- 対象: process
+- 決定: 実行タスクは `tasks.md`、現在ポインタは `docs/state.md`、リポジトリナビゲーションは `docs/repo-map.md` に分離する
+- 採用理由: pm-zero v9.3 の Task Ledger Gate / Repo Map Gate に合わせ、タスク状態と現在状態の重複を防ぐため
+- 不採用案: `docs/state.md` にタスク一覧を残す → `tasks.md` と責務が重複し、更新漏れが起きやすい
+- 将来見直し条件: pm-zero の次版で台帳責務が変更された場合
+
+## D-015: 検証コマンド — package.json と scripts/verify.mjs を一致させる
+- 日付: 2026-05-15
+- 対象: process
+- 決定: `pnpm typecheck`, `pnpm test`, `pnpm verify` を package.json に追加し、`scripts/verify.mjs` はそれらを呼ぶ
+- 採用理由: AGENTS.md / OS-KERNEL.md が要求するコマンドと実在する npm scripts がズレていたため
+- 不採用案: `npx tsc --noEmit` などを文書側に残す → v9.3標準コマンドと異なり、次セッションで迷う
+- 将来見直し条件: テストランナーをVitest/Playwrightへ移行した場合
+
+## D-016: パッケージ管理 — pnpmへ単一化
+- 日付: 2026-05-15
+- 対象: process
+- 決定: `pnpm-lock.yaml` を唯一のロックファイルとし、旧 `package-lock.json` は削除する
+- 採用理由: AGENTS.md / README.md / docs/repo-map.md がpnpmを一次パッケージマネージャーとして定義しており、npmロックが残ると依存更新経路が分岐するため
+- 不採用案: `package-lock.json` を残して注意書きだけ追加 → 次回の自動実行でnpm/pnpmの混在が再発しやすい
+- 将来見直し条件: プロジェクト標準をnpmへ戻す場合
+
+## D-013: 植物画面復旧 — plantState + 共通下部ナビ
+- 日付: 2026-05-15
+- 対象: UI / domain
+- 決定: 植物状態は既存の `plantState` 永続化を使い、下部ナビは `src/components/navigation/bottom-nav.tsx` に共通化する
+- 実例1: `/` の下部ナビに「ホーム / カレンダー / 植物」を表示し、植物タブから `/plant` へ遷移する
+- 実例2: `/all` の下部ナビも同じ3タブを使い、ページごとの複製差分で植物タブが消えないようにする
+- 実例3: `/plant` は今月の植物名、今週の完了数、成長段階、SVG植物を表示し、IndexedDB読み込み失敗時も画面全体を空にしない
+- 採用理由: リモート側で導入済みの `plantState` と同期しつつ、ナビ重複をなくすことで同種の表示欠落を防げるため
+- 不採用案: 各画面に下部ナビを個別実装し続ける → ページ追加時にタブ欠落が再発しやすい
+- 将来見直し条件: 月跨ぎ履歴、植物図鑑、手動育成状態など永続化が必要になった場合
+## D-017: pm-zero v9.4 Lean Task Ledger alignment
+
+- Date: 2026-05-16
+- Decision: Keep Task Plant project memory in AGENTS.md, tasks.md, docs/state.md, docs/repo-map.md, docs/decisions.md, and docs/issues.md.
+- Rationale: pm-zero v9.4 assigns reusable behavior, model defaults, and generic hooks to global config. The repo should keep only product facts, task state, and verification commands.
+- Consequence: Project-local Codex/MCP/hook scaffolds are removed unless a future task records a concrete deterministic need.
+
+## D-018: 植物報酬画像 — 写実的な生成写真アセットへ移行
+- 日付: 2026-05-17
+- 対象: ui / reward
+- 決定: 植物画面の報酬表現は、既存SVGイラストから、事前生成した超写実的な自然写真風アセットへ移行する方針とする。
+- 採用理由: タスク完了のインセンティブとして、自然で美しい花の写真体験がイラストより強く、月ごとの季節感も表現しやすいため。
+- 実例1: 花を主役にしつつ、梅は冬の枝、紫陽花は梅雨、コスモスは秋風など周囲の季節感を少し含める。
+- 実例2: 過度な幻想表現、非現実的な発光、作り物のような完全対称、花弁の破綻、余計な文字や人物は避ける。
+- 実例3: 各月の花ごとに5案生成し、選定後にアプリ同梱の固定アセットとして使う。実行時生成は報酬表示の即時性を損なうため避ける。
+- 将来見直し条件: API課金・生成運用を避けるため、D-019で無料写真素材へ方針変更済み。
+
+## D-019: 植物報酬画像 — 無料写真素材を事前同梱する
+- 日付: 2026-05-17
+- 対象: ui / reward / assets
+- 決定: 植物報酬画像は、GPT画像生成ではなく、無料利用可能なWeb写真素材をダウンロードしてアプリ用に編集・同梱する。
+- 採用理由: ユーザー専用アプリでAPI課金を避けたいこと、実写真の自然さを優先したいこと、既存写真を画面比率に合わせて編集すれば目的を満たせること。
+- 実例1: Unsplash等の写真ページで無料利用ライセンスを確認し、元URLを `docs/plant-reward-image-sources.md` に記録する。
+- 実例2: 人物・ブランド・ロゴ・文字が主役になる写真は避ける。
+- 実例3: 選定後に `public/plant-rewards/` 配下で画面用サイズへトリミング・圧縮する。
+- 将来見直し条件: 無料素材で花種や季節感の品質が不足する場合、ユーザー提供写真または有料素材を検討する。
+
+## D-020: pm-zero v9.4 -> v11 governance migration
+- Date: 2026-07-19
+- Target: OS/governance files (non-source)
+- Decision: Migrate all non-source governance files to pm-zero v11: CLAUDE.md becomes the
+  self-contained always-on ruleset; AGENTS.md and the Codex model-routing are removed
+  (v11 is Claude Code only); .claude/settings.json adopts the v11 project template
+  (bypassPermissions + guard-hook deny mirrors + autocompact 50); self-review is tiered
+  (Tier 1 fresh Sonnet default, Tier 2 Opus for top-risk classes).
+- Rationale: v11 is the Budget-Bound Autonomous Solo-Dev OS. It reasons from a hard Pro-plan
+  budget and a single Claude Code agent, so the dual-agent (Codex) split, the AGENTS.md
+  adapter layer, and the mandatory-Opus review gate are dropped. Behavior lives in a lean
+  CLAUDE.md that reloads every turn; project facts stay in the git ledger.
+- Consequence: Removed AGENTS.md (folded into CLAUDE.md), docs/codex-prompt.md (Codex-only),
+  and the deprecated tombstones OS-KERNEL.md and MEMORY.md (v11 auto-memory is user-level,
+  not a project stub). scripts/verify.mjs no longer requires AGENTS.md. Historical tasks.md
+  rows keep their "Codex CLI" owner for evidence integrity; docs/implementation-plan.md is
+  retained unchanged as a historical planning artifact.
+- Future review: if Codex or another second agent is reintroduced, re-add a thin adapter and
+  record the concrete need here.
+
+## D-021: 2026デザイン刷新 — メディア駆動ダークファースト + ネイティブView Transitions
+- 日付: 2026-07-19
+- 対象: ui / design-system / accessibility
+- 決定: ダークモードは prefers-color-scheme メディアクエリ駆動（クラストグルなし・JSゼロ・FOUCなし）。
+  全画面の色は globals.css のセマンティックトークン（primary/brand/category/success/destructive）
+  経由に統一し、ライト専用のパレット直書きを廃止。リストの並び替えアニメーションは依存追加なしの
+  ネイティブ View Transitions API + flushSync（`src/lib/view-transition.ts`）で実装。
+- 採用理由: 単一ユーザーのAndroid Chrome PWAではOS設定追従が最小実装で最大効果。orange-500直書きは
+  ダーク非対応かつ白文字コントラスト2.8:1でWCAG AA不合格のため、AA準拠ペア（橙地+濃茶文字、
+  テキスト用は--brand）へ置換。WCAG 2.2対応として userScalable:false 撤廃、24px以上のタッチ
+  ターゲット、progressbarロール、prefers-reduced-motion 全面対応を同時に実施。
+- 実在例:
+  - ホームのヒーローカード: SVG進捗リング + ストリークチップ + 植物ステータスチップ（/plant導線）
+  - タスクカード: pathLength=1 のSVGチェック描画、background-size遷移の取り消し線、
+    grid-template-rows 0fr→1fr の展開、期限超過シグナル
+  - チェック色は text-background / text-primary-foreground で両スキームの可読性を自動維持
+- 不採用案: Biome移行（eslint-config-next 16のNext/react-hooksルール喪失リスク > 速度益）、
+  Motion/Framer Motion導入（View Transitions APIで代替、バンドル増を回避）、
+  クラスベースdarkトグル（状態管理とFOUC対策が不要に増える）、
+  Server Actions/PPR適用（サーバーレスのローカルファーストPWAには適用対象外）
+- 将来見直し条件: 手動テーマ切替の要望が出た場合、またはブラウザのView Transitions挙動差が
+  問題化した場合
+
+## D-022: 報酬システムv2 — アイスボーン風「素材ドロップ×調査記録」+ 月次累積成長
+- 日付: 2026-07-19
+- 対象: reward / db / ui / audio / concept
+- 決定: 報酬系を「クエスト達成→素材ドロップ（変動報酬）→調査記録（コレクション）」の
+  モンスターハンター：アイスボーン風ループに刷新する。植物成長は週次リセットを廃止し
+  月内累積制（月替わりで新種到来=物語的リフレッシュ）へ変更。Dexie version(3) で
+  `drops` テーブルを追加し、`plantState` は upgrade 内でタスクから月間完了数を再計算して
+  移行（既存データ喪失なし）。
+- 採用理由（外部調査の裏付け）: ADHDは遅延報酬を急峻に割り引くが努力量は割り引かない
+  （完了の瞬間に報酬を置くのが正解）。変動比率強化+コレクションは最も消去されにくい
+  動機構造で、天井（PITY_LIMIT=12）と初回保証（1日の最初のドロップはRARE4以上）で
+  挫折と着手障壁を同時に手当てする。週次リセットは「毎週進捗を没収される」無自覚の罰
+  だったため廃止。
+- IP境界: Capcomの固有名詞・アセットは一切埋め込まない。移植したのは構造（受注→達成→
+  剥ぎ取り/ドロップ→図鑑）、語彙の一般語部分（クエスト/素材/RARE/調査）、および
+  雪原×炉の火のトーンのみ。素材名は全てオリジナル。
+- 実装詳細:
+  - 効果音は音声アセットゼロのWeb Audio合成。全音Cメジャーペンタトニックの単一
+    パレットで、レアリティは同一上昇モチーフの延長（認知一貫性・ランダム疲れ防止）。
+    1アクション=最大「音1+動き1+振動1」。localStorageでミュート永続化、振動も連動。
+  - 押下エフェクトは全ボタン共通の `btn-squish`（スプリング戻り）1種のみ。
+  - ページ遷移は `next-view-transitions`（追加依存・約2kB）でハンターノート風の
+    ページめくり。方向は `html[data-page-turn]` 属性でCSS制御。
+  - パレットはフロスト（寒色ニュートラル+氷シアン`--frost`+レア金`--gold`）へ
+    色相シフト。炉の火のオレンジ（primary/brand）は継続。
+- 不採用案: 実IPアセットの同梱（権利リスク・公開リポジトリ）、ドロップの取り消し
+  （無罰原則に反する）、完了毎の固定演出のみ（変動性がなく飽きる）。
+- 将来見直し条件: T018（バウンティボード+出発ボタン+ストリーク保険）実装時に
+  ドロップ率・天井値を実使用データで再調整する。
+
+## D-023: プロダクト名変更 — Grimoire（旧 Task Plant）+ アイコン刷新
+- 日付: 2026-07-19
+- 対象: branding / assets / infra
+- 決定: プロダクト名を「Grimoire」へ変更。適用範囲は package.json name、PWA表示名
+  （manifest name/short_name、layout metadata title/applicationName/appleWebApp.title —
+  スマホのホーム画面に表示される名前）、README、CLAUDE.md/CONTEXT.md ヘッダ、
+  verify バナー、GitHubリポジトリ名（snowtone-ai/task-plant → snowtone-ai/grimoire、
+  旧URLはGitHubが自動リダイレクト）。歴史的記録（decisions の過去エントリ、tasks.md の
+  過去行、docs/implementation-plan.md）は証跡保全のため書き換えない。
+- アイコン: 手描きSVG（public/icon.svg）を新規作成 — 凍夜の紺グラデーション地に、
+  フロストシアンの雪ルーン円環と炉の火の宝珠を戴く魔導書、金の留め具、エンバーの栞。
+  既存の sharp パイプライン（scripts/gen-icons.mjs）で 192/512 + maskable 2種を再生成。
+  Canva生成ではなくSVG手描きを選択（リポジトリ内で再現可能・依存最小・ベクター原本）。
+  sharp は require されていたのに未宣言だったため devDependency として明示追加。
+- 併せて修正: gen-icons.mjs の maskable 変換が背景rectごと0.8倍縮小して外周10%が
+  透過になる潜在バグを、背景フルブリード+コンテンツのみ縮小に修正。
+- ローカルフォルダ名（プロダクト/task-plant）はセッション稼働中のためリネーム不可。
+  ユーザーがセッション終了後に手動でリネームする（HANDOFF-JA.md 参照）。
+- Vercelプロジェクト名は変更しない（ユーザー決定 2026-07-19）: 名称変更は本番URL
+  =IndexedDBのオリジンを変え、スマホ内の全データが到達不能になるため現状維持。
+- 将来見直し条件: なし
+
+## D-024: アイスボーン・ビスタ — フロントエンドのアートディレクション
+- 日付: 2026-07-19
+- 対象: ui / art-direction
+- 決定: 調査（渡りの凍て地=雪原・氷窟・温泉の共存 / セリエナ=雪夜に灯る地熱と炉の
+  琥珀光 / MHW UI=暗色パネル+金琥珀ハイライト+儀礼的欧文）に基づき、以下を実装:
+  - 大気レイヤー: body::before の固定背景1枚に「オーロラ(frost)+紫のフリンジ+
+    地平線下の炉火(brand)+夜藍グラデ」を集約。ライトは「陽光の雪原」バリアント。
+    各画面ルートは透過にしてカードが空に浮かぶ構成。
+  - 金の飾りヘアライン: ヒーローカード上辺・下部ナビ上辺・図鑑セクション見出し下。
+  - 欧文ディスプレイ書体: Cinzel（next/font、latin 600/700のみ）をオーバーライン
+    （GRIMOIRE / FIELD MAP / BOTANICAL LAB / SURVEY NOTES）と QUEST CLEAR バナー
+    限定で使用。和文は従来のシステムサンセリフ（可読性優先）。
+  - 主要CTA: エンバーグラデ+インセットハイライトで「炉の火」の質感。進捗リングは
+    金→琥珀のグラデストローク。
+  - 雪: 研究所画面のみ、8粒の低速CSS降雪（開花写真中と reduced-motion では非表示）。
+- 抑制ルール: 環境演出は「背景1枚+ヘアライン+書体+雪(1画面)」に限定し、
+  カード・リスト・フォームは無装飾を維持（ランダム刺激疲れの防止）。
+- 不採用案: 全画面パーティクル常時表示（過剰刺激）、和文へのディスプレイ書体適用
+  （JPグリフ非対応・可読性低下）、backdrop-blurのカード全面適用（低価格帯Android
+  でのスクロール性能劣化）。
+- 将来見直し条件: 実機で降雪・大気レイヤーの体感性能に問題が出た場合
+
+## D-025: 報酬ステージ2 — 調査依頼（バウンティ）+ 出発ボタン + ストリーク保険
+- 日付: 2026-07-20
+- 対象: reward / domain / ui
+- 決定: 段階導入プランのステージ2として以下を実装:
+  - 日替わり調査依頼3件（出発1件 / 達成N件 / 追加1件）。N は日付キーの決定的ハッシュで
+    1-3を選択（同じ日は何度開いても同じ依頼=信頼性、日ごとの変動=新奇性）。達成した
+    依頼は既存の grantDropForTask 経路で**自動受給**し、受給ボタンを置かない
+    （ADHDに「受け取り操作の記憶」を要求しない）。
+  - 受給台帳は新テーブルを作らず、drops の一意インデックス &[taskId+dateKey] に
+    `bounty:<id>` を taskId として記録して兼用。**DB v4 不要**（マイグレーション
+    リスクゼロ）。ドロップは没収しない無罰原則をそのまま継承。
+  - 出発ボタン（Footprints）: 未完了カードに配置。タップ=着手宣言のみで、完了もタイマーも
+    要求しない。ADHDの遅延割引研究が示す「着手そのものが最大の障壁」への直接介入。
+    記録は当日限りの localStorage（`departed-<date>`）— 失っても永続価値が
+    無いデータをIndexedDBに入れない。
+  - ストリーク保険: calcStreakCount を pure domain 関数へ抽出。今日の未完了は猶予
+    （フリーズ非消費）、連鎖ごとに1日のフリーズが欠落日/未達成日を吸収、2連続ギャップで
+    停止。Duolingo の streak freeze に倣った無罰設計で「1日の失敗=全損」を廃止。
+- 不採用案: バウンティ専用テーブル+DB v4（一意インデックス兼用で十分・移行リスク回避）、
+  受給ボタン式（操作記憶の要求は着手障壁の再生産）、出発状態のIndexedDB永続化
+  （翌日に意味を持たないデータの永続化はノイズ）。
+- 将来見直し条件: 依頼の種類を増やす場合（カテゴリ別依頼など）は claimId 名前空間を
+  `bounty:` 配下で拡張する。
+
+## D-026: JSONバックアップ — オリジン移行を安全化するエクスポート/インポート
+- 日付: 2026-07-20
+- 対象: data-integrity / ui
+- 決定: /book 画面末尾に ARCHIVE カードを追加し、tasks/streaks/plantState/drops の
+  4テーブルを versioned JSON（app:"grimoire", version:3）でエクスポート/インポート
+  できるようにする。インポートは形状検証（日本語エラー）→ 件数を明示した確認UI →
+  単一トランザクション内 bulkPut upsert。既存データは削除せず、drops は
+  [taskId+dateKey] で重複排除し auto-increment id を剥がして取り込む。
+- 採用理由: Vercelプロジェクト名変更を見送った根本理由が「オリジン変更=IndexedDB
+  全損」だったため（D-023）。バックアップがあれば将来の独自ドメイン移行・端末変更・
+  ブラウザデータ消去のいずれにも耐えられる。ローカルファーストPWAの唯一の
+  データ保全手段。
+- 不採用案: クラウド同期（サーバーレス方針に反する・認証が必要）、自動定期
+  バックアップ（ファイルシステムアクセスが必要でPWA制約が大きい。手動導線で十分）。
+- 将来見直し条件: DBスキーマが v4 になった場合は parseBackup の版数許容範囲を更新する。
+
+## D-027: カレンダー刷新 — 調査記録ヒートマップ（残り火の狩猟記録）
+- 日付: 2026-07-21
+- 対象: ui / calendar / reward-concept
+- 背景: カテゴリ分類（生活/大学/就活）を撤廃（b31d66e）した結果、カレンダーの各マスから
+  カテゴリ色ドットが消え、タスクがある日でも日付の数字しか出ず「タスクの有無すら分からない
+  空白」になっていた。FIELD MAP 画面が受動的な未来タスク閲覧専用に退化していた。
+- 第一原理: カレンダーの本質的価値は「時間軸」であり、永続利用アプリで最も長生きする
+  データ構造。ここを既存のアイスボーン風「調査記録」テーマ（D-022）の時間軸ビューに使えば、
+  使うほど価値が増す資産になる。
+- 3スケルトン比較の結論（採用: 残り火ヒートマップ）:
+  - A 残り火ヒートマップ（GitHub貢献グラフ×MHW狩猟記録×Apple Fitness）＝採用
+  - B 単純なドット復活 → 「有効活用」「永続価値」を満たさず不採用
+  - C ドロップ宝の地図 → /book と重複し、ドロップ日以外は空白のまま不採用
+  Aのみがユーザーの4要件（空白解消/画面の有効活用/永続利用のクリエイティブ/調査記録テーマ）
+  を同時に満たし、既存トークンのみでDBマイグレーション不要。
+- 決定:
+  - 過去/今日のマスを、その日に「完了したクエスト数」（＝努力の日 completedAt スライス）に
+    応じた残り火（--brand）濃度で塗る。tier 0-3（0/1/2-3/4+）を color-mix で 0/18/30/42% に
+    マップ。上限を 42% に固定し、両スキームで日付数字(--foreground)のコントラストを維持
+    （D-024 の環境演出抑制ルールにも整合）。tier3 のみ内側に残り火リング。
+  - 予定/未完クエストのある日は霜シアン(--frost)の小ドット＝「ここにクエストがある」affordance
+    復活（過去・未来問わず）。カテゴリドット撤廃で失われた「タスクの存在表示」を意味を変えて再建。
+  - グリッド下に「SURVEY LOG」統計ストリップ（討伐/活動日/予定 + 通算件数）を追加し、
+    タップ前でも画面単体で物語を語る（有効活用）。通算は tasks の completedAt から導出（plantState
+    の lifetimeCompleted はドリフトが既知のため不使用 = T017 レビュー指摘の回避）。
+  - ドメインは純粋関数（buildCalendarSummary / summarizeCalendarMonth / completionHeatLevel）
+    に切り出し node:test で検証。dead code だった buildCategoryDotMap と空の all-constants.ts を撤去。
+- 罰則なし原則の遵守(D-022/D-025): 過去の未完了を赤で咎めない。過去は達成の記録として温かく
+  光るだけ（期限切れの警告は従来どおりリスト表示側に限定）。
+- IP境界: 構造（記録の蓄積可視化）と一般語彙（討伐/調査記録）のみ。固有名詞・アセットは不使用。
+- 将来見直し条件: 反復タスクの過去完了履歴を残す設計（現在は completedAt が最終完了日のみ）を
+  導入する場合、ヒートマップの完了カウント源を drops 履歴等へ拡張する。
+
+## D-028: 調査記録の永続化 — 季節で更新される「年代記」
+- 日付: 2026-07-21
+- 対象: reward / book / concept
+- 背景: ユーザーの本質的懸念 =「報酬が短期前提で、いずれ飽きて着手インセンティブとして
+  死ぬのでは」。第一原理: 有限カタログはコンプで終わり、固定報酬は快楽適応で必ず飽きる。
+  習慣化に最も強いのは「新規性の定期投入」+「無限に積み上がる記録」。ユーザーは4案
+  （自己ベスト/季節更新/人生目標接続/様子見）から「季節で新規性を補給」を選択。
+- 決定: /book 調査記録の先頭に「CHRONICLE / 年代記」を追加。既存の12ヶ月植物テーマを
+  時間軸に展開し、(1) 今月の調査対象（当月の花）を「調査中」ライブページとして提示＝
+  毎月新しい対象が届く新規性、(2) 過去の月を討伐/希少/活動日つきの年代記カードとして
+  新しい順に無限追記＝コンプの無い蓄積。全て drops（剥奪なしの永久記録）の dateKey/rarity
+  から純関数 buildChronicle で導出し、DBマイグレーション不要。
+- 実装: src/lib/domain/chronicle.ts（buildChronicle）、rewardDb.getChronicle、
+  book-screen の ChronicleSection。当月ページの花は RARE4 絵文字で表現し、未発見の
+  RARE8 写真をネタバレしない。
+- 不採用: 自己ベスト主義（動く参照点／将来の拡張余地として保留）、人生目標接続
+  （設計が重く抽象度が高い）、専用テーブル追加（drops から導出でき移行リスク回避）。
+- 将来見直し条件: 年代記が長くなった場合の折り畳み／年区切り、または自己ベスト軸の追加。
+
+## D-029: レアリティを正直な RARE 1-8 ラダーへ（歯抜け解消）
+- 日付: 2026-07-21
+- 対象: reward / drops / ui
+- 背景: ユーザー指摘「RARE が 8 まであるのに 8 種類分ない（1/4/8 の飛び番）はおかしい」。
+  実在ゲーム調査(MHW=本作アート元)で裏付け: MHのレアリティは連続ラダーで全ランクに実物が
+  あり歯抜けなし。ガチャ調査では高レアほど指数的に低下＋天井が定石。
+- 決定: レアリティを 1/4/8 の3段階から RARE 1-8 の全8段階へ拡張。後方互換のため既存の
+  保存済みドロップ(rarity 1/4/8, id c-*/r-*/s-*)はランク据え置きで温存し、空いていた
+  2/3/5/6/7 に新規の凍て地素材プールを追加（良質素材/結晶/特殊素材/貴重標本/秘蔵の遺物、
+  計29種）。DropRarity 型を 1-8 に、DROP_CATALOG は 36→63 種。
+- 確率設計（ガチャのカーブ準拠・単調減少・合計1）: 8:2.5% 7:3.5% 6:6% 5:9% 4:12%
+  3:17% 2:22% 1:28%。天井(PITY_LIMIT=12→RARE8)と初回保証(1日最初はRARE4以上)は継続。
+  pickDrop は POOL_BY_RARITY で全ランク対応、当月4倍重みは季節プール(4/8)のみに作用。
+- 演出は「1動作1音・認識性」原則(D-022)を守り、8段階を3バケットに束ねる:
+  playClear/fireDropConfetti/drop-reveal を低(1-3)/中(4-6)/高(7-8)で強度分け。
+  バッジ配色は MHW のレアリティ色（低=白/緑→中=青/紫→高=琥珀/金）を本アプリの
+  frost/gold/ember トークンへ翻訳し昇順化。図鑑は8セクションを config 駆動で描画。
+- IP境界: 借用したのは構造（全ランク実装）と一般語（RARE/討伐/素材）のみ。素材名は全て
+  オリジナル。Capcom の固有名詞・アセットは不使用。
+- 将来見直し条件: 実使用データでレート/天井を再調整、または各ランクの素材数を拡充する場合。
+
+## D-030: 家族マルチユーザー対応 — アーキテクチャは無変更、Geminiキーのみサーバー移設
+- 日付: 2026-08-15
+- 対象: architecture / api / security / deploy
+- 背景: 開発者以外に家族2名がこのPWAを使いたいと申し出た。事前調査でユーザーに3問確認:
+  (1) 各自が自分のスマホにインストール、(2) データはローカルのみ維持（クラウド同期は導入
+  しない）、(3) Google連携も各自が自分のGoogleアカウントで使う——のいずれも「推奨」を選択。
+- 発見: tasks/streaks/plantState/drops は Dexie(IndexedDB) でブラウザ単位に既に分離されて
+  おり、Google OAuth(GIS)もトークンをメモリ保持するだけの端末単位フローだった。つまり
+  「各自が別端末で使う」運用ならユーザー分離のためのコード変更は一切不要だった。
+- 発見(Vercel MCP経由): SSO Protection が deploymentType=all で有効化されており、かつ
+  本プロジェクトはカスタムドメイン未設定のため本番URL(task-plant.vercel.app)を含む
+  全デプロイがVercelチームログインでガードされていた。家族は今のままでは開けない。
+- 決定: Vercel の ssoProtection を deploymentType=preview に変更（本番のみ解除、Preview
+  は保護継続）。これにより本番URLが公開状態になる副作用として、クライアントJSに直埋め
+  されていた `NEXT_PUBLIC_GEMINI_API_KEY`(音声タスク解析・Gmail取り込みで使用)が誰でも
+  抜き取れる状態になるため、新設の `src/app/api/gemini/generate` ルートへ両呼び出し口を
+  移設し、キーをサーバー専用の `GEMINI_API_KEY` に変更(PR #19, T025)。
+- 不採用案: クラウド同期(Supabase等)導入によるマルチユーザー化 → ユーザーが明示的に
+  ローカルのみ維持を選択したため不採用。同一端末プロフィール切替UI → 各自が別端末を使う
+  運用のため不要と判断。
+- 未実施(人間の手動対応が必要、エージェントは非対応):
+  1. Vercel の環境変数に `GEMINI_API_KEY`(現行キーと同じ値、`NEXT_PUBLIC_`なし)を
+     Production/Preview両方に追加して再デプロイ — .env*の値はエージェントが読み書き禁止。
+  2. Google Cloud OAuth同意画面の公開ステータス確認 — 「テスト中」の場合、家族のGoogle
+     アカウントをテストユーザーとして追加しないとGmail/Calendar連携でログインできない。
+- 将来見直し条件: 将来的に端末を跨いだデータ同期や引き継ぎが必要になった場合、クラウド
+  同期(認証+DBスキーマ)の導入を再検討する。
+
+## D-031: 素材カタログ5倍拡充(63→308種)と報酬ホットパスの脱フルスキャン
+- 日付: 2026-08-15
+- 対象: reward / drops / performance
+- 背景: 日常的な長期使用でドロップの反復が目立つというユーザー要望。加えて家族2名が新規に使い
+  始めるため、数年単位の使用に耐える設計かを事前に検証する必要があった。
+- 決定(カタログ): 汎用ランクを全て拡充(RARE1 12→60, RARE2/3 6→44, RARE5 6→40, RARE6 5→34,
+  RARE7 4→26)。合計 63→308種(約4.9倍)。名称・フレーバーは既存の凍て地調査ボイスを踏襲した
+  オリジナルのみ(Capcom固有名詞は不使用)。
+- 決定(RARE4の構造): RARE4は「初回保証(1日最初の完了はRARE4以上)」により最も目にするランクだが
+  12種しかなく反復が最も強かった。`RARE_DROPS`(12種の正典)は不変のまま維持し(book-screenが
+  月→絵文字マップをこれから導出しており、月あたり1件でなければ順序依存になるため)、採取形態違いの
+  `RARE4_VARIANT_DROPS`(各月3種=36件)を追加、`RARE4_POOL`を新設して`POOL_BY_RARITY[4]`と
+  図鑑のRARE4節に接続。当月4倍重みの比率(27%)は拡充前後で不変。
+- 決定(RARE8): 写真実体が12枚しかないため12種のまま据え置き。季節の絶景=年間を通じた収集目標
+  というD-028/D-029の設計意図を維持する。
+- 決定(後方互換): 既存63件の id/name/emoji/color/flavor/rarity は1バイトも変更しない。これらは
+  ユーザーのIndexedDB `drops` 台帳の外部キーであり、`getCollection`は解決できないidのレコードを
+  黙って読み飛ばす=収集履歴の一部が消える。旧63 id全件をテストに固定し孤児化を防いだ。
+- 決定(性能): `grantDropForTask`はタスク完了のたびに`db.drops.toArray()`で台帳全件を読み3回走査して
+  いた。`drops`は追記専用でinstallの寿命だけ増え続けるため、使用年数に比例して完了操作が重くなる
+  (実測: 8000件時点でスキャン部分だけで約45ms、インデックス版は約9ms、差は件数に比例して拡大)。
+  天井カウンタ=rarityインデックス、初回判定=dateKeyインデックス、isNew=rarity絞り込みfilterに置換し、
+  ホットパスから全件ロードを撤廃。カタログが5倍になったため`getDropById`もMap化
+  (`getCollection`がレコード1件ごとに呼ぶためO(件数×カタログ)になっていた)。
+- 決定(テスト): Dexieのクエリ記法はtypecheckで検証できないため、`fake-indexeddb`をdevDependencyに
+  追加し報酬書き込みパスを実際に実行するテストを新設(付与/重複防止/天井/初回保証/isNew/
+  全件ロードしないことの保証)。併せて3年分の使用シミュレーション(天井違反なし・全ランク出現・
+  出現率・多様性・全アイテム到達可能性)を追加。
+- 不採用案: `dropId`インデックスを追加するDexie v4マイグレーション → isNewを完全にO(log n)に
+  できるが、実データに対するスキーマ変更のリスクに対し、rarity絞り込みで得られる改善で当面十分と判断。
+- 副作用(意図的): 図鑑の収集率分母が63→308になるため、既存ユーザーの表示上の達成率は一時的に
+  大きく下がる。収集目標が増えたことの正直な反映であり、隠さない。
+- 将来見直し条件: RARE8の写真素材を追加できる場合、または実使用データで特定ランクの反復が
+  再び目立つ場合。
+
+## D-032: 報酬素材の世界観を単一モチーフから8地域の世界アトラス構造へ全面刷新(308→436種)
+- 日付: 2026-08-15
+- 対象: reward / drops / ui
+- 背景: ユーザー指摘「今の報酬はランダムなアイテムに見える。地域・文化・文明・時代・歴史等の
+  モチーフに沿って戦略的・構造的に構築すれば、アイテム同士に一貫性やストーリー性が生まれる」。
+  ビジュアル面も「最新技術/UIを活かしたデザイン」への刷新を要望。事前確認でユーザーに3問確認し、
+  「全面刷新して良い(既存308種のIDは維持不要)」「400-500種の最適な数は本エージェントが戦略的に
+  策定」「上位レアリティ(RARE6-8)はAI生成イラストを追加」「設計から実装まで一気に今セッションで
+  通す(予算超過リスクは許容)」のいずれも回答を得た。
+- 決定(世界観): 単一の「凍て地調査」モチーフを、研究本部(引き続き凍て地)が世界8地域へ調査隊を
+  派遣するという世界アトラス構造に拡張。8地域はいずれも実在の地域・文明・神話・歴史をモチーフに
+  ファンタジー要素を統合したオリジナル設定(商標・固有名詞は不使用、D-029のIP境界方針を継続):
+  frost(極北氷雪圏、既存モチーフを本拠地として温存)、aegis(陽光の地中海遺跡群)、
+  caravan(大砂漠の隊商路)、canopy(密林の古代神殿)、lantern(東方古都の四季庭園)、
+  grove(北方霧林の大樹)、savanna(大草原の王国跡)、tide(南海群島の潮流路)。
+  新設 `src/lib/domain/regions.ts` が `RegionDef`(id/name/subtitle/blurb/accent)を保持。
+- 決定(RARE4/RARE8は意図的に対象外): RARE4(月替わりの希少植物)とRARE8(季節の絶景写真)は、
+  本部の「季節庭園(garden)」という別軸として温存し、id・名称・写真は1バイトも変更しない。
+  理由は技術的制約: RARE8は実写真ファイル(`public/plant-rewards/`)に1:1で紐づき、RARE4/8は
+  book-screenの月→絵文字マップや年代記(D-028)の土台であり、「作り直す」対象になり得ない。
+  全面刷新の承認はランク1/2/3/5/6/7(地域素材)に適用した。
+  訂正(2026-08-15 Tier2レビュー指摘): RARE4の12種canonicalとRARE8の12種(計24件、
+  `rareFromSpecies`/`ssrFromSpecies`が生成)のflavor文のみ、世界アトラス化に合わせて
+  「研究所で」→「本部で」「一面の」→「本部の庭に広がる一面の」と地の文を調整した。
+  RARE4_VARIANT_DROPS(36件)のflavorは本当に無変更。id・名称・写真・月・色はこの24件も含め
+  全60件が完全不変。
+- 決定(規模): 400-500種の指示に対し436種(8地域×47種+季節庭園60種)を採用。地域ごとの内訳は
+  RARE1:11 RARE2:10 RARE3:9 RARE5:7 RARE6:6 RARE7:4(地域あたり計47、8地域で376) +
+  RARE4:48 RARE8:12(季節庭園、既存据え置き)。ランクが上がるほど地域あたりの点数が減る設計は
+  「レアなランクほど選択肢を絞って特別感を保つ」というD-031の考え方を踏襲。frost地域の
+  47種は、既存の308種から評価の高いものを選び再録した(flavor文はそのまま、id/regionのみ新規)。
+- 決定(後方互換): 明示的に破棄。旧308件のidは1件も温存していない(D-031の「既存idは1バイトも
+  変えない」方針からの意図的な転換)。ユーザーの承認理由: (1) 世界観そのものを変える規模の依頼、
+  (2) 家族はまだ使い始めたばかりで蓄積が薄い。影響は把握済み: 旧idを参照する`drops`台帳の
+  レコードは`getDropById`が解決できず`getCollection`が黙って読み飛ばす(既存の設計通りの
+  縮退動作、クラッシュしない)。テスト`drop-catalog.test.mjs`の旧63id固定テストは削除し、
+  代わりに構造的な不変条件(地域の実在性、ランクとgarden/expedition地域の対応、地域ごとの
+  全ランク充足)を検証するテストに置き換えた。
+- 決定(データ構造): `src/lib/domain/reward-catalog/{frost,aegis,caravan,canopy,lantern,
+  grove,savanna,tide}.ts` に地域ごとのランク別配列(`FROST_RARE1`等)を分離し、`drops.ts`が
+  importして結合。1ファイル400+件の一枚岩を避け、将来の地域追加・個別編集を容易にする狙い。
+  `DropDef`に`region: string`を追加(garden/8地域のいずれか)。確率カーブ・天井・初回保証の
+  ロジック(`decideRarity`/`pickDrop`)は完全に不変。
+- 決定(ビジュアル): 画像アセットを増やさず、CSSのみで「現在の技術を活かした」デザインへ刷新。
+  発見済みアイテムのカードに、アイテム固有色と地域アクセントカラーを`color-mix`で重ねた
+  放射状グラデーション背景を適用し、フラットな単色丸アイコンから脱却。RARE6-8は地域色の
+  発光ボーダー(box-shadow)を追加し箔押し風の質感を付与。カード左上に地域を示す小さなドット
+  (スクリーンリーダー向けに地域名をsr-only/titleで併記)。図鑑冒頭に新設「EXPEDITIONS 遠征記録」
+  セクション(8地域の横スクロールカード、地域ごとの発見数/総数)を追加し、ランク別セクションに
+  地域という新しい閲覧軸を与えた。
+- 不採用/未実施(AI生成イラスト、RARE6-8向け): ユーザーは上位レアリティへのAI生成イラスト追加を
+  希望したが、本エージェントには画像生成ツール/APIキーへのアクセスがなく(`GEMINI_API_KEY`は
+  `.env*`にあり読み取り禁止、画像生成モデルの呼び出しも今回の実行環境には未接続)、その場で
+  生成することは不可能だった。`DropDef`に将来`illustration?: string`のような差し込み枠を
+  追加することは可能だが、実データ生成は別途、ユーザー自身のキーで動かすスクリプトとして
+  切り出すのが現実的(未着手・将来タスク候補)。当面はCSSベースの箔カードで代替。
+- 将来見直し条件: 実際にAI生成イラストを追加する場合(別スクリプト+ユーザーのAPIキーが必要)、
+  9番目以降の地域を追加する場合、または地域ごとのアイテム数バランスを実使用データで見直す場合。
+
+## D-033: GitHub Dependabotアラート62件(High25/Medium33/Low4)を全件解消
+
+- 日付: 2026-08-15
+- 対象: dependencies / build / deploy
+- 背景: PR #20マージ後、GitHubから default branch に62件のDependabotアラートが検出された旨の
+  通知(push時のremote message)。全件がpnpm-lock.yaml上の間接依存で、直接依存としてはどれも
+  package.jsonに現れない。ユーザーから全件対応の指示。
+- 決定(shadcn CLIの依存ツリーを縮小): アラート最大の発生源は `shadcn`(shadcn/ui CLI、
+  dependencies直下)経由の`@modelcontextprotocol/sdk`→`@hono/node-server`→`hono`鎖で、
+  hono関連だけで約25件、加えてip-address/qs/body-parser/`brace-expansion`の1系統もこの鎖。
+  `shadcn`パッケージ自体はCLIコード(コンポーネント追加コマンド)だが、`src/app/globals.css`が
+  `@import "shadcn/tailwind.css";`でこのパッケージ同梱のプリセットCSS(デザイントークンの土台)を
+  読み込んでおり、ビルドに必須と判明(削除して`next build`が壊れることを実地で確認、後述の
+  トラブルシュートを参照)。パッケージ自体は削除できないため、`pnpm.overrides`でhono/
+  @hono/node-server/ip-address/qs/body-parserの脆弱バージョンのみを個別にピン留めした。
+- 決定(Next.js 16.2.11→16.3.1、eslint-config-next 16.2.2→16.3.1): postcss(8.4.31)と
+  nanoid(3.3.16経由)、sharp(0.34.5)がいずれもNext.js自身が内部で要求するバージョンで、
+  Next側が新しいパッチをリリース済みなら追従するのが本来の直し方だと判断。実際に16.3.1は
+  postcss@8.5.23・sharp@^0.35.3を自ら要求しており、overrideなしでこの3件が解消した。
+  eslint-config-nextはNextのメジャー/マイナーと揃えるのが通例のため同時に16.3.1へ。
+- 決定(残りはpnpm.overridesでピン留め): 上記以外はすべてdev/build時のみ使われるツール
+  (eslint本体・typescript-eslint・next-pwaのworkbox-buildビルドステップ)の間接依存で、
+  実行時にブラウザへ配信されることはない。brace-expansionは呼び出し元のminimatchメジャー
+  バージョンが3系/2系/5系の3系統に分かれており、一括overrideだと非対応バージョンを強制
+  する恐れがあったため、`親パッケージ@バージョン>brace-expansion`の親スコープ付き
+  override構文で系統ごとに個別ピン留め。fast-uri/js-yaml/serialize-javascript/
+  @babel/core/@babel/plugin-transform-modules-systemjsも同様に親スコープを指定し、
+  意図しない他パッケージへの波及を防いだ。
+- トラブルシュート(記録価値あり): `shadcn`を一旦削除してから`^4.1.2`で入れ直したところ、
+  semverの範囲一致で最新の`4.18.0`が解決され、そちらのパッケージには`dist/tailwind.css`が
+  同梱されておらずビルドが壊れた(shadcn CLIが4.x系の途中でテンプレート配布方式を変更した
+  とみられる)。教訓: 元のロックファイルが解決していた具体バージョンが暗黙の前提になって
+  いる依存は、削除→再追加ではなく`package.json`側で完全一致バージョン(caret無し)に
+  固定してから触るべき。`shadcn`は`"4.1.2"`(caretなし)に固定した。また`next`を16.3.1へ
+  上げた直後、`.next`の古いTurbopackキャッシュが残っていたことが原因の別のビルド失敗
+  (`shadcn/tailwind.css`解決エラー)も一度発生した。`.next`削除で解消し、パッケージの
+  バージョンとは無関係な事象だったため、対応不要だった`tailwindcss`の追加バージョンアップは
+  取り消し、元の`^4`のまま維持した。
+- 検証: `pnpm audit`が0件になったことを確認(修正前は62件)。`pnpm verify`
+  (lint/typecheck/58テスト/build)全緑。sharpの実動作は`next build && next start`後に
+  `/_next/image?url=...`エンドポイントへ実リクエストし、200 + image/jpegでリサイズ画像が
+  返ることを確認済み(next/imageの最適化パイプラインがsharp@0.35.3で実際に機能することの
+  実地検証)。
+- 将来見直し条件: 次にDependabotアラートが出た際、同じ`pnpm.overrides`ブロックへの追記で
+  対応するか、根本パッケージ(shadcn/next-pwa等)のメジャーアップデートで自然解消するかを
+  都度判断する。`shadcn`のバージョンを次に上げるときは、事前に`dist/tailwind.css`が
+  同梱されているか(またはCSSの入手方法が変わっていないか)を必ず確認すること。
+
+## D-034: カレンダー・調査記録のリセット機能 — /book ARCHIVEカードに追加
+- 日付: 2026-08-15
+- 対象: data-integrity / ui
+- 背景: カレンダー（FIELD MAP）と調査記録（SURVEY NOTES/図鑑）はいずれも独自の永続状態を
+  持たず、`tasks`+`streaks`（カレンダー）と`drops`（調査記録）から導出される表示のみ
+  （D-027/D-032確認済み）。ユーザーからリセット機能の実装依頼があったが、範囲（何を消すか）
+  が本質的に曖昧だったため、実装前にAskUserQuestionで4点を確認した。
+- 決定(削除範囲): カレンダーのリセット = `tasks`+`streaks`を全削除（未完了の予定タスクも
+  含む）。調査記録のリセット = `drops`のみ全削除。`plantState`（/plant画面の今月の植物成長）
+  はどちらのリセットも対象外——ユーザーが明示的に選択しなかった範囲であり、拡大解釈しない。
+- 既知の副作用（意図的に対応せず）: カレンダーのリセットで`tasks`を全削除しても
+  `plantState.monthlyCompleted`は自動追随しない（`syncPlantStateFromTasks`は完了操作の
+  たびに呼ばれる関数で、リセット操作からは呼んでいない）。したがって直後は「今月の完了数」が
+  リセット前の値のまま残る。範囲外の変更として許容——次にタスクを1件完了すればその時点の
+  `syncPlantStateFromTasks`呼び出しで実際のタスク数から再計算され、乖離は自己修復する。
+- 決定(UI): 新規画面は作らず、/book の既存ARCHIVEカードの下に新設した「RESET」カードへ
+  2ボタンを追加。安全策はユーザー選択どおり「件数確認+二重確認ダイアログのみ」（自動
+  バックアップDLの強制はしない）——`task-edit-modal.tsx`のクエスト削除確認と同じ、
+  ワンタップで警告パネルを開き二段目のタップで実行する2タップパターンを踏襲し、
+  件数（例:「クエスト14件・ストリーク記録0件を完全に削除します」）を実行前に表示する。
+- 決定(実装): `src/lib/taskDb.ts`に`getCalendarResetCounts`/`resetCalendar`
+  （`db.transaction("rw", db.tasks, db.streaks, ...)`で両テーブルを`clear()`）、
+  `src/lib/rewardDb.ts`に`getSurveyResetCount`/`resetSurveyNotes`（`db.drops.clear()`）を
+  追加。両方とも`fake-indexeddb`で実際のDexie書き込みパスを検証するテストを追加
+  （他方のテーブルに影響しないことも確認）。
+- トラブルシュート(記録価値あり): `taskDb.ts`は自身の相対importに`.ts`拡張子を付けておらず
+  （`from "./db"`等、`db.ts`/`rewardDb.ts`は`.ts`付きで統一済み）、Node組み込みテスト
+  ランナーの型ストリッピングでは拡張子なし相対importが解決できず`ERR_MODULE_NOT_FOUND`に
+  なることが、`taskDb.ts`を初めてfake-indexeddbテストからimportした際に発覚した
+  （Next.js/webpackバンドルでは解決できていたため、テストが無い間は潜在バグとして
+  気づかれなかった）。`taskDb.ts`の相対import4件に`.ts`拡張子を追加して解消。
+- 不採用案: 自動バックアップDL強制（ユーザーが明示的に不要と回答）、専用設定画面の新設
+  （工数増に見合う理由なし、ARCHIVEカードで十分）、native `window.confirm()`の追加
+  （コードベースに前例がなく、既存の2タップ・インパネル確認パターンで十分と判断）。
+- Tier 1 fresh-context Sonnetレビューで実バグを1件検出・修正: 削除が失敗した場合、
+  `handleConfirm`のcatchでエラーメッセージをstateにセットしていたが、そのメッセージは
+  折りたたみ後（`!confirming`）のDOM分岐でしか描画しておらず、失敗時は`confirming`を
+  falseに戻していなかったため、ユーザーには何も表示されないまま確認パネルだけが
+  静かに再操作可能に戻っていた（データは失われない=Dexieトランザクションのロールバックは
+  正常だが、失敗が実質不可視だった）。開いたままの確認パネル側にも`aria-live`の
+  メッセージ枠を追加して解消。
+- 将来見直し条件: `plantState`もリセット対象に含めたい要望が出た場合、または
+  リセット操作の頻度が実使用で見えてきた場合に、より強い安全策（自動バックアップDL等）を
+  再検討する。
+- 訂正(2026-08-15 Tier2レビュー指摘、マージ前に修正済み): 初版の`pnpm.overrides`に4件の
+  堅牢性の問題があった。(1) `brace-expansion`の親スコープを`minimatch@3.1.5>`のように
+  完全一致バージョンで書いていたため、次にminimatchがパッチリリースされて解決バージョンが
+  ずれた瞬間、override が静かに無効化され脆弱版に戻る恐れがあった → `minimatch@3>`
+  のようにメジャー範囲指定に修正。(2) `body-parser`と`ip-address`をbare(親スコープなし)
+  overrideにしていたため、現時点では唯一のconsumer(それぞれexpress@5, express-rate-limit)
+  にしか影響しないが、将来別のconsumer(express4系はbody-parser 1.x必須、socks系は
+  ip-address 9系必須)が入った場合に非互換バージョンを強制する恐れがあった →
+  `express@5>body-parser`、`express-rate-limit>ip-address`にスコープ。(3) `nanoid`の
+  bare overrideはpostcss以外に将来consumerが増えた際に古い3系へ引き戻すリスクがあった →
+  `postcss>nanoid`にスコープ。(4) 逆に`@babel/core`と`js-yaml`は本来木の中で単一メジアー
+  系統しかない(それぞれdedupeで1バージョンに収束することを確認済み)のに複数の親スコープ
+  overrideに分割していて冗長だった → それぞれ単一のbare overrideに統一。
+  使い分けの基準(以後の追記もこれに従う): 対象パッケージが**同一ツリー内で複数の
+  非互換メジャー系統**を持つ場合は親スコープ(かつメジャー範囲指定、完全一致バージョンは
+  避ける)、**単一メジャー系統のみ**であることを`pnpm why`で確認できた場合はbareの
+  グローバルoverrideでよい。
+
+## D-035: pm-zero v11.1.1へのガバナンス移行 — グローバル(~/.claude)+プロジェクト双方を完全更新
+- 日付: 2026-08-15
+- 対象: process / security / governance（プロダクトコードは変更なし）
+- 背景: `プロダクト/pm-zero` リポジトリに v11.1.1 と v11.2 の2版が存在し、どちらを本
+  リポジトリの運用基盤とすべきか、ユーザーから選定+完全適用の指示があった。適用範囲を
+  「プロジェクトのみ」か「グローバル(~/.claude、他の全プロダクトに影響)も含めて完全移行」か
+  AskUserQuestionで確認し、ユーザーは「グローバルも含めて完全移行(推奨)」を選択した。
+- 決定(版選定): v11.1.1を採用。v11.2はグラフ再構築(`graph.mjs`/`loop.mjs`等の新規
+  メンテナンス対象スクリプト)を伴う設計変更であるのに対し、v11.1.1は既存ランタイムに対する
+  「設定のみの真正化パッチ」で新規保守コードがゼロ。本リポジトリおよびユーザーの他プロダクトは
+  いずれも個人利用規模であり、v11.2のグラフ機構が要求する規模に見合わないと判断した。
+- 決定(グローバル ~/.claude、v11.1.1のP1-P7/A1-A6修正を適用):
+  - P1: `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1`(サブエージェントの再帰スポーンを禁止)。
+  - P2: RTK(Rust Token Killer)を完全撤去。60-90%圧縮という主張がペア計測ベンチマークで
+    否定されたため、CLAUDE.md/settings.jsonの両方から関連記述を削除。
+  - P3: `CLAUDE_CODE_AUTO_COMPACT_WINDOW=188000`(絶対トークン数)を採用し、旧来の
+    パーセンテージ指定オーバーライドを置き換え。
+  - P4: モデル呼称をOpus 4.8→Opus 5に更新。Proプランでは200Kコンテキスト制約がある旨を
+    明記。
+  - P5: `permissions.allow: ["*"]`をbypassPermissions下でも明示。acceptEditsモードで
+    動くサブエージェントは、たとえメインがbypassPermissionsでも個別に確認を要求し得るため。
+  - P7(最重要のセキュリティ修正): `guard.mjs`にEdit/Write/MultiEdit/NotebookEditの
+    経路を新設し、`.env`/`.env.*`への書き込みも読み取りと同じ正規表現でブロックするように
+    した。従来はReadの二重ガードのみで書き込み経路が無防備だった——エージェントが`.env`を
+    新規作成してステージする方が、実際に秘密情報を漏えいさせる失敗モードに近い。
+  - A2: `PreCompact`フック追加。コンパクション前に`tasks.md`/`docs/state.md`/
+    `docs/issues.md`を`--no-verify`でチェックポイントコミット。
+  - A3: `StopFailure(rate_limit|overloaded)`フック追加。予算上限ヒット時も同様に
+    チェックポイントコミットし、`docs/issues.md`に一行記録。
+  - A4: `.claude/rules/*.md`(frontmatterの`paths:`グロブでマッチしたファイルを
+    Claudeが読んだ時のみロードされる)を、パス限定のSelf-Evolutionルールの新しい置き場として
+    導入。
+  - A5: バージョン再確認のタイミングをSession Start/Version Policy相当のセクションに明記。
+  - A6:「ペア計測での実測」原則をTooling節に明文化し、RTKのような未検証の圧縮率主張を
+    根拠なく採用しない方針を残す。
+  - fallbackModel: `["claude-sonnet-5"]`。ルーティング先モデル(Opusレビュー等)が
+    overloadedのときのみ代替に入り、Proプランのレート制限では発火しない。
+- 決定(プロジェクト側、task-plant): `CLAUDE.md`をv11.1.1へ全面書き換え(ヘッダ改版、
+  Continuity/Autonomy/Self-Review/Self-Evolution/Shell/Version Policy各節を更新、RTKの
+  行を完全削除)。`.claude/settings.json`は不正な`"Bash(rm -rf:*)"`(コロン構文の誤り、
+  一度もマッチしないデッドルールだった)を`"Bash(rm -rf *)"`に修正し、Edit/Write版の
+  `.env*`拒否ルールを追加、`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`を
+  `CLAUDE_CODE_AUTO_COMPACT_WINDOW`に置換。
+- 決定(メモリ層境界の即時適用): 両CLAUDE.mdが定める「ファイルパスに紐づく事実は
+  プロジェクト横断のauto-memoryではなく、そのプロジェクトの`.claude/rules/*.md`に置く」
+  というルール自体をこの移行で新設したため、既存のクロスプロジェクトauto-memoryに
+  混入していたtask-plant固有の教訓(node:testの相対import拡張子問題)を新設した
+  `.claude/rules/tests.md`へ移設し、`MEMORY.md`の対応行と旧メモリファイルを削除した。
+- 不採用案: v11.2の採用(グラフ再構築コストに見合う規模がない)、プロジェクト限定の
+  適用(ユーザーが明示的にグローバル込みの完全移行を選択したため不採用)。
+- 情報共有(修正はせず、範囲外として記録のみ): `~/.claude/settings.local.json`に
+  スキーマ上無効な`permissionMode`トップレベルキーが残存している。ユーザーレベルの
+  `settings.local.json`は読み込み階層に含まれない(仕様上、無効化されている可能性が高い)ため、
+  実害は乏しいと判断し、今回の明示的なファイルセット(グローバル/プロジェクトのcore
+  governanceファイル)には含めず修正しなかった。
+- 将来見直し条件: Codex等の第二エージェントを再導入する場合、または将来pm-zeroの
+  次版が出て台帳/フック責務がさらに変わった場合に再度この節を更新する。
+
+## D-036: VoC分析に基づく演出方針 — 不具合は直し、好みだけを設定にする
+- 日付: 2026-08-16
+- 対象: ux / ui / notifications
+- 背景: ユーザーから6件のVoC（「通知機能が欲しい」「もっと頻繁に何か見たい」「操作のたび
+  一瞬キラッと」「タスクしないと花火上がらないんでは、ちと寂しい」「ラインスタンプの動くやつは
+  押したら何回でも動く」「紙吹雪が短くて、絵の下の説明を読む前に画面が消える」）が提出された。
+  PdM/UXとして分類したところ、6件のうち2件は要望ではなく**不具合**だった。
+- 判定1（不具合）: 締切通知はコード上存在する（notifications.ts / sw.js / F-7）が、
+  構造的に発火しない。(a) `sw.js`の`setTimeout`はService Workerが数十秒のアイドルで
+  停止した時点でタイマーごと破棄されるため、数時間後の9:00まで生存しない。
+  (b) `notifications.ts`の`if (todayAt9 > now)`により、朝9時を過ぎてから開いた日は
+  **翌日分も含めて一切スケジュールされない**。ユーザーの「通知機能が欲しい」という
+  事実認識のほうが正しかった。vision.mdのASSUMPTION（影響度MEDIUM）は「ブラウザが
+  閉じていたら届かない可能性」と書いていたが、実際は**開いていても届かない**——前提が
+  過小評価されていた。
+- 判定2（不具合）: `drop-reveal.tsx`の自動消滅は2000-3400msだが、その間に
+  QUEST CLEAR/画像/レア度バッジ/NEW/名前/flavor text/記録メッセージの7要素を
+  読ませる設計になっている。加えてオーバーレイ全体の`onClick={onDismiss}`がカード本体を
+  含むため「読もうとして触ると消える」。ユーザーの報告は感想ではなく仕様欠陥の正確な記述。
+- 判定3（本質課題）: 残るVoCはすべて同一の課題の言い換え——**「達成の報酬」は作ったが
+  「接触の報酬」を作っていない**。演出の発火点は事実上`handleToggle`の1箇所だけで、
+  同一タスクは1日1ドロップのため、1日の快感の総量がタスク件数で上限になる。
+  「タスクしないと花火上がらないんでは、ちと寂しい」はこの構造の正確な指摘であり、
+  求められているのは報酬の**豪華さではなく頻度**。
+- 決定（設定にするものの判別基準）: ユーザーから「演出を個別にON/OFFできる設定画面」の
+  提案があったが、そのままは採らない。基準を2つ置く。(1)「OFFにした人が損をするか？」
+  Yesなら設定にしない（直す）。(2)「2人のユーザーが正反対の正解を持つか？」Noなら
+  設計者がデフォルトを決める。→ ドロップカードの尺と通知の発火は**設定にせず直す**
+  （T031）。効果音・バイブ・演出強度・朝の環境演出は**設定にする**（T032/T033）。
+  設定画面は壊れたものを隠す場所ではない。
+- 決定（設定のかたち）: 個別トグルを並べる案は却下。理由は2つ——(a) N個のトグルで2^N状態、
+  さらに`prefers-reduced-motion`との優先順位を全組合せで決める必要があり現実的に
+  テストできない。(b) より本質的に、コアペルソナはADHDであり、選択肢を10個並べた設定画面は
+  このアプリのターゲットに対してだけは特に逆効果（F-2 Must NOT「登録に3タップ以上」と
+  同じ精神）。→ 演出強度を**セグメント1本の3段（しずか/ふつう/にぎやか）**に集約し、
+  質の異なる独立トグル（効果音・バイブ）だけを別に置く。
+- 決定（設定画面は演出と無関係に単独で正当化される）: ホームには既に`FxToggle`がヘッダに
+  常駐し、`NotificationPanel`の「🔔 通知が有効です + テスト通知を送る」が閉じるまで
+  今日のクエスト一覧の上に居座っている。これは演出の議論とは無関係に、今この瞬間、毎日
+  F-1「開いた瞬間に今日やることを把握」を阻害している。/settings はこれ単独で正当化される。
+- 決定（図鑑リプレイが本命）: 「ラインスタンプは押したら動く」がVoC中で最も価値の高い示唆。
+  /book の記録済みエントリをタップすると`DropReveal`が再生される。**報酬を新規に増やさずに
+  接触頻度を上げられる唯一の道**であり、レア度インフレを起こさず（D-032の436種の希少性設計と
+  衝突しない）、ユーザーが能動的にタップした結果なので割り込みではなくF-1にも非干渉。
+  したがって演出強度に含めず「しずか」でも常時有効とする。
+- 不採用/変形: 「開くたびに必ず何か飛び出す」は**変形採用**——F-1 Must NOTに正面衝突する
+  ため割り込みモーダルは作らず、割り込まない「朝の環境演出」に落として「にぎやか」に入れる。
+  トグルにしても却下のまま（ONにした人にとってもF-1を壊すため）。**トグルは実装の質を
+  救わない**。「ランダムに新規報酬が飛び出す」は保留——変動比率強化は有効だが報酬の新規供給を
+  増やすとRARE価値が薄まる。まず図鑑リプレイで頻度欲求が満たされるか観測する。
+- デフォルト値の責任: 設定画面を作っても大多数はデフォルトのまま使う。したがって
+  「ふつう」の中身が今回のVoCへの本当の回答であり、設定画面はその逃げ道であって代替では
+  ない。既定は「ふつう」——マイクロインタラクションと図鑑リプレイは入れ、朝の環境演出は
+  入れない。
+- 副作用対処: `NotificationPanel`をホームから撤去すると通知許可を求める導線が消える。
+  F-7 Must NOT「初回起動時に即表示してはいけない（価値を体感した後に許可を求める）」を
+  守るため、初回の全クエスト達成直後に1度だけホームで提示し、以降は/settingsからのみとする。
+- 設定値の永続化: 既存の`isFxEnabled`と同じlocalStorage層。IndexedDBマイグレーション不要。
+  T021のJSONバックアップには**含めない**——端末固有の好みであり、移行先で選び直すほうが自然。
+- VoCの限界（明記）: n=1、かつvision.mdが定義するコアペルソナ（ADHD就活中の大学生本人）
+  ではない第三者の声である。コアペルソナ本人からのVoCはまだ1件も取れていない。
+- 将来見直し条件: 図鑑リプレイ出荷後に同じ発話者へ再ヒアリングし、「もっと見たい」が
+  満たされたかを確認する。満たされない場合にのみ、保留したランダム新規報酬を再検討する。
+  通知は起動時キャッチアップ（サーバ不要）で1週間運用し、実際に使われるかを見てから
+  Web Push + VAPID + Cron + 購読保存バックエンドという純増インフラ投資の是非を判断する。
+
+## D-037: pm-zero v11.1.1 -> v12へのガバナンス移行 — プロジェクト側完全適用
+- 日付: 2026-08-16
+- 対象: process / governance（プロダクトコードは変更なし）
+- 背景: `プロダクト/pm-zero`リポジトリの`pm-zero-knowledge-v12.md`がv12をリリース済みで、
+  ~/.claude配下(グローバル)は既にv12へ移行済みだった(env二値化、deny再編、
+  `effortLevel`撤去、hooks三本、`~/.claude/CLAUDE.md`書き換え——本セッション開始前に
+  完了済みで、このタスクの対象外)。ユーザーから「pm-zero-knowledge-v12.mdに従い、この
+  リポジトリの該当箇所を全て更新せよ、余計な変更は禁止」との指示があり、v12文書
+  Section 14「Migration from v11.1.1」の残項目(6-8, いずれもプロジェクト側)を本
+  リポジトリに適用した。
+- 決定(v12憲法の適用): 「configの値・scriptのexit code・hookのいずれかでない限り
+  ルールとして採用しない」というv12の唯一の制約に従い、CLAUDE.mdからprose-onlyの
+  ルールを実行可能な形へ置換した:
+  - Startup Readにdocs/issues.mdを追加(Section 14項目7)。現在ブロック中のものだけを
+    残す運用に変更したため、解決済みだったI-001(Service Worker cache.addAll問題、
+    根本原因はD-003で既に恒久記録済み)をdocs/issues.mdから削除。
+  - Budget/Continuity: 「1セッション1タスク」を撤廃(v12 Section 5: 長時間セッションは
+    キャッシュ課金上むしろ安い)。auto-compactの機構を
+    `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=70`から絶対トークン数`CLAUDE_CODE_AUTO_COMPACT_WINDOW`
+    (グローバルで400000済み)へ全面移行——v12文書はPCT_OVERRIDEを「閾値を上げられず、
+    モデル上限前にコンパクションするセッションにしか効かない」既知の欠陥として記録して
+    いる。
+  - Self-Review: Tier 2を完全撤去(v12 Section 8: auth/billing/DB schema/production data
+    クラスは本プロジェクト規模では実質発生しないため、4か月・18プロジェクトの実績で
+    一度も発火の痕跡がないTierを維持するコストが正当化できない)。
+  - Self-Evolution: 4つの昇格先(このファイル/`.claude/rules/*.md`/`docs/lessons.md`/
+    auto-memory)を1つの機械判定ループへ集約(v12 Section 9: 「機械で検出できるか」
+    →YESならscripts/verify.mjsへチェックを追加、NOなら`.claude/rules/<zone>.md`に
+    `paths:`と`由来:`付きで記録)。`docs/lessons.md`は本リポジトリに元々存在せず
+    (Section 14項目8は本リポジトリでは対象なし)、`AGENTS.md`も同様に存在しない。
+  - Git: マージゲートの文言を「final verify green + self-review passed」から
+    「CI green」へ変更(v12 Section 7/12: 自己申告のローカルverifyはマージ根拠になり
+    得ない。GitHub上のCIだけが偽装不可能)。
+- 決定(.github/workflows/ci.yml新設、Section 14項目6・本リポジトリが名指しされた項目):
+  scripts/verify.mjsと同じ4チェック(lint/typecheck/test/build)をGitHub Actions上で
+  実行するワークフローを追加し、branch protectionで必須化した。pnpm/action-setup +
+  actions/setup-node(Node 24、ローカル環境と合わせる)+ `pnpm install --frozen-lockfile`。
+- 決定(.claude/settings.json、v12文書には明記されていないが直接起因する不具合修正):
+  プロジェクト側の`permissions.deny`が`Read(**/.env.*)`のような包括パターンで
+  `.env.example`まで巻き込んでブロックしていた——v12文書Section 4/11が明記する
+  「`.env.example`除外はdeny構文では表現できないため、`.env.*`ファミリーはhook
+  (guard.mjs)側に一任し、deny側は個別ファイル名で狭く書く」という設計と正面から矛盾
+  する実装ミスだった。グローバル側は既にこの設計でv12移行済み(狭いdeny + guard.mjsの
+  例外処理)のため、プロジェクト側の重複かつ矛盾するdeny/envブロックを撤去し、
+  `{"permissions":{"defaultMode":"bypassPermissions"}}`のみに縮小してグローバルの
+  deny+hookへ完全に委譲した。同時に、既にPCT_OVERRIDEの機構的欠陥を理由に撤去対象だった
+  `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`の`env`キーも削除。
+- 決定(バージョンラベルのみの更新): docs/repo-map.mdとtasks.mdの見出しにあった
+  「pm-zero v11」表記をv12に更新。tasks.mdの過去行(T001-T033)は証跡としてそのまま
+  保持し、書き換えない。
+- 決定(範囲外だが必須だったtest修正、CIが初回実行で発見): 新設したci.ymlの初回実行で
+  `tests/lib/domain/plant.test.mjs`の`toLocalDateString is timezone-safe`テストが
+  GitHub ActionsのUTCランナー上で失敗した(80件中1件)。原因はテスト側がJSTホスト前提の
+  期待値をハードコードしていながらプロセスのtimezoneを固定していなかったこと——
+  オーナーのローカル機がJSTだったため今まで一度も顕在化しなかった、まさにv12
+  Section 7が「自己申告のローカルverifyはCIの代替にならない」と述べる典型例。
+  ガバナンス移行タスクの範囲(「余計な変更は禁止」)を厳密に超えるが、このタスク自身が
+  新設した「CI green」マージゲートを満たせなければセッションを完了状態にできないため、
+  最小の修正(`process.env.TZ = "Asia/Tokyo"`をそのテストファイル冒頭に固定)のみ実施。
+  `toLocalDateString`本体はクライアントPWAの「今日」をホストのローカルタイムゾーンで
+  判定する設計として正しく、変更していない。`TZ=UTC node --test`で80/80通過を確認。
+- 不採用案: プロジェクト側`.claude/settings.json`にグローバルと同一のdeny一覧を
+  再度複製すること(グローバルのdenyは`bypassPermissions`下でも全モードで発火する
+  ため、プロジェクト側での複製は保守対象が二重化するだけで実効的な追加保護にならない
+  と判断)。
+- 将来見直し条件: pm-zeroの次版が出て台帳/hook責務がさらに変わった場合、または
+  auth/billing/DB schemaクラスの変更が実際に発生してTier 2相当のレビューが必要になった
+  場合に再度この節を更新する。
+
+## D-038: 背景の光の粒子演出 — D-024の「全画面パーティクル不採用」を条件付きで再解禁
+- 日付: 2026-08-17
+- 対象: ui / art-direction / fx
+- 背景: T036（エフェクト全面刷新）でユーザーから「研究所以外のページの背景に、
+  エルデンリングの祝福の導きのような光の粒子エフェクトを出したい」との依頼があった。
+  D-024（2026-07-19）の抑制ルールは「環境演出は背景1枚+ヘアライン+書体+雪(1画面)に
+  限定」し、不採用案として明示的に「全画面パーティクル常時表示（過剰刺激）」を挙げていた。
+  今回の依頼は文面上その不採用案そのものに見えるため、単に上書きするのではなく何が
+  違うのかをここに記録する。
+- 決定: `src/components/fx/grace-particles-gate.tsx`を`layout.tsx`に追加し、
+  `/plant`以外の全ルートに疎らな金色の粒子（12-16粒、20-27秒サイクル、上昇+緩い
+  横揺れ）を背景レイヤー（`body::before`/`.morning-light`と同じ`z-[-1]`層）として
+  表示できるようにした。D-024の不採用案との違いは4点: (1) 常時ON/デフォルトではなく
+  「背景の光の粒子」トグル（既定OFF、D-039参照）による完全なオプトイン。(2) `/plant`は
+  対象外——同ページには既に下降・冷色（白/霜）の雪が8粒あり、今回の粒子は上昇・暖色
+  （金）にすることで方向と色温度を意図的に対比させた（単なる「ごちゃつき回避」ではなく
+  主題的な対比: 研究所は静かな観測の場、それ以外は導きの光に満ちた道）。(3) 粒子数は
+  既存の雪と同水準の疎らさ（8-16粒）に抑え、confetti的な密度にはしない。(4)
+  `transform`/`opacity`のみのCSSキーフレームアニメーション（雪と同じ技法）で、
+  D-024が明示的に禁じた`backdrop-blur`の広域アニメーションには該当しない——粒子1つ
+  あたりの静的（非アニメーション）`blur(0.5px)`のみで、低価格帯Androidでの負荷は
+  雪と同等と判断した。
+- 不採用のまま残る部分: D-024の抑制ルール本体（背景1枚+ヘアライン+書体+雪1画面という
+  デフォルト構成）は変更しない。今回追加したのはデフォルトに含まれない、ユーザーが
+  明示的に選び取る第5の環境演出であり、既定の見た目には一切影響しない。
+- 将来見直し条件: 「背景の光の粒子」のON率が実際の利用で著しく低い場合、実装コストに
+  見合うか再検討する。逆に高い場合は`/plant`にも別テーマ（例: 静止した淡い光）を
+  検討する余地がある。
+
+## D-039: 演出強度ダイヤルを廃止し、効果ごとの独立トグルへ — D-036の一部を上書き
+- 日付: 2026-08-17
+- 対象: ux / ui / fx / settings
+- 背景: D-036（2026-08-16）は「しずか/ふつう/にぎやか」の3段階ダイヤル1本に集約する
+  設計を採用し、個別トグルを並べる案を明示的に却下していた。理由は2つ: (a) N個の
+  トグルで2^N状態爆発、(b) コアペルソナ（ADHD）にとって選択肢の多い設定画面自体が
+  逆効果。T036でユーザーから「大規模刷新でエフェクト構成自体が大きく変わるため、
+  設定画面を0から再構築してよい。しずか/にぎやかという分類は廃止し、それぞれON/OFFで
+  選べるようにしてほしい。デフォルトはADHDのタスク管理に最適化し、演出を楽しみたい人は
+  全部ONにすればよい」との明示的な指示があった。
+- 決定: `src/lib/domain/fx.ts`を全面書き換えし、`FxIntensity`(3段階)を
+  `EffectKey`(6キー: タップの光/完了エフェクト/朝のあいさつ演出/起動時の演出/
+  背景の光の粒子/ページごとの遷移演出)の独立ON/OFFへ置き換えた。効果音・バイブレーション
+  は既存どおり`sound.ts`の独立トグル（`fx-enabled`）のまま——今回のQ&Aでも
+  reduced-motionに連動させない設計は明示的に維持されている。
+- D-036の却下理由への応答: (a) の2^N状態爆発は、トグル数を「効果の種類ごとに1つ」
+  ではなく「アプリ内の意味のある瞬間ごとに1つ」に絞ることで実質的な組合せは
+  ユーザーにとって意味を持つ範囲に収まる（6キー、うち新規の重い4つは既定OFFなので
+  実際に大多数のユーザーが触れる状態はデフォルトの1状態のみ）。reduced-motionとの
+  優先順位は全キー共通で「reduced-motion時は常に強制OFF」という単一ルールに統一した
+  ため、全組合せを個別にテストする必要はない（`resolveEffect`のテストが全キー×
+  reduced-motion true/falseの2値を機械的に検証）。(b) の決定疲れへの懸念は、
+  設定画面を「基本のフィードバック」（デフォルトON寄り、3行）と「追加の演出」
+  （デフォルトOFF、"演出をもっと楽しみたい方はこちら"という一言リードで導入、4行）の
+  2セクションに分けることで対処した——デフォルトのまま使う人は何もスキャンする必要が
+  ない設計は維持している。
+- 図鑑リプレイの扱いは不変: D-036の「ユーザーが能動的にタップした結果なので割り込み
+  ではなくF-1にも非干渉、よって常時有効」という理由は今回のQ&Aでも覆っておらず、
+  どのトグルにも属さず常時有効のまま。
+- 起動時の演出（当初「スプラッシュ画面」と呼んでいたもの）について: ユーザーは当初
+  D-036のF-1保護原則（開くたびに何か飛び出す演出は割り込みモーダルとして不採用、
+  非ブロッキングの朝の環境演出に変形採用）との関係を尋ねられ、「起動時の演出を出すのは
+  にぎやか（今回はトグルON）を選んでいるユーザー自身なので、豪華にしてよい」と明示的に
+  F-1保護をこの機能に限り緩和する判断を下した。したがって`open-flourish.tsx`は
+  タップ/Escでスキップ可能だが、コンテンツの読み込みをブロックしない設計（オーバーレイ
+  のみ、`{children}`は裏で即座に読み込み継続）にとどめ、待たせる設計にはしていない。
+  また、当初「アイコンを使ったスプラッシュ画面」を想定していたが、ユーザーからの訂正
+  「アイコンとは無関係でよい、豪華な演出を出したいだけ」を受けて、ロゴ/アイコン中心の
+  reveal演出ではなく金の装飾フレーム+光の粒子+一言メッセージという構成に変更した。
+- 不採用のまま残る部分: D-036の「(1) OFFにした人が損をするか、(2) 2人のユーザーが
+  正反対の正解を持つか」という設定化の判別基準そのものは今回も適用している——ドロップ
+  カードの尺や通知の発火のような「不具合」は今回も設定にしていない。今回変わったのは
+  「好み」に分類される演出をどう提示するか（1本のダイヤル→複数の独立トグル）だけで、
+  判別基準自体は継続。
+- 将来見直し条件: 実際の利用で「追加の演出」セクションのONトグル数が著しく多い/少ない
+  場合、デフォルトの妥当性を再検討する。トグル数がさらに増える見込みが出た場合は、
+  再びダイヤル化やプリセット化（「まとめてON」ボタンなど）を検討する。
+
+## D-040: T036 Tier 1レビュー指摘への対応 — 5件の修正 + 2件の受容済みトレードオフ
+- 日付: 2026-08-17
+- 対象: ux / a11y / fx
+- 背景: T036のTier 1フレッシュコンテキストレビュー（Opus 5）が、reduced-motion時に
+  RARE6-8のドロップカードへ白い光の帯が焼き付いたまま残る不具合（FAIL判定）と、
+  4件のshould-fix指摘を検出した。オーナーからは「残りの問題も全て対応せよ」との
+  指示があり、Tier 1の残りのminor指摘（11件）のうち9件も併せて修正した。
+- 修正した項目（コード変更）: (1) `.drop-reveal-shine`のreduced-motion時
+  `opacity: 0`欠落を修正。(2) `open-flourish.tsx`のsessionStorage確保をuseEffect本体
+  ではなくマイクロタスク内に移し、React 19 dev/StrictModeの二重マウントで演出が
+  一度も表示されない不具合を修正。(3) `docs/repo-map.md`の記述をD-039の6トグル
+  モデルに更新。(4) 旧`fx-intensity`キーからの一度限りの移行処理を追加
+  （quiet→全OFF、lively→全ON、normal→タップ/完了のみON、いずれも新6キーが
+  未設定の場合のみ適用）。(5) 完了エフェクト演出（spring/shine/glow/rank8粒子）を
+  `completion`トグルでもゲートするよう修正——ただしreplay（図鑑タップ再生）は
+  D-036の「常時有効」原則によりトグルではなくreduced-motionのみでゲートする
+  （`fireReplayEffect`も同様に修正、confetti.tsのゲートを`isEffectEnabled`から
+  `prefersReducedMotion`直接参照に変更）。加えて: ページ別遷移音がreduced-motion時に
+  無音化していた問題を修正（音はトグルの保存値のみで判定し、reduced-motionは視覚側
+  のCSSテーマのみに残す）。起動演出のEscapeスキップとフェードアウトが実際には
+  機能していなかった問題を修正（`<button>`直下の暗黙フォーカスに依存していたのを
+  `autoFocus`付きの明示的なスキップボタンに変更、`return null`の瞬間消去を
+  クロージングフェーズ付きの遷移に変更）。起動演出の`<button>`によるブロック
+  要素ラップ+`aria-label`によるAT向けコンテンツ抑制を修正し、`role="dialog"
+  aria-modal`+可視テキストがそのままAT到達可能な構造に変更。ライトテーマで
+  起動演出の金色フレーム/タイトルが常に暗い背景に対して低コントラストになっていた
+  問題を修正（`.open-flourish`スコープで`--gold`をダークモード相当の明るい値に
+  固定——背景は常に`bg-black/70`でテーマに依存しないため）。タップの光の
+  `animationend`リスナーがバブリングで最初に終わった子要素（モート、0.4s）に
+  反応し、コア閃光（0.42s）を20ms早く消していた問題を修正（コア要素へ直接
+  リスナーを付け替え）。`rarityBand()`が定義済みだが未使用だった問題を解消し、
+  `sound.ts`の`playClear`のランク分岐（旧: `rarity<=3`/`rarity<=6`のハードコード）
+  を`rarityBand()`経由に統一。`EFFECT_KEYS`の「設定画面の表示順」というコメントが
+  実態と食い違っていた（settings-screen.tsxが独自にハードコードした2つのリストを
+  持っていた）問題を、`EFFECT_SECTIONS`という正準の割り当てマップに置き換えて
+  解消し、`tests/lib/domain/fx.test.mjs`に「全キーが必ずどちらか一方のセクションに
+  属する」ことを検証するテストを追加した（将来7個目のキーが追加された際、
+  設定画面に行が出ないまま出荷される事故を機械的に防ぐ）。plant/allテーマの
+  ページ遷移が、戻り方向ナビゲーション時にbackルールの`transform-origin: right
+  center`を意図せず継承していた問題を修正（両テーマとも純粋なscale演出なので
+  `transform-origin: center center`を明示）。
+- 受容済み・未修正のまま残す指摘（2件、いずれもconfetti.ts関連）: (a) 紙吹雪の
+  本バーストが予備振動パフの40ms後に発火するようdeferredになった結果、その40ms
+  以内に画面が閉じられるとバーストが飛ばれる可能性がある——発生確率が極めて低く、
+  修正するとanticipation演出自体（本レビューが評価した「juice」の核）を取り除く
+  ことになるため受容する。(b) 旧「にぎやか」ユーザー向けの2波紙吹雪機能が
+  固定値化により失われ、代替トグルもない——これは意図的なアーキテクチャ選択
+  （D-039本文参照: 強度スケーリングの廃止はトグル数抑制とセットの設計判断であり、
+  紙吹雪の波数だけ個別に復活させると同じ2^N問題を部分的に再導入することになる）
+  なので、機能追加ではなく本エントリへの明記をもって対応済みとする。
+
+## D-041: Grimoire v2 着手 — 環境準備(Blender/BlenderMCP)を機械的に自動実行
+
+- 日付: 2026-08-19
+- 対象: infra / tooling / v2-kickoff
+- 背景: 現行Grimoire(v1)を土台に、3D相棒(グリモ)+Three.js背景世界を持つv2をほぼ
+  ゼロから作る方針。設計資料は `grimore-v2/` 配下の3ファイル(決定事項ログ統合版、
+  Three.js設計文書、UIコンポーネントサイト集)としてリポジトリに追加。決定事項ログの
+  P章「次のアクション」に列挙された5つの機械的セットアップ作業について、当初は
+  「手順提示のみ」で計画したが、オーナーから「手順提示ではなく実行可能な方法を
+  探して実行せよ」と明示指示があり、自動化可能な範囲を全て自動実行した。
+- 決定(ブランチ): `chore/v2-env-setup` を `main` から作成。v2は「ほぼ0から」の
+  大規模刷新のため、今後の実装は既存のtasks.md/docs/*ledgerの流儀を維持しつつ、
+  機能単位でさらに枝分かれさせる想定(このブランチは環境準備のみに限定)。
+- 決定(Blender): `winget install BlenderFoundation.Blender.LTS.4.5` で
+  Blender 4.5.10 LTSをサイレントインストール(exit 0で確認)。5.x系の最新版ではなく
+  4.5 LTSを選んだ理由: 決定事項ログP章が明示的に「Blender 4.x」を要求しており、
+  ahujasid/blender-mcp addonのbl_info最小要求も`(3, 0, 0)`以上でLTS 4.5との
+  互換性リスクが最も低いため。
+- 決定(BlenderMCPアドオン): `github.com/ahujasid/blender-mcp` の`addon.py`を
+  ダウンロードし、`blender --background --python <setup script>` でheadless実行し
+  `bpy.ops.preferences.addon_install` + `addon_enable` を実施、
+  `bpy.ops.wm.save_userpref()`で永続化を確認(次回Blender起動時に再インストール不要)。
+  同スクリプト内で `bpy.context.scene.blendermcp_use_polyhaven = True` を設定し
+  `bpy.ops.wm.save_homefile()` で既定の起動ファイルとして保存したため、PolyHaven
+  連携は次回Blender起動時点で既にONの状態になる。**唯一自動化できなかった手順**:
+  addon自身が`--background`モードでの明示的なガード
+  (`"cannot start server in background mode... run Blender with a GUI"`)を持つため、
+  ソケットサーバーの起動("Connect to Claude"ボタン)はBlenderのGUIを開いた上で
+  ユーザーが1回クリックする必要がある(サーバーはBlenderのイベントループに依存し、
+  `--background`終了と同時にプロセスごと消えるため、原理的にheadless自動化不可)。
+- 決定(Claude Code側MCP登録): `claude mcp add --scope project blender -- uvx blender-mcp`
+  でこのプロジェクトの`.mcp.json`(既存の`.gitignore`ルールにより追跡対象外、
+  そのままで正しい)に登録済み。`claude mcp list`は`⏸ Pending approval`と表示——
+  これはClaude Codeの新規プロジェクトMCPサーバーに対する標準の一度きり承認ゲートで、
+  次回`claude`起動時にユーザーが承認すれば解消する(セキュリティ上、エージェント側で
+  バイパスすべきではない)。
+- 決定(CC0四足リグ済みベースモデル): Sketchfab API(`api.sketchfab.com/v3/search`)を
+  license=cc0で複数クエリ試行した結果、"downloadable かつ CC0 かつ実際にリグ済み
+  (animCount>0)"の四足生物はほぼ皆無と判明(該当ヒットは考古学スキャン/彫像が
+  大半で、リグ済み創作モデルは大半がSketchfab Storeの有料コンテンツかCC-BY)。
+  代わりに `Quaternius` の "Animated Animal Pack"(poly.pizza経由、CC0確認済み、
+  Idle/Walk/Run/Jump/Deathアニメーション付き、FBX/glTF/Blend形式)を発見——
+  Shiba Inu・Husky・Wolf・Foxを含み、L章のロードマップ最優先である犬(水属性)の
+  参考/叩き台として直接使える。ダウンロード自体はオーナー指示どおり次セッションの
+  選定判断に委ねて未実施、候補提示のみに留めた。
+- 不採用: Mixamo(人型リグ中心で四足動物に非対応)、Sketchfab Storeの有料
+  リグ済みモデル(予算0円方針(G章)に反する)。
+- 将来見直し条件: BlenderのGUI起動+ソケットサーバー接続をオーナーが実施した後、
+  `claude mcp list`でblenderが`✔ Connected`になることを次セッション冒頭で確認する。
+  Quaternius以外の候補(CGTrader等)が必要になった場合、同じCC0/商用可の判定基準で
+  追加調査する。
+- 訂正(2026-08-19、Official Blender MCP調査時に発覚): 「Blender 4.x」を選んだ理由を
+  「決定事項ログP章がそう指示していたから」とだけ記録していたが、これは裏取り不足
+  だった。Blenderのリリース実績を調べ直すと、5.0(2025-11)→5.1(2026-03)→5.2 LTS
+  (2026-07-14、2028-07までサポート)と続いており、T037実行時点(2026-08-19)で
+  5.2 LTSはすでに1ヶ月以上前から入手可能だった。つまり「4.x」という設計ログの
+  指示自体が、Blenderの2026年の高速リリースサイクルを織り込む前の古い前提だった
+  可能性が高い。
+  改めて調査した結果、**結論(4.5 LTSに留まる)は変わらないが、正しい理由は別にある**:
+  このプロジェクトが実際に依存するahujasid/blender-mcp(PolyHaven等のアセット調達に
+  使う想定、A章参照)は、Blender 5.0で実際にPythonエラーが報告されており、5.1/5.2への
+  対応も未確定(addon.py自身が宣言する最低要件`(3,0,0)`はMCPという概念が存在する前の
+  記述で実質的な互換性の目安にならない)。Blender公式が2026-04-28にリリースした
+  Official Blender MCP(blender.org/lab/mcp-server)はBlender 5.1以降が要件だが、
+  得意領域がシーン検査・自動化(ポリゴン数分析・データブロックのリネーム・
+  ジオメトリノードのドキュメント化等)であり、このプロジェクトが今必要としている
+  外部アセット生成連携(PolyHaven/Sketchfab/Hyper3D)とは重ならない。結論:
+  当面はBlender 4.5 LTS + ahujasid/blender-mcpを維持。Official Blender MCPは
+  モデリング・リグ作業が本格化しシーン検査ニーズが出てきた段階で、Blenderの
+  5.x移行とセットで再検討する(複数の外部情報源が両者を「競合ではなく補完関係」
+  「併用可」としている)。
+
+## D-042: Grimoire v2 — 犬系グリモ(水属性)デザイン仕様確定 + MHW参照画像ポリシー転換
+
+- 日付: 2026-08-19
+- 対象: design / assets / legal-risk / v2-kickoff
+- 決定:
+  1. 犬系グリモ(水属性)の卵〜成体デザインを確定
+     (`grimore-v2/Grimoire_決定事項ログ_統合版_20260819.md` L-2章に記載)。
+     卵=氷/水晶の半透明殻、幼体=まん丸プニプニ+耳/尻尾先端のみヒレ/水滴状+
+     周囲の波紋エフェクト、子供=幼体の延長で体型のみ成長、成体=オオカミ/
+     ハスキー系ベース+体全体の水色〜青グラデーション。トーンは卵〜子供の
+     「かわいい」路線から成体で「かわいい+かっこいい」の融合へ転換。O章の
+     最優先未決定事項を解消。
+  2. Monster Hunter World: Iceborneの参照画像8枚について、旧方針(アート
+     ディレクション参照限定・最終素材への使用不可)を撤回し、**背景世界
+     (相棒+世界画面の環境)の素材として元画像をそのまま使用する**方針へ
+     転換。グリモ本体(生物)には適用しない(C章の背景/生物レイヤー分離を維持)。
+- 採用理由: (1)は相談セッションでの分解質問(卵の質感/幼体のファンタジー
+  要素の宿し先/成長のプロポーション変化/成体のベース犬種/色の主張度/
+  子供段階の性格)への回答を統合。(2)はオーナーへ法的リスクを2回明示提示
+  した上での採用: 本アプリは家族2名も利用中(D-030)のため「自分専用だから
+  私的使用の複製特例が及ぶ」という前提は厳密には成立せず、Three.jsでの
+  加工は複製に留まらず翻案に該当しうる。著作権侵害は親告罪のため摘発
+  リスクは低いが、ゼロではないことを伝達済み。オーナーはリスクを理解した
+  上で明示的に採用を選択した。
+- 不採用案: MHW画像を完全に不使用としオリジナル素材のみで背景世界を
+  構築する案(A章の旧方針) → オーナーが「元画像をそのまま使いたい」と
+  明示選択したため不採用。
+- 将来見直し条件: 著作権者からの指摘があった場合、または本アプリの公開
+  範囲が家族以外へ広がる場合は再検討する。犬グリモのデザインは、次段階
+  (表情・模様の入り方・サイズ感等のディテール)を詰める際に細部を追記する。
+
+## D-043: Grimoire v2 — 妖精（光属性）デザイン方針確定
+
+- 日付: 2026-08-19
+- 対象: design / v2-kickoff
+- 決定: O章にあった「妖精の属性：光 or 植物」を光に確定
+  (`grimore-v2/Grimoire_決定事項ログ.md` L-3章に記載)。ビジュアルモチーフは
+  星屑・プリズム系（犬（水）のオーロラ・虹系モチーフとは差別化）。猫
+  （闇／月）との対比（陰陽的ペア）を意図的なデザイン思想として採用。発光
+  エフェクトはK章の原則通り「適度に使うが、素材・輪郭・モーション等の
+  非発光手段も併用する」という位置づけで確定し、光属性だからといって発光
+  一辺倒にはしない。植物属性は不採用となったため、アプリ旧名／
+  /plant画面の植物成長メタファーとの意味の重複という論点も解消。
+- 採用理由: 相談セッションでの分解質問（属性×モチーフ／猫との対比構造／
+  発光の使用可否／植物属性を選んだ場合の旧名との意味的重複の扱い）への
+  回答を統合。
+- 不採用案: 植物属性（花・蕾系／蔓・苔・森系のモチーフ） → 光が選択された
+  ため不採用。植物VFXは花びらメッシュ等の実装難度がやや高い懸念もあった。
+- 将来見直し条件: なし。卵〜成体の具体的な見た目デザイン（L-2章の犬グリモ
+  に相当する内容）は、妖精が5系統中「最後に着手」する系統であるため未着手
+  のまま。他系統の知見が貯まった段階で改めて相談する。
+- 付記: 相談中にオーナー自身が `grimore-v2/Grimoire_決定事項ログ_統合版_
+  20260819.md` を `grimore-v2/Grimoire_決定事項ログ.md` にリネームした
+  （ファイル名短縮、内容は無変更）。以後この設計ログはこの新ファイル名で
+  参照する。旧ファイル名を参照していたT038/D-042等の過去記録は証跡として
+  そのまま残す。
+
+## D-044: grimore-v2専用の長命統合ブランチを新設 — mainから分離
+
+- 日付: 2026-08-19
+- 対象: architecture / git-workflow / v2-kickoff
+- 決定: `main`はプロダクション環境（家族が日常利用、マージで自動デプロイ）
+  であり、grimore-v2は完成時期未定の長期・高頻度変更・投機的な設計＋開発
+  作業であるため、両者を分離する。`main`から新規ブランチ`grimore-v2`を
+  作成し、以後のgrimore-v2関連作業（設計相談ドキュメント`grimore-v2/*.md`、
+  将来の実装コード）はすべてこの`grimore-v2`ブランチを起点・着地点とする
+  （タスクごとのサブブランチは`grimore-v2`から切り、`grimore-v2`へPRまたは
+  ドキュメントのみ例外での直接コミット）。オーナーの明示的な出荷判断が
+  出るまで`main`はv2の影響を受けない。`grimore-v2`ブランチがv2の「実質
+  main」となる。CLAUDE.mdのGitセクションに恒久ルールとして追記。
+- 採用理由: オーナーからの明示指示。mainへの毎回のPRサイクルはv2の設計
+  相談フェーズには過剰である一方、mainを直接汚すのは本番環境への影響
+  リスクがある。長命ブランチで両立させる。
+- 不採用案: (1) 従来通りタスクごとにmainへ直接PR・マージ（T037-T040で
+  実施済み） → v2が長期化するほどmainの履歴がv2ドキュメント更新で
+  埋まり、本番運用上の変更と混在して追いにくくなるため不採用。(2) v2を
+  完全に別リポジトリに分離 → 既存のCLAUDE.md/tasks.md等のガバナンス
+  資産を再構築する必要があり過剰なので不採用。
+- 既知のトレードオフ（受容済み）: `tasks.md`/`docs/decisions.md`/
+  `docs/state.md`は各ブランチで独立に追記されるため、`main`側でも並行
+  して現行アプリの保守タスクが積み重なった場合、`grimore-v2`を将来
+  `main`へマージする際にこれらの台帳ファイルで行追加型のコンフリクトが
+  発生する見込み。マージ時に両ブランチの新規行を両方残す形で解消する
+  前提で受容する。
+- 将来見直し条件: v2の出荷判断が出た時点で`grimore-v2`を`main`へマージし、
+  本ルールは以後のv3等次期メジャー作業に読み替える。
+
+## D-045: Kenney "Interface Sounds"(CC0、100件)を配置のみで導入する — 合成エンジンは変更しない
+
+- 日付: 2026-08-22
+- 対象: audio / assets / AI-assisted development
+- 決定: `public/audio/ui/`へKenney "Interface Sounds"(CC0 1.0、公式配布元
+  https://kenney.nl/assets/interface-sounds)の全100ファイルと
+  `manifest.json`(category/用途hint/再生時間を機械可読で記録)、
+  `LICENSE.txt`を配置する。**配置のみ**であり、`src/lib/sound.ts`の
+  Web Audio合成エンジン(D-022、「効果音は音声アセットゼロのWeb Audio
+  合成、全音Cメジャーペンタトニック」)は無変更。どのファイルもコードから
+  参照されず、ビルド成果物のサイズにのみ計上される
+  (`public/`配下は静的配信されるがfetchされなければ実行時コストはゼロ)。
+  フォーマットは公式配布のoggではなくpcm_s16le/44.1kHz/monoのwavへ統一
+  (Safari/iOSの`decodeAudioData`がogg/vorbisを確実にデコードできない
+  ため、grimore-v2ブランチのD-015/D-016と同じ変換方針)。
+- 背景: grimore-v2ブランチ側でD-015(12件導入)→D-016(全100件へ拡張)として
+  同じパックを効果音エンジンへ実際に配線している。オーナー指示により、
+  `main`(本番、家族が日常使用)側にも同じ資産プールを用意しておく。
+  ただし`main`は現在D-022で「合成のみ」を確定方針としており、実際に
+  ファイルベースの効果音へ切り替えるかどうかは本番挙動を変える製品判断
+  のため、今回のスコープからは明確に除外する(オーナー指示で「配置のみ・
+  安全側」を選択)。
+- 採用理由: (a) パックはCC0であり配置自体にライセンス上のリスクがない、
+  (b) 将来`main`側でファイルベースの効果音へ移行する判断が出た場合に、
+  素材取得・ライセンス確認・フォーマット変換という前段作業を先に済ませて
+  おける、(c) 未参照ファイルは実行時に一切fetchされないため、配置しても
+  本番の実効挙動・パフォーマンスに影響しない。
+- 不採用案: (a) 合成エンジンをこの場でファイルベースへ差し替える →
+  本番音の鳴り方が変わる製品判断であり、オーナーが明示的に今回のスコープ
+  外とした。(b) `main`には配置しない(grimore-v2側だけで十分) →
+  オーナーの明示指示に反する。
+- 将来見直し条件: `main`側でファイルベースの効果音への切り替えを検討する
+  タスクが起票された時点で、この配置済みプールをそのまま使う(再取得・
+  再ライセンス確認は不要)。それまでは`src/lib/sound.ts`の合成エンジンが
+  唯一の効果音経路のまま。
+
+## D-046: main を pm-zero v12.1(Frontend/UI Operating Layer)へ追随させる
+
+- 日付: 2026-08-23
+- 対象: governance / tooling / CLAUDE.md
+- 決定: オーナー指示により、`grimore-v2`ブランチ側でT018(D-011)として先に
+  適用済みの pm-zero v12.1(`pm-zero-knowledge-v12.1.md` Section 16、
+  Frontend/UI Operating Layer)へ`main`も追随させる。憲法(config値・
+  script exit code・hookへ還元できる部分のみ導入する採用基準)自体は
+  v12から不変で、今回追加されるのはSection 16の1層のみ。適用した差分は
+  次のとおり。
+  - `CLAUDE.md`: ヘッダーを「pm-zero v12」→「pm-zero v12.1」へ、
+    Self-ReviewのTier 1条件へ「shared UI components or design tokens」を
+    追記、新設「Frontend/UI Operating Layer」節を追加。ただし
+    `grimore-v2`側の同節はDESIGN.md/Grimo制作ワークフローなどv2固有の
+    記述を含むため丸ごとの転記はせず、`main`の実状(DESIGN.md未採用、
+    shadcn/uiを実際に使用中)に合わせて書き直した。
+  - `scripts/setup.mjs`: v9.4放置状態(ディレクトリ作成のみ)から、UI
+    framework検出時にimpeccable skill・(package.jsonにshadcnがある場合)
+    shadcn/ui skillを冪等にauto-provisioningするv12.1 §16.7準拠の実装へ
+    書き直した(`grimore-v2`の実装を移植)。実行して動作確認済み:
+    1回目でimpeccable(既存流用)とshadcn skillを導入、2回目は両方
+    skip(冪等性確認)。chrome-devtools MCPは追加しない
+    (Playwright MCPがグローバル登録済みで重複コスト回避、K2と同じ理由)。
+  - `eslint.config.mjs`: `.claude/skills/**`をglobalIgnoresへ追加
+    (vendored skillコードはlint対象外)。
+  - `.gitignore`: `.claude/skills/**`・`.agents/`(`npx skills add`が実体を
+    書き込む先。`.claude/skills/`側はそこへのsymlink)・`skills-lock.json`
+    を追加。`grimore-v2`は`.claude/skills/impeccable/`を個別指定していたが、
+    `main`ではshadcn skillも動くため、より広い`.claude/skills/**`パターンを
+    採用した。
+  - 副次的に判明した`grimore-v2`側`scripts/setup.mjs`の潜在バグを`main`
+    実装では修正済み: shadcn skill導入後の実際の配置先は`.claude/skills/
+    shadcn`(symlink)だが、既存冪等性チェックは存在しない
+    `.claude/skills/shadcn-ui`を見ていたため、2回目以降の実行で毎回
+    再インストールを試みる状態だった。`grimore-v2`側は元々shadcnへ依存
+    していないため実害はなく、今回は`main`側の実装のみ修正し
+    `grimore-v2`側は対象外とした(要求範囲外)。
+  - `.github/workflows/ci.yml`: 変更なし。`grimore-v2`のT018では
+    grimore-v2ブランチをCI trigger対象へ追加する差分があったが、`main`は
+    既にtrigger対象そのものなので該当なし。`.mcp.json`もgitignore対象の
+    ローカル専用ファイルであり、かつcontext7 MCP/frontend-designプラグイン
+    はSection 16のT1(グローバルuser-scope、`~/.claude/`側で既に導入済み)
+    のため、プロジェクト側の変更は不要。
+- 採用理由: (a) 同じオペレーターが同じマシンで両ブランチを行き来する以上、
+  「AIが判断すべき事柄」の運用基盤(UIツール自動provisioning、Tier 1の
+  UIトリガー)は両ブランチで揃っているべきで、揃っていないと`grimore-v2`
+  で効いていた安全策が`main`側の作業では静かに効かなくなる、
+  (b) v12.1自体が「config値・script exit code・hookへ還元できる部分のみ」
+  という受入基準を通過済みの内容であり、`main`固有の再評価は不要、
+  (c) 実際に手を動かして検証(setup.mjs実行・verify green)した範囲でしか
+  記録していないため、机上のドキュメント更新だけで終わっていない。
+- 不採用案: `grimore-v2`のCLAUDE.md Frontend/UI Operating Layer節を
+  そのまま転記する → DESIGN.md §9-10やGrimo制作ワークフローなど`main`に
+  存在しない概念への参照を含み、`main`の開発者(未来のAIセッション含む)を
+  誤誘導するため不採用。実状に合わせて書き直した。
+- 将来見直し条件: `main`がDESIGN.mdを採用する具体的必要が生じた時点で、
+  raw-value lint(K1)を`scripts/verify.mjs`へ配線する。pm-zero本体が
+  v12.2等へ更新された場合はupdate.mdの当該sectionを再度参照する。
+
+## D-047: 効果音とエフェクトを全廃し、vendored CC0アセット上に作り直す
+
+- 日付: 2026-08-23
+- 対象: src/lib/sound.ts, src/lib/vfx.ts, src/lib/spark.ts,
+  src/lib/domain/{sound-cues,vfx-scenes,fx}.ts, src/lib/fx.ts,
+  src/components/fx/*, src/app/globals.css, public/audio/cues/,
+  public/vfx/, 各呼び出し側
+- 決定: オーナー指示(「効果音を全て削除し、アセットから全アクションに
+  対して最適なものを選択して配置」「エフェクトも全てリセットし……全て
+  豪華で高品質なものを選べ」)により、合成音エンジン(D-022/T036)と
+  canvas-confetti を両方とも撤去し、実アセット上に作り直す。
+
+### 1. 音: 合成 → サンプラー
+- D-022の合成エンジンは「音声ファイルを1つも同梱せずに出荷する」ため
+  にオシレータから全音を生成していた。その代償として、鳴らせる音は
+  すべてオシレータの音色になり、「クエスト達成」と「ボタン押下」が
+  同じ音色の1オクターブ違いでしかなかった。D-045でKenney
+  "Interface Sounds"(CC0、100件)がすでに`public/audio/ui/`へ配置済み
+  だったため、前提そのものが消えている。
+- Kenney CC0の3パックから14音を選び`public/audio/cues/`へ配置
+  (896KB)。ffmpegの`volumedetect`2パスでピークを-1.0 dBFSへ揃え、
+  44.1kHz/mono/pcm_s16leへ統一。出典と対応は`LICENSE.txt`に記録。
+- 3パックが3つのレイヤーを1つずつ担当する:
+  TOUCH = Interface Sounds(`ui/*`、タップ/保存/トグル等)、
+  WORLD = RPG Audio(ページめくり・扉・留め金・コイン)、
+  REWARD = Music Jingles(ピチカートの階段 + スチールベル)。
+  「何がいつ鳴るか」は`src/lib/domain/sound-cues.ts`だけが決める。
+- 選定は当てずっぽうにせず、Goertzel法のピッチ追跡スクリプトで
+  ジングルを上行/平坦/下行に分類し、実測長さと併せて選んだ
+  (低レアほど短く軽い、高レアほど長く上行する、が測定で保証されている)。
+- 重ねる音は2つだけ(`clearHigh`と`flourish`)。テストで固定している。
+
+### 2. 絵: canvas-confetti → 加算合成スプライトエンジン
+- `canvas-confetti`は「紙吹雪」しか描けず、ファンタジー世界観の
+  グリモアには最初から合っていなかった(D-036時点での妥協)。依存ごと
+  削除。
+- Kenney Particle Packから13枚を`public/vfx/`へ配置(296KB、
+  256x256 / `pix_fmt ya8`のwhite-alphaテクスチャ。740KB→280KBへ縮小)。
+  白アルファなので実行時にテーマトークンで着色でき、色違いを枚数分
+  持たなくてよい。
+- `src/lib/vfx.ts`はCanvas 2Dの加算合成(`globalCompositeOperation =
+  "lighter"`)スプライトエンジン。オフスクリーン`source-in`で着色結果を
+  キャッシュ、DPR対応、rAFループは粒子が尽きると自分でcanvasごと
+  外れる。上限700粒。
+- シーン定義は`src/lib/domain/vfx-scenes.ts`に純データとして分離。
+  RAREの階段は 低(3エミッタ/41粒) → 中(5/76、衝撃波リング追加) →
+  高(9/約140、魔法陣・稲妻・紋章・立ち上る尾を追加)。魔法陣は
+  RARE7-8専用で、上位が「うるさい」のではなく「別の出来事」になる
+  ようにしてある(テストで固定)。
+
+### 3. 背景の光の粒子: 13 → 44
+- 3層の被写界深度に分け、mulberry32のシード固定PRNGで配置(レビュー
+  可能・再現可能)。負のanimation-delayで1フレーム目から空が埋まる。
+- ここだけは意図的にCSSのまま残した。常設レイヤーをcanvasにすると
+  rAFループが開きっぱなしになり、電池を食い続けるため。
+
+### 4. ページ遷移
+- 遷移先ごとに別の演出。ホーム=金の光/暖色、カレンダー=橙・最速
+  (340ms、日々何度も踏むため)、研究所=霜の渦・寒色、記録=金の紋章。
+  `body::after`のベールをCSS View Transitionsに重ねている。
+- 音も遷移先ごとに別(本のめくり2種・扉・めくり)。どのタブへ着いたかが
+  画面を見なくても分かる。
+
+### 5. 既定値をすべてONへ
+- T036/D-039は重い3つをoff既定で出荷した。「タップの光は欲しいが数秒の
+  起動演出は要らない」人に選択肢がない、という理由は今も正しく、6つの
+  独立スイッチもOS reduced-motionの全部off強制もそのまま残す。変えたの
+  は初期位置だけ。オーナーの明示指示であり、かつ実アセットで作り直した
+  演出がopt-in既定のままでは/settingsを探しに行くまで存在しないのと同じ
+  になるため。
+- これに伴い`migrateFromIntensity()`の穴を塞いだ: D-039では未設定キー=
+  offだったので、旧「しずか」ユーザーに対し新しい3キーを触らないままに
+  しておけば正しい答えになっていた。全既定がonになった今、未設定は逆の
+  意味になるため、6キーすべてに明示的な値を書くようにした。
+
+### 6. 変えなかったこと(意図的)
+- reduced-motionは全視覚エフェクトを例外なくoffにする。音と振動は
+  別トグル(`fx-enabled`)のままで、reduced-motionでは止めない
+  (あれはmotionの信号であって音の信号ではない — D-036)。
+- /bookのリプレイは完了エフェクトのトグルから独立(D-036の約束)。
+  形も完了バーストと別(発射しない・落ちない、テストで固定)。
+- 起動演出の音は、初回ジェスチャ前に鳴らせない(autoplayポリシー)。
+  そこで「後で鳴らす」のではなく捨てる。詳細はsound.tsのコメント。
+
+- 採用理由: (a) 「アセットから最適なものを選べ」という指示に対し、
+  選定を主観ではなく測定(ピッチ・長さ・コンタクトシートの目視)で
+  裏付けた、(b) 音も絵も「何をいつ出すか」を純データのdomainモジュール
+  へ切り出したので、ブラウザ実装を触らずに演出を差し替えられる、
+  (c) 単一のCC0ファミリー(Kenney)に揃えたのでライセンス調査が1回で
+  済み、かつ3パックが1つの声色として成立する。
+- 不採用案: `素材/*.mp4`の動画素材を遷移演出に使う → オーナー指示で
+  今回は見送り(v2用に保留)。/ 効果を1つのダイヤルに戻す → D-039の
+  判断を覆す理由がない。/ 背景粒子をcanvas化 → 常設rAFの電池コスト。
+### 7. Tier 1レビューで判明した設計上の穴(追記、2026-08-23)
+
+fresh-context Opus 5レビューがBLOCKER 1件+MAJOR 5件を返し、すべて実在した。
+うち3件は上のセクションが「守っている」と書いた不変条件そのものを破っており、
+記録として残す価値があるのはこの3件:
+
+- **音の初回ジェスチャ解錠をホーム画面から仕掛けていた。** `unlocked`フラグは
+  全cueと全hapticを塞ぐため、/settings・/book・/all・/plantを直接開いた場合
+  (リロード、ブックマーク、ホーム画面ショートカット)はそのページロード中ずっと
+  無音だった。mainでは同関数はレイテンシ最適化にすぎなかったので、これは
+  §1の修正が持ち込んだ回帰。全ルートで1度mountされる`PwaRegister`へ移動し、
+  `keydown`も監視対象に加えた(キーボード操作は`pointerdown`を発火しない)。
+- **§5の移行修正は誰も守っていなかった。** D-039の移行は2026-08-17に出荷済みで
+  mainは自動デプロイのため、実ユーザーは全員それを実行済み——3キーを書き
+  `fx-intensity`を削除した状態にある。よって`old === null`で即returnし、
+  「6キーすべてに明示値を書く」修正は6日間アプリを開いていない人にしか効かない。
+  引き金を「引退したダイヤルの有無」から「キーの存在」へ変えた
+  (`backfillDefaultsV2`)。履歴があるユーザーの未設定キーは、旧モデルで
+  未設定=offだったのだから、offとして記録する。テスト8件で固定。
+- **朝のあいさつ演出がコンテンツの前面に出ていた。** `.morning-light`は
+  「クエストリストの上に描いてはならない——これはUIではなく天気」(D-036 F-1)
+  としてz-index:-1に固定されているのに、その粒子側だけがz-95のcanvasで最大
+  4秒間クエストリストの上を流れていた。エンジンを2レイヤー(behind/front)に
+  分け、朝の演出はbehindへ。
+
+教訓として一般化できる部分: **「1画面から仕掛ける初期化」と「全アプリに効く
+ゲート」を組み合わせてはいけない。** 前者はその画面を通らない経路で沈黙し、
+後者はその沈黙をアプリ全体へ広げる。今回は`PwaRegister`という既存の
+「ルートレイアウトで1度だけmountされる場所」があったのに使わなかったのが原因。
+
+※ この3件はいずれもテストでもtypecheckでも検出できない(どれも
+「正しく動くコードが、間違った場所から呼ばれている」類)。機械検出できる形へ
+還元できたのは移行の1件のみで、それは`tests/lib/fx-migration.test.mjs`として
+実装済み。残り2件は`scripts/verify.mjs`へ落とせないため、
+`.claude/rules/`へは書かず——同じ間違いを繰り返す具体的な予防手順が書けない
+(「全アプリのゲートは全アプリの場所から仕掛けよ」は助言であって検査ではない)——
+このADRの記述に留める。
+
+- 将来見直し条件: 実機(中位Android)で44粒+700スプライトが重いと分かった
+  時点で、粒子数とMAX_PARTICLESを下げる。動画素材はgrimore-v2側で再検討。
+
+## D-048: アイテム/エリアのビジュアル資産を全面生成し、図鑑を実物の絵で見せる
+
+- 日付: 2026-08-23
+- 対象: public/item-rewards/(thumb・inspect・manifest.json), public/area-heroes/
+  (preview・explore), data/item-asset-index.json, docs/asset-art-bible.md,
+  docs/asset-production-ledger.md, scripts/{process-item,process-area,
+  validate-item,build-item-contact-sheets,build-item-production-index}*.mjs,
+  src/components/book/{area-explorer,item-explorer}.tsx,
+  src/components/reward/reward-art.tsx, src/components/home/quest-add-button.tsx,
+  src/components/home/task-add-modal.tsx, src/lib/use-dialog-back-close.ts,
+  src/components/ui/*(shadcn追加分), public/sw.js, src/app/globals.css
+- 決定: RARE 1-7 の424アイテムと8エリアの絵を実際に生成して同梱し、絵文字
+  プレースホルダを廃する。制作規約は docs/asset-art-bible.md、制作の全経緯・
+  再生成回数・品質判定は docs/asset-production-ledger.md が持つ。
+
+### 1. なぜ「マスターをGitに入れない」のか
+
+生成マスター(`public/item-rewards/master/` 417枚 + `pilot/`、約1GB)は
+`.gitignore` に入れ、**アプリが実際に配信する派生物だけ**を追跡する
+(`thumb/` 7.6MB、`inspect/` 107MB、`explore/` 4.1MB、`preview/` 824KB)。
+理由は一方向性: Gitは一度入った1GBを履歴から忘れられず、忘れさせるには
+履歴の書き換え(このプロジェクトではguardが禁止するforce push)が要る。
+逆に「あとから入れる」はいつでもできる。トレードオフとして、cloneした別環境
+では `scripts/process-*-assets.mjs` を再実行できない。
+
+これは「マスターが失われたら気付ける」状態にして受け入れる。具体的には、
+`public/item-rewards/manifest.json` と `data/item-asset-index.json` が、出荷中の
+各派生物を**生成したマスターPNGのsha256**を持ち、`scripts/validate-item-assets.mjs`
+がローカルのマスターと突き合わせる。マスターが差し替わっていたり壊れていたりすれば
+検証が落ちる——再生成しようとした時に初めて気付く、という事態を避けられる。
+同スクリプトはマスター不在でも動き、アプリが配信する派生物とmanifestの検証は
+そのまま実行して、飛ばした項目を明示する(だからCIにも載せられる)。
+マスター実体はオーナーのローカルにある。
+
+### 2. 全画面エクスプローラと戻るジェスチャ
+
+エリアは1枚を約2×2ビューポート分の探索キャンバスとして描き、中央から開始して
+二軸パン+ズーム。アイテムは1:1から開始し横スワイプで隣へ。どちらもCSS
+transformのみ(コンポジタ完結)で、reduced-motionでは整定アニメーションを外す。
+
+Androidの戻るジェスチャで閉じられない問題は `src/lib/use-dialog-back-close.ts`
+で解決した。空URLの `pushState` はApp Router自身のhistory同期に吸収されて
+区別できず、`router.push` のハッシュのみ変更はこのNext.jsでは無音のno-op
+だったため、`history.pushState` を直接、実URL(pathname + `#explore`)で呼ぶ。
+React 19 StrictMode の mount→cleanup→mount で二重pushや `history.back()` の
+非同期unwindと競合しないよう microtask に遅延させる(open-flourish.tsx と同型)。
+
+### 3. 受け入れた既知の不完全さ
+
+Opus 5サブエージェント2体による全424点の視覚レビューで、23点が must-fix
+(RARE 6-7 にシルエット衝突が集中、原因はテンプレート再利用)。この環境の
+Claudeには画像生成ツールがないため**オーナー判断で現状のまま出荷**する。
+再生成が可能になった時点で docs/asset-production-ledger.md の該当表から着手する。
+
+- 将来見直し条件: 派生物120MBがVercelのビルド時間を実測で悪化させたら、
+  `inspect/` をリポジトリ外(CDN/Blob)へ移す。must-fix 23点は画像生成手段が
+  得られ次第。
+
+## D-049: クエスト追加ボタンをWebGLの魔力オーブにし、遷移演出OFF時に素の遷移を与える
+
+- 日付: 2026-08-23
+- 対象: src/lib/domain/mana-orb.ts(新規), src/lib/mana-orb.ts(新規),
+  tests/lib/domain/mana-orb.test.mjs(新規),
+  src/components/home/quest-add-button.tsx,
+  src/components/navigation/bottom-nav.tsx, src/app/globals.css
+
+### 1. オーブ: 自作シェーダを選び、外部3Dライブラリを選ばなかった
+
+オーナーが4案のプロトタイプから「露 / Dew」を選び、10個のパラメータを自分で
+調整した最終値を指定した。この値は `MANA_ORB_PARAMS` に**そのまま**入っており、
+`tests/lib/domain/mana-orb.test.mjs` が1件のテストで固定している——これは
+「あとで詰める既定値」ではなく承認済みのデザインなので、変更は新しい決定を
+要する。
+
+実装はWebGL1のレイマーチング(SDF球)で、Three.js/Spline/Lottieを足していない。
+理由は2つ。(a)この見た目の核は**入射と射出の2回の屈折**にある。入射側だけ
+屈折させると光線が収束して平たい円盤になり、ガラスに見えない。2回目の屈折は
+球体の裏面まで進んでから曲げ直す必要があり、これはメッシュベースの汎用3D
+ライブラリを入れても結局自前シェーダになる。(b)依存を1つも増やさずに済む
+(バンドル増分はシェーダ文字列のみ)。
+
+物理(潰れバネと内部のスロッシュ)はブラウザを必要としないので
+`src/lib/domain/mana-orb.ts` に純関数として分離し、描画側と分けてテストする。
+明示的オイラー積分は条件付き安定なので、`dt` を50msでクランプし、潰れ量を
+シェーダのSDFが表現できる範囲へクランプしたうえで、最大ステップでの
+発散しないことをテストで固定した(バックグラウンドから復帰した最初のフレームが
+まさにこの条件になる)。
+
+### 2. 電池: 常時rAFを避ける
+
+D-038で「常設レイヤーをcanvas化するとrAFが開きっぱなしになり電池を食う」と
+決めて背景の光の粒子をCSSのまま残した。ボタンの裏で走り続けるフラグメント
+シェーダは同じ問題なので、同じ規律を適用する: タブが隠れたら停止、
+IntersectionObserverで画面外なら停止、`prefers-reduced-motion` では
+**1フレームだけ描いてループを開始しない**(オーブは見えるが動かない)。
+Playwrightで実測して確認済み(表示中は500ms中25回変化、隠すと1回=静止、
+復帰で再開)。
+
+WebGLが無い/シェーダのリンクに失敗した環境では `createManaOrb` が null を
+返し、既存のCSS「泉の封印」ボタンがそのまま出る。だから旧デザインのCSSは
+削除せず、`.is-orb` による上書きとして書いてある。`destroy()` で
+`WEBGL_lose_context` を**呼ばない**のは意図的で、呼ぶとそのcanvasが永久に
+死に、React 19の二重呼び出しeffectで2個目のオーブが無言で出なくなる(実際に
+この不具合を踏んで直した)。
+
+`+` の色はトークンではなくリテラル(`oklch(0.3 0.07 300)`)。オーブは自分で
+発光して明暗どちらのテーマでも明るい真珠色になるため、`--foreground` に
+紐づけるとダークテーマで消える。
+
+### 3. 遷移演出OFF時に、いちばん重いモーションが残っていた
+
+「ページごとの遷移演出」トグルをOFFにしても、3Dのノートめくり
+(`rotateY(-72deg)`)は再生され続けていた。トグルは `data-page-theme` を
+出さないだけで、めくり自体はアプリの基本挙動だったため。結果として、
+モーションを減らすための唯一のスイッチを切った人に、画面上で最も重い
+モーションだけが残るという壊れた挙動になっていた。
+
+OFF時は `data-page-plain` を立て、GoogleのMaterial / AppleのiOSが使う素の
+フェードスルー(旧画面が90msで消え、新画面が60ms遅れて0.985倍から200msで
+立ち上がる)にする。奥行きも方向も行き先ごとの個性もない。完全な無演出には
+しない——切り替わった感覚が失われるうえ、reduced-motionの人はメディアクエリ
+経由で既に無演出を得ているため。
+
+`data-page-plain` は「テーマ無し」ではなく独立した属性にしてある。素の遷移も
+`data-page-turn` を伴うので、タスクカードのFLIP抑止ルールが両方の経路で効く。
+既存のめくりルールの除外は `:where(:not([data-page-plain]))` で書き、詳細度を
+0,1,1のまま保った——行き先別テーマのルールが属性1つ分の差でこれを上回る、
+という既存の前提をソース順に依存させずに保つため。
+
+- 将来見直し条件: 実機(中位Android)でオーブが電池/発熱に響くなら、
+  DPR上限1.5をさらに下げるか、非操作時のフレームレートを落とす。
+
+## D-050: プロジェクトMCPサーバーの追加
+- 日付: 2026-08-30
+- 対象: `.mcp.json`
+- 調査: CodeGraph、Vercel、GitHub、Playwright、Context7 の公式/保守元設定を確認。
+- 決定: `codegraph`（ローカルstdio）、`vercel`（`https://mcp.vercel.com`）、
+  `github`（`https://api.githubcopilot.com/mcp/`）、`playwright`（`npx -y
+  @playwright/mcp@latest`）、`context7`（`https://mcp.context7.com/mcp`）を
+  プロジェクトスコープへ追加する。認証情報は保存しない。
+- 採用理由: 既存のプロジェクトMCP設定へ、指定された5サーバーだけを最小構成で追加するため。
+- 確認結果: JSONパース成功、Claude Codeで5件すべてがProject configとして認識された。
+
+## D-051: アプリ内文字サイズを2段階化し、満開後施策は観察マイルストーンを第一候補にする
+
+- 日付: 2026-08-31（外部調査: 2026-08-30）
+- 対象: T048
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 | 既設project MCP / npm `@upstash/context7-mcp` 4.0.4、[公式クライアント設定](https://context7.com/docs/resources/all-clients)・[API Guide](https://context7.com/docs/api-guide) | 外部へ送るのはライブラリIDと質問。認証情報・アプリデータ・ソースは送らない | 採用。MCP呼出し口がこのセッションに公開されなかったため、同じ公式APIを読み取り専用で使用。導入中Next.js 16.3.1に最も近い16.2.9 snapshot / React 19.2 / Tailwindの資料取得をスモーク確認 |
+| Chrome DevTools MCP | 既設local MCP / 1.8.0、[保守元README](https://github.com/ChromeDevTools/chrome-devtools-mcp) | ローカルChromeのページ・storage・networkを閲覧/操作。外部アカウント認証なし | 採用。実行中routeと主要操作、幅/高さ、console/network、Lighthouse、performanceを確認 |
+| Playwright MCP | 既設project MCP / 0.0.79、[保守元README](https://github.com/microsoft/playwright-mcp) | 自動ブラウザ操作。対象ページ内容を取得可能 | 不採用。今回の検証はChrome DevToolsと重複し、追加context/権限に改善がない |
+| frontend-design / shadcn skills | 既設local skills、shadcn CLI 4.1.2 | ローカルファイルと公開component docsのみ | UI規律と既存構成確認に使用。新規component/依存は不要と判断 |
+| 追加plugin/ライブラリ | — | 導入なら新しい供給網・bundle・権限が増える | 不採用。CSS root scalingと既存controlだけで要件を満たす |
+
+選定は既設Context7・Chrome DevTools・local skillだけ。追加installは0件、project scope外の設定変更も0件とする。
+
+### UIモデルと実装判断
+
+- 1つだけ選んだモデルはApple「設定 > 画面表示と明るさ」の文字サイズ設定。
+  [Appleの案内](https://support.apple.com/guide/iphone/make-text-easier-to-read-iph3c076905a/26/ios/26)と
+  [HIG Typography](https://developer.apple.com/design/human-interface-guidelines/typography)を参照した。
+  借りるのは「設定内の独立した表示項目」「変更が即時に全体へ反映」「現在状態が明白」
+  という構造だけ。Apple固有の外観、slider、文言、brand assetはコピーしない。実際のcontrolは
+  オーナー指示を優先し、このアプリの既存設定行と同じ説明付きON/OFF buttonにする。
+- `html[data-text-size]`の`font-size`をNormal=16px、Large=20px(125%)とする。
+  固定pxの文字指定はNormal時に同じ見た目になるremへ機械変換し、React Context/全画面再描画、
+  resize listener、追加dependencyを避ける。変更はroot attributeとlocalStorageの同期だけにする。
+- 初回描画前にlayout内の短いinline scriptで保存値を検証し、`large`だけを受理する。
+  読出し不能・破損値・SSRはNormalへ安全に倒し、`suppressHydrationWarning`をrootへ限定する。
+- Large時は一覧名のtruncate/2行clampを解除する。研究所は横だけを隠して縦scrollを許可し、
+  drop revealは低い画面でscroll可能にする。新しく実装する設定面/controlは角丸にしない。
+
+### 満開後の第一候補（今回は提案のみ）
+
+「満開後の観察マイルストーン」を第一候補とする。満開条件の月10件は変えず、以後3件ごと
+（13/16/19件）に「満開後の観察 1/3・次まで2件」と短い観察記録を1つ解放する。演出は到達時だけ
+1〜2秒の控えめなCSS光、`prefers-reduced-motion`では即時表示。`monthlyCompleted`から導出できるため、
+新button、通貨、DB schema、常時rAF、日次入力は増やさない。
+
+ヒントは、現実の行動を花の変化へ返す
+[Pikmin Bloomの花植え](https://niantic.helpshift.com/hc/ja/23-pikmin-bloom/faq/2855-planting-flowers/?p=android)、
+短い反復目標を更新する[Finch Daily Quests](https://help.finchcare.com/hc/en-us/articles/37943131828749-Daily-Quests)、
+継続を木の成長・蓄積として見せる[Forest](https://www.forestapp.cc/en/)から得た。
+日次ワンタップ観察は新しい習慣state、標本variantは図鑑との重複が生じるため、現段階では採らない。
+導入判断時は「満開後の次タスク完了率」「7日再訪率」「マイルストーン到達率」を主指標にする。
+
+## D-052: Gemini Flashの最新版をGoogle管理エイリアスで自動追従する
+
+- 日付: 2026-08-31
+- 対象: T049
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 | 既設project MCP / npm `@upstash/context7-mcp` 4.0.4 (MIT)、`/websites/ai_google_dev_gemini-api` snapshot 2026-08-25、trust score 9 | 外部へ送ったのはライブラリ名とモデル選定の質問のみ。APIキー・アプリデータ・ソースは送信しない | 採用。セッションにMCP呼出し口が公開されなかったため、同じContext7公式read-only APIでlibrary searchとcontext取得を実行。`generateContent` REST形式とlatest aliasのhot-swapを確認 |
+| Google Gemini API公式資料 | [Models](https://ai.google.dev/gemini-api/docs/models)、[Release notes](https://ai.google.dev/gemini-api/docs/changelog)、2026-08-31閲覧 | 公開資料のread-only閲覧。認証・データ露出なし | 採用。最新GA FlashはGemini 3.7 Flash。`gemini-flash-latest`はFlashの最新リリースへGoogleがhot-swapし、破壊的変更は2週間前にメール通知する公式aliasであることを確認 |
+| Google Gen AI SDK | npm `@google/genai` 2.19.0 (Apache-2.0)、[保守元](https://github.com/googleapis/js-genai) | 導入時は新しいdependencyと供給網が増える。実行時の送信データは現行RESTと同等 | 不採用。既存の短いREST実装で正式endpointを利用でき、SDK追加は自動モデル選定を改善せず重複する |
+| 追加MCP / plugin / skill | — | 導入ごとに権限・供給網・context costが増える | 不採用。既設Context7とGoogle公式資料で要件を満たし、実装自体に外部操作は不要 |
+
+追加installは0件、project scope外の設定変更も0件。Context7の検索・context取得はいずれも200でスモーク確認した。
+
+### 決定
+
+- 固定列挙していた`gemini-2.5-flash`と、2026-06-01に停止済みの
+  `gemini-2.0-flash`を削除し、`gemini-flash-latest`だけを使用する。Google側の
+  alias更新が次回リクエストから反映されるため、Geminiの世代更新ごとのコード変更・
+  build・deployを不要にする。
+- latest aliasはstableだけでなくpreview/experimentalを指す場合もある。これは
+  「Googleの最新デフォルトへ自動追従する」という今回の明示要件を優先した判断で、
+  Googleは破壊的変更の2週間前通知を行う。primaryは常にaliasとし、単純なデータ抽出向けの
+  低遅延な安定版`gemini-3.5-flash-lite`はalias targetが一時的な高需要・timeout・5xxの
+  ときだけ使うcontinuity fallbackとする。通常時の自動追従を妨げず、一時障害で音声登録全体が
+  停止することを避ける。JSON response modeを受理しない場合のpayload fallbackも維持する。
+- Gemini 3.6以降でdeprecatedになった`temperature`指定を同時に除く。固定入力shape、
+  server-only API key、出力上限、全体50秒予算、429処理、upstream detail非公開は維持する。
+  各attemptは12秒に制限し、aliasのhangが全体予算を使い切ってfallbackを阻害しないようにする。
+- 最新Flashの既定`thinkingLevel`はmediumで、単純なタスク抽出には遅延・token消費が過大なため、
+  Google公式がlatency-critical用途に示す`low`をgenerationConfigへ指定する。応答は最初のpartだけで
+  なく、非thoughtの全text partsを結合する。これによりthinking対応モデルの複数part応答でも
+  最終JSONを取りこぼさない。
+
+### 検証
+
+- Context7とGoogle公式資料でモデルalias・REST形式・thinking設定を確認した。
+- `pnpm verify`（lint、typecheck、test 120件、production build）、`git diff --check`、
+  gitleaks、PR CIを通過した。
+- Vercel Productionで音声解析APIを実行し、14.74秒・HTTP 200でtitle / dueDate /
+  dueTime / categoryを含むJSONを取得した。`pnpm check:production`も配信CSS 47クラス中欠落0。
+
+2026-09-05追記: Google公式の[最新モデル案内](https://ai.google.dev/gemini-api/docs/latest-model)で
+Gemini 3.8 Flashへの更新を確認した。実装は世代名を固定せず`gemini-flash-latest`をprimaryにするため、
+この更新にもコード変更なしで追従する。安定版`gemini-3.5-flash-lite`はlatest aliasが一時失敗した場合の
+continuity fallbackであり、通常リクエストのモデル選択を固定しない。
+
+## D-053: 破壊的・予測不能操作をlocal test環境だけで再現するseeded resilience harness
+
+- 日付: 2026-09-04
+- 対象: testing / agent skill / browser automation
+- 要求: rapid tap、duplicate submit、navigation churn、reload/tab close/browser restart、
+  offline/abort/delay、quota/corrupt storageを再現可能な順序で注入し、時間・操作数・並列数を
+  必ず有限にする。production・実データ・外部通信には到達させない。
+
+### 実装前Capability Gate（2026-09-04調査）
+
+| 候補 | 種別・版/一次出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| `@playwright/test` | npm devDependency 1.62.1 / Apache-2.0 / Node >=20。[公式Isolation](https://playwright.dev/docs/browser-contexts)、[Timeouts](https://playwright.dev/docs/test-timeouts)、[BrowserContext route/offline/tracing](https://playwright.dev/docs/api/class-browsercontext)、[trace設定](https://playwright.dev/docs/test-use-options) | 新規の一時browser profileでlocal fixtureのDOM、same-origin request、明示したsynthetic storageだけを操作。traceはrepo内`logs/`またはOS tempへ保存 | 採用。npm registryで1.62.1が当日更新のcurrent、Node 24.14.0互換、direct dependencyは`playwright` 1.62.1だけと確認。browser lifecycle/network/storageを同じseedでCI再生できる |
+| 既設Playwright MCP | project MCP / `@playwright/mcp@latest` | agent contextへpage内容を取得し、対話的にbrowserを操作 | 主runnerには不採用。spot検証には有用だが、package scriptとしての固定budget、seed、history、invariant checkerを再現できず、既設機能とも重複する。設定変更・追加installはしない |
+| Node built-in test + `fake-indexeddb` | 既設dependency / Node 24 | process内のpure logicとmock storageのみ。外部露出なし | core safety/seed/budget testには継続採用。real browserのclose/restart、routing、quota exception注入は担えない |
+| Jepsen本体 / WPT全体 | 外部test suites。[Jepsen histories/model](https://jepsen.io/consistency/models)、[nemesis例](https://jepsen.io/analyses/rethinkdb-2-2-3-reconfiguration)、[W3C WebDriver BiDi](https://www.w3.org/TR/webdriver-bidi/) | 大きい別runtime/test surface。対象外のsystemやbrowserまで試験する | 不採用。Jepsenのinvoke/completion historyとbounded nemesisという設計だけを借り、browser appを分散DBとして過大主張しない。WPTは標準実装の適合suiteでありapp invariant試験とは目的が違う |
+| 追加plugin / MCP / skill | 推奨plugin一覧および既設local tools | 導入ごとに権限・認証・context costが増える | 不採用。外部account/dataは不要。再利用判断だけをproject-local skillへ閉じる |
+
+### 根拠と決定
+
+- W3C [IndexedDB 3.0](https://www.w3.org/TR/IndexedDB/) はtransaction abort時のrollback、
+  commit失敗時のatomicity、`QuotaExceededError` / `NotReadableError` / `UnknownError`を定義する。
+  実disk破壊ではなく、isolated pageのWeb Storage / IndexedDB / Cache書込境界へ
+  `QuotaExceededError`を注入し、corruptionはscenarioが列挙したsynthetic key/recordだけに限定する。
+- W3C WebDriver BiDiのnetwork moduleはoffline conditionとrequest failure/interceptionを区別する。
+  harnessもoffline、1回限定abort、有限delayを別operationとして履歴化する。
+- web.dev [Storage for the web](https://web.dev/articles/storage-for-the-web) はquota超過時の
+  `QuotaExceededError`とbest-effort storage evictionを、[Network reliability](https://web.dev/explore/reliable)
+  はoffline/不安定回線での明示的な信頼性を扱う。よって「画面が落ちない」ではなく、false success、
+  acknowledged write loss、recovery/degraded stateをscenario invariantで判定する。
+- targetはexplicit port付きloopbackだけ、credential/query付きURLは拒否し、
+  `/.well-known/resilience-test`が`environment=test`・scenario token・`Cache-Control: no-store`を
+  返すまでbrowserを起動しない。browser内のcross-origin requestはabortし、force bypassは作らない。
+- defaultは30秒・16 actions・2 tabs・browser restart最大2回。hard capは120秒・128 actions・
+  4 tabs・restart 4回で、全operationをseeded shuffleして最低1回ずつ実行する。seedと
+  Jepsen型`invoke/ok/fail` history、trace segment、failure screenshotを診断に残し、最初の
+  invariant違反で停止する。runner自身が作った一時browser profile以外のprocessは停止しない。
+- `.agents/`全体のignoreは維持し、`.agents/skills/resilience-tester/**`だけを明示的に追跡する。
+
+### 確認結果
+
+- `pnpm test:resilience:unit`: 14/14 pass。
+- `pnpm test:resilience`: seed `424242`で7/7 passを2回連続確認。全11 faultを含む同一順序を再生し、
+  request abort / offline由来のbrowser errorは、同じoperation・同じURL・対応するrequest failureが
+  揃う場合だけexpectedとして分類する。その他のconsole errorはinvariant違反として失敗する。
+- `node --test tests/resilience/core.test.mjs tests/resilience/campaign.smoke.mjs`: pass。
+- `pnpm exec eslint scripts/resilience tests/resilience`: pass。
+
+## D-054: 2026-09-05 ユーザーFB一括改善
+
+- 日付: 2026-09-05
+- 対象: feminine Areas / Gemini voice / Base wallpaper / first navigation / startup sound
+
+### 実装前Capability Gate
+
+| 候補 | 種別・版/一次出典 | 権限・データ露出 | 判断と確認 |
+|---|---|---|---|
+| Context7 remote MCP | MCP 4.0.4 / [公式client設定](https://context7.com/docs/resources/all-clients) | 公開ドキュメントqueryだけを送信。認証なし。API key・利用者データ・source codeは送信しない | 採用。project-local `.codex/config.toml`へ公式Streamable HTTP URLを追加し、MCP initialize HTTP 200 / protocol 2025-06-18を確認 |
+| Gemini公式 + Web Speech仕様 | [Gemini Models](https://ai.google.dev/gemini-api/docs/models)、[latest model](https://ai.google.dev/gemini-api/docs/latest-model)、[MDN SpeechRecognition error](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error) | 公開資料のread-only閲覧。音声・API key・アプリデータ送信なし | 採用。latest aliasのhot-swap、stable fallback、権限拒否・無音・audio capture等の失敗区別を実装へ反映 |
+| Next.js 16.3.1 built-in routing | [公式Linking and Navigating](https://nextjs.org/docs/app/getting-started/linking-and-navigating)、[Lazy Loading](https://nextjs.org/docs/app/guides/lazy-loading) | 外部権限なし。既存bundleだけ | 採用。静的routeのserver renderと`Link` prefetchを回復し、追加prefetch libraryは導入しない |
+| Chromium / web.dev rendering guidance | [DOM size](https://developer.chrome.com/docs/lighthouse/performance/dom-size/)、[content-visibility](https://web.dev/articles/content-visibility) | 公開資料のread-only閲覧。認証・データ露出なし | 採用。図鑑の全項目は検索可能なDOMに保ちつつ、画面外rarity sectionのstyle/layout/paintだけを延期する |
+| Apple iPhone wallpaper gallery | [公式Wallpaper案内](https://support.apple.com/en-us/102638) | 公開UI資料のread-only閲覧 | UIモデルとして1つだけ採用。選択肢一覧・即時preview・保存という構造だけを借り、Appleの外観、角丸component、固有素材、文言はコピーしない |
+| Kenney RPG Audio / Music Jingles | CC0 1.0 / [RPG Audio](https://kenney.nl/assets/rpg-audio)、[Music Jingles](https://kenney.nl/assets/music-jingles)、[CC0 legal code](https://creativecommons.org/publicdomain/zero/1.0/legalcode.en) | 同梱asset取得だけ。認証・利用者データなし | 採用。既存同梱CC0 sourceをmixした1.31秒のstartup flourishを追加。出典、source hash、再現手順は`docs/startup-sound-sources.md`へ固定 |
+| project-local skills | `frontend-design`、`shadcn`、`imagegen`、`resilience-tester`、`chrome-devtools` | repository内手順とlocal/browser testだけ | 採用。UI規約、生成asset要件、bounded fault campaign、実画面検証に限定 |
+| 追加UI/audio/model SDK | — | dependency・bundle・供給網を増やす | 不採用。既存React/CSS/Web Audio/RESTとPlaywrightで要件を満たす |
+
+### 決定と実装
+
+- `petal`（花菓子宮殿の庭）と`lullaby`（夢織り星谷）を追加し、各47点を既存エリアと同じ
+  R1/2/3/5/6/7 = 11/10/9/7/6/4で構成する。新規94点と2エリア画像は写実的な自然幻想の
+  共通art bibleを保ちつつ、花菓子・陶磁器・レース・星空・月・夢織りで女性向けの可愛さを明確にする。
+- Gemini keyをclient公開可能な`NEXT_PUBLIC_*`からserver-only `GEMINI_API_KEY`へ移し、
+  latest alias → stable liteの有限fallback、attempt timeout、payload互換fallback、秘密情報を含まない
+  error logを採用する。音声認識は二重開始、無限待機、unmount後callback、権限拒否、無音、network、
+  capture失敗を区別し、必ず手入力へ復帰できるようにする。
+- Base背景は10種類とする。白/紺の二択を置換するのではなく、各themeにlight/darkのatmosphereを持たせ、
+  設定画面のnative radioで即時適用・永続化する。SSRでは安全な既定値、初回paint前inline scriptでは
+  許可IDだけを受理し、hydration差分と白いflashを避ける。新規controlは`border-radius: 0`。
+- 各routeの`next/dynamic({ ssr: false })`と初回loading fallbackを外して静的server renderへ戻す。
+  下部navigationの既存`Link`がviewport内static routeを自動prefetchするため、最初の画面表示でも
+  client chunk待ちのblank/loading stateを作らない。IndexedDB読出し中もHome/All/Chronicleの骨格を
+  初回から固定し、状態は`aria-busy`で伝える。図鑑の画面外rarity sectionは`content-visibility: auto`と
+  intrinsic sizeで描画を延期し、最初に見えるエリア画像だけを高priorityで取得する。
+- 起動演出音は非blockingな単一audio elementで再生する。演出skip、unmount、page hide、
+  reduced motion、起動演出OFF、効果音OFFで停止し、autoplay拒否は画面操作を阻害せず静かにdegradeする。
+
+### 検証結果
+
+- `pnpm verify`でlint、TypeScript、unit 144/144、production buildがpass。画面5routeはすべてstatic prerender、
+  Gemini APIだけがon-demand server routeであることを確認した。
+- Catalog unit 14/14 pass。RARE 1–7は518点、全master hashは一意、shipping derivativeは2,072点。
+  Area processorは10/10、item validatorは518/518、resilience campaignは同一seedで2回連続7/7 pass。
+- Chrome DevTools MCPのproduction serverを412×915、device scale 2、touchで確認。初回reload時の
+  HomeはLCP 354ms / CLS 0.00、Allは265ms / 0.00、Bookは489ms / 0.00。Bookは横overflowなし、
+  新2エリアと総数530を実DOMで確認し、console warning/error/issueは0件だった。
+- Base背景10種はlight/dark双方でcomputed値が10種類すべて一意で、選択値はhard reload後も保持した。
+  Gemini APIは実リクエストHTTP 200、音声は無音timeout後にbuttonと手入力へ復帰することを確認した。
+- `startup-flourish.wav`はproduction serverからHTTP 200、`audio/wav`、115,522 bytesで配信された。
+  自動Chromeではbrowser autoplay policyにより可聴再生を保証できないため、拒否時は意図的に無音で継続する。
+- Lighthouse mobileはAccessibility 100、Best Practices 100、SEO 100。Agentic browsingは88で、
+  一般利用者向け画面にagent metadataがないという非機能要件外の1項目だけが未達だった。
+
+## D-055: 残存リスクの依存関係・CI・音声回復・autoplay対策
+
+- 日付: 2026-09-05
+- 対象: dependency integrity / CI supply chain / voice recovery and privacy / autoplay control
+- 要求: Dependabotで検出されたtransitive dependencyの修正版をlockfileへ固定し、CIで全severityの
+  `pnpm audit`をfail closedで実行する。Node 20 runtime警告を解消し、workflow tokenをread-onlyにする。
+  あわせて、音声認識の停止・再試行・server privacy境界と、ブラウザが許可しない可聴autoplayの
+  回復経路を、有限かつ観測可能な状態として扱う。
+
+### 実装前Capability Gate
+
+既存のpnpm/gh CLIと公式GitHub metadataで完結するため、追加MCP/plugin/skillは導入しない。
+Chrome DevTools MCPは親ステージのruntime確認に限定し、本変更では外部データ・認証情報を扱わない。
+参照はpnpm [audit CLI](https://pnpm.io/cli/audit)、fast-uri [v3.1.6 release](https://github.com/fastify/fast-uri/releases/tag/v3.1.6)、
+browserslist [releases](https://github.com/browserslist/browserslist/releases)、
+actions/[checkout releases](https://github.com/actions/checkout/releases)、
+[setup-node releases](https://github.com/actions/setup-node/releases)と各tagの公式`action.yml`である。
+
+### 決定と確認
+
+- 既存overrideを最小変更し、`ajv>fast-uri: ^3.1.6`、`qs: ^6.16.0`を更新。
+  `browserslist: ^4.28.7`と`@humanfs/node: ^0.16.8`だけを追加し、pnpm 10.33.0を
+  `packageManager`とCI `version`へ固定した。lockfile実解決値はfast-uri 3.1.7、browserslist 4.28.9、
+  @humanfs/node 0.16.8、qs 6.16.0。
+- CIは`pnpm install --frozen-lockfile`後に`pnpm audit --audit-level=low`を実行し、registry errorや
+  advisoryを抑制しない。push/PRに加え毎週月曜のscheduleと手動dispatchを同一workflowで実行し、
+  jobは15分で打ち切る。`permissions: contents: read`を明示し、checkout v7.0.1、setup-node v7.0.0、
+  pnpm/action-setup v6.0.10を公式tagのimmutable SHA（各`action.yml`の`using: node24`確認済み）で参照する。
+
+### 検証結果
+
+- `pnpm install --lockfile-only`（pnpm 10.33.0）成功。
+- frozen installと`pnpm audit --audit-level=low`を実行し、既知脆弱性0件（audit 9件から0件）を確認。
+- `gh api`で3 action tagの公式`action.yml`を取得し、すべて`using: node24`を確認した。
+
+### 起動音のautoplay回復（同D-055追補）
+
+- Capability gateは既存のpnpm/ghとChrome DevTools MCPで完結し、追加MCP/plugin/依存は導入しない。
+  UIモデルはApple [サウンド設定](https://support.apple.com/guide/iphone/change-sounds-and-vibrations-iph07c867f28/ios)
+  のラベル付き設定行と明示的な試聴操作だけを借り、外観・固有資産は複製しない。
+- [Chrome autoplay policy](https://developer.chrome.com/blog/autoplay)と
+  [WebKit autoplay policy](https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/)に従い、
+  audible autoplayを強制しない。`playStartupFlourish()`は単一mediaの有限deadlineと
+  `loading/playing/blocked/error/ended/cancelled/disabled`状態を公開し、拒否時だけ同じ要素を
+  ユーザー操作から同期retryする。Sound OFF、重複要求、skip、hidden、unmountで即時cancelする。
+- OpenFlourishの拒否時は「音付きで再生」を表示し、retryと同じ操作ターンでVFXと3秒dismiss timerを
+  再起動する。設定画面の「起動音を試聴」は停止操作を兼ね、状態を`role=status`で通知する。
+
+### 追補の確認結果
+
+- `node --test tests/lib/sound-preferences.test.mjs`: 10/10 pass（blocked/error/ended、同期retry、
+  Sound OFFとstale promise、never-settling play deadlineを含む）。
+- `pnpm lint -- src/lib/sound.ts src/components/fx/open-flourish.tsx src/components/settings/settings-screen.tsx`: pass。
+- `pnpm typecheck`: pass。`git diff --check`: pass。
+
+### 音声認識の回復とGemini privacy（同D-055追補）
+
+- 原因の再現: 元のproduction挙動では、recognizerの`stop()`後にterminal callbackが来ない
+  ケースを23.3秒観測しても、UIはlisteningのままだった。ただしhistorical mother-device/account
+  logsはなく、この再現だけでは当時の利用者環境の正確な原因までは証明できない。従来のwatchdogは
+  `stop()`より前にcancelされていたため、この経路を回復不能にしていた。修正では20秒watchdogを
+  terminalまで保持し、mounted状態とsession identityを確認する。結果後はrecognizerをdetach/abortし、
+  staleなerror/end callbackを無視する。
+- 停止・無音・権限・network・capture・AI設定の失敗を混同せず、transcriptを保持した明示的な
+  retryまたは手入力へ復帰する。新しい試行では古いtranscriptを消し、storage failureはAI failure
+  として表示しない。[Web Speech API仕様](https://webaudio.github.io/web-speech-api/)と
+  [MDNのSpeechRecognition error event](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error)
+  を状態分類の根拠とした。
+- clientのGemini全体予算はresponse body読み込みまで含む55秒。quota、configuration、upstream、
+  invalid responseをtyped errorとして扱う。serverは全responseにUUIDの`x-request-id`を付け、
+  `durationMs`/HTTP status/allowlist済みkindだけをstructured logへ出す。upstream body、任意の
+  error、reason、finishReason、transcript、keyはログへ出さず、markerを含む回帰テストで確認する。
+  根拠は[Gemini公式troubleshooting](https://ai.google.dev/gemini-api/docs/troubleshooting)。
+
+### 現在の確認結果とrelease tracking（同D-055追補）
+
+- focused checksは33/33 pass（sound 13、Gemini client 14、server privacy 4、voice watchdog 2）。
+  `pnpm audit`は0件、`pnpm test:resilience`はseed `424242`で11 bounded disruptionsを含む7/7 pass、
+  working diffのgitleaksは0件。親ステージの`pnpm verify`はlint/typecheck/test 164件/buildを
+  すべてpassした。
+- Chrome DevToolsのisolated local runtimeで、20秒の無terminal停止からpersistent errorとretry/manual、
+  service-not-allowedの区別、20回resultの1 API/1 task、late callback無視、pagehide cancel、
+  quota時save error、double-clickの1保存を確認した。startup autoplay blockから明示clickで実mediaが
+  playing→ended（1.308889秒）、settings previewのendedとOFF中pause/detach、320px/1280pxの
+  overflow 0、new controlsのradius 0を確認した。settingsの通常操作runtimeではconsole
+  error/warn/issue 0だった（故障注入テストの想定済みerror/warnとAPI 400 probeは別扱い）。reduced-motionは
+  `matchMedia`を強制したbrowser probeでoverlay/audioなしを確認した（OSそのもののsimulationではない）。
+  local APIは400（88ms）と200（2202ms）の双方でUUID `x-request-id`を確認した。
+- releaseは [PR #49](https://github.com/snowtone-ai/grimoire/pull/49) で追跡する。本変更はこの時点で
+  productionへ未deployであり、Chromeのproduction確認とrelease完了は未確認とする。実deploy後の
+  最終結果はPRのrelease comment/bodyへ記録し、post-release docs commit loopは作らない。
+
+### 既知の制限と回収メモ（同D-055追補）
+
+- historical mother-device/account logsは利用できないため、上記production停止不具合の正確な
+  過去原因は推定できても証明できない。audible autoplayはブラウザポリシー上強制できず、明示的な
+  retry/previewを提供する。storage blocked時のsession fallbackは再起動後へは永続化されない。
+- 以前ignoreされていたresolved fixture artifactは
+  `C:\Users\chidj\AppData\Local\Temp\task-plant-resolved-resilience-20260905`へ回収可能な形で移動した。
+  untrackedの`AGENTS.md`はユーザー所有ファイルとして変更しない。
+
+## D-056: 壁紙候補の折りたたみと意味別触覚フィードバック
+
+- 日付: 2026-09-05
+- 対象: settings wallpaper / feedback controls / home floating actions / haptics
+- 要求: 設定画面の初期表示を圧迫しない壁紙選択、既存トグルとの視覚的一貫性、
+  泉の紋章とマイクの整列、各操作の意味に合う短い触覚を実装する。
+
+### 実装前Capability Gate
+
+既存のReact/CSS、`src/lib/domain/sound-cues.ts` と `src/lib/sound.ts` の単一経路で要件を満たすため、
+外部haptic library/plugin/MCPや依存追加は不採用。採用候補は公開Web標準の
+[W3C Vibration API](https://www.w3.org/TR/vibration/) と
+[MDN `navigator.vibrate()`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate)のみで、
+権限・データ露出はなく、sticky user activation、非対応ブラウザでのsilent degradation、
+既存のhaptic設定OFF・retrigger guardを維持する。Appleの
+[Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics)
+に従い、consistent/causal/short/optionalな意味別patternに限定する。
+
+### UIモデルと決定
+
+既存D-055のApple wallpaper galleryを継続し、「項目 → 明示操作 → 選択肢 → 即時preview」の
+構造だけを借りる。Apple固有の外観、角丸資産、文言は複製しない。候補一覧は同一ページ内の
+accessible radiogroupとして初期非表示・buttonで展開し、選択後も開いたままにする。効果音行は
+既存Text/Haptic rowと同じ円形track/knob・iconに揃え、マイクと泉の紋章は同一の円形タッチ領域へ揃える。
+触覚はselection/toggle、open/close、navigation、add/save/undo、error、rewardsを短く区別し、
+設定toggleのON時にcue経由の一回だけ振動する。
+
+## D-057: Codex MCP 定義の競合解消
+
+- 日付: 2026-09-06（プロダクト横断再確認: 2026-09-07）
+- 要求: 任意のプロジェクトフォルダから Codex と MCP を起動できるようにする。
+- 調査: OpenAI 公式 [MCP ドキュメント](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) を確認。全プロジェクトの `.codex/config.toml` と MCP 定義を走査した。追加の MCP、plugin、skill、依存関係は不要で、権限・データ露出の変更もない。
+- 決定: グローバル設定の stdio 版 `context7` を唯一の定義とし、`task-plant/.codex/config.toml` の同名 HTTP 定義を削除した。同一サーバー名に異なる transport を重ねると `url is not supported for stdio` で Codex の起動前検証が失敗する。
+- 確認: `codex mcp list` を `.codex` を持つ全 11 プロジェクトで実行し、すべて exit code 0。さらに `C:\Users\chidj\project\プロダクト` 配下の全 19 リポジトリ直下でも再実行し、全件 exit code 0。`task-plant` では chrome-devtools、clasp、context7、google-workspace が enabled として表示された。Context7 4.0.5 と `npx`、`uvx`、`codegraph` の実行可能性も確認した。
+
+## D-058: pm-zero v13 への運用移行
+
+- 日付: 2026-09-07
+- 要求: Grimoire を pm-zero v13 に沿って保守し、次回の作業を安全に再開できる状態にする。
+- 調査: 現行 `main`、GitHub Actions、既存の台帳・判断記録、プロジェクト固有の実行コマンドを確認した。既存のデータモデル、公開設定、依存関係、外部接続を変更しなくても、v13 の共通規約を参照する短いプロジェクト規約と台帳先頭の現在地で要求を満たせる。
+- 決定: 旧来の長大な一般規約は履歴で保持しつつ、現行 `AGENTS.md` は pm-zero v13 への実在する参照、Grimoire 固有の IndexedDB・外部 API・UI・検証・記録先だけに絞る。`tasks.md` は先頭を v13 の再開形式へ更新し、過去の作業行は証跡として残す。
+- 影響と確認: プロダクトコード、利用者データ、Vercel の公開範囲、Gemini/Google の認証情報と scope、新規依存は変更しない。PR #52 は GitHub Actions CI 成功後に `main`（`f81652f`）へ統合し、Vercel Production と `pnpm check:production`（配信 CSS 48 クラス、欠落 0）を確認した。
+
+## D-059: グリモ画面の調査・3案と短文出力設定
+
+- 日付: 2026-09-07。要求は `prompt.md` の公式情報・カスタマーレビュー調査と複数案提出、およびCodexの出力節約。
+- 判断: Astraが既存実装・提供画像・統合企画を担当し、Luna/xhighの子2名へ異なる8作品の調査を委譲。親の2作品を合わせて10作品・37レビューを要約した。公開ページの少数標本であり、比率・効果・現在の不具合を一般化しない。
+- 提案: `docs/grimo-proposals.md` のA（直接のふれあい）を推奨。B（箱庭）とC（思い出）を比較し、休んでも減らない育成、専用おやつ、背景と設定、既存データを残す置換方針を具体化。主参照は [Amaru公式](https://www.sixwingstudios.com/amaru-press-kit) の世話と反応の構造。固有資産は転載しない。今回は企画提出で、実装・公開・データ移行は行っていない。
+- 設定: [OpenAI公式Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) の `model_verbosity` を確認。グローバルには既に `low` があり、今回プロジェクトの `.codex/config.toml` にも明記。`AGENTS.md` に短い進捗・最終報告・子への依頼を追記。モデル、reasoning effort、権限、MCPは変えていない。短文指定による総トークン削減量は未測定であり、保証しない。実行中セッションの設定再読込までは確認していない。
+- 検証: `codex features list` がexit 0で設定を読み込むことを確認。調査件数・根拠・提案の対応、ローカル文書リンク、`git diff --check` を確認。文書・設定変更のためアプリ試験・本番反映は対象外。
+- 作業中の修正: 台帳更新の初回patchは既存文との不一致で変更前に失敗。実際の先頭だけを確認して再適用した。以後、履歴を広く読み込まず更新対象の短い範囲を使う。
+- 次: 実装依頼時に企画の受入条件から再開し、素材と1匹の触れ合いを先に確認する。
+
+## D-060: 1匹と専用世界に集中する最終HTML企画
+
+- 日付: 2026-09-07。更新された `prompt.md` は調査に基づく最終企画のHTML提出を指定。親が構想・仕様・統合・受入判断を担当し、既存Luna/xhighの子2名へ追加調査、方針レビュー、HTML制作を範囲指定で委譲した。孫なし、同時編集なし。
+- 決定: 「きみのいる、小さな世界。」へ一本化。4体は常に1体ずつ、専用の環境と演技を持つ。永久無料、広告なし、マイナス状態なし。おやつは無制限の道具とし、旧案の日次配布・残高・段階解放は廃止。数値の育成より、触れ方・余韻・待つ時間の個性を優先する。
+- 根拠: [うさぎしま公式掲載](https://play.google.com/store/apps/details?hl=en_US&id=com.pank0.usagishima) をUI・体験の主参照に選んだ。手描きの相棒へ、なでる・餌やり・ブラシで関わる構造が近い。固有の絵・音・家具は転載しない。既存10作品の調査に4作品を追加確認し、重複除外12作品。評価の取得条件とレビューの限界は `docs/grimo-research-touch.md` を参照。Finchの評価に子4.8／親4.9の取得差があり、最終表示を親の再取得値に統一して差を記録した。
+- 成果物: `docs/grimo-final-proposal.html` が視覚的な最終企画、`docs/grimo-final-spec.md` が工程1〜3の仕様基準。原画は元ファイルを変えずHTMLに埋め込み、1象限ずつ表示する。外部フォント・実行時API・新規依存・費用を追加しない。120反応核は製品制作の目標であり、説明デモの実装数と混同しない。
+- 判断の境界: 企画決定の質問は不要。素材の許諾と分離レイヤーは製品用素材の加工・配布前に確認する。製品コード・DB・公開状態には触れない。「競合以上」は比較試遊前の達成実績とせず、実装後の合否条件にした。詳細仕様の独立レビューは矛盾指摘なし。
+- 追加指示: `grimo-ムゥ.png` を5匹目として追加し、現状の全グリモを5匹へ更新。ムゥは虹音の花丘の穏やかな音楽家。元の画風・比率・虹の体・蝶ネクタイ・指揮棒・背中のピアノを保持。最終の反応制作目標は30×5=150。旧3案と当初4体の記述は履歴として保持し、最終HTML・仕様は5体を正とする。
+- 検証: Chromeのfile表示で320/390/667横/1280px、1体表示・5体切替・原画の見え方・タップ・代替ボタン・キーボードを確認。長押し/なで速度/離す/cancelはPointerEvent注入で確認。接触classは即時、次フレーム3.1msの単発測定（製品のp95や競合優越の証明ではない）。横overflow 0、console error/warn 0、外部実行リソース通信0。Playwrightのreduce設定でCSS animation 2件ともnoneを確認。原画2点は埋込元バイト一致、JS構文・リンク・差分確認成功。実タブ非表示の再現は未確認。製品build・本番検証は対象外。
+- 修正と学習: 子の初稿はtranslate構文、切替中の複数体露出、人格と工程順のズレ、横overflowを親が修正。企画提出に対し説明デモの調整・検証を広げすぎ、利用者から遅さの指摘を受けた。次回の企画提出では必須の内容・表示確認で区切り、製品相当の検証を増やさない。Playwright補助確認ではfileプロトコルが標準でブロックされるため単一HTMLだけをlocalhostで一時配信し確認（faviconのみ404、製品の異常ではない）。確認後に一時サーバーを終了した。
+## D-062: Carol Golden Reference の開始とcanonical制約
+
+- 日付: 2026-09-08。利用者指示により、5体同時実装を止め、P00監査→G01→G02→renderer決定→G03→G04→人の明示合格の順に固定した。既存 `/plant`、schema v4、backup、PWA、音・音声入力、未コミット差分を保護する。
+- G01は5起動経路と中断可能な状態遷移を `docs/grimo-g01-product-contract.md` に固定。罰、消費、期限、通知圧力は追加しない。
+- G02は利用者提供原画を `assets/grimo/source/` へbyte不変で整理し、source hashを検証する再現可能scriptとmanifestを追加。キャロルの3層静止再合成はdecoded全画素一致。JPEG黒matte、閉じ目、隠れ部位、独立可動partsはsource不足として記録し、生成・補筆で埋めない。原画の外部配布権記録はrelease前の未解決事項。
+- 作業中の軽微な失敗: PowerShellで `Get-FileHash -LiteralPath '*'` を使いwildcardが展開されなかった。ファイル移動自体は成功し、以後はscript内の明示pathでhashを検証した。
+- canonical test初稿はSharpへWindowsのfile URL objectを直接渡して失敗し、`fileURLToPath` へ修正後3/3 pass。renderer初稿はrender中のref更新・impure時刻初期化とthree型不足をlint/typecheckが検出し、effect内更新・初回frame初期化・`@types/three` 追加で解消した。PixiJS切替時のAssets cleanup警告はtexture破棄をやめ `Assets.unload` へ修正し、失敗観点だけ再確認してconsole 0。
+## D-063: Carolの目視合格はライブ調整面で行う
+
+- 日付: 2026-09-08。利用者の要請により、Carolの合格判断は固定スクリーンショットやAI評価ではなく、`/plant` の「目視調整を開く」で利用者自身が操作して行う。
+- 原画の顔・輪郭・比率・配色はG01のidentity layerであり、比較中に変えられるとcanonical fidelityを判断できないため固定する。一方、空・月・遠近雲・星・Carolの安全な舞台上配置/一様scale、返事量、追従、release、余韻、雲視差/伸びを36項目のlive parameterとして公開する。数値はsession stateだけで、IndexedDB、task/plant/reward/backupへ書き込まない。
+- 目視調整面は通常のfirst-touch体験を妨げない二次操作とする。レビュー値を永続presetへ昇格するのは、利用者が明示合格と採用値を指定した後だけである。G04の9反応核をこの判断の前に始めない。
+# D-068: Blender 5.2.1 LTSへの更新と3D造形改善（2026-09-09）
+
+- 既存のThree.js 0.185.1とWebGLRenderer、Next.js、GLBのノード名を維持し、Blenderだけを4.5.10から5.2.1 LTSへ更新した。WebGPU/WebGPURendererは現時点の品質課題ではないため導入しない。
+- `scripts/grimo/build-carol-3d.py`の既存BodyWool/HeadWoolを壊さず、疎なWoolCluster/HeadWoolClusterを追加して羊毛の塊感を補強した。FaceにBasis/Smile/Surprise/SquintのShape Keysを追加し、Three.js側で既存のjoy/surprise状態からブレンドする。
+- Blender 5.2.1でGLBを再生成し、既存ノード名・Three.jsロード経路・APIを保持する。追加依存、外部素材、費用、データ移行はない。
+
+## D-069: キャロルの原画基準と全角度の造形評価（2026-09-09）
+
+- 利用者は前作を品質不合格と評価。原画の実測をせず左右対称の丸い羊へ置換したことが主因。クラスタ追加やBlender更新では解決できなかった。
+- 新しい投影UVと閉曲面の中間版も、正面の一致に対して側面が裂ける/薄い/引き延ばされる問題を自分の目視で発見し、不合格とした。原画のalphaを立体本体の切り抜きへ流用し、正面重視で形を組んだ問題。無地の全角度と可動部のつながりを評価してから色と演技を仕上げる。
+- 材質の失敗: EmissionのみではglTF裏面の頂点色が白になった。既存exporterのunlit検出を確認し、RGBA→Surfaceと `KHR_materials_unlit` へ修正して出力を実測。これと造形の合格は別。
+- Wei Wongの原画からの3D制作、Anthony Wongのポーズ評価、Nicholas De Lottoの身体/顔/接地/時間差の仕上げを一次資料で調査。今回へ適用する具体項目と閲覧できなかった資料を `docs/grimo-carol-rebuild-review.md` に記録した。
+- 将来の動作追加を利用者が明示希望。部位名とmorphの意味を固定し、入力と演技を分離する。未実装の全キャラ共通基盤を先回りして増やさない。現時点では制作途中、compactのため保存して中断。
+
+## D-070: 不透明の全周ペイント・演技境界・チェックでの中断（2026-09-09）
+
+- 2Dの透明部分を3D本体の穴にせず、派生全周UVで補完色へ接続。背面poleの角度依存深さを除去。正面の原画への近さだけで造形合格としない。側面の層状形と境界はまだ未合格。
+- `carol-3d-motion.ts` をキャロル専用の演技編集単位にし、入力/描画は分離したままにする。静止はアニメーション時計とpose更新を止め、歩行接地はroot移動を相殺する。全キャラ共通基盤は作らない。
+- 実クリックで比較ボタンが反応しない原因は古い開発cacheのCSS。ソースに指定があることを動作確認の代わりにせず、配信CSS/実hit targetを確認。自分の開発server停止→限定cache退避/再生成で回復した。
+- 最新の指示でチェックURLと再開台帳を渡して終了。191tests/build成功を造形完成の代わりにしない。詳細は `docs/grimo-carol-rebuild-review.md` 最新節。

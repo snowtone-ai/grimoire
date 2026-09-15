@@ -1,0 +1,25 @@
+
+> grimoire@0.1.0 resilience:carol C:\Users\chidj\project\プロダクト\task-plant
+> node scripts/resilience/run-carol.mjs "--" "--acknowledge-local-destructive-testing"
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:60305
+- Network:       http://192.168.10.120:60305
+- Environments: .env.local
+✓ Ready in 1170ms
+✓ Running next.config.ts took 94ms
+
+ GET /.well-known/resilience-test 200 in 704ms (next.js: 616ms, application-code: 88ms)
+file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:108
+    throw new Error(`${name} exceeds the hard limit of ${HARD_LIMITS[name]}`)
+          ^
+
+Error: durationMs exceeds the hard limit of 120000
+    at boundedInteger (file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:108:11)
+    at normalizeLimits (file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:121:20)
+    at runResilienceCampaign (file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/campaign.mjs:323:18)
+    at file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/run-carol.mjs:74:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.14.0
+ ELIFECYCLE  Command failed with exit code 1.

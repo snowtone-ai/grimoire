@@ -1,0 +1,99 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/.playwright-mcp/
+/output/playwright/
+/.playwright-cli/
+
+# next.js
+/.next/
+/.next-resilience/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# pm-zero v9.3
+screenshots/*
+logs/*
+!screenshots/.gitkeep
+!logs/.gitkeep
+!.env.example
+.claude/settings.local.json
+.claude/worktrees/
+.mcp.json
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+
+# GCP service account keys
+service-account*.json
+credentials.json
+.claude/transcripts/
+.claude/cache/
+.codegraph/
+
+# Local third-party agent tooling, not this project's source.
+.claude/skills/**
+.agents/
+skills-lock.json
+
+# This repository owns one bounded resilience-testing skill. Keep all other
+# third-party/local agent skills ignored while allowing this skill to be reviewed.
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/resilience-tester/
+!.agents/skills/resilience-tester/**
+
+# impeccable (Stop-hook code checker). config.json IS tracked: it records
+# reviewed false-positive decisions with their reasons, which are worth
+# keeping. The hook cache is a disposable speed-up and never is.
+.impeccable/hook.cache.json
+
+# Art-generation sources. Only scripts/process-item-assets.mjs and
+# scripts/process-area-assets.mjs read these; every file the app actually
+# serves is derived from them and IS tracked (thumb/, inspect/, explore/,
+# preview/, manifest.json). The masters alone are ~1GB of full-resolution PNG,
+# which git can never forget once committed, so they stay out of history and
+# live in the owner's own archive. data/item-asset-index.json records each
+# derived file's sha256, so a lost master is detectable rather than silent.
+/public/item-rewards/master/
+/public/item-rewards/pilot/
+/public/area-heroes/master/
+/public/area-heroes/pilot/
+
+# Contact sheets for reviewing generated item art by rarity — regenerate with
+# `node scripts/build-item-contact-sheets.mjs`, never worth versioning.
+/tmp-item-audit/

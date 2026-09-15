@@ -1,0 +1,207 @@
+import { db, type Task, type Streak, type Category } from "./db.ts";
+import {
+  doesTaskApplyToDate,
+  sortTasksByTime,
+  taskForDisplayDate,
+  todayDateString,
+} from "./domain/task-date.ts";
+import { countMonthlyCompletedTasks, monthKeyLocal } from "./domain/plant.ts";
+import { calcStreakCount } from "./domain/streak.ts";
+import { validAppointment, type CalendarImportTask } from "./domain/calendar-import.ts";
+import { localDateKey } from "./domain/macarons.ts";
+import {
+  grantMacaronForTaskAdditionInCurrentTransaction,
+  grantMacaronForTaskCompletionInCurrentTransaction,
+  type MacaronGrantResult,
+} from "./macaronDb.ts";
+
+// ── Task CRUD ──────────────────────────────────────────────────────────────
+
+/** 全タスクを取得 */
+export async function getAllTasks(): Promise<Task[]> {
+  return db.tasks.toArray();
+}
+
+/** 指定日のタスクを時刻順で取得（当日締切 + 繰り返しで該当する日） */
+export async function getTasksForDate(date: string): Promise<Task[]> {
+  const all = await db.tasks.toArray();
+  const filtered = all
+    .filter((task) => doesTaskApplyToDate(task, date))
+    .map((task) => taskForDisplayDate(task, date));
+
+  return sortTasksByTime(filtered);
+}
+
+/** IDでタスクを1件取得 */
+export async function getTaskById(id: string): Promise<Task | undefined> {
+  return db.tasks.get(id);
+}
+
+/** タスクを作成 */
+export async function createTask(
+  task: Omit<Task, "id" | "createdAt">
+): Promise<Task> {
+  const createdAt = new Date();
+  const newTask: Task = {
+    ...task,
+    id: crypto.randomUUID(),
+    createdAt: createdAt.toISOString(),
+  };
+  // Task creation and the daily add reward share a transaction. Calendar
+  // imports intentionally write through importCalendarTasks instead, so a
+  // replayed external batch does not consume the manual-add reward.
+  await db.transaction("rw", [db.tasks, db.foodInventory, db.foodAwards], async () => {
+    await db.tasks.add(newTask);
+    await grantMacaronForTaskAdditionInCurrentTransaction(localDateKey(createdAt), createdAt);
+  });
+  return newTask;
+}
+
+/** All-or-nothing import; the transaction also serializes competing tabs. */
+export async function importCalendarTasks(tasks: CalendarImportTask[]): Promise<{ added: number; skipped: number }> {
+  if (tasks.length > 30 || tasks.some(t => !validAppointment(t) ||
+    typeof t.importSourceKey !== "string" || !t.importSourceKey.startsWith("google-calendar:") ||
+    t.importSourceKey.length > 3100 || !["job", "university", "life"].includes(t.category) ||
+    t.recurrence !== "none")) throw new Error("Invalid calendar import");
+  return db.transaction("rw", db.tasks, async () => {
+    let added = 0;
+    let skipped = 0;
+    for (const task of tasks) {
+      const existing = await db.tasks.where("importSourceKey").equals(task.importSourceKey).first();
+      if (existing) { skipped++; continue; }
+      // Stable IDs preserve source identity in backups exchanged across devices.
+      await db.tasks.add({ ...task, id: task.importSourceKey, completed: false, completedAt: null, createdAt: new Date().toISOString() });
+      added++;
+    }
+    return { added, skipped };
+  });
+}
+
+/** タスクを更新 */
+export async function updateTask(
+  id: string,
+  changes: Partial<Omit<Task, "id" | "createdAt">>
+): Promise<void> {
+  await db.tasks.update(id, changes);
+}
+
+/** タスクを削除 */
+export async function deleteTask(id: string): Promise<void> {
+  await db.tasks.delete(id);
+}
+
+/** タスクを完了/未完了に切り替え */
+export async function toggleTaskComplete(id: string): Promise<MacaronGrantResult | null> {
+  const now = new Date();
+  return db.transaction("rw", [db.tasks, db.foodInventory, db.foodAwards], async () => {
+    const task = await db.tasks.get(id);
+    if (!task) return null;
+
+    if (task.recurrence !== "none") {
+      // 繰り返しタスク: 「今日完了済みか」で判断し、当日のみ有効な完了状態にする
+      const today = localDateKey(now);
+      const completedToday = task.completedAt?.slice(0, 10) === today;
+      await db.tasks.update(id, {
+        completed: !completedToday,
+        completedAt: completedToday ? null : now.toISOString(),
+      });
+      if (!completedToday) {
+        return grantMacaronForTaskCompletionInCurrentTransaction(id, today, task.recurrence, now);
+      }
+    } else {
+      const completed = !task.completed;
+      await db.tasks.update(id, {
+        completed,
+        completedAt: completed ? now.toISOString() : null,
+      });
+      if (completed) {
+        return grantMacaronForTaskCompletionInCurrentTransaction(id, localDateKey(now), task.recurrence, now);
+      }
+    }
+    return null;
+  });
+}
+
+/** 今月の完了数を集計し、plantStateを同期する（月内累積・減算なしの育成） */
+export async function syncPlantStateFromTasks(now = new Date()): Promise<void> {
+  const tasks = await db.tasks.toArray();
+  const monthKey = monthKeyLocal(now);
+  const monthlyCompleted = countMonthlyCompletedTasks(tasks, now);
+  const existing = await db.plantState.get(1);
+
+  if (!existing) {
+    await db.plantState.put({
+      id: 1,
+      monthlyCompleted,
+      monthKey,
+      lifetimeCompleted: monthlyCompleted,
+      lastUpdated: now.toISOString(),
+    });
+    return;
+  }
+
+  await db.plantState.put({
+    ...existing,
+    monthlyCompleted,
+    monthKey,
+    lastUpdated: now.toISOString(),
+  });
+}
+
+/** カテゴリでフィルタしたタスクを取得 */
+export async function getTasksByCategory(
+  category: Category
+): Promise<Task[]> {
+  return db.tasks.where("category").equals(category).toArray();
+}
+
+/** リセット前の確認表示用に、タスク・ストリークの件数を取得 */
+export async function getCalendarResetCounts(): Promise<{
+  tasks: number;
+  streaks: number;
+}> {
+  const [tasks, streaks] = await Promise.all([
+    db.tasks.count(),
+    db.streaks.count(),
+  ]);
+  return { tasks, streaks };
+}
+
+/** カレンダーをリセット: タスクとストリーク記録を全削除する（取り消し不可） */
+export async function resetCalendar(): Promise<void> {
+  await db.transaction("rw", db.tasks, db.streaks, async () => {
+    await db.tasks.clear();
+    await db.streaks.clear();
+  });
+}
+
+// ── Streak CRUD ────────────────────────────────────────────────────────────
+
+/** 指定日のストリークレコードを取得 */
+export async function getStreak(date: string): Promise<Streak | undefined> {
+  return db.streaks.get(date);
+}
+
+/** 全ストリークを日付順で取得 */
+export async function getAllStreaks(): Promise<Streak[]> {
+  return db.streaks.orderBy("date").toArray();
+}
+
+/** ストリークを記録（upsert） */
+export async function recordStreak(
+  date: string,
+  allCompleted: boolean
+): Promise<void> {
+  await db.streaks.put({ date, allCompleted });
+}
+
+/**
+ * 現在の連続全完了日数を計算する（保険つき）
+ * - 未完のままの「今日」は連鎖を切らない（朝に🔥が消えない）
+ * - 1連鎖につき1日まで、欠けた日を保険で吸収する（カウントには入れない）
+ * - 判定ロジックは純関数 domain/streak.ts に分離（テスト対象）
+ */
+export async function getCurrentStreakCount(): Promise<number> {
+  const streaks = await db.streaks.toArray();
+  return calcStreakCount(streaks, todayDateString());
+}

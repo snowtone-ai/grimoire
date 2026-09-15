@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/grimo/build-carol-canonical.mjs",
+  "sources": {
+    "fourCharacterSheet": {
+      "path": "assets/grimo/source/carol-pino-jill-shushu-canonical.jpg",
+      "sha256": "4bef79470608bc81482afef48f124279fdaa57b41f0cc043453ec98ee79ade1b",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "format": "jpeg",
+      "alpha": false,
+      "provenance": "user-created original via AI image generation",
+      "distributionRights": "user confirms full rights for project and publication"
+    },
+    "muu": {
+      "path": "assets/grimo/source/muu-canonical.png",
+      "sha256": "d4d6fa9cea3364fbb8a3e5f8a22a814955c02592246a0f7c39d785baa1d890a6",
+      "dimensions": [
+        1792,
+        2400
+      ],
+      "format": "png",
+      "alpha": "present but fully opaque",
+      "provenance": "user-created original via AI image generation",
+      "distributionRights": "user confirms full rights for project and publication"
+    },
+    "carolTransparent": {
+      "path": "assets/grimo/source/carol-transparent.png",
+      "sha256": "a1a2ec59f62d4a799a7e891d44990489519ad38b03cfed125d1dff137c75fb81",
+      "dimensions": [
+        624,
+        400
+      ],
+      "format": "png",
+      "alpha": "transparent with anti-aliased edge",
+      "provenance": "user-created original via AI image generation",
+      "distributionRights": "user confirms full rights for project and publication"
+    }
+  },
+  "characters": {
+    "carol": {
+      "source": "fourCharacterSheet",
+      "sourceCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 768,
+        "height": 493
+      },
+      "visibleBounds": {
+        "left": 96,
+        "top": 5,
+        "right": 733,
+        "bottom": 489
+      },
+      "world": "星眠りの雲床",
+      "canonicalTraits": [
+        "purple-and-white cloud fleece",
+        "original face and proportions",
+        "brown ears and feet",
+        "crescent moon",
+        "yellow stars"
+      ],
+      "transparentAsset": {
+        "source": "carolTransparent",
+        "derivedFile": "transparent.png",
+        "publicFile": "public/grimo/carol-transparent.png",
+        "decodedPixelMatch": true,
+        "alpha": {
+          "transparentPixels": 93747,
+          "semiTransparentPixels": 9275
+        },
+        "use": "world composition and renderer depth comparison; preserve without ML re-segmentation"
+      },
+      "layers": [
+        {
+          "id": "background",
+          "file": "background.png",
+          "zOrder": 0,
+          "purpose": "exact source matte",
+          "movable": false
+        },
+        {
+          "id": "ambient",
+          "file": "ambient.png",
+          "zOrder": 10,
+          "purpose": "detached source pixels",
+          "movable": true,
+          "maxTranslationPx": 4,
+          "maxRotationDeg": 2
+        },
+        {
+          "id": "identity",
+          "file": "identity.png",
+          "zOrder": 20,
+          "purpose": "canonical visible surface",
+          "movable": "rigid translation only",
+          "maxTranslationPx": 3,
+          "maxRotationDeg": 0
+        }
+      ],
+      "parts": [
+        {
+          "id": "fleece-and-body",
+          "bounds": [
+            96,
+            5,
+            638,
+            485
+          ],
+          "anchor": [
+            414,
+            300
+          ],
+          "zOrder": 20,
+          "sourceStatus": "flattened-visible-surface",
+          "motion": {
+            "translatePx": 3,
+            "rotateDeg": 0,
+            "localDeformPx": 2,
+            "condition": "face lock and browser comparison required"
+          }
+        },
+        {
+          "id": "face",
+          "bounds": [
+            382,
+            210,
+            260,
+            188
+          ],
+          "anchor": [
+            517,
+            307
+          ],
+          "zOrder": 24,
+          "sourceStatus": "flattened-identity-lock",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0,
+            "localDeformPx": 0
+          }
+        },
+        {
+          "id": "left-eye",
+          "bounds": [
+            430,
+            273,
+            58,
+            80
+          ],
+          "anchor": [
+            459,
+            313
+          ],
+          "zOrder": 25,
+          "sourceStatus": "open-eye-only",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          },
+          "missing": [
+            "closed eyelid",
+            "separate pupil"
+          ]
+        },
+        {
+          "id": "right-eye",
+          "bounds": [
+            552,
+            235,
+            61,
+            82
+          ],
+          "anchor": [
+            582,
+            276
+          ],
+          "zOrder": 25,
+          "sourceStatus": "open-eye-only",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          },
+          "missing": [
+            "closed eyelid",
+            "separate pupil"
+          ]
+        },
+        {
+          "id": "left-ear",
+          "bounds": [
+            280,
+            286,
+            132,
+            84
+          ],
+          "anchor": [
+            393,
+            303
+          ],
+          "zOrder": 18,
+          "sourceStatus": "flattened-with-hidden-root",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          },
+          "missing": [
+            "fur-hidden root contour",
+            "back surface"
+          ]
+        },
+        {
+          "id": "right-ear",
+          "bounds": [
+            612,
+            207,
+            99,
+            88
+          ],
+          "anchor": [
+            619,
+            253
+          ],
+          "zOrder": 18,
+          "sourceStatus": "flattened-with-hidden-root",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          },
+          "missing": [
+            "fur-hidden root contour",
+            "back surface"
+          ]
+        },
+        {
+          "id": "feet",
+          "bounds": [
+            277,
+            429,
+            322,
+            63
+          ],
+          "anchor": [
+            438,
+            462
+          ],
+          "zOrder": 17,
+          "sourceStatus": "partly-occluded-flattened",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          },
+          "missing": [
+            "body-hidden contours"
+          ]
+        },
+        {
+          "id": "moon-and-attached-stars",
+          "bounds": [
+            185,
+            82,
+            377,
+            318
+          ],
+          "anchor": [
+            334,
+            237
+          ],
+          "zOrder": 21,
+          "sourceStatus": "merged-with-fleece",
+          "motion": {
+            "translatePx": 0,
+            "rotateDeg": 0
+          }
+        },
+        {
+          "id": "detached-ambient",
+          "bounds": [
+            96,
+            50,
+            623,
+            440
+          ],
+          "anchor": [
+            407,
+            250
+          ],
+          "zOrder": 10,
+          "sourceStatus": "component-separated",
+          "motion": {
+            "translatePx": 4,
+            "rotateDeg": 2
+          }
+        }
+      ],
+      "derivedFiles": {
+        "canonical-crop.png": {
+          "sha256": "bc792b4f301e83dcf1d59ce9d469cb660afb33018b08867bb0afaa6f95da7459",
+          "bytes": 528177
+        },
+        "background.png": {
+          "sha256": "55b829e1c2719be3c5820373f64a9450f12560fe1593a225c499fa0cd865be49",
+          "bytes": 582047
+        },
+        "ambient.png": {
+          "sha256": "f48b1597c54cd03e6858142b446e36f7a41ecf8b0fcc727c3a1421daf4f9465c",
+          "bytes": 580213
+        },
+        "identity.png": {
+          "sha256": "24b4393986c91d3419fc018d524cc428f4ff9e73657468d1aa2e98e1de7cea2b",
+          "bytes": 575697
+        },
+        "static-recomposite.png": {
+          "sha256": "1a050f66aeb3f7be375c1dc93f4837ca2e635889160abd72b07b250221a07f7f",
+          "bytes": 574376
+        },
+        "transparent.png": {
+          "sha256": "c8fa0f6fd7111b0fe77513da927893299188003fc8e5c4a7f693e038aa3f4bfd",
+          "bytes": 368921
+        }
+      },
+      "staticRecomposition": {
+        "sourceSha256": "4bef79470608bc81482afef48f124279fdaa57b41f0cc043453ec98ee79ade1b",
+        "crop": {
+          "left": 0,
+          "top": 0,
+          "width": 768,
+          "height": 493
+        },
+        "decodedPixelSha256": "320fd723734f082cc2ab410892edcc4e83f3343f12412d4ce44421faddb96e58",
+        "recompositePixelSha256": "320fd723734f082cc2ab410892edcc4e83f3343f12412d4ce44421faddb96e58",
+        "pixelMatch": true,
+        "foregroundThreshold": 18,
+        "identityComponent": {
+          "id": 0,
+          "pixels": 232779,
+          "bounds": {
+            "left": 96,
+            "top": 5,
+            "right": 733,
+            "bottom": 489
+          }
+        },
+        "ambientComponents": 9
+      },
+      "limitations": [
+        "JPEG has no alpha and uses a black matte; a clean arbitrary-background cutout is not proven.",
+        "Hidden anatomy and a canonical closed-eye drawing do not exist in the source.",
+        "Semantic body parts are coordinates on one flattened visible surface, not independently movable art."
+      ]
+    },
+    "pino": {
+      "source": "fourCharacterSheet",
+      "sourceCrop": {
+        "left": 768,
+        "top": 0,
+        "width": 768,
+        "height": 512
+      },
+      "status": "held for post-Carol approval"
+    },
+    "jill": {
+      "source": "fourCharacterSheet",
+      "sourceCrop": {
+        "left": 0,
+        "top": 512,
+        "width": 768,
+        "height": 512
+      },
+      "status": "held for post-Carol approval"
+    },
+    "shushu": {
+      "source": "fourCharacterSheet",
+      "sourceCrop": {
+        "left": 768,
+        "top": 512,
+        "width": 768,
+        "height": 512
+      },
+      "status": "held for post-Carol approval"
+    },
+    "muu": {
+      "source": "muu",
+      "sourceCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1792,
+        "height": 2400
+      },
+      "status": "held for post-Carol approval"
+    }
+  }
+}

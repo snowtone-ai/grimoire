@@ -1,0 +1,88 @@
+{
+  "$schema": "Kenney \"Particle Pack\" (CC0), hand-picked, downscaled and re-encoded. See LICENSE.txt and docs/decisions.md D-047.",
+  "pack": "kenney_particle-pack",
+  "license": "CC0 1.0 (public domain, no attribution required)",
+  "format": "PNG, 256x256, grey+alpha (colour type 4). White luminance only — src/lib/vfx.ts tints each sprite at draw time.",
+  "status": "In use. src/lib/domain/vfx-scenes.ts names the texture for every effect; src/lib/vfx.ts loads and draws it.",
+  "count": 13,
+  "files": [
+    {
+      "file": "arcane-circle.png",
+      "role": "sigil",
+      "hint": "a ringed circle with nodes on its circumference — a summoning circle read edge-on",
+      "bytes": 31080
+    },
+    {
+      "file": "bolt.png",
+      "role": "streak",
+      "hint": "a vertical crackling bolt — electric detail, high rarity only",
+      "bytes": 25339
+    },
+    {
+      "file": "burst.png",
+      "role": "glow",
+      "hint": "a filled centre throwing many rays — a single-frame flash of impact",
+      "bytes": 17574
+    },
+    {
+      "file": "flare.png",
+      "role": "streak",
+      "hint": "a horizontal anamorphic lens flare — a wide light bar",
+      "bytes": 14156
+    },
+    {
+      "file": "glint.png",
+      "role": "glow",
+      "hint": "a thin four-point glint, almost all highlight — the cheapest twinkle",
+      "bytes": 10164
+    },
+    {
+      "file": "halo.png",
+      "role": "ring",
+      "hint": "a filled disc with a bright rim — a body of light, not an outline",
+      "bytes": 32697
+    },
+    {
+      "file": "mote.png",
+      "role": "glow",
+      "hint": "a soft four-point sparkle with a wide falloff — the default drifting light",
+      "bytes": 26559
+    },
+    {
+      "file": "ring-pulse.png",
+      "role": "ring",
+      "hint": "concentric rings — one texture that already reads as a repeating pulse",
+      "bytes": 31273
+    },
+    {
+      "file": "ring.png",
+      "role": "ring",
+      "hint": "a thin soft-edged ring — an expanding shockwave",
+      "bytes": 21793
+    },
+    {
+      "file": "sigil.png",
+      "role": "sigil",
+      "hint": "a solid five-pointed star — a small crisp emblem, no glow of its own",
+      "bytes": 4467
+    },
+    {
+      "file": "star.png",
+      "role": "glow",
+      "hint": "a bright hard-edged four-point star — the main celebratory particle",
+      "bytes": 11636
+    },
+    {
+      "file": "swirl.png",
+      "role": "sweep",
+      "hint": "a pair of crescent arcs — a swoosh that reads as rotation",
+      "bytes": 26308
+    },
+    {
+      "file": "trail.png",
+      "role": "streak",
+      "hint": "a vertical tapered streak — a mote in motion",
+      "bytes": 10377
+    }
+  ]
+}

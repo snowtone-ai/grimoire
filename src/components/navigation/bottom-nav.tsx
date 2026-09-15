@@ -1,0 +1,122 @@
+"use client";
+
+import { Link } from "next-view-transitions";
+import { usePathname } from "next/navigation";
+import { BookOpen, Calendar, Home, Sprout } from "lucide-react";
+import { getStoredEffectPref, isEffectEnabled } from "@/lib/fx";
+import { playPage } from "@/lib/sound";
+import { firePageEffect } from "@/lib/vfx";
+
+const NAV_ITEMS = [
+  { href: "/", label: "ホーム", icon: Home, theme: "home" },
+  { href: "/all", label: "カレンダー", icon: Calendar, theme: "all" },
+  { href: "/plant", label: "研究所", icon: Sprout, theme: "plant" },
+  { href: "/book", label: "記録", icon: BookOpen, theme: "book" },
+] as const;
+
+type NavPath = (typeof NAV_ITEMS)[number]["href"];
+type PageTheme = (typeof NAV_ITEMS)[number]["theme"];
+
+/** Mark the html element so CSS picks the page-turn direction, then let the
+ * transition Link take over. The marker is cleared after the turn ends.
+ *
+ * T036: also stamps data-page-theme from the DESTINATION only — arriving
+ * somewhere always plays that place's motif regardless of which tab you came
+ * from, rather than needing a directional cross-product of every from/to
+ * pair.
+ *
+ * D-049: with the toggle off, the marker is data-page-plain instead of a
+ * theme. The old branch only withheld data-page-theme, which left the 3D
+ * notebook flip — the heaviest motion in the app — running for someone who had
+ * just switched the transition effects off. data-page-plain selects a plain
+ * fade-through in globals.css and is still a page-turn, so the FLIP-suppression
+ * rule on task cards keeps applying either way. */
+let pageTurnTimer = 0;
+
+function markPageTurn(fromPath: string | null, toPath: string, theme: PageTheme) {
+  const fromIndex = NAV_ITEMS.findIndex((item) => item.href === fromPath);
+  const toIndex = NAV_ITEMS.findIndex((item) => item.href === toPath);
+  const root = document.documentElement;
+  window.clearTimeout(pageTurnTimer);
+  root.dataset.pageTurn = toIndex < fromIndex ? "back" : "fwd";
+  if (isEffectEnabled("pageTransitions")) {
+    root.dataset.pageTheme = theme;
+    delete root.dataset.pagePlain;
+  } else {
+    delete root.dataset.pageTheme;
+    root.dataset.pagePlain = "";
+  }
+  pageTurnTimer = window.setTimeout(() => {
+    delete root.dataset.pageTurn;
+    delete root.dataset.pageTheme;
+    delete root.dataset.pagePlain;
+  }, 700);
+}
+
+const NAV_PATHS = new Set<string>(NAV_ITEMS.map((item) => item.href));
+
+function isNavPath(path: string): path is NavPath {
+  return NAV_PATHS.has(path);
+}
+
+export function BottomNav({ currentPath }: { currentPath?: NavPath }) {
+  const pathname = usePathname();
+  // Sub-pages that are not themselves tabs (e.g. /settings) must not light up a
+  // tab they are not on, so an unknown path resolves to "no active item".
+  const resolvedPath: NavPath | null =
+    currentPath ?? (isNavPath(pathname) ? pathname : null);
+
+  return (
+    <nav
+      aria-label="メインナビゲーション"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
+    >
+      <div
+        aria-hidden
+        className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-frost/45 to-transparent"
+      />
+      <div className="mx-auto flex max-w-lg">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.href === resolvedPath;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => {
+                if (isActive) return;
+                // The per-destination sound identity follows the user's own
+                // stored choice, not isEffectEnabled's reduced-motion override:
+                // reduced-motion is a visual signal (it does silence the CSS
+                // page-turn theme and the sweep below), and sound already has
+                // its own separate, motion-independent toggle (see fx.ts).
+                // With the theme off, every turn is the plain home flip.
+                playPage(getStoredEffectPref("pageTransitions") ? item.href : "/");
+                firePageEffect(item.href);
+                markPageTurn(resolvedPath, item.href, item.theme);
+              }}
+              className="group flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5"
+            >
+              <span
+                className={`flex h-8 w-14 items-center justify-center rounded-full transition-all duration-300 ease-spring group-active:scale-90 ${
+                  isActive ? "bg-brand-soft text-brand" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="size-5" strokeWidth={isActive ? 2.4 : 2} />
+              </span>
+              <span
+                className={`text-[0.6875rem] font-semibold ${
+                  isActive ? "text-brand" : "text-muted-foreground"
+                }`}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

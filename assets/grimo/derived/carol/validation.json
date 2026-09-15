@@ -1,0 +1,24 @@
+{
+  "sourceSha256": "4bef79470608bc81482afef48f124279fdaa57b41f0cc043453ec98ee79ade1b",
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 768,
+    "height": 493
+  },
+  "decodedPixelSha256": "320fd723734f082cc2ab410892edcc4e83f3343f12412d4ce44421faddb96e58",
+  "recompositePixelSha256": "320fd723734f082cc2ab410892edcc4e83f3343f12412d4ce44421faddb96e58",
+  "pixelMatch": true,
+  "foregroundThreshold": 18,
+  "identityComponent": {
+    "id": 0,
+    "pixels": 232779,
+    "bounds": {
+      "left": 96,
+      "top": 5,
+      "right": 733,
+      "bottom": 489
+    }
+  },
+  "ambientComponents": 9
+}

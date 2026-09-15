@@ -1,0 +1,30 @@
+
+> grimoire@0.1.0 resilience:carol C:\Users\chidj\project\プロダクト\task-plant
+> node scripts/resilience/run-carol.mjs "--" "--acknowledge-local-destructive-testing"
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:51213
+- Network:       http://192.168.10.120:51213
+- Environments: .env.local
+✓ Ready in 1399ms
+✓ Running next.config.ts took 107ms
+
+ GET /.well-known/resilience-test 200 in 775ms (next.js: 687ms, application-code: 88ms)
+ GET /.well-known/resilience-test 200 in 68ms (next.js: 44ms, application-code: 23ms)
+ GET /plant/carol-3d 200 in 1846ms (next.js: 905ms, application-code: 941ms)
+ GET /api/resilience-probe 200 in 984ms (next.js: 758ms, application-code: 226ms)
+ GET /plant 200 in 3.3s (next.js: 1095ms, application-code: 2.2s)
+ GET /plant/carol-3d 200 in 284ms (next.js: 29ms, application-code: 255ms)
+ GET /plant/carol-3d 200 in 238ms (next.js: 109ms, application-code: 129ms)
+ GET /plant/carol-3d 200 in 1994ms (next.js: 1270ms, application-code: 724ms)
+file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:209
+          controller.abort(new Error(`${label} exceeded ${timeoutMs}ms`))
+                           ^
+
+Error: browser-restart exceeded 15000ms (seed 20260910; diagnostics C:\Users\chidj\project\プロダクト\task-plant\output\resilience\carol-3d)
+    at Timeout.<anonymous> (file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:209:28)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+
+Node.js v24.14.0
+ ELIFECYCLE  Command failed with exit code 1.

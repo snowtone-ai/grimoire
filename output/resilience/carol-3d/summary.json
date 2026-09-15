@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "scenario": "carol-3d-resilience",
+  "baseUrl": "http://127.0.0.1:58145/",
+  "seed": 20260910,
+  "limits": {
+    "durationMs": 300000,
+    "maxActions": 11,
+    "concurrency": 1,
+    "actionTimeoutMs": 60000,
+    "navigationTimeoutMs": 30000,
+    "rapidTapCount": 4,
+    "networkDelayMs": 100,
+    "maxRestarts": 1
+  },
+  "operationPlan": [
+    "offline",
+    "request-delay",
+    "navigation-churn",
+    "page-close",
+    "duplicate-submit",
+    "request-abort",
+    "rapid-taps",
+    "storage-corruption",
+    "storage-quota",
+    "browser-restart",
+    "reload"
+  ],
+  "passed": true,
+  "error": null,
+  "durationMs": 210192,
+  "diagnostics": {
+    "consoleErrors": [
+      {
+        "operation": "offline",
+        "text": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+        "expected": true
+      },
+      {
+        "operation": "request-abort",
+        "text": "Failed to load resource: net::ERR_CONNECTION_RESET",
+        "expected": true
+      }
+    ],
+    "externalRequests": [],
+    "pageErrors": [],
+    "requestFailures": [
+      {
+        "operation": "offline",
+        "url": "http://127.0.0.1:58145/api/resilience-probe",
+        "error": "net::ERR_INTERNET_DISCONNECTED"
+      },
+      {
+        "operation": "request-abort",
+        "url": "http://127.0.0.1:58145/api/resilience-probe",
+        "error": "net::ERR_CONNECTION_RESET"
+      }
+    ],
+    "serverErrors": []
+  },
+  "historyFile": "C:\\Users\\chidj\\project\\プロダクト\\task-plant\\output\\resilience\\carol-3d\\history.jsonl"
+}

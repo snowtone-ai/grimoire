@@ -1,0 +1,452 @@
+# state.md
+
+## Current
+- 2026-09-09（チェック用に中断）: `/plant/carol-3d` のチェックページを渡し、再開点をtasks/reviewへ保存。原画alphaで本体を欠く処理を不透明の全周UVへ変更し、背面pole・星の支持位置・動作停止を改善。演技を `carol-3d-motion.ts` へ分離。対象lint/typecheck、191tests、production build成功、320/390/1280のready/overflowと通常クリックの原画切替・なでる・停止・歩行終了を確認。造形の側面/境界/月/自然な接地は未合格、最新の入力中断/pinch/性能一式は未実施。公開・commitなし。
+- 2026-09-09（最新）: 前作3Dキャロルは利用者評価で不合格。`feat/carol-reference-rebuild`で原画624×400の実測とAI-FBに基づく再制作を開始。正面の色と比率は改善したが、側面と接合は自分の目視でも不合格。制作途中のGLB/blend、前作退避、一次資料による制作・評価基準と再開点を `docs/grimo-carol-rebuild-review.md` に保存し、利用者のcompact指示で中断。新版の型/lint/diff確認は成功、画面幅・全操作・buildは未完了。追加動作を見据えた演技の分離は次工程。公開なし。
+- 2026-09-09: Blender 5.2.1 LTSへ更新。Three.js 0.185.1、既存WebGLRenderer、Next.js、GLBノード名/APIを維持し、WebGPU移行は見送った。Blender生成側へ疎なWoolCluster/HeadWoolClusterとFace Shape Keys（Smile/Surprise/Squint）を追加し、Three.jsの既存joy/surprise反応からブレンド。GLBを再生成し、189テスト・lint/typecheck・build・GLB実測・Playwright対応幅確認まで完了。
+- 2026-09-09: `feat/carol-3d` で `/plant/carol-3d` に3Dキャロル一体の試遊版を実装。BlenderによるローカルGLB、表情・部位反応・連続接触・短い歩行・回転拡大を接続。既存 `/plant` と保存データは不変。verify（189 tests）/build成功、320/390/1280の画面と入力、pinch競合、中断・読み込み失敗の復帰を確認。試遊URL `http://localhost:3000/plant/carol-3d`。SV品質の達成や原画完全再現を宣言せず、利用者が造形と触感を判断する段階。詳細 `docs/grimo-3d-carol-preview.md`。未公開、追加費用0円。
+- 2026-09-09: 利用者がSV品質を目標とする3Dキャロル一体の制作・提示を承認。表情・触れ合い・待機・短い歩行・カメラまで動く体験版を作り、感覚的な品質は実物で判断する。モデル制作はまだ未着手。利用者のcompact運用指定に従い、実装再開手順をtasks.md最上部に保存し一旦停止。「実装を続けて」で着手する。
+- 2026-09-09: 最新希望で移動・歩行・自由カメラは品質次第の候補へ復帰。SVの厳密なタイミング一致は不要。既存Blender 4.5.10 LTSのbackground Python操作を確認し、ツール追加なしで制作できると判断。Blender MCPは第三者MIT連携で、既存経路と重複するため現時点で未導入。3D原画再現の品質は未実証、D-066参照。
+- 2026-09-09: 利用者補足で移動不要を明確化。スマートフォン内の定位置の触れ合いに限定し、SVを手本にした表情・部位反応・身じろぎ・余韻へ集中。歩行、経路探索、自由カメラは対象外。2.5D＋少数の事前生成演技の推奨を維持し、3Dは必須としない。
+- 2026-09-09: SVピクニック分析と無料制作方式比較を完了。G04はコード上の反応分類があるだけで、顔・身体の演技品質は未達として訂正。推奨着手はGPT Image等の少数差分＋既存Three.jsの2.5D即時制御、必要な演技だけ事前生成clip。詳細は `docs/grimo-picnic-analysis.md`、`docs/grimo-picnic-evidence.md`、`docs/grimo-free-animation-options.md`。今回は文書のみ、生成・導入・製品変更・公開なし。動画時間解析は取得制約で未確認。次は方式の追加調査ではなく一体の実装。
+- 2026-09-08: CarolのG04反応核を実装。状態文「キャロルは待っている」を撤去し、顔・頭・左右の毛並み・足元でキャラクター、雲、星の返答を変える。到着、つつく、ゆっくりなでる、長押し、ドラッグ、離す、連打、待つ、直接接触は現在姿勢から即時にredirectする。5体は共通の`GRIMO_COMPANIONS`定義へ登録し、将来は承認済みassetと個体固有のmotion grammarだけを加える。production build実画面で320/1280幅、pointer/ボタン、console error/warn 0、network成功を確認。`/plant?review=1` を開いて利用者の目視合格待ち。表情差分の生成候補はcanonicalでないため不採用。
+- 2026-09-08: 利用者のCarol合格判断用に、`/plant` の「目視調整を開く」へ36個のlive calibration controlを追加。canonical原画の顔・輪郭・色はG01のidentity lockとして固定し、空・月・遠近雲・星・キャロルの配置/大きさ、返事・追従・戻り・余韻・視差は色/sliderで即時反映する。値はsession内だけで、保存/既存データは不変。Playwright実ブラウザで390/320/1280の横あふれなし、slider変更、Space、pointer hold/release、reduced-motion、console/network異常0を確認。G03 pure input testを追加して8 focused tests pass、production build pass。次は利用者の目視合格または具体的な調整値であり、G04はまだ開始しない。
+- 2026-09-08: G03入力基盤を開始。`/plant` にThree.jsのCarol専用sceneを追加し、透明canonical原画を変形なしのplaneで表示、pointer capture/cancel/lostcapture/blur/visibility と keyboard／代替ボタンを同一の接触・解除経路へ接続した。changed-file lint/typecheck、production buildはpass。Chrome DevTools は既存ブラウザprofileが他プロセスにより使用中で接続できず、実画面QA（320/390/1280、console/network、reduced-motion）は未確認のまま。次はこの失敗観点だけを再確認し、pure input test後にG04へ進む。
+- 2026-09-08: Phase B完了。Carol transparent assetを使う5層renderer gateを390pxで4方式比較し、全方式60fps・1 texture（DOM draw n/a、他1）、console warn/error/issue 0。320/1280の横あふれなし、reduced-motion state、Three.js 5秒trace（CLS 0、insightなし）を確認。Three.js 0.185.1へ固定し、不採用のPixiJS・比較spike・関連CSSを削除。`pnpm test` 180/180、production build pass。次は人間の明示合格後にG03入力。
+- 2026-09-08: Phase A完了。利用者追加のCarol透過PNGを`assets/grimo/source/carol-transparent.png`へ移動し、既存sharpによる完全ローカルalpha-preserving pipelineをcanonical buildへ導入。透明93,747px・半透明edge 9,275px、source→derived→publicのdecoded RGBA一致をfocused test 4/4で確認。利用者確認によりGrimo原画はAI生成の本人オリジナル・公開権利ありとしてmanifestを更新。renderer方式は未決定のまま。
+- 2026-09-08: 中断checkpoint。DOM/CSS・Canvas2D・PixiJS 8.20.1・Three.js 0.185.1の同条件renderer spikeを `/plant/render-spike` に追加。390×844のproduction実画面で4方式が60〜61fps、1 draw/1 texture（取得可能な方式）、resource 200、修正後console warn/error 0。depth/局所変形/reduced-motion/320/1280/trace未比較のため方式は未決定、G03未着手。build・focused lint/typecheck・canonical tests 3/3 pass。local serverは停止済み。
+- 2026-09-08: G02でキャロル原本hash、crop、部位領域、anchor、z-order、可動上限をmanifestへ固定。原画を排他的なbackground/ambient/identityへ実分離し、静止再合成がdecoded全画素一致。JPEG黒matteのため任意背景alpha、閉じ目、隠れ部位は不足として保持し、補筆・生成は不採用。次は同条件のrenderer比較。
+- 2026-09-08: Golden Reference実装を開始。既存差分を保護してP00監査を完了し、G01で初回・通常再訪・長期不在・保存失敗・offline、状態遷移、主要操作、5体の外観・世界・演技を固定した。原画はbyteを変えず `assets/grimo/source/` へ整理し、`prompt.md` は利用者指示で削除。製品コード・DB・PWA・公開状態は未変更。次はキャロルG02の実測と静止再合成。
+- 2026-09-07: 最終企画を基本承認した利用者の依頼に沿い、UX改善と実装計画G01〜G12（限定レビューG04R/G08R含む）を `tasks.md` へ保存。次回の主実装役はLuna/xhigh、上位レビュー2件のみAstra/xhigh。調査2文書と既存能力の全棚卸しを追加し、新規導入は不要と判断。今回は文書のみでHTML・製品・DB・公開は未変更。現行の改善仕様と再開点はtasks.mdを正とする。
+- 2026-09-07: 更新された `prompt.md` の最終HTML企画（D-060）を作成・実画面確認済み。最新の基準は `docs/grimo-final-spec.md`。1グリモ＋専用世界、永久無料・マイナスなし・無制限の触れ合いへ一本化し、旧3案の残数・段階解放・複数同時表示は不採用。ムゥ追加により現状の全グリモは5匹。HTML検証結果は `tasks.md` に集約。
+- 2026-09-07: グリモ企画（D-059）を `docs/grimo-proposals.md` に作成。10作品・37レビューから3案を比較し、ふれあい中心のAを推奨。研究所の置換は企画段階で、製品・本番・DBは未変更。短文設定をプロジェクトへ明記し、調査はLuna/xhighの子2名と分担。詳細根拠は `docs/grimo-research-*.md`、次の操作は `tasks.md`。
+- 2026-09-07: pm-zero v13 へ運用移行。`AGENTS.md` を共通規約への参照と Grimoire 固有のデータ・外部 API・UI・検証境界へ整理し、`tasks.md` の先頭を現在地、受入条件、検証、次の操作から再開できる形式へ更新した。プロダクトコード、IndexedDB、公開設定、依存関係、Gemini/Google 接続は変更していない。Context7 はグローバル定義だけを使うため、プロジェクト設定の重複定義を削除した。PR #52 を `main`（`f81652f`）へ統合し、GitHub Actions CI、Vercel Production、`pnpm check:production`（配信 CSS 48 クラス、欠落 0）を確認済み。
+- 2026-09-06: T050 / D-057 — Calendar import duplicate fix is implemented and locally verified; release tracking is the PR from `fix/calendar-import-deduplication`. Source-ID uniqueness/atomic saves prevent replay duplicates; bounded Gemini suggestions cover paraphrased existing appointments without deleting data. Focused tests 9/9, touched-file lint/typecheck, live synthetic Gemini 6 cases and Chrome 320/1280px checks passed. Required CI and production results will be recorded in that PR before session completion. Schema v4 must be retained on rollback; see D-057.
+- 2026-09-05: 残存リスク対応（D-055）は実装済みで、[PR #49](https://github.com/snowtone-ai/grimoire/pull/49)
+  でrelease tracking中。本変更はproductionへ未deployで、Chromeのproduction確認とrelease完了は
+  未確認。依存4系統を修正しaudit 0、Node 24/read-only CI、音声認識の20秒terminal watchdog・
+  session/mounted guard・明示retry/manual復帰、Geminiの55秒body込み予算・typed failure・privacy-safe
+  server logs/request ID、autoplay blocked時の手動再生/previewを実装した。
+  `pnpm verify`（lint/typecheck/test 164/build）、focused 33/33、resilience 7/7（seed `424242`）、
+  working diff gitleaks 0をlocalで確認。Chrome isolated runtimeでは無terminal停止、重複result、
+  pagehide、quota、autoplay、responsive overflow、reduced-motion、local API request IDを確認済み。
+  最終production結果は実deploy後にPR #49のrelease comment/bodyへ記録する。
+- 2026-09-05: ユーザーFB一括改善（D-054）を `main` に反映し、Vercel Productionへ自動デプロイした。
+  - commit `e26a712`、GitHub Actions `main CI` は lint / typecheck / test / build 全成功。
+  - Vercel deployment は Ready。公開URL `https://task-plant.vercel.app` の主要5route、manifest、
+    新2エリア（総数530）、startup audio（HTTP 200）をChrome DevToolsで確認し、console error/warn 0。
+- 2026-08-31: T049 / D-052 — Gemini音声タスク登録をGoogle管理の`gemini-flash-latest`へ更新した。
+  - Google側のalias更新へdeployなしで自動追従し、一時的な混雑時だけ抽出向け安定版
+    `gemini-3.5-flash-lite`へ継続fallbackする。廃止済み2.0と固定2.5への依存を削除した。
+  - Context7とGoogle公式資料を確認。`pnpm verify`は120テストを含め全合格、PR #45 / #46 /
+    #47 / #48をsquash merge。本番APIは14.74秒・HTTP 200で期限日時を含むJSONを返却し、
+    Vercel ProductionはReady、配信CSSは47クラス中欠落0。
+- 2026-08-31: T048 / D-051 — Normal/Large(125%)のアプリ内文字サイズ設定を追加した。
+  - 設定は既存項目と同じ説明付きON/OFF行。root attributeを即時更新し、localStorageへ
+    保存。初回paint前に検証済み値を読むため、再読込時のちらつき・hydration差分を避ける。
+  - 全固定px文字をNormal等価のremへ移し、Largeだけtruncate/clampを解除。研究所と
+    drop revealは低い画面で縦scrollできる。Provider、常駐listener、追加dependencyは0件。
+  - Chrome DevToolsで主要5routeを320/375/414幅、320×568、667×375で確認し、
+    horizontal overflow / clipped visible text / console error・warnはいずれも0。
+    設定の即時切替と再読込保持、クエスト追加全画面も確認。Lighthouse mobileは4カテゴリ100、
+    traceはLCP 1.395s / CLS 0.00。`pnpm verify`全合格。
+  - 満開後は3タスクごとの「観察マイルストーン」を第一候補として提案。既存の
+    `monthlyCompleted`から導出できる最小案で、今回は実装していない。
+  - PR #43をsquash merge（`3237865`）。main CIとVercel Productionはsuccess。
+    `pnpm check:production`は配信CSS 47クラス中欠落0。本番URLでもLargeの即時反映・
+    再読込保持、主要5routeのoverflow/clipped text 0、console error/warn 0、
+    Lighthouse mobile 4カテゴリ100を再確認した。
+- 2026-08-23: T047 — オーナー報告の3件のUI回帰を修正した。
+  - クエスト追加を全ブレークポイントで`dvh`全画面にし、ノッチとホームバーの
+    safe area、固定フッター、低い画面での入力欄スクロールを維持した。
+  - クエスト追加・取得アイテム鑑賞・遠征エリア探索を閉じた直後の停止は、
+    T045で追加した履歴ガードのcleanupが`history.back()`を呼び、同一ページの
+    hash解除まで`next-view-transitions`が画面遷移として180ms処理していたのが
+    共通原因だった。全close経路をguard entryのBackへ統一し、rootで先に登録する
+    `DialogBackHistoryBridge`が合成entryだけを消費する。Android/ブラウザBackは
+    引き続きダイアログを閉じ、通常ページのBackはNext.jsへ渡る。
+  - 提供スクリーンショットでカレンダー左下にはみ出していた魔力オーブは、
+    `/all`の`QuestAddButton`そのものを関連state/modalごと削除した。
+  - `pnpm verify`全合格(lint/typecheck/test 117件/build)。Playwright + Chromeの
+    393×873 / 900×700で全画面寸法、X・Escape・履歴Back、3画面終了後のURLを
+    実測。guard終了時の`startViewTransition`は0回、通常ページBackは1回、
+    console/page errorは0件だった。Tier 1 fresh-context reviewer(Luna、高)の
+    指摘は0件。
+- 2026-08-23: 本番デプロイの検証を`pnpm check:production`として追加した。
+  T045+T046のマージ後、VercelのProductionは`READY`で、`public/`の新アセットも
+  JSも新しいのに、CSSチャンクだけが本ブランチで足した手書きクラスを1つも
+  含まない古い内容だった(ビルドログは`Restored build cache from previous
+  deployment`のみ、エラーも警告もなし、ローカルの本番ビルドは正しい)。
+  結果、本番のホーム画面でクエスト追加ボタンが300×150の素のcanvasとして
+  右下からはみ出していた。mainへ1コミット積んで再ビルドしたら解消。
+  `READY`はビルドが正しい証拠にならないので、`scripts/check-production.mjs`が
+  配信中のCSSと`globals.css`が定義する全クラスを突き合わせて終了コードで返す。
+  壊れていたデプロイURLに対して19クラス欠落で1、現在の本番に対して0で確認済み。
+- 2026-08-23: T046 (D-049) — クエスト追加ボタンをWebGLの魔力オーブにし、
+  遷移演出OFF時の挙動を素のフェードスルーへ変えた。
+  - オーブはオーナーが4案のプロトタイプから選び自分で調整した「露 / Dew」の
+    10パラメータそのもの。`MANA_ORB_PARAMS`に格納し、テスト1件で固定して
+    ある——承認済みのデザインであって「あとで詰める既定値」ではない。
+  - 実装はWebGL1のレイマーチング(SDF球)。外部3Dライブラリは足していない:
+    この見た目の核は入射と射出の2回屈折にあり、1回だけだと光線が収束して
+    平たい円盤になる。押すと潰れ、中身が指の方向へ遅れて揺れる。
+  - 電池規律はD-038と同じ。タブ非表示・画面外で停止、reduced-motionは
+    1フレームだけ描いてループを開始しない。WebGLが無ければ`createManaOrb`が
+    nullを返し、既存のCSS「泉の封印」ボタンがそのまま出る(旧CSSは削除せず
+    `.is-orb`の上書きとして残してある)。
+  - 遷移演出OFFで3Dのノートめくりが残っていた問題を修正。モーションを減らす
+    唯一のスイッチを切った人に、画面上で最も重いモーションだけが残っていた。
+    OFFは`data-page-plain`を立て、Material/iOS相当の素のフェードスルーへ。
+  - `pnpm verify`全合格(lint/typecheck/test 117件/build)。Playwright実機で
+    明暗両テーマ・押下時の潰れ・reduced-motion静止・タブ非表示でのループ停止
+    ・遷移ON/OFFの属性と見た目を実測、0 console errors。
+  - Tier 1レビュー(Opus 5)でT045と合わせてMAJOR 3件+MINOR 11件、すべて修正。
+    最も重かったのは修正が生んだ回帰: ホイールズームをネイティブリスナへ
+    移した際、Radixポータル配下では最初のcommitでrefがまだnullであることを
+    見落とし、両エクスプローラのホイールズームが無言で死んでいた。コンソール
+    が静かになったのはリスナが消えたからで、直ったからではない——コンソール
+    の観察だけを検証とせず、CDPでリスナの実在と実マウスホイールでの
+    scale変化まで測って確認した。詳細はtasks.mdのReview Notes。
+- 2026-08-23: T045 (D-048) — RARE 1-7の424アイテムと8エリアの絵を実際に
+  生成して同梱し、絵文字プレースホルダを廃した。図鑑は実物の絵を出し、
+  エリアは約2×2ビューポートの探索キャンバスを全画面で二軸パン+ズーム。
+  - 約1GBの生成マスターは`.gitignore`へ。Gitは一度入った1GBを履歴から
+    忘れられず、忘れさせるにはguardが禁止するforce pushが要る一方、
+    「あとから入れる」はいつでもできるため。追跡するのはアプリが配信する
+    派生物のみ(約120MB)。マスター実体はオーナーのローカルにある。
+  - 全424点の視覚レビューで23点がmust-fix(RARE 6-7にシルエット衝突が集中)。
+    この環境のClaudeには画像生成ツールがないためオーナー判断で現状のまま
+    出荷し、docs/asset-production-ledger.mdの表に残してある。
+  - 制作の全経緯・再生成回数・品質判定はdocs/asset-production-ledger.md、
+    制作規約はdocs/asset-art-bible.mdが持つ。
+- 2026-08-23: T044 (D-047) — 効果音とエフェクトを全廃し、vendored Kenney CC0
+  アセット上に作り直した。オーナー指示(任天堂のチーフクリエイター視点で
+  UI/UXを作り直せ)を受けた6項目のうち、動画素材(`素材/*.mp4`)の使用のみ
+  オーナー判断で見送り(v2用に保留)、残り5項目と整合性確認を実施。
+  - 音: D-022の合成エンジンを撤去し、14音のサンプラーへ
+    (`public/audio/cues/`、896KB)。3パックが3レイヤーを1つずつ担当
+    (Interface Sounds=触感、RPG Audio=世界、Music Jingles=報酬)。
+    「何がいつ鳴るか」は`src/lib/domain/sound-cues.ts`だけが決める。
+  - 絵: `canvas-confetti`を依存ごと削除し、Canvas 2D加算合成スプライト
+    エンジン(`src/lib/vfx.ts`、上限700粒、粒子が尽きるとcanvasごと
+    自己解体)へ。シーンは`src/lib/domain/vfx-scenes.ts`に純データで分離
+    (`public/vfx/`、13枚のwhite-alphaテクスチャ296KB)。
+  - 背景の光の粒子 13→44(3層・シード固定PRNG)。ここだけ意図的にCSSのまま
+    (常設レイヤーをcanvas化するとrAFが開きっぱなしになり電池を食う)。
+  - ページ遷移は遷移先ごとに別演出・別音。朝のあいさつ/起動演出も同基盤で
+    作り直し。6つのエフェクトトグルはオーナー指示で全て既定ONへ。
+  - 整合性確認(オーナー要求項目)はテストとブラウザ実機の両方で固定:
+    reduced-motionは全視覚エフェクトを例外なくoffにするが音・振動は
+    止めない(別トグル`fx-enabled`)、/bookリプレイは完了エフェクトの
+    トグルから独立し形も完了バーストと別(発射しない・落ちない)、
+    既定ON化で旧「しずか」ユーザーの選択が覆らないよう
+    `migrateFromIntensity()`が6キーすべてに明示値を書くよう修正。
+  - `pnpm verify`全合格(lint/typecheck/test 99件/build)。Playwright実機
+    スモークで0 console errors。ブラウザQAでのみ露見した実バグを1件修正
+    (suspended AudioContextは時計が進まないため初回ジェスチャ前のcueが
+    捨てられずキューされ、無関係なタップで数秒後にまとめて鳴っていた)。
+  - Tier 1 fresh-context reviewer(Opus 5)がBLOCKER 1件+MAJOR 5件を返し、
+    すべて実在。全件修正済み(9a61f81)。特に重いもの3件:
+    (a)音の解錠をホーム画面から仕掛けていたため/settings・/book・/all・
+    /plantを直接開くと全ページロードで無音、(b)既定ON化の移行が、D-039の
+    移行を既に実行済みの実ユーザー全員に対して無効(引き金をキーの存在へ
+    変更、テスト8件で固定)、(c)朝のあいさつ演出がD-036 F-1に反して
+    コンテンツの前面に出ていた(エンジンを2レイヤー化)。詳細はD-047 §7と
+    tasks.mdのReview Notes。テスト99→107件。
+  - オーナー承認を得てPR #38をsquash-merge(`018f454`)、ブランチ削除。
+    main側CI green、Vercel productionデプロイ完了(READY)。本番実測で
+    `/audio/cues/flourish.wav`(80242 B)・`/vfx/mote.png`(26559 B)が
+    リポジトリとバイト一致で配信され、`sw.js`は`task-manager-v8`
+    (=`/audio/`・`/vfx/`をcache-firstに切り替えた版)を返している。
+  - 併せて`.impeccable/config.json`を追跡対象に(`408e969`)。T044中に
+    Stop-hookのチェッカーがglobals.cssのbounce-easingを3件指摘したが、
+    3件ともT036以来mainとバイト一致の既存コードで、跳ね返りではなく
+    1回で収まる減衰だったため誤検知と判断し、理由付きのignore登録を
+    残してある。未追跡のままだとclone毎に同じ調査が再発するか、
+    最悪「指摘されたから」とRARE4+の見た目を変えてしまうため。
+    `hook.cache.json`は使い捨てなので`.gitignore`側へ。
+- 2026-08-23: T043 (D-046) — オーナー指示で`main`をpm-zero v12.1(Section 16
+  Frontend/UI Operating Layer)へ追随させた。CLAUDE.mdのバージョン表記・
+  Tier 1条件・新設節、`scripts/setup.mjs`のUIツールauto-provisioning
+  (impeccable/shadcn skill、v9.4放置状態から書き直し)、
+  `eslint.config.mjs`/`.gitignore`のvendored skillコード除外を追加。
+  `main`の実状(DESIGN.md未採用、shadcn/ui使用中)に合わせて内容は書き直し、
+  `grimore-v2`側の記述を丸ごと転記していない。副次的にgrimore-v2側
+  `scripts/setup.mjs`のshadcn skill冪等性チェックパスの誤りを発見、
+  `main`側実装でのみ修正(grimore-v2側は対象外、shadcn未使用のため実害なし)。
+  `scripts/setup.mjs`は2回実行して冪等性を確認、`node scripts/verify.mjs`
+  全合格(lint/typecheck/test 82件/build)。ブランチ
+  `chore/main-v12-1-frontend-ui-layer`からPR作成。CI green後、PR #37として
+  squash-mergeされmainへ反映済み(9d7cd1b、2026-08-23)。
+- 2026-08-22: T042 (D-045) — オーナー指示で、grimore-v2ブランチ側でD-015/
+  D-016として導入済みのKenney "Interface Sounds"(CC0、100件)を`main`側
+  にも`public/audio/ui/`へ配置した。category/用途hint/再生時間を記録した
+  `manifest.json`を同梱し、「UIコンポーネントアセットのようにAIが選定を
+  完全に任される」運用の下地とする。**配置のみ**であり、`src/lib/
+  sound.ts`のWeb Audio合成エンジン(D-022)は無変更・どのファイルもコード
+  から未参照(オーナー指示で安全側を明示選択)。PRを`main`へ作成、
+  マージはオーナー確認待ち。
+- 2026-08-19: T041 (D-044) — Gitワークフロー見直し。(1)ドキュメントのみの
+  変更はブランチ/PR/CIをスキップしmain直接コミット可という例外を
+  CLAUDE.mdと大元のpm-zero(pm-zero-knowledge-v12.md Section 12)の両方に
+  追記。(2)`main`は家族利用中の本番(マージで自動デプロイ)、grimore-v2は
+  出荷時期未定の長期投機的作業のため、`main`から`grimore-v2`長命統合
+  ブランチを新設。以後のv2関連作業(grimore-v2/*.mdの設計ドキュメント、
+  将来の実装コード)はこのブランチを起点・着地点とする——v2の「実質main」。
+  タスクごとのサブブランチは`grimore-v2`から切り、`grimore-v2`へPRまたは
+  ドキュメントのみ例外での直接コミット。tasks.md/decisions.md/state.mdは
+  ブランチごとに独立して追記され、v2出荷判断が出た時点でmainへマージし
+  台帳のコンフリクトは両ブランチの新規行を残す形で解消する前提(D-044に
+  トレードオフとして明記)。既存の3本の作業用ブランチ(T038〜T040で使用、
+  いずれもPRマージ済み)はすでに削除済みで、mainのほかに残存ブランチは
+  なかった。
+- 2026-08-19: T040 (D-043) — Grimoire v2 design consult session #2. O章の未決定
+  事項「妖精の属性：光 or 植物」を光に確定(L-3章新規)。モチーフ=星屑・
+  プリズム系(犬の背景オーロラ/虹系と差別化)、猫(闇/月)との対比を意図的な
+  デザイン思想として採用、発光は「適度に使うが非発光手段も併用」でK章の
+  原則を維持。植物不採用によりアプリ旧名(Task Plant)/plant画面との意味的
+  重複の懸念は解消。卵〜成体の具体的デザインは妖精が5系統中最後に着手する
+  系統のため未着手のまま(次に相談するテーマとしてO章の残り6項目——図鑑/
+  カレンダー詳細設計、タップ反応ライブラリ構成、スプリングボーンパラメータ、
+  エリア間遷移演出、モジュール間共有状態インターフェース仕様——が残る)。
+  セッション中、設計ログのファイル名がオーナー自身の操作により
+  `Grimoire_決定事項ログ_統合版_20260819.md`から`Grimoire_決定事項ログ.md`
+  へ変更された(内容は無変更)。ブランチ `docs/grimo-fairy-light-design`。
+- 2026-08-19: T039 — Researched Official Blender MCP (blender.org, released
+  2026-04-28) as a possible replacement for the ahujasid/blender-mcp registered in
+  T037. Conclusion: not switching now. Official MCP targets scene inspection/
+  automation (poly-count analysis, data-block renaming, geometry-node docs) while
+  this project's near-term need is external asset sourcing (PolyHaven/Sketchfab/
+  Hyper3D via ahujasid's tool); Official MCP also requires Blender 5.1+, which
+  conflicts with the 4.5 LTS chosen in T037. Corrected D-041's own reasoning in the
+  process: the "Blender 4.x" rationale was traced only to the design log's P-chapter
+  instruction, not independently verified — Blender 5.2 LTS had already been out
+  over a month by the time T037 ran (5.0 Nov 2025 -> 5.1 Mar 2026 -> 5.2 LTS
+  2026-07-14), so that instruction was itself based on a stale assumption. The
+  actual reason to stay on 4.5 LTS is ahujasid/blender-mcp's own compatibility risk
+  on Blender 5.x (Python errors reported on 5.0, 5.1/5.2 unconfirmed) — same
+  conclusion, corrected justification, recorded as a 訂正 addendum to D-041.
+  Official Blender MCP flagged as worth revisiting once modeling/rigging work is
+  underway and a Blender 5.x upgrade is separately justified.
+- 2026-08-19: T038 (D-042) — Grimoire v2 design consult session #1 (moved fully into
+  Claude Code per owner's request, replacing the prior claude.ai chat). Branch
+  `docs/grimo-dog-design-and-mhw-policy` off main. Read all 3 grimore-v2/ design docs;
+  verified T037/D-041 evidence and tasks.md numbering (no issues found); confirmed
+  BlenderMCP still `Pending approval` in `claude mcp list` (owner will run the manual
+  Blender GUI "Connect to Claude" step + approve on next `claude` launch — no
+  automation possible here, unchanged from T037). Two decisions recorded in D-042:
+  (1) 犬系グリモ(水属性)の卵〜成体デザイン確定via 4-question x2-round consult (see
+  grimore-v2/...統合版.md L-2章) — egg=frost/crystal translucent shell, infant=round
+  soft body with fantasy elements confined to ear/tail-tip shape + ambient ripple VFX,
+  child=infant extended (body grows, gradient starts filling in), adult=wolf/husky-base
+  breed with full-body blue gradient, tone shifts cute->cute+cool across the arc; (2)
+  MHW reference-image policy reversed — owner explicitly chose to use the 8 original
+  images as-is for the *background world* (not the grimo creature) after being told
+  twice the legal-risk picture (family now uses the app too per D-030, so the
+  "personal-use-only" copyright exception doesn't cleanly apply; Three.js editing counts
+  as derivative work, not just reproduction; risk is low-probability/non-zero since
+  infringement is complaint-driven). Also researched and answered an owner question
+  mid-session: GPT-5.6 Sol (OpenAI, released 2026-07-09) is real and technically usable
+  here via Codex CLI (still active, MCP-capable, including an official Blender MCP
+  Blender itself shipped in April 2026) — recommended staying single-agent (this
+  project retired the dual-agent Codex+Claude split in D-020 for context-cost reasons
+  that still apply) rather than switching, since no verified capability edge either
+  way was found; flagged the official Blender MCP as a separate, non-model-related
+  thing worth a future look (this project's T037 registered the community
+  ahujasid/blender-mcp addon instead).
+- 2026-08-19: T037 (D-041) — Grimoire v2 kickoff, environment prep only. Branch
+  `chore/v2-env-setup` off main. Blender 4.5.10 LTS installed (winget), blender-mcp
+  addon installed+enabled+persisted (headless python, save_userpref/save_homefile),
+  PolyHaven scene toggle pre-set True in the default startup file. blender-mcp
+  registered with Claude Code (`--scope project`); shows Pending approval in
+  `claude mcp list` until the owner approves it at next `claude` launch. Remaining
+  manual step (cannot be automated — the addon refuses to start its socket server in
+  `--background` mode): open Blender GUI once and click "Connect to Claude" in the
+  BlenderMCP sidebar tab. CC0 rigged-quadruped search on Sketchfab came up empty
+  (downloadable+CC0+actually-rigged four-legged models are essentially nonexistent
+  there); Quaternius's "Animated Animal Pack" (CC0, via poly.pizza, Shiba
+  Inu/Husky/Wolf/Fox, Idle/Walk/Run/Jump/Death anims, FBX/glTF/Blend) identified as
+  a strong candidate for the priority 犬(水属性) grimo — listed only, not downloaded,
+  per the owner's explicit "decide next session" instruction. `grimore-v2/` design
+  docs (3 files) added to the repo. No product code touched.
+- 2026-08-17: T036 shipped — full effects rebuild (D-038 background
+  particles, D-039 per-effect toggles replacing the old intensity dial,
+  D-040 Tier 1 review fixes). Squash-merged via PR #29 to main (1bb8c8e),
+  branch feat/aaa-fx-rebuild deleted, CI green on the merge commit, Vercel
+  production deployment confirmed via the GitHub deployments API. Full
+  narrative in tasks.md T036 (Evidence column has the complete browser-
+  smoke and review-fix record); write scope there too (fx.ts domain+
+  browser layers, confetti/spark/sound, drop-reveal, plant snowfall,
+  settings screen, 3 new src/components/fx/ files, bottom-nav, layout.tsx,
+  globals.css, docs/repo-map.md). Notable operational note from this task:
+  this app's PWA service worker can mask fresh dev-server builds during
+  browser smoke testing with a misleading stale-bundle error — see
+  .claude/rules/pwa-dev-testing.md for the unregister+cache-clear recovery.
+- 2026-08-17: T035 shipped on feat/notif-toggle-and-replay-fx, base main @ c5a6f36.
+  Two user-reported defects: /settings had no way to turn notifications back off
+  once granted (browser permission is a one-way ratchet, so a new app-level
+  notif-enabled flag was added), and /book's item-tap replay used the exact
+  same star-burst confetti as live task completion (now a distinct per-rarity
+  "twinkle" via fireReplayEffect, distinct in shape and motion from the
+  completion burst). pnpm verify green (80/80); browser smoke via Playwright
+  confirmed both fixes with 0 console errors. CI green on PR #27; squash-merged
+  to main and branch deleted; local checkout back on main @ c07d510.
+- Previous branch: feat/settings-and-fx-presets (T031/T032/T033, one PR — same bundling
+  precedent as T018+T021). Base: main @ 17c6ef1. PR #25 open.
+- MERGE GATE: cleared. The owner explicitly authorised the merge on 2026-08-16
+  after being shown that the diff falls in the 300+ line high-risk class and
+  that merging auto-deploys to the production origin the family uses. Final
+  pnpm verify green (80/80, 8 routes) immediately before merging; squash-merged
+  via PR #25 and the branch deleted.
+- Owner follow-up during the same exchange: asked for the sound-mute button to
+  be moved into settings. Already done in T032 — the home header's FxToggle was
+  removed and rebuilt as the FEEDBACK section of /settings; a grep confirms the
+  only isFxEnabled/setFxEnabled UI in src/ is settings-screen.tsx. The button
+  still appeared in the running app only because this branch had not yet merged.
+- Active task: T031/T032/T033 — VoC-driven effects + settings work (D-036).
+  Six pieces of user feedback were classified as PdM/UX input; two turned out to
+  be defects rather than requests, and the rest were one root cause restated.
+  - T031 (fix): drop reveal auto-dismissed in 2.0-3.4s while asking the user to
+    read seven things, and the overlay's onClick covered the card, so reading it
+    dismissed it. Now 4.0-9.0s by rank + stopPropagation + explicit close button.
+    Deadline notifications existed but could never fire: the SW's setTimeout dies
+    with the SW after seconds of idle, and notifications.ts bailed out entirely
+    once 09:00 had passed (so opening later scheduled nothing, not even the next
+    day). Replaced by catch-up-on-open through a new pure src/lib/domain/
+    reminders.ts + a localStorage delivered-ledger; sw.js CACHE_NAME -> v6.
+  - T032 (feat): /settings created; FxToggle, the notification panel, and
+    /book's ARCHIVE + RESET cards all moved into it. Gear takes the slot the
+    sound toggle vacated. BottomNav unknown paths now resolve to no active tab.
+    Notification permission is asked once, after the first all-clear (F-7).
+  - T033 (feat): effects intensity preset (しずか/ふつう/にぎやか) replacing the
+    proposed pile of toggles; OS reduced-motion always forces しずか. Confetti
+    extracted to src/lib/confetti.ts and made wave/scale driven. Tap sparks via
+    one delegated listener (src/lib/spark.ts). /book entries replay their reveal.
+    Morning ambience on にぎやか only, as an ambient layer behind content.
+- Superseded (kept for history): T034 — pm-zero v11.1.1 -> v12 governance migration
+  (D-037), project scope only (global `~/.claude` was already on v12 before this task
+  started). CLAUDE.md: header, Startup Read (+docs/issues.md), Budget/Continuity
+  (absolute-window auto-compact replacing the PCT override, "do not split sessions"),
+  Self-Review (Tier 2 retired), Self-Evolution (single machine-detectable-check loop,
+  docs/lessons.md destination removed), Git merge-gate (CI green replacing self-reported
+  verify) all rewritten. `.claude/settings.json` reduced to
+  `{"permissions":{"defaultMode":"bypassPermissions"}}`, removing a real bug (a blanket
+  `.env.*` deny pattern that blocked reading `.env.example` against documented policy)
+  and the dead `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` env key, deferring fully to the
+  already-v12 global deny + guard.mjs. `.github/workflows/ci.yml` added (Section 14
+  migration item 6, task-plant named explicitly in the v12 doc) running the same
+  lint/typecheck/test/build as pnpm verify, with branch protection requiring it.
+  docs/issues.md stripped to the current-blockers-only template. docs/repo-map.md and
+  tasks.md headers relabeled v12. docs/lessons.md/AGENTS.md do not exist in this repo.
+  Product source untouched.
+- Superseded (kept for history): T030 — pm-zero v11 -> v11.1.1 governance migration (D-035),
+  applied to both global (`~/.claude`, affects all of the user's other repos) and
+  project scope. Global: CLAUDE.md, settings.json (env/fallbackModel/hooks), and
+  guard.mjs (P7: Edit/Write/MultiEdit/NotebookEdit now block `.env`/`.env.*`
+  writes, not just reads) all re-read in full and confirmed correctly migrated —
+  no RTK references remain, Sonnet 5/Opus 5 routing in place. Project:
+  CLAUDE.md rewritten for v11.1.1; `.claude/settings.json`'s dead
+  `"Bash(rm -rf:*)"` deny rule (invalid colon syntax, never matched) fixed to
+  `"Bash(rm -rf *)"`; `.claude/rules/tests.md` added (node:test relative-import
+  lesson moved out of cross-project auto-memory per the memory-layer boundary
+  rule). Product source untouched. Tier 1 self-audit (docs/config-only diff,
+  no auth/billing/DB-schema/production-data class) substituted for Tier 2, same
+  basis as T015.
+- Current executor: Claude Code main agent (2 Sonnet workers used on disjoint
+  scopes: the fx preset model, and the /book replay + drop-reveal replay mode)
+- Write lock: none
+- Permanent constraint (from D-033): `shadcn` is exact-pinned to `4.1.2` (no caret)
+  because 4.18.0 stopped shipping the `dist/tailwind.css` file this app's
+  `globals.css` imports as its design-token base. Any future bump of `shadcn`
+  must confirm `dist/tailwind.css` still ships before changing the pin.
+- Informational (not a blocker, out of scope for T030): `~/.claude/settings.local.json`
+  has a stale top-level `permissionMode` key not part of the loaded config
+  hierarchy. No fix applied; recorded in D-035.
+- Main agent: Claude Code (Sonnet 5-first; Opus 5 for top-risk review only)
+- Latest verification pointer: tasks.md T033
+- Known local-environment note (not a code issue): a stale
+  `.next/dev/types/validator.ts` referencing a `/book/[dropId]` route that does
+  not exist in the repo failed `pnpm typecheck` mid-session. Deleting that one
+  generated file fixed it. Also worth knowing: the project deny rule
+  `"Bash(rm -rf *)"` (introduced in T030) matches every `rm -rf`, including
+  safe build-cache clears, not just the root/home cases it was meant for.
+- Verification mode: standard
+
+## Current Blocker
+- none — both prior Google Cloud blockers closed 2026-08-15 by the owner (human
+  action was required for both; the agent lacked either tooling or credentials to
+  self-serve). Root cause and fix history:
+  - `GEMINI_API_KEY`: the owner's screenshot of Vercel > Environment Variables
+    showed the var was saved under its pre-PR#19 name, `NEXT_PUBLIC_GEMINI_API_KEY`
+    (added May 9), while the route reads `process.env.GEMINI_API_KEY` (added in
+    PR #19 / T025). A grep of `src/` confirmed `NEXT_PUBLIC_GEMINI_API_KEY` is no
+    longer referenced anywhere — since Vercel SSO is now off in Production
+    (D-030), that stale var was sitting exposed in the client JS bundle for
+    anyone to read. Owner added `GEMINI_API_KEY` (Production) and removed the
+    stale `NEXT_PUBLIC_` one; redeployed automatically (dpl_Gnf5VDiMxgLRVyXSdziSQ138nUqJ,
+    READY). Re-verified 2026-08-15: POST /api/gemini/generate with a valid
+    `{kind:"voice", text, todayDate}` body now returns 200 with real Gemini
+    output; an invalid body still correctly returns 400 (request-shape guard
+    from T025 intact).
+  - Google OAuth consent screen test users: owner added the family's Gmail
+    addresses directly in Cloud Console (console.cloud.google.com/auth/audience)
+    without needing agent involvement — self-service by a non-owner account is
+    not possible on Google's side (test-user list is edited only by the project
+    owner/editor), so this was always going to be a manual step.
+
+## Next
+- 2026-08-16: T034 — pm-zero governance migrated v11.1.1 -> v12 (D-037), project scope
+  (global already on v12). New: .github/workflows/ci.yml as the merge gate. Removed:
+  Tier 2 review, docs/lessons.md as a promotion destination, "one task per session",
+  the PCT-based auto-compact override, and a project settings.json bug that blocked
+  reading .env.example. No product code touched.
+- 2026-08-16: T031/T032/T033 shipped on feat/settings-and-fx-presets (D-036).
+  Deliberately NOT built, and why:
+  - Random unprompted rewards on open: would dilute the 436-item rarity design
+    (D-032). Held until we see whether /book replay already satisfies "もっと見たい".
+  - Real scheduled push (Web Push + VAPID + cron + a subscription store): the
+    app has no backend and no auth today, so this is pure new infrastructure.
+    Catch-up-on-open ships first; decide after a week of real use.
+  - Splitting sound and vibration into two switches: they share one preference
+    in sound.ts, so the label says so instead of promising two.
+  Open follow-up: re-interview the same person after they have used /book
+  replay, and get VoC from the core persona (the ADHD student) — every piece of
+  feedback so far is from one non-persona family member.
+- 2026-08-15: T030 — pm-zero governance migrated v11 -> v11.1.1 (D-035), global
+  + project scope. v11.1.1 chosen over v11.2 (config-only truth patch vs. a
+  version requiring new maintained scripts). No product code touched.
+- 2026-08-15: T027 — reward catalog rebuilt into an 8-region world atlas (308→436 items,
+  D-032). Backward compat intentionally broken (user-authorized). RARE4/8 untouched
+  (ids/names/photos; flavor text on 24 of 60 was reworded, see D-032 correction).
+  AI-generated illustrations for RARE6-8 were requested but are out of reach in this
+  environment (no image-gen tool/key access) — deferred to a future task (a standalone
+  script the user runs with their own GEMINI_API_KEY). Also deferred: drop-reveal.tsx
+  doesn't show the region name at the moment of reveal (Tier 2 review nit, no visual
+  QA time this session). Shipped and merged 2026-08-15.
+- 2026-08-15: T026 — reward catalog 63→308 and the completion hot path no longer
+  reads the whole drops ledger. See D-031. Deferred options recorded there: a
+  Dexie v4 `dropId` index (would make the isNew check fully O(log n)), and more
+  RARE8 entries if additional vista photos are ever sourced.
+- 2026-08-15: T025 — family multi-user access audit found the data layer already
+  device-scoped (no code needed); real blockers were Vercel SSO gating prod
+  entirely (scoped to preview-only via Vercel settings) and NEXT_PUBLIC_GEMINI_API_KEY
+  becoming publicly extractable once prod opened up (fixed: moved server-side via
+  new src/app/api/gemini/generate route, PR #19). See D-030.
+- 2026-07-21: Category classification removed (b31d66e) + calendar reborn as the
+  調査記録 ember heatmap (T022 / D-027, merged #15).
+- 2026-07-21: Permanent-use survey-notes overhaul on feat/seasonal-chronicle —
+  seasonal CHRONICLE (T023 / D-028) + honest RARE 1-8 ladder (T024 / D-029).
+  Future options: chronicle folding / year dividers once it gets long; a
+  moving-personal-best axis (deferred 4th option); per-day recurring completion
+  history for the heatmap (D-027 note); rate/pity re-tuning on real usage.
+- No agent tasks queued. The staged reward plan (案1+案3) is fully shipped:
+  drops/collection (T017), bounty board + departure + streak insurance (T018),
+  Iceborne vista art direction (T020), Grimoire rebrand (T019), JSON backup (T021).
+- On-device QA (human, optional): after the auto-deploy, check bounty board
+  auto-claims, 出発 button, streak freeze display, and /book ARCHIVE
+  export/import on the phone.
+- Vercel project name stays "task-plant" by user decision (renaming would change
+  the production origin and orphan on-device IndexedDB data; JSON backup now
+  makes a future migration possible if ever wanted).
+- Manual (human, post-session): local folder rename —
+  `Rename-Item "C:\Users\chidj\project\プロダクト\task-plant" grimoire`

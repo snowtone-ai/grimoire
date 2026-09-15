@@ -1,0 +1,30 @@
+
+> grimoire@0.1.0 resilience:carol C:\Users\chidj\project\プロダクト\task-plant
+> node scripts/resilience/run-carol.mjs "--" "--acknowledge-local-destructive-testing"
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:53375
+- Network:       http://192.168.10.120:53375
+- Environments: .env.local
+✓ Ready in 1389ms
+✓ Running next.config.ts took 112ms
+
+ GET /.well-known/resilience-test 200 in 786ms (next.js: 724ms, application-code: 62ms)
+ GET /.well-known/resilience-test 200 in 45ms (next.js: 14ms, application-code: 32ms)
+ GET /plant/carol-3d 200 in 1565ms (next.js: 861ms, application-code: 703ms)
+ GET /api/resilience-probe 200 in 1022ms (next.js: 426ms, application-code: 596ms)
+○ Compiling /plant ...
+ GET /plant 200 in 11.3s (next.js: 7.3s, application-code: 4.0s)
+ GET /plant/carol-3d 200 in 336ms (next.js: 77ms, application-code: 258ms)
+ GET /plant/carol-3d 200 in 231ms (next.js: 102ms, application-code: 128ms)
+file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:209
+          controller.abort(new Error(`${label} exceeded ${timeoutMs}ms`))
+                           ^
+
+Error: snapshot-after exceeded 15000ms (seed 20260910; diagnostics C:\Users\chidj\project\プロダクト\task-plant\output\resilience\carol-3d)
+    at Timeout.<anonymous> (file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/core.mjs:209:28)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+
+Node.js v24.14.0
+ ELIFECYCLE  Command failed with exit code 1.

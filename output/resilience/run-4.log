@@ -1,0 +1,32 @@
+
+> grimoire@0.1.0 resilience:carol C:\Users\chidj\project\プロダクト\task-plant
+> node scripts/resilience/run-carol.mjs "--" "--acknowledge-local-destructive-testing"
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:56965
+- Network:       http://192.168.10.120:56965
+- Environments: .env.local
+✓ Ready in 1331ms
+✓ Running next.config.ts took 108ms
+
+ GET /.well-known/resilience-test 200 in 685ms (next.js: 613ms, application-code: 73ms)
+ GET /.well-known/resilience-test 200 in 32ms (next.js: 14ms, application-code: 18ms)
+ GET /plant/carol-3d 200 in 1554ms (next.js: 791ms, application-code: 763ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: ReferenceError: requireIdle is not defined
+    at eval (eval at predicate (eval at evaluate (:311:30)), <anonymous>:4:12)
+    at predicate (eval at evaluate (:311:30), <anonymous>:7:27)
+    at next (eval at evaluate (:311:30), <anonymous>:29:33)
+    at waitForCarol (C:\Users\chidj\project\プロダクト\task-plant\tests\resilience\carol-3d-scenario.mjs:6:14)
+    at Object.initialize (C:\Users\chidj\project\プロダクト\task-plant\tests\resilience\carol-3d-scenario.mjs:63:15)
+    at async openContext (C:\Users\chidj\project\プロダクト\task-plant\scripts\resilience\campaign.mjs:381:7)
+    at async runResilienceCampaign (C:\Users\chidj\project\プロダクト\task-plant\scripts\resilience\campaign.mjs:501:5)
+    at async file:///C:/Users/chidj/project/%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88/task-plant/scripts/resilience/run-carol.mjs:74:19 {
+  log: []
+}
+
+Node.js v24.14.0
+ ELIFECYCLE  Command failed with exit code 1.
