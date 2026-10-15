@@ -2,9 +2,9 @@
 
 更新日: 2026-09-13 JST
 
-現在地: pm-zero knowledge v14.1 に合わせた自己完結型の運用文書移行中。T050（カレンダー再取込の重複防止と意味的な重複候補表示）までの製品変更と v13 移行は `main` に反映済み。今回もプロダクトコード・IndexedDB・公開設定・外部接続は変更しない。追加でグローバル Codex の最新実験的 compaction 経路を有効化し、repo-map と環境インベントリを更新した。
+現在地: T051（別AI向けプロダクト全体 atlas）を完了。T050（カレンダー再取込の重複防止と意味的な重複候補表示）までの製品変更と v13 移行は `main` に反映済み。今回もプロダクトコード・IndexedDB・公開設定・外部接続は変更せず、`docs/grimoire-product-atlas.md` に現行コードから機能・データ依存関係・外部連携・パイプライン・検証境界を集約した。
 
-次の手順: 次の機能依頼では `AGENTS.md`、`tasks.md` 先頭、`xp.md` を読み、専用ブランチで開始する。
+次の手順: 次の機能依頼では `AGENTS.md`、`tasks.md` 先頭、`xp.md` を読み、専用ブランチで開始する。atlas は source の要約なので、実装変更時は該当コードを再確認する。
 
 受入条件の状態:
 
@@ -19,11 +19,18 @@
 
 未解決の質問・仮定: 追加費用 0 円、既存の GitHub/Vercel/Gemini/Google 接続と公開範囲を維持する。プロダクト機能変更・データ移行・新しい外部接続は今回の対象外。
 
-変更ブランチ: `codex/pm-zero-v14-1`（`main`へマージ済み）
+変更ブランチ: `codex/product-system-map`
 
-検証済み: v14.1 knowledge の該当節確認、既存未コミット差分の確認、`git diff --check`、system文書の構造確認、repo-map/環境インベントリ確認、グローバル feature 設定確認、`pnpm verify`（lint: 0 errors、typecheck、test: 176/176、production build）。既存 `main` の CI、Vercel Production、`pnpm check:production` は v13 移行時点で確認済み。
+検証済み: v14.1 knowledge の該当節確認、既存未コミット差分の確認、atlas と現行 source の突合、`git diff --check`。今回の変更は Markdown のみで、プロダクトコードの再ビルドは不要。既存 `main` の `pnpm verify`、CI、Vercel Production、`pnpm check:production` は過去記録のとおり。
 
 停止理由や制限: なし。既存の `grimore-v2/` 削除差分はユーザー所有として保持したうえでコミット済み。
+
+## T051: 別AI向けプロダクト全体 atlas
+
+- Status: done
+- Scope: `docs/grimoire-product-atlas.md` のみ（運用台帳の先頭更新を除く）
+- Acceptance: atlas 単体で機能、画面、データ schema/依存、外部 API 境界、主要 pipeline、asset、検証、既知の制限を把握できる。秘密情報・利用者データを含めない。
+- Verification: source inventory、`db.ts`/task/reward/backup/domain/API/route/UI の読解、`git diff --check`
 
 ## 履歴
 
