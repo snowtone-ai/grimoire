@@ -1,6 +1,17 @@
 # 作業台帳
 
-更新日: 2026-09-07 JST
+## 現在地 — 2026-10-17 廃止キャラクター関連除去
+
+- Status: remote main へ反映済み。Grimo `28c1505` fast-forward、task-plantは `c9bdb67` のCarol廃止差分のみを専用branchで統合。
+- Branch: `codex/retire-carol-main-20261017`、基点 `origin/main` = `0c067b8137346e94fba6ed38eb785f5c6d0acc33`。先行3コミットは移植していない。
+- Scope: `fsck-carol.txt` を削除し、廃止監査記録を追加。アプリ・IndexedDB・利用者データ・他タスクは変更なし。
+- Acceptance: Grimoの恒久知見 `GRIMO_CHARACTER_3D_LESSONS.md` とJill/Pino/Shushu共有基盤を維持し、両remote mainでCarol廃止を反映。
+- Verification: 限定Carol参照/link scan、他キャラ/共有資産の維持確認、`git diff --check`。コード変更なしのためフルテスト/buildは省略。
+- Evidence / limitations: [廃止実行記録](docs/character-retirement-20261017.md)。歴史的Git記録・archive tag・外部生成サービス側は未消去。
+
+---
+
+更新日: 2026-09-13 JST
 
 現在地: pm-zero v13 への運用移行は完了。直近の製品変更 T050（カレンダー再取込の重複防止と意味的な重複候補表示）と v13 移行は `main` に反映済みで、GitHub Actions CI と Vercel Production を確認済み。v13 移行ではプロダクトコード・IndexedDB・公開設定を変更していない。
 
