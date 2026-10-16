@@ -1,5 +1,16 @@
 # 作業台帳
 
+## 現在地 — 2026-10-17 廃止キャラクター関連除去
+
+- Status: done（専用branchのcommit/push・remote HEAD照合をもって確定）
+- Branch: `codex/retire-carol-20261017`、基点 `84a759a666c5d2589685ff0aee3d098472ca1144`
+- Scope: Human依頼によるCarol関連のみ。`fsck-carol.txt`、棚卸し済み専用ローカル生成物・branch・古いworktree登録を除去。共有履歴はarchive tagで保護。
+- Acceptance: Grimo側で恒久知見を削除前にcommit済み。他タスク・アプリ・利用者データを保持し、現branchの現役制作依存を除去。
+- Verification: 変更pathの限定、専用参照scan、共有履歴tagのremote保存、ディスク差分、`git diff --check`。コード変更がないためフルテスト/buildは省略。
+- Evidence / limitations: [実行記録](docs/character-retirement-20261017.md)。過去のGit履歴と外部生成サービスは未消去。次の操作は本branchの取り込み。以下の製品台帳は既存作業の記録として保持する。
+
+---
+
 更新日: 2026-09-13 JST
 
 現在地: T051（別AI向けプロダクト全体 atlas）を完了。T050（カレンダー再取込の重複防止と意味的な重複候補表示）までの製品変更と v13 移行は `main` に反映済み。今回もプロダクトコード・IndexedDB・公開設定・外部接続は変更せず、`docs/grimoire-product-atlas.md` に現行コードから機能・データ依存関係・外部連携・パイプライン・検証境界を集約した。
