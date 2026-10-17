@@ -28,9 +28,15 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - id: install
+        run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=low
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+      # Keep audit failures fatal while collecting every verification result.
+      - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm lint
+      - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm typecheck
+      - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm test
+      - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm build
