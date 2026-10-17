@@ -30,8 +30,9 @@ Humanの明示依頼によりCarolを完全廃止し、再開対象から外し�
 ## 最終清算の再確認 — 2026-10-17
 
 - 再fetch後のmainは `6bca9b043196cce9941a8e4005c234938397e33b`。廃止差分は既にmainに保存済み。上記「取り込みが必要」は初回実行時の記録であり、再統合しない。
-- SAFE_EDIT: 本記録とtasksの現在地のみ更新。専用名のmain追跡pathなし、既存棚卸し対象の専用生成物の復活なし。追加のSAFE_DELETE対象なし。
+- SAFE_EDIT: 本記録とtasksの現在地のみ更新。専用名のmain追跡pathなし、既存棚卸し対象の専用生成物の復活なし。Carol資産の追加削減は0。
+- SAFE_DELETE: 旧統合用 `codex/retire-carol-main-20261017` はmainと同一SHA、cleanかつignored/untrackedなし。不要なworktreeとlocal branchを削除（2,469ファイル、論理151,398,788 bytesの重複checkout）。remoteには同名branchなし。
 - PROTECT: 旧 `codex/retire-carol-20261017` = `c9bdb67` にはmain未包含の別作業 `1a47f03`（移行）、`3101399`（台帳）、`84a759a`（product atlas）がある。削除条件を満たさないためlocal/remote branch・clean worktreeを保持。`docs/character-retirement-20261017.md` はmainと同一で、専用ログは両方から削除済み。製品作業branch、共有archive tag、利用者データ・sparse設定も保護。
-- Grimoの同名旧廃止branchはmainと同一SHAであり、local/remote branch・clean専用worktreeを削除。恒久知見とJill/Pino/Shushuを維持。
+- Grimoの同名旧廃止branchはmainと同一SHAであり、local/remote branch・clean専用worktreeを削除。恒久知見とJill/Pino/Shushuを維持。最終監査は[PR #6](https://github.com/snowtone-ai/Grimo/pull/6)でmerge済み、再fetch後mainは `4e52cd4080e1b1b5414caf90c74374ee311efd7b`。
 - UNKNOWN/HOLD: 共有Git履歴、用途不明object・無名ファイル、GitHub remote LFS、Tripo等の外部資産。共有履歴rewriteなし。外部アカウントを確認できず、外部削除済みとは扱わない。[Grimo最終監査](https://github.com/snowtone-ai/Grimo/blob/main/docs/grimo/knowledge/character-production/CHARACTER_RETIREMENT_AUDIT_20261017.md)を参照。
 - CI/保護設定は独立した別PRで扱う。既存audit失敗が必須verifyを止めているため、本記録のmain統合もチェック成功までHOLD。無断bypass、main巻き戻し、audit緩和なし。
