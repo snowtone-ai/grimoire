@@ -1,5 +1,11 @@
 # 作業台帳
 
+## 現在地 — 2026-10-17 最終清算
+
+- 廃止差分はremote main `6bca9b0` に統合済み。専用資産の追加削除はNO-OP。[最終監査](docs/character-retirement-20261017.md)。
+- 旧廃止branchは未統合の製品作業3コミットを含み、local/remote/worktreeを保護。共有履歴・外部資産は未消去。
+- 本監査更新は `codex/carol-final-settlement-20261017` のPR。CI/保護ルールは別PR。必須verifyが既存auditで失敗する場合はmain反映HOLD、bypass禁止。
+
 ## 現在地 — 2026-10-17 廃止キャラクター関連除去
 
 - Status: remote main へ反映済み。Grimo `28c1505` fast-forward、task-plantは `c9bdb67` のCarol廃止差分のみを専用branchで統合。
