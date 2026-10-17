@@ -1,5 +1,11 @@
 # 作業台帳
 
+## 現在地 — 2026-10-17 CI・保護ルール是正（廃止清算とは別PR）
+
+- main保護をPR必須（承認人数0）・管理者にも適用へ修正済み。required `verify`/app指定・audit閾値は維持。
+- CIはaudit失敗後もlint/typecheck/test/buildのstep結果を収集し、verify自体は失敗を維持する最小修正。[根拠と独立セキュリティ対処方針](docs/ci-protection-20261017.md)。
+- 既存の依存脆弱性が解消されず必須checkが失敗する場合はPR merge HOLD。検査無効化・bypass・main巻き戻し禁止。
+
 ## 現在地 — 2026-10-17 廃止キャラクター関連除去
 
 - Status: remote main へ反映済み。Grimo `28c1505` fast-forward、task-plantは `c9bdb67` のCarol廃止差分のみを専用branchで統合。
